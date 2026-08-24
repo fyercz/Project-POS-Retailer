@@ -42,22 +42,89 @@
   background: rgba(107, 114, 128, 0.8);
 }
 
-/* Thermal Receipt Print Styles */
+/* Thermal Receipt & Report Print Styles */
 @media print {
-  body * {
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide app navigation, headers, sidebars, floating widgets */
+  header,
+  nav,
+  aside,
+  #header-element,
+  .no-print,
+  button,
+  input,
+  select {
+    display: none !important;
+  }
+
+  /* When printing thermal receipt */
+  body:has(#thermal-receipt-print-area) * {
     visibility: hidden;
   }
-  #thermal-receipt-print-area, #thermal-receipt-print-area * {
+  body:has(#thermal-receipt-print-area) #thermal-receipt-print-area,
+  body:has(#thermal-receipt-print-area) #thermal-receipt-print-area * {
     visibility: visible;
   }
   #thermal-receipt-print-area {
     position: absolute;
     left: 0;
     top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* When printing full-page report modal */
+  body:has(#printable-report-area) * {
+    visibility: hidden;
+  }
+  body:has(#printable-report-area) #printable-report-area,
+  body:has(#printable-report-area) #printable-report-area * {
+    visibility: visible;
+  }
+  #printable-report-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* When printing shift recap */
+  body:has(#shift-recap-print-area) * {
+    visibility: hidden;
+  }
+  body:has(#shift-recap-print-area) #shift-recap-print-area,
+  body:has(#shift-recap-print-area) #shift-recap-print-area * {
+    visibility: visible;
+  }
+  #shift-recap-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
     background: white !important;
     color: black !important;
   }
 }
+

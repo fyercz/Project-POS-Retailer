@@ -161,12 +161,13 @@ export interface PurchaseReturn {
   returnNumber: string; // e.g., 'RET-SUP-100456'
   supplierName: string;
   referenceInvoice?: string;
+  referenceInvoiceNumber?: string;
   reason: string; // 'Barang Rusak / Bad Stock' | 'Kadaluarsa / Near Expired (FEFO)' | 'Salah Kirim / Tidak Sesuai' | 'Kelebihan Qty'
   items: PurchaseReturnItem[];
   totalAmount: number;
-  status: 'completed' | 'pending';
+  status?: 'completed' | 'pending';
   createdAt: string;
-  processedBy: string;
+  processedBy?: string;
   notes?: string;
 }
 
@@ -179,22 +180,39 @@ export interface SupplierPurchaseItem {
   expiryDate?: string;
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  contactPerson?: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  category?: string; // e.g. 'Distributor Makanan & Minuman', 'Sembako', 'Personal Care'
+  paymentTerms?: string; // 'Tunai / Cash', 'Tempo 14 Hari', 'Tempo 30 Hari'
+  leadTimeDays?: number;
+  isActive: boolean;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface SupplierPurchase {
   id: string;
   invoiceNumber: string;
   supplierName: string;
   paymentTerms: string;
   items: SupplierPurchaseItem[];
-  grossAmount: number;
-  discountType: 'nominal' | 'percentage';
-  discountRate: number;
-  discountAmount: number;
-  dppAmount: number;
-  ppnRate: number; // e.g. 0, 11, 12
-  ppnAmount: number;
-  finalTotal: number;
+  subtotal?: number;
+  grossAmount?: number;
+  discountType?: 'nominal' | 'percentage';
+  discountRate?: number;
+  discountAmount?: number;
+  dppAmount?: number;
+  ppnRate?: number; // e.g. 0, 11, 12
+  ppnAmount?: number;
+  totalAmount: number;
+  finalTotal?: number;
   createdAt: string;
-  receivedBy: string;
+  receivedBy?: string;
   notes?: string;
 }
 
@@ -248,5 +266,98 @@ export interface AIPromoResult {
   bundleItems?: string[];
   description: string;
   isAiGenerated?: boolean;
+}
+
+// Multi-Employee & Shift Management Interfaces
+export type EmployeeRole = 'cashier' | 'supervisor' | 'inventory' | 'owner';
+
+export interface Employee {
+  id: string;
+  employeeCode: string; // e.g. 'EMP-01'
+  name: string;
+  role: EmployeeRole;
+  roleTitle: string; // e.g. 'Kasir 01', 'Kepala Toko / Supervisor', 'Staf Gudang & FEFO', 'Pemilik / Owner'
+  pin: string; // 4-digit PIN e.g. '1234'
+  avatar: string; // Initials e.g. 'AR'
+  avatarColor: string; // Tailwind color e.g. 'bg-emerald-600'
+  phone?: string;
+  email?: string;
+  isActive: boolean;
+  assignedShift: string; // 'Shift Pagi (07:00 - 15:00)', 'Shift Siang (14:30 - 22:30)', 'Full Day'
+  registeredAt: string;
+}
+
+export interface ShiftSummary {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  role: EmployeeRole;
+  startTime: string;
+  endTime?: string;
+  startingCash: number; // Kas Modal Awal
+  totalSales: number;
+  totalTransactions: number;
+  cashSales: number;
+  nonCashSales: number;
+  actualCashEnding?: number;
+  difference?: number;
+  status: 'active' | 'closed';
+  notes?: string;
+}
+
+// AI Invoice & Receipt Scanner Interfaces
+export interface AIInvoiceScannedItem {
+  matchedProductId?: string;
+  productName: string;
+  quantity: number;
+  costPrice: number;
+  subtotal: number;
+  expiryDate?: string;
+  confidence: number;
+}
+
+export interface AIInvoiceScanResult {
+  supplierName?: string;
+  invoiceNumber?: string;
+  date?: string;
+  items: AIInvoiceScannedItem[];
+  grossAmount?: number;
+  discountAmount?: number;
+  ppnAmount?: number;
+  finalTotal?: number;
+  notes?: string;
+  isAiGenerated: boolean;
+}
+
+// AI Visual Stock Opname Interfaces
+export interface AIStockOpnameDetectedItem {
+  productId: string;
+  productName: string;
+  systemStock: number;
+  detectedCount: number;
+  difference: number;
+  condition?: 'Baik / Utuh' | 'Kemasan Rusak' | 'Salah Penempatan Rak' | 'Kadaluarsa';
+  shelfLocation?: string;
+  confidence: number;
+}
+
+export interface AIStockOpnameResult {
+  sessionTitle: string;
+  scannedType: 'shelf_image' | 'video_stream' | 'barcode_burst';
+  items: AIStockOpnameDetectedItem[];
+  totalDiscrepancy: number;
+  aiObservations: string[];
+  suggestedStockUpdates: { productId: string; newStock: number; note: string }[];
+  isAiGenerated: boolean;
+}
+
+export interface StockOpnameHistory {
+  id: string;
+  auditNumber: string;
+  createdAt: string;
+  auditedBy: string;
+  mode: 'visual_ai' | 'barcode_burst' | 'manual';
+  items: AIStockOpnameDetectedItem[];
+  notes?: string;
 }
 

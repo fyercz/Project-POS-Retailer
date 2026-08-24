@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   BarChart3,
   DollarSign,
@@ -18,12 +18,21 @@ import {
   ArrowUpRight,
   RotateCcw,
   PackageCheck,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { usePOS } from '../../context/POSContext';
 import { formatCurrency, formatNumber } from '../../utils/formatters';
+import { ReportPrintModal, ReportType } from '../ReportPrintModal';
 
 export const ReportsView: React.FC = () => {
   const { transactions, settings, openGeminiCopilot, salesReturns } = usePOS();
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [selectedReportType, setSelectedReportType] = useState<ReportType>('summary');
+
+  const openPrintWith = (type: ReportType = 'summary') => {
+    setSelectedReportType(type);
+    setIsPrintModalOpen(true);
+  };
 
   const completedTransactions = transactions.filter((t) => t.status === 'completed');
 
@@ -103,11 +112,11 @@ export const ReportsView: React.FC = () => {
           </button>
 
           <button
-            onClick={() => window.print()}
+            onClick={() => openPrintWith('summary')}
             className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
           >
-            <Printer className="w-4 h-4" />
-            <span>Cetak Laporan</span>
+            <Printer className="w-4 h-4 text-emerald-500" />
+            <span>Cetak & Ekspor Laporan</span>
           </button>
         </div>
       </div>
@@ -242,6 +251,13 @@ export const ReportsView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Printable Report Modal */}
+      <ReportPrintModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        defaultType={selectedReportType}
+      />
     </div>
   );
 };

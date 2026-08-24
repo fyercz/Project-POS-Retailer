@@ -7,6 +7,10 @@ export const formatCurrency = (amount: number, currency: CurrencyType = 'IDR'): 
   return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
+export const formatRupiah = (amount: number): string => {
+  return `Rp ${Math.round(amount).toLocaleString('id-ID')}`;
+};
+
 export const formatNumber = (val: number): string => {
   return new Intl.NumberFormat().format(val);
 };

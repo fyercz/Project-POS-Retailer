@@ -11,6 +11,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
 
   const shortcuts = [
     { key: 'Alt + T', action: 'Toggle Dark / Light Theme', icon: SunMoon, highlight: true },
+    { key: 'Alt + L', action: 'Kunci Layar & Ganti Kasir / Login PIN', icon: Monitor, highlight: true },
     { key: 'F2', action: 'Focus Product Search & Barcode Input', icon: Search },
     { key: 'F4', action: 'Hold / Park Current Order', icon: PauseCircle },
     { key: 'F9', action: 'Quick Checkout & Payment Modal', icon: CreditCard, highlight: true },

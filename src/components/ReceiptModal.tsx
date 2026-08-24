@@ -9,10 +9,12 @@ import {
   Receipt as ReceiptIcon,
   RotateCcw,
   MessageSquare,
+  ExternalLink,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { Transaction } from '../types';
+import { printViaIframe, openPrintWindow } from '../utils/printHelper';
 
 interface ReceiptModalProps {
   transaction: Transaction | null;
@@ -29,7 +31,19 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
   if (!isOpen || !transaction) return null;
 
   const handlePrint = () => {
-    window.print();
+    const el = document.getElementById('thermal-receipt-print-area');
+    if (el) {
+      printViaIframe(el.outerHTML, `Struk_${transaction.invoiceNumber}`, paperSize);
+    } else {
+      window.print();
+    }
+  };
+
+  const handleOpenReceiptTab = () => {
+    const el = document.getElementById('thermal-receipt-print-area');
+    if (el) {
+      openPrintWindow(el.outerHTML, `Struk POS - ${transaction.invoiceNumber}`, paperSize);
+    }
   };
 
   const handleCopyInvoice = () => {
@@ -247,10 +261,18 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
             <button
               onClick={handlePrint}
               id="btn-print-thermal-receipt"
-              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center gap-1.5 cursor-pointer shadow-sm"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
             >
               <Printer className="w-4 h-4" />
               <span>Print Thermal</span>
+            </button>
+
+            <button
+              onClick={handleOpenReceiptTab}
+              className="px-2.5 py-2 rounded-xl text-xs border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-850 cursor-pointer"
+              title="Buka struk di jendela cetak baru"
+            >
+              <ExternalLink className="w-4 h-4" />
             </button>
 
             <button

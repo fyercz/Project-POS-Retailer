@@ -24,6 +24,7 @@ import {
 import { usePOS } from '../../context/POSContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { Transaction, SalesReturn, SalesReturnItem } from '../../types';
+import { ReportPrintModal } from '../ReportPrintModal';
 
 export const TransactionsView: React.FC = () => {
   const { transactions, setActiveReceipt, voidTransaction, settings, salesReturns, processSalesReturn } = usePOS();
@@ -31,6 +32,7 @@ export const TransactionsView: React.FC = () => {
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState<string>('all');
   const [selectedTxForVoid, setSelectedTxForVoid] = useState<Transaction | null>(null);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   // Return Modal State
   const [selectedTxForReturn, setSelectedTxForReturn] = useState<Transaction | null>(null);
@@ -237,6 +239,14 @@ export const TransactionsView: React.FC = () => {
               <option value="transfer">Transfer Bank</option>
             </select>
           )}
+
+          <button
+            onClick={() => setIsPrintModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+          >
+            <FileText className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Cetak / Ekspor Laporan</span>
+          </button>
         </div>
       </div>
 
@@ -736,6 +746,13 @@ export const TransactionsView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Printable Report Modal */}
+      <ReportPrintModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        defaultType="transactions"
+      />
     </div>
   );
 };

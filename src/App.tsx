@@ -16,6 +16,9 @@ import { InventoryView } from './components/views/InventoryView';
 import { CustomersView } from './components/views/CustomersView';
 import { ReportsView } from './components/views/ReportsView';
 import { GeminiRetailCopilot } from './components/GeminiRetailCopilot';
+import { EmployeeLockScreen } from './components/EmployeeLockScreen';
+import { EmployeeManagementModal } from './components/EmployeeManagementModal';
+import { ShiftModal } from './components/ShiftModal';
 
 const POSMainApp: React.FC = () => {
   const {
@@ -71,6 +74,15 @@ const POSMainApp: React.FC = () => {
 
       {/* Gemini AI Retail Copilot Drawer */}
       <GeminiRetailCopilot />
+
+      {/* Employee Login & Screen Lock */}
+      <EmployeeLockScreen />
+
+      {/* Employee Management Modal */}
+      <EmployeeManagementModal />
+
+      {/* Shift Summary & Drawer Reconciliation Modal */}
+      <ShiftModal />
     </div>
   );
 };

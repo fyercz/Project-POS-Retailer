@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sun,
   Moon,
@@ -16,6 +16,12 @@ import {
   DollarSign,
   Sparkles,
   RotateCcw,
+  Lock,
+  LogOut,
+  ChevronDown,
+  Shield,
+  Briefcase,
+  UserCheck,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { usePOS } from '../context/POSContext';
@@ -34,6 +40,12 @@ export const Header: React.FC = () => {
     cart,
     openGeminiCopilot,
     resetToRetailDefaults,
+    activeEmployee,
+    employees,
+    lockScreen,
+    setIsEmployeeManagementOpen,
+    setIsShiftModalOpen,
+    quickSwitchEmployee,
   } = usePOS();
 
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -41,6 +53,8 @@ export const Header: React.FC = () => {
   const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const updateTime = () => {
@@ -57,6 +71,29 @@ export const Header: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Keyboard shortcut listener: Alt + L to lock screen, Alt + T theme
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        lockScreen();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lockScreen]);
+
+  // Click outside to close user menu
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const navItems = [
     { id: 'pos', label: 'Kasir POS', icon: Monitor, shortcut: 'F1' },
     { id: 'transactions', label: 'Riwayat Transaksi', icon: Receipt, shortcut: '' },
@@ -64,6 +101,22 @@ export const Header: React.FC = () => {
     { id: 'customers', label: 'Member & CRM', icon: Users, shortcut: '' },
     { id: 'reports', label: 'Laporan Penjualan', icon: BarChart3, shortcut: '' },
   ] as const;
+
+  const getRoleBadge = (role?: string) => {
+    switch (role) {
+      case 'owner':
+        return { label: 'Owner', bg: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300' };
+      case 'supervisor':
+        return { label: 'Supervisor', bg: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' };
+      case 'inventory':
+        return { label: 'Gudang', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' };
+      case 'cashier':
+      default:
+        return { label: 'Kasir', bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' };
+    }
+  };
+
+  const badge = getRoleBadge(activeEmployee?.role);
 
   return (
     <>
@@ -255,17 +308,149 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Active Cashier Profile */}
-          <div className="hidden md:flex items-center pl-2">
-            <div className="flex items-center space-x-2.5 bg-slate-100 dark:bg-slate-850/80 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1">
-              <div className="w-7 h-7 rounded-full bg-slate-700 text-white font-bold text-xs flex items-center justify-center">
-                AR
+          {/* Active Employee Profile & Quick Menu Dropdown */}
+          <div className="relative pl-1 md:pl-2" ref={userMenuRef}>
+            <button
+              id="btn-employee-menu"
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700/80 rounded-xl px-2.5 py-1 transition cursor-pointer"
+              title="Menu Karyawan & Ganti Kasir"
+            >
+              <div
+                className={`w-7 h-7 rounded-lg ${
+                  activeEmployee?.avatarColor || 'bg-emerald-600'
+                } text-white font-bold text-xs flex items-center justify-center shadow-xs flex-shrink-0`}
+              >
+                {activeEmployee?.avatar || 'KR'}
               </div>
-              <div className="text-left text-xs">
-                <p className="font-medium text-slate-900 dark:text-slate-100 leading-none">Alex Rivera</p>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Head Cashier</span>
+              <div className="text-left text-xs hidden sm:block">
+                <p className="font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate max-w-[110px]">
+                  {activeEmployee?.name || 'Kasir'}
+                </p>
+                <div className="flex items-center gap-1">
+                  <span className={`text-[9px] font-bold px-1 rounded ${badge.bg}`}>
+                    {badge.label}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {activeEmployee?.employeeCode || 'EMP-01'}
+                  </span>
+                </div>
               </div>
-            </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-0.5" />
+            </button>
+
+            {/* User Dropdown Menu */}
+            {isUserMenuOpen && (
+              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-50 overflow-hidden text-xs">
+                {/* Active user header */}
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className={`w-9 h-9 rounded-xl ${
+                        activeEmployee?.avatarColor || 'bg-emerald-600'
+                      } text-white font-bold text-sm flex items-center justify-center shadow-sm`}
+                    >
+                      {activeEmployee?.avatar || 'KR'}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-900 dark:text-white truncate">
+                        {activeEmployee?.name}
+                      </p>
+                      <p className="text-[11px] text-slate-500 truncate">
+                        {activeEmployee?.roleTitle || activeEmployee?.role} • {activeEmployee?.assignedShift}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Menu items */}
+                <div className="p-1.5 space-y-0.5">
+                  <button
+                    id="menu-item-lock-screen"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      lockScreen();
+                    }}
+                    className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  >
+                    <div className="flex items-center gap-2 font-medium">
+                      <Lock className="w-4 h-4 text-amber-500" />
+                      <span>Ganti Kasir / Kunci Layar</span>
+                    </div>
+                    <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-500 font-mono">
+                      Alt+L
+                    </kbd>
+                  </button>
+
+                  <button
+                    id="menu-item-shift-report"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setIsShiftModalOpen(true);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition font-medium"
+                  >
+                    <Clock className="w-4 h-4 text-emerald-500" />
+                    <span>Rekap & Tutup Shift Kasir</span>
+                  </button>
+
+                  <button
+                    id="menu-item-manage-employees"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setIsEmployeeManagementOpen(true);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition font-medium"
+                  >
+                    <Users className="w-4 h-4 text-blue-500" />
+                    <span>Kelola Master Karyawan</span>
+                  </button>
+                </div>
+
+                {/* Fast Switch List */}
+                <div className="p-2 bg-slate-50/50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 px-1">
+                    Ganti Karyawan Cepat:
+                  </span>
+                  <div className="space-y-1">
+                    {employees
+                      .filter((e) => e.isActive && e.id !== activeEmployee?.id)
+                      .slice(0, 3)
+                      .map((emp) => (
+                        <button
+                          key={emp.id}
+                          onClick={() => {
+                            quickSwitchEmployee(emp);
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full px-2 py-1 rounded-lg flex items-center justify-between text-left text-[11px] text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition"
+                        >
+                          <div className="flex items-center gap-1.5 truncate">
+                            <span className={`w-2 h-2 rounded-full ${emp.avatarColor}`} />
+                            <span className="truncate">{emp.name}</span>
+                          </div>
+                          <span className="text-[9px] text-slate-400 font-mono">{emp.employeeCode}</span>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Logout action */}
+                <div className="p-1.5 border-t border-slate-200 dark:border-slate-800">
+                  <button
+                    id="menu-item-logout"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      lockScreen();
+                    }}
+                    className="w-full px-3 py-1.5 rounded-xl flex items-center gap-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-semibold transition"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Kunci / Logout Akun</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>

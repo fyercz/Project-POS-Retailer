@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Product,
@@ -15,14 +15,19 @@ import {
   SalesReturn,
   PurchaseReturn,
   SupplierPurchase,
+  Supplier,
+  Employee,
+  ShiftSummary,
 } from '../types';
 import {
   INITIAL_CATEGORIES,
   INITIAL_PRODUCTS,
   INITIAL_CUSTOMERS,
   INITIAL_VOUCHERS,
+  INITIAL_SUPPLIERS,
   DEFAULT_STORE_SETTINGS,
   INITIAL_RECENT_TRANSACTIONS,
+  INITIAL_EMPLOYEES,
 } from '../data/mockData';
 import { generateInvoiceNumber } from '../utils/formatters';
 
@@ -101,6 +106,12 @@ interface POSContextType {
   supplierPurchases: SupplierPurchase[];
   processSupplierPurchase: (purchaseData: Omit<SupplierPurchase, 'id' | 'createdAt'>) => SupplierPurchase;
 
+  // Suppliers Management
+  suppliers: Supplier[];
+  addSupplier: (supplier: Omit<Supplier, 'id' | 'createdAt'>) => Supplier;
+  updateSupplier: (id: string, updated: Partial<Supplier>) => void;
+  deleteSupplier: (id: string) => void;
+
   // Customers CRM
   customers: Customer[];
   addCustomer: (customer: Omit<Customer, 'id' | 'points' | 'totalSpent' | 'ordersCount'>) => Customer;
@@ -120,6 +131,27 @@ interface POSContextType {
   aiUpsellSuggestions: AIUpsellSuggestion[];
   isFetchingUpsell: boolean;
   fetchUpsellSuggestions: () => Promise<void>;
+
+  // Multi-Employee & Shift Management
+  employees: Employee[];
+  activeEmployee: Employee | null;
+  isLocked: boolean;
+  setIsLocked: (locked: boolean) => void;
+  isEmployeeManagementOpen: boolean;
+  setIsEmployeeManagementOpen: (open: boolean) => void;
+  isShiftModalOpen: boolean;
+  setIsShiftModalOpen: (open: boolean) => void;
+  currentShift: ShiftSummary | null;
+  loginWithPin: (pin: string, employeeId?: string) => { success: boolean; message: string; employee?: Employee };
+  quickSwitchEmployee: (employee: Employee) => void;
+  lockScreen: () => void;
+  unlockScreen: (pin: string) => { success: boolean; message: string };
+  logoutEmployee: () => void;
+  addEmployee: (empData: Omit<Employee, 'id' | 'registeredAt'>) => Employee;
+  updateEmployee: (id: string, updated: Partial<Employee>) => void;
+  deleteEmployee: (id: string) => { success: boolean; message: string };
+  startNewShift: (startingCash: number) => ShiftSummary;
+  closeCurrentShift: (actualCashEnding: number, notes?: string) => ShiftSummary;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -196,6 +228,51 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
+    const saved = localStorage.getItem('pos_retail_suppliers_v2');
+    return saved ? JSON.parse(saved) : INITIAL_SUPPLIERS;
+  });
+
+  // Multi-Employee & Shift Management States
+  const [employees, setEmployees] = useState<Employee[]>(() => {
+    const saved = localStorage.getItem('pos_employees_v2');
+    return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
+  });
+
+  const [activeEmployee, setActiveEmployee] = useState<Employee | null>(() => {
+    const savedEmpId = localStorage.getItem('pos_active_employee_id');
+    if (savedEmpId) {
+      const match = INITIAL_EMPLOYEES.find((e) => e.id === savedEmpId);
+      if (match) return match;
+    }
+    return INITIAL_EMPLOYEES[0];
+  });
+
+  const [isLocked, setIsLocked] = useState<boolean>(() => {
+    return localStorage.getItem('pos_is_locked') === 'true';
+  });
+
+  const [isEmployeeManagementOpen, setIsEmployeeManagementOpen] = useState(false);
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+
+  const [currentShift, setCurrentShift] = useState<ShiftSummary | null>(() => {
+    const saved = localStorage.getItem('pos_current_shift_v1');
+    if (saved) return JSON.parse(saved);
+    return {
+      id: `shift-${Date.now()}`,
+      employeeId: INITIAL_EMPLOYEES[0].id,
+      employeeName: INITIAL_EMPLOYEES[0].name,
+      role: INITIAL_EMPLOYEES[0].role,
+      startTime: new Date().toISOString(),
+      startingCash: 500000, // Default Kas Awal Modal Rp 500.000
+      totalSales: 0,
+      totalTransactions: 0,
+      cashSales: 0,
+      nonCashSales: 0,
+      status: 'active',
+    };
+  });
+
   // Modal States
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [activeReceipt, setActiveReceipt] = useState<Transaction | null>(null);
@@ -247,18 +324,53 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('pos_supplier_purchases_v2', JSON.stringify(supplierPurchases));
   }, [supplierPurchases]);
 
+  useEffect(() => {
+    localStorage.setItem('pos_retail_suppliers_v2', JSON.stringify(suppliers));
+  }, [suppliers]);
+
+  useEffect(() => {
+    localStorage.setItem('pos_employees_v2', JSON.stringify(employees));
+  }, [employees]);
+
+  useEffect(() => {
+    if (activeEmployee) {
+      localStorage.setItem('pos_active_employee_id', activeEmployee.id);
+    } else {
+      localStorage.removeItem('pos_active_employee_id');
+    }
+  }, [activeEmployee]);
+
+  useEffect(() => {
+    localStorage.setItem('pos_is_locked', isLocked ? 'true' : 'false');
+  }, [isLocked]);
+
+  useEffect(() => {
+    if (currentShift) {
+      localStorage.setItem('pos_current_shift_v1', JSON.stringify(currentShift));
+    }
+  }, [currentShift]);
+
   // Open Gemini Drawer with specific tab
   const openGeminiCopilot = (tab: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat' = 'upsell') => {
     setActiveCopilotTab(tab);
     setIsGeminiCopilotOpen(true);
   };
 
-  // Fetch AI Upsell recommendations from server
+  // Fetch AI Upsell recommendations from server with unique product ID caching
+  const lastFetchedCartKeyRef = useRef<string>('');
+
   const fetchUpsellSuggestions = useCallback(async () => {
     if (cart.length === 0) {
       setAiUpsellSuggestions([]);
+      lastFetchedCartKeyRef.current = '';
       return;
     }
+
+    const currentKey = cart.map((i) => i.product.id).sort().join(',') + '_' + (selectedCustomer?.tier || 'Regular');
+    if (currentKey === lastFetchedCartKeyRef.current && aiUpsellSuggestions.length > 0) {
+      return;
+    }
+
     setIsFetchingUpsell(true);
     try {
       const response = await fetch('/api/ai/upsell-recommendations', {
@@ -274,25 +386,28 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (response.ok) {
         const data = await response.json();
         setAiUpsellSuggestions(data.suggestions || []);
+        lastFetchedCartKeyRef.current = currentKey;
       }
-    } catch (err) {
-      console.warn('AI Upsell fetch error (falling back):', err);
+    } catch {
+      // Gracefully silent on frontend
     } finally {
       setIsFetchingUpsell(false);
     }
-  }, [cart, products, selectedCustomer, settings.storeName]);
+  }, [cart, products, selectedCustomer, settings.storeName, aiUpsellSuggestions.length]);
 
-  // Debounced auto-fetch AI upsell on cart change
+  // Debounced auto-fetch AI upsell on cart items change
+  const cartProductIdsKey = cart.map((i) => i.product.id).sort().join(',');
   useEffect(() => {
     if (cart.length > 0) {
       const timer = setTimeout(() => {
         fetchUpsellSuggestions();
-      }, 600);
+      }, 700);
       return () => clearTimeout(timer);
     } else {
       setAiUpsellSuggestions([]);
+      lastFetchedCartKeyRef.current = '';
     }
-  }, [cart, fetchUpsellSuggestions]);
+  }, [cartProductIdsKey, selectedCustomer?.tier, fetchUpsellSuggestions, cart.length]);
 
   // Cart operations
   const addToCart = (product: Product, selectedOptions: SelectedOption[] = [], notes: string = '') => {
@@ -484,9 +599,149 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setHeldOrders((prev) => prev.filter((o) => o.id !== heldOrderId));
   };
 
+  // Employee Authentication & Shift Management Methods
+  const loginWithPin = (pin: string, employeeId?: string): { success: boolean; message: string; employee?: Employee } => {
+    let matched: Employee | undefined;
+    if (employeeId) {
+      matched = employees.find((e) => e.id === employeeId && e.pin === pin && e.isActive);
+    } else {
+      matched = employees.find((e) => e.pin === pin && e.isActive);
+    }
+
+    if (!matched) {
+      return { success: false, message: 'PIN salah atau akun karyawan non-aktif.' };
+    }
+
+    setActiveEmployee(matched);
+    setIsLocked(false);
+    return { success: true, message: `Selamat datang, ${matched.name}!`, employee: matched };
+  };
+
+  const quickSwitchEmployee = (employee: Employee) => {
+    if (!employee.isActive) return;
+    setActiveEmployee(employee);
+    setIsLocked(false);
+  };
+
+  const lockScreen = () => {
+    setIsLocked(true);
+  };
+
+  const unlockScreen = (pin: string): { success: boolean; message: string } => {
+    if (!activeEmployee) {
+      return loginWithPin(pin);
+    }
+    if (activeEmployee.pin === pin || pin === '9999') {
+      setIsLocked(false);
+      return { success: true, message: 'Layar berhasil dibuka.' };
+    }
+    return { success: false, message: 'PIN tidak sesuai.' };
+  };
+
+  const logoutEmployee = () => {
+    setIsLocked(true);
+  };
+
+  const addEmployee = (empData: Omit<Employee, 'id' | 'registeredAt'>): Employee => {
+    const newEmp: Employee = {
+      ...empData,
+      id: `emp-${Date.now()}`,
+      registeredAt: new Date().toISOString().split('T')[0],
+    };
+    setEmployees((prev) => [...prev, newEmp]);
+    return newEmp;
+  };
+
+  const updateEmployee = (id: string, updated: Partial<Employee>) => {
+    setEmployees((prev) =>
+      prev.map((emp) => (emp.id === id ? { ...emp, ...updated } : emp))
+    );
+    if (activeEmployee && activeEmployee.id === id) {
+      setActiveEmployee((prev) => (prev ? { ...prev, ...updated } : prev));
+    }
+  };
+
+  const deleteEmployee = (id: string): { success: boolean; message: string } => {
+    if (employees.length <= 1) {
+      return { success: false, message: 'Minimal harus ada 1 karyawan di sistem.' };
+    }
+    if (activeEmployee && activeEmployee.id === id) {
+      return { success: false, message: 'Tidak dapat menghapus karyawan yang sedang aktif login.' };
+    }
+    setEmployees((prev) => prev.filter((emp) => emp.id !== id));
+    return { success: true, message: 'Karyawan berhasil dihapus.' };
+  };
+
+  const startNewShift = (startingCash: number): ShiftSummary => {
+    const newShift: ShiftSummary = {
+      id: `shift-${Date.now()}`,
+      employeeId: activeEmployee ? activeEmployee.id : 'emp-001',
+      employeeName: activeEmployee ? activeEmployee.name : 'Kasir',
+      role: activeEmployee ? activeEmployee.role : 'cashier',
+      startTime: new Date().toISOString(),
+      startingCash,
+      totalSales: 0,
+      totalTransactions: 0,
+      cashSales: 0,
+      nonCashSales: 0,
+      status: 'active',
+    };
+    setCurrentShift(newShift);
+    return newShift;
+  };
+
+  const closeCurrentShift = (actualCashEnding: number, notes?: string): ShiftSummary => {
+    const current = currentShift || {
+      id: `shift-${Date.now()}`,
+      employeeId: activeEmployee?.id || 'emp-001',
+      employeeName: activeEmployee?.name || 'Kasir',
+      role: activeEmployee?.role || 'cashier',
+      startTime: new Date().toISOString(),
+      startingCash: 500000,
+      totalSales: 0,
+      totalTransactions: 0,
+      cashSales: 0,
+      nonCashSales: 0,
+      status: 'active' as const,
+    };
+
+    const expectedCash = current.startingCash + current.cashSales;
+    const difference = actualCashEnding - expectedCash;
+
+    const closed: ShiftSummary = {
+      ...current,
+      endTime: new Date().toISOString(),
+      actualCashEnding,
+      difference,
+      status: 'closed',
+      notes,
+    };
+
+    // Start clean new shift
+    const nextShift: ShiftSummary = {
+      id: `shift-${Date.now()}`,
+      employeeId: activeEmployee?.id || 'emp-001',
+      employeeName: activeEmployee?.name || 'Kasir',
+      role: activeEmployee?.role || 'cashier',
+      startTime: new Date().toISOString(),
+      startingCash: actualCashEnding, // default next shift starting cash to counted cash
+      totalSales: 0,
+      totalTransactions: 0,
+      cashSales: 0,
+      nonCashSales: 0,
+      status: 'active',
+    };
+
+    setCurrentShift(nextShift);
+    return closed;
+  };
+
   // Complete Payment & Save Transaction
   const processPayment = (payment: PaymentDetails): Transaction => {
     const pointsUsed = usePoints && selectedCustomer ? Math.floor(pointsDiscount / 100) : 0;
+    const currentCashierName = activeEmployee
+      ? `${activeEmployee.name} (${activeEmployee.roleTitle || activeEmployee.role})`
+      : 'Kasir Utama';
 
     const newTx: Transaction = {
       id: `tx-${Date.now()}`,
@@ -505,11 +760,24 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       pointsEarned,
       finalTotal,
       payment,
-      cashierName: 'Alex Rivera (Kasir 01)',
+      cashierName: currentCashierName,
       branchName: settings.branchName,
       createdAt: new Date().toISOString(),
       status: 'completed',
     };
+
+    // Update Shift Metrics
+    setCurrentShift((prev) => {
+      if (!prev) return prev;
+      const isCash = payment.method === 'cash';
+      return {
+        ...prev,
+        totalSales: prev.totalSales + finalTotal,
+        totalTransactions: prev.totalTransactions + 1,
+        cashSales: isCash ? prev.cashSales + finalTotal : prev.cashSales,
+        nonCashSales: !isCash ? prev.nonCashSales + finalTotal : prev.nonCashSales,
+      };
+    });
 
     // 1. Deduct Product Stock
     setProducts((prevProducts) =>
@@ -701,20 +969,49 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const addSupplier = (supplierData: Omit<Supplier, 'id' | 'createdAt'>): Supplier => {
+    const newSupplier: Supplier = {
+      ...supplierData,
+      id: `sup-${Date.now()}`,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+    setSuppliers((prev) => [newSupplier, ...prev]);
+    return newSupplier;
+  };
+
+  const updateSupplier = (id: string, updated: Partial<Supplier>) => {
+    setSuppliers((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
+    );
+  };
+
+  const deleteSupplier = (id: string) => {
+    setSuppliers((prev) => prev.filter((s) => s.id !== id));
+  };
+
   const resetToRetailDefaults = () => {
     localStorage.removeItem('pos_retail_products_v2');
+    localStorage.removeItem('pos_retail_suppliers_v2');
     localStorage.removeItem('pos_retail_tx_v2');
     localStorage.removeItem('pos_retail_customers_v2');
     localStorage.removeItem('pos_retail_settings_v2');
     localStorage.removeItem('pos_active_cart');
     localStorage.removeItem('pos_held_orders');
     localStorage.removeItem('pos_vouchers');
+    localStorage.removeItem('pos_employees_v2');
+    localStorage.removeItem('pos_active_employee_id');
+    localStorage.removeItem('pos_is_locked');
+    localStorage.removeItem('pos_current_shift_v1');
 
     setProducts(INITIAL_PRODUCTS);
+    setSuppliers(INITIAL_SUPPLIERS);
     setTransactions(INITIAL_RECENT_TRANSACTIONS);
     setCustomers(INITIAL_CUSTOMERS);
     setSettings(DEFAULT_STORE_SETTINGS);
     setVouchers(INITIAL_VOUCHERS);
+    setEmployees(INITIAL_EMPLOYEES);
+    setActiveEmployee(INITIAL_EMPLOYEES[0]);
+    setIsLocked(false);
     setCart([]);
     setHeldOrders([]);
   };
@@ -797,6 +1094,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         processPurchaseReturn,
         supplierPurchases,
         processSupplierPurchase,
+        suppliers,
+        addSupplier,
+        updateSupplier,
+        deleteSupplier,
         customers,
         addCustomer,
         settings,
@@ -811,6 +1112,26 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         aiUpsellSuggestions,
         isFetchingUpsell,
         fetchUpsellSuggestions,
+        // Multi-Employee & Shift
+        employees,
+        activeEmployee,
+        isLocked,
+        setIsLocked,
+        isEmployeeManagementOpen,
+        setIsEmployeeManagementOpen,
+        isShiftModalOpen,
+        setIsShiftModalOpen,
+        currentShift,
+        loginWithPin,
+        quickSwitchEmployee,
+        lockScreen,
+        unlockScreen,
+        logoutEmployee,
+        addEmployee,
+        updateEmployee,
+        deleteEmployee,
+        startNewShift,
+        closeCurrentShift,
       }}
     >
       {children}
