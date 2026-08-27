@@ -591,11 +591,11 @@ export const INITIAL_VOUCHERS: Voucher[] = [
 ];
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
-  storeName: 'NexaMart Superstore',
+  storeName: 'Ulilmart Superstore',
   branchName: 'Grand Orchard Mega Branch #04',
   address: 'Jl. Orchard Boulevard No. 88, Jakarta Selatan',
   phone: '(021) 7890-5544',
-  receiptFooterMessage: 'Terima kasih telah berbelanja di NexaMart! Info promo: www.nexamart.id',
+  receiptFooterMessage: 'Terima kasih telah berbelanja di Ulilmart! Info promo: www.ulilmart.id',
   taxRatePercent: 0, // Tanpa Pajak Penjualan
   serviceChargePercent: 0, // Tanpa Surcharge
   currency: 'IDR',
@@ -764,7 +764,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     avatar: 'AR',
     avatarColor: 'bg-emerald-600',
     phone: '0812-3456-7890',
-    email: 'alex.rivera@nexamart.co.id',
+    email: 'alex.rivera@ulilmart.co.id',
     isActive: true,
     assignedShift: 'Shift Pagi (07:00 - 15:00)',
     registeredAt: '2026-01-10',
@@ -779,7 +779,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     avatar: 'SR',
     avatarColor: 'bg-teal-600',
     phone: '0813-9876-5432',
-    email: 'siti.rahma@nexamart.co.id',
+    email: 'siti.rahma@ulilmart.co.id',
     isActive: true,
     assignedShift: 'Shift Siang (14:30 - 22:30)',
     registeredAt: '2026-02-15',
@@ -794,7 +794,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     avatar: 'BS',
     avatarColor: 'bg-amber-600',
     phone: '0856-1122-3344',
-    email: 'budi.santoso@nexamart.co.id',
+    email: 'budi.santoso@ulilmart.co.id',
     isActive: true,
     assignedShift: 'Shift Pagi (07:00 - 15:00)',
     registeredAt: '2026-01-20',
@@ -809,7 +809,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     avatar: 'DP',
     avatarColor: 'bg-purple-600',
     phone: '0821-5566-7788',
-    email: 'diana.putri@nexamart.co.id',
+    email: 'diana.putri@ulilmart.co.id',
     isActive: true,
     assignedShift: 'Full Day & Supervisory',
     registeredAt: '2025-11-01',
@@ -824,7 +824,7 @@ export const INITIAL_EMPLOYEES: Employee[] = [
     avatar: 'HW',
     avatarColor: 'bg-indigo-600',
     phone: '0811-2233-4455',
-    email: 'hendro.wijaya@nexamart.co.id',
+    email: 'hendro.wijaya@ulilmart.co.id',
     isActive: true,
     assignedShift: 'Management / Executive',
     registeredAt: '2025-01-01',

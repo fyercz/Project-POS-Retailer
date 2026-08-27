@@ -84,7 +84,7 @@ export const ProductCatalog: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search product name, SKU, or scan barcode (Press F2)..."
+              placeholder="Cari nama barang, merk, atau scan barcode (Tekan F2)..."
               className="w-full pl-9 pr-14 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-2xs"
             />
             {searchQuery ? (
@@ -112,10 +112,10 @@ export const ProductCatalog: React.FC = () => {
                 ? 'bg-rose-50 border-rose-400 text-rose-800 dark:bg-rose-950/50 dark:border-rose-700 dark:text-rose-300 ring-1 ring-rose-500'
                 : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-850'
             }`}
-            title="Filter low stock items"
+            title="Filter barang stok menipis"
           >
             <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
-            <span className="hidden sm:inline">Low Stock</span>
+            <span className="hidden sm:inline">Stok Menipis</span>
           </button>
         </div>
 

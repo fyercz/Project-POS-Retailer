@@ -90,6 +90,7 @@ export const InventoryView: React.FC = () => {
   // Price Tag Modal State (A4 / F4)
   const [isPriceTagModalOpen, setIsPriceTagModalOpen] = useState(false);
   const [productForPriceTag, setProductForPriceTag] = useState<Product | null>(null);
+  const [purchaseForPriceTag, setPurchaseForPriceTag] = useState<SupplierPurchase | null>(null);
 
   // Master Supplier Modal State
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
@@ -126,7 +127,12 @@ export const InventoryView: React.FC = () => {
     { productId: products[0]?.id || '', quantity: 1, costPrice: products[0]?.costPrice || 0 },
   ]);
 
-  const [notificationMsg, setNotificationMsg] = useState<{ type: 'success' | 'return' | 'delete'; text: string } | null>(null);
+  const [notificationMsg, setNotificationMsg] = useState<{
+    type: 'success' | 'return' | 'delete';
+    text: string;
+    actionLabel?: string;
+    onAction?: () => void;
+  } | null>(null);
 
   const lowStockCount = products.filter((p) => p.stock <= p.minStock).length;
   const totalStockUnits = products.reduce((sum, p) => sum + p.stock, 0);
@@ -332,13 +338,27 @@ export const InventoryView: React.FC = () => {
       }),
     };
 
+    const generatedInvoiceId = `SUP-PUR-${Date.now()}`;
     processSupplierPurchase(purchasePayload);
     setIsReceivingOpen(false);
+
+    const createdPurchaseForModal: SupplierPurchase = {
+      ...purchasePayload,
+      id: generatedInvoiceId,
+      createdAt: new Date().toISOString(),
+    };
+
     setNotificationMsg({
       type: 'success',
-      text: `Faktur Pembelian ${invoiceNumber} dari ${supplierName} senilai ${formatCurrency(finalReceivingTotal, settings.currency)} berhasil diproses dan stok telah diperbarui.`,
+      text: `Faktur Pembelian ${invoiceNumber} dari ${supplierName} senilai ${formatCurrency(finalReceivingTotal, settings.currency)} berhasil diproses & stok bertambah.`,
+      actionLabel: 'Cetak Pricetag Faktur Ini',
+      onAction: () => {
+        setProductForPriceTag(null);
+        setPurchaseForPriceTag(createdPurchaseForModal);
+        setIsPriceTagModalOpen(true);
+      },
     });
-    setTimeout(() => setNotificationMsg(null), 6000);
+    setTimeout(() => setNotificationMsg(null), 8000);
 
     // Reset Form
     setInvoiceNumber(`INV-SUP-${Date.now().toString().slice(-6)}`);
@@ -552,9 +572,21 @@ export const InventoryView: React.FC = () => {
               : 'bg-rose-500 text-white'
           }`}
         >
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>{notificationMsg.text}</span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{notificationMsg.text}</span>
+            </div>
+            {notificationMsg.actionLabel && notificationMsg.onAction && (
+              <button
+                type="button"
+                onClick={notificationMsg.onAction}
+                className="px-2.5 py-1 rounded-lg bg-slate-950 text-white hover:bg-slate-900 text-xs font-bold flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95"
+              >
+                <Tag className="w-3.5 h-3.5 text-amber-400" />
+                <span>{notificationMsg.actionLabel}</span>
+              </button>
+            )}
           </div>
           <button
             onClick={() => setNotificationMsg(null)}
@@ -566,67 +598,85 @@ export const InventoryView: React.FC = () => {
       )}
 
       {/* Header Bar */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-900">
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-900 shadow-2xs">
         <div className="flex items-center gap-4 flex-wrap">
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Package className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-              <span>Inventaris, Master Item & Mitra Supplier</span>
+              <span>Katalog Produk & Stok Toko</span>
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-300">
-              Kelola master katalog item (tambah/edit/hapus), mitra pemasok distributor, faktur pembelian, dan retur FEFO
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Kelola daftar produk, stok fisik, penerimaan faktur dari supplier, dan retur barang
             </p>
           </div>
 
-          {/* Tab Switcher */}
-          <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+          {/* Ergonomic Tab Switcher */}
+          <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs gap-0.5">
             <button
               id="tab-btn-inventory"
               onClick={() => setActiveTab('inventory')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'inventory'
                   ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Package className="w-3.5 h-3.5" />
-              <span>Master Item ({products.length})</span>
-            </button>
-            <button
-              id="tab-btn-suppliers"
-              onClick={() => setActiveTab('suppliers')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'suppliers'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-500 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400'
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>Data Supplier ({suppliers.length})</span>
+              <Package className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Semua Produk</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                {products.length}
+              </span>
             </button>
             <button
               id="tab-btn-purchases"
               onClick={() => setActiveTab('purchases')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'purchases'
                   ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-500 dark:text-slate-300 hover:text-emerald-400'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
               }`}
             >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Faktur Pembelian ({supplierPurchases.length})</span>
+              <FileText className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Faktur Masuk</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                activeTab === 'purchases' ? 'bg-emerald-700 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}>
+                {supplierPurchases.length}
+              </span>
+            </button>
+            <button
+              id="tab-btn-suppliers"
+              onClick={() => setActiveTab('suppliers')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'suppliers'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5 text-blue-400" />
+              <span>Supplier Mitra</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                activeTab === 'suppliers' ? 'bg-blue-700 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}>
+                {suppliers.length}
+              </span>
             </button>
             <button
               id="tab-btn-returns"
               onClick={() => setActiveTab('returns')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'returns'
                   ? 'bg-rose-500 text-white shadow-xs'
-                  : 'text-slate-500 dark:text-slate-300 hover:text-rose-400'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400'
               }`}
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Retur Pembelian ({purchaseReturns.length})</span>
+              <RotateCcw className="w-3.5 h-3.5 text-rose-300" />
+              <span>Retur Supplier</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                activeTab === 'returns' ? 'bg-rose-700 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}>
+                {purchaseReturns.length}
+              </span>
             </button>
           </div>
         </div>
@@ -640,7 +690,7 @@ export const InventoryView: React.FC = () => {
               className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
-              <span>+ Tambah Item Baru</span>
+              <span>+ Tambah Produk</span>
             </button>
           )}
 
@@ -651,7 +701,7 @@ export const InventoryView: React.FC = () => {
               className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
-              <span>+ Tambah Supplier Baru</span>
+              <span>+ Tambah Supplier</span>
             </button>
           )}
 
@@ -662,7 +712,7 @@ export const InventoryView: React.FC = () => {
             className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-teal-600/20 cursor-pointer transition-all active:scale-95"
           >
             <Video className="w-4 h-4" />
-            <span>Stock Opname AI</span>
+            <span>Cek Stok AI</span>
           </button>
 
           {/* INPUT PEMBELIAN */}
@@ -672,7 +722,7 @@ export const InventoryView: React.FC = () => {
             className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 border border-slate-700 cursor-pointer transition-all active:scale-95"
           >
             <Truck className="w-4 h-4 text-emerald-400" />
-            <span>+ Input Pembelian</span>
+            <span>+ Terima Barang</span>
           </button>
 
           {/* INPUT RETUR PEMBELIAN */}
@@ -682,7 +732,7 @@ export const InventoryView: React.FC = () => {
             className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer transition-all active:scale-95"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>+ Retur ke Supplier</span>
+            <span>+ Retur Barang</span>
           </button>
 
           {/* AI RESTOCK FORECAST TRIGGER */}
@@ -691,7 +741,7 @@ export const InventoryView: React.FC = () => {
             className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition-all active:scale-95"
           >
             <Sparkles className="w-4 h-4 fill-current animate-pulse" />
-            <span>Prediksi AI</span>
+            <span>Prediksi Stok AI</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -821,6 +871,27 @@ export const InventoryView: React.FC = () => {
             </span>
           </div>
         )}
+
+        {/* Purchases Metrics & Quick Print */}
+        {activeTab === 'purchases' && (
+          <div className="flex items-center gap-3 text-xs flex-wrap ml-auto">
+            <span className="text-slate-500 dark:text-slate-400">
+              Total Faktur: <strong className="text-slate-900 dark:text-white font-mono">{filteredPurchases.length}</strong>
+            </span>
+            <button
+              onClick={() => {
+                setProductForPriceTag(null);
+                setPurchaseForPriceTag(supplierPurchases[0] || null);
+                setIsPriceTagModalOpen(true);
+              }}
+              className="px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+              title="Cetak label pricetag rak atau stiker barcode dari faktur pembelian supplier"
+            >
+              <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Cetak Pricetag per Faktur</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Content View */}
@@ -851,29 +922,22 @@ export const InventoryView: React.FC = () => {
                       key={prod.id}
                       className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group"
                     >
-                      {/* Product Name & Image */}
+                      {/* Product Name & Details */}
                       <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={prod.image}
-                            alt={prod.name}
-                            className="w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0"
-                          />
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <p className="font-bold text-slate-900 dark:text-white leading-tight">
-                                {prod.name}
-                              </p>
-                              {prod.promoBadge && (
-                                <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
-                                  {prod.promoBadge}
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                              Satuan: {prod.unit}
-                            </span>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-bold text-slate-900 dark:text-white leading-tight">
+                              {prod.name}
+                            </p>
+                            {prod.promoBadge && (
+                              <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                                {prod.promoBadge}
+                              </span>
+                            )}
                           </div>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                            Satuan: {prod.unit}
+                          </span>
                         </div>
                       </td>
 
@@ -1146,7 +1210,8 @@ export const InventoryView: React.FC = () => {
                 <th className="py-3 px-4">Barang Dibeli</th>
                 <th className="py-3 px-4 text-right">Diskon & DPP</th>
                 <th className="py-3 px-4 text-right">PPN Masukan</th>
-                <th className="py-3 px-4 text-right">Total Tagihan Faktur</th>
+                <th className="py-3 px-4 text-right">Total Tagihan</th>
+                <th className="py-3 px-4 text-center">Aksi & Label</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -1227,11 +1292,27 @@ export const InventoryView: React.FC = () => {
                         {purch.items.reduce((sum, i) => sum + i.quantity, 0)} total pcs
                       </span>
                     </td>
+
+                    <td className="py-3 px-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProductForPriceTag(null);
+                          setPurchaseForPriceTag(purch);
+                          setIsPriceTagModalOpen(true);
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-[11px] flex items-center gap-1.5 mx-auto cursor-pointer transition-all shadow-2xs active:scale-95 whitespace-nowrap"
+                        title={`Cetak pricetag untuk ${purch.items.length} item barang dari faktur ${purch.invoiceNumber}`}
+                      >
+                        <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                        <span>Cetak Pricetag</span>
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
                     <FileText className="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
                     <p className="font-semibold text-slate-700 dark:text-slate-300">Belum ada faktur pembelian supplier</p>
                     <p className="text-xs text-slate-400 mt-1">Catat penerimaan stok masuk dengan mengklik tombol "+ Input Pembelian".</p>
@@ -2190,8 +2271,10 @@ export const InventoryView: React.FC = () => {
         onClose={() => {
           setIsPriceTagModalOpen(false);
           setProductForPriceTag(null);
+          setPurchaseForPriceTag(null);
         }}
         initialSelectedProduct={productForPriceTag}
+        initialPurchaseInvoice={purchaseForPriceTag}
       />
     </div>
   );

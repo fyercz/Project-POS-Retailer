@@ -204,7 +204,21 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Store Settings
   const [settings, setSettings] = useState<StoreSettings>(() => {
     const saved = localStorage.getItem('pos_retail_settings_v2');
-    return saved ? JSON.parse(saved) : DEFAULT_STORE_SETTINGS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.storeName && parsed.storeName.includes('NexaMart')) {
+          parsed.storeName = parsed.storeName.replace(/NexaMart/g, 'Ulilmart');
+        }
+        if (parsed.receiptFooterMessage && /nexamart/i.test(parsed.receiptFooterMessage)) {
+          parsed.receiptFooterMessage = parsed.receiptFooterMessage.replace(/nexamart/gi, 'ulilmart');
+        }
+        return parsed;
+      } catch {
+        return DEFAULT_STORE_SETTINGS;
+      }
+    }
+    return DEFAULT_STORE_SETTINGS;
   });
 
   const [vouchers, setVouchers] = useState<Voucher[]>(() => {
@@ -241,11 +255,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [activeEmployee, setActiveEmployee] = useState<Employee | null>(() => {
     const savedEmpId = localStorage.getItem('pos_active_employee_id');
+    const savedEmployeesStr = localStorage.getItem('pos_employees_v2');
+    const allEmployees: Employee[] = savedEmployeesStr ? JSON.parse(savedEmployeesStr) : INITIAL_EMPLOYEES;
     if (savedEmpId) {
-      const match = INITIAL_EMPLOYEES.find((e) => e.id === savedEmpId);
+      const match = allEmployees.find((e) => e.id === savedEmpId);
       if (match) return match;
     }
-    return INITIAL_EMPLOYEES[0];
+    return allEmployees[0] || INITIAL_EMPLOYEES[0];
   });
 
   const [isLocked, setIsLocked] = useState<boolean>(() => {

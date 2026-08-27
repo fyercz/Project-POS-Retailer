@@ -200,7 +200,7 @@ export const CartPanel: React.FC = () => {
                   className="text-[11px] text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 flex items-center gap-1 cursor-pointer"
                 >
                   <MessageSquare className="w-3 h-3" />
-                  <span>{item.notes ? 'Edit note' : '+ Add note'}</span>
+                  <span>{item.notes ? 'Ubah catatan' : '+ Catatan'}</span>
                 </button>
 
                 <div className="flex items-center space-x-1.5">
@@ -340,7 +340,7 @@ export const CartPanel: React.FC = () => {
                     type="text"
                     value={voucherInput}
                     onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
-                    placeholder="Voucher code (e.g. WELCOME10)"
+                    placeholder="Kode promo / voucher..."
                     className="w-full pl-8 pr-2 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 uppercase focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
@@ -348,7 +348,7 @@ export const CartPanel: React.FC = () => {
                   type="submit"
                   className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-emerald-500 hover:text-slate-950 cursor-pointer transition-colors"
                 >
-                  Apply
+                  Pakai
                 </button>
               </form>
             )}
@@ -366,7 +366,7 @@ export const CartPanel: React.FC = () => {
                     className="rounded text-emerald-500 focus:ring-emerald-500"
                   />
                   <span className="text-slate-800 dark:text-slate-200 font-medium">
-                    Redeem {selectedCustomer.points} loyalty points
+                    Tukarkan {selectedCustomer.points} poin belanja
                   </span>
                 </div>
                 {pointsDiscount > 0 && (
@@ -413,7 +413,7 @@ export const CartPanel: React.FC = () => {
             onClick={clearCart}
             disabled={cart.length === 0}
             className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer transition-colors"
-            title="Clear all cart items"
+            title="Kosongkan seluruh isi keranjang"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -425,10 +425,10 @@ export const CartPanel: React.FC = () => {
             onClick={() => holdCurrentOrder()}
             disabled={cart.length === 0}
             className="p-2.5 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1 text-xs font-semibold cursor-pointer transition-colors"
-            title="Park / Hold current order (F4)"
+            title="Parkir / tunda transaksi sementara (F4)"
           >
             <PauseCircle className="w-4 h-4 text-amber-500" />
-            <span className="hidden sm:inline">Hold</span>
+            <span className="hidden sm:inline">Parkir</span>
           </button>
 
           {/* Checkout & Pay Button (F9) */}
@@ -440,7 +440,7 @@ export const CartPanel: React.FC = () => {
             className="col-span-2 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95"
           >
             <CreditCard className="w-4 h-4" />
-            <span>Pay / Charge</span>
+            <span>Bayar Sekarang</span>
             <span className="text-[10px] px-1 py-0.2 rounded bg-slate-950/20 text-slate-950 font-mono ml-1 font-bold">F9</span>
           </button>
         </div>

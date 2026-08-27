@@ -89,25 +89,25 @@ export const ReportsView: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-100 dark:bg-slate-950 overflow-y-auto select-none p-4 space-y-4">
       {/* Top Header */}
-      <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+      <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
         <div>
           <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-            <span>Laporan Penjualan & Rekapitulasi Kasir Harian</span>
+            <span>Laporan Omzet & Performa Toko</span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-300">
-            {settings.branchName} • Rekapitulasi Real-Time Transaksi Penjualan Bersih
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {settings.branchName} • Pantau pemasukan kasir, profit bersih, dan produk terlaris hari ini
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* AI Executive Insights Trigger */}
           <button
             onClick={() => openGeminiCopilot('insights')}
             className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-500/20 transition-all active:scale-95"
           >
             <Sparkles className="w-4 h-4 fill-current animate-pulse" />
-            <span>Analisis Eksekutif AI</span>
+            <span>Analisis Cerdas AI</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
 
@@ -116,58 +116,58 @@ export const ReportsView: React.FC = () => {
             className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
           >
             <Printer className="w-4 h-4 text-emerald-500" />
-            <span>Cetak & Ekspor Laporan</span>
+            <span>Cetak / Unduh Laporan</span>
           </button>
         </div>
       </div>
 
-      {/* Primary KPI Metric Cards (No PPN) */}
+      {/* Primary KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Gross Revenue */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
-            Total Omzet Penjualan
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">
+            Total Omzet Kotor
           </span>
           <div className="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
             {formatCurrency(grossSales, settings.currency)}
           </div>
           <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
-            <span>Net: {formatCurrency(netSales, settings.currency)}</span>
+            <span>Bersih: {formatCurrency(netSales, settings.currency)}</span>
             <span>{totalUnitsSold} Pcs Terjual</span>
           </div>
         </div>
 
         {/* Total Orders & Ticket */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">
             Total Transaksi Selesai
           </span>
           <div className="text-xl font-black font-mono text-slate-900 dark:text-white mt-1">
-            {completedTransactions.length} Struk Kasir
+            {completedTransactions.length} Struk Nota
           </div>
           <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block font-mono">
-            Rata-rata Basket: {formatCurrency(averageTicket, settings.currency)}
+            Rata-rata Nota: {formatCurrency(averageTicket, settings.currency)}
           </span>
         </div>
 
         {/* Gross Profit & Margin */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
-            Estimasi Laba Kotor (Margin)
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">
+            Estimasi Laba Kotor (Cuan)
           </span>
           <div className="text-xl font-black font-mono text-teal-600 dark:text-teal-400 mt-1">
             {formatCurrency(grossProfit, settings.currency)}
           </div>
           <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
             <span>Margin: {profitMargin}%</span>
-            <span>HPP: {formatCurrency(totalCOGS, settings.currency)}</span>
+            <span>Modal: {formatCurrency(totalCOGS, settings.currency)}</span>
           </div>
         </div>
 
         {/* Retur Penjualan & Diskon */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
-            Retur & Potongan Promo
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">
+            Retur & Promo Diskon
           </span>
           <div className="text-xl font-black font-mono text-amber-600 dark:text-amber-400 mt-1">
             {formatCurrency(totalDiscounts + totalSalesReturnAmount, settings.currency)}

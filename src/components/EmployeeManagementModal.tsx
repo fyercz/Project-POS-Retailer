@@ -547,7 +547,7 @@ export const EmployeeManagementModal: React.FC = () => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="nama@nexamart.co.id"
+                      placeholder="nama@ulilmart.co.id"
                       className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     />
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />

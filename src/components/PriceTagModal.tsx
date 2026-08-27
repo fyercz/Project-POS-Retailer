@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   X,
   Printer,
@@ -24,9 +24,11 @@ import {
   Store,
   Calendar,
   AlertCircle,
+  Truck,
+  Package,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
-import { Product } from '../types';
+import { Product, SupplierPurchase } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { generateBarcodeSvgString } from '../utils/barcodeGenerator';
 import { printViaIframe, openPrintWindow } from '../utils/printHelper';
@@ -42,18 +44,20 @@ interface SelectedProductTag {
   copies: number;
 }
 
-interface PriceTagModalProps {
+export interface PriceTagModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialSelectedProduct?: Product | null;
+  initialPurchaseInvoice?: SupplierPurchase | null;
 }
 
 export const PriceTagModal: React.FC<PriceTagModalProps> = ({
   isOpen,
   onClose,
   initialSelectedProduct,
+  initialPurchaseInvoice,
 }) => {
-  const { products, categories, settings } = usePOS();
+  const { products, categories, settings, supplierPurchases } = usePOS();
 
   // Paper & Layout settings
   const [paperSize, setPaperSize] = useState<PaperSize>('a4');
@@ -70,8 +74,26 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
   const [showCutGuide, setShowCutGuide] = useState<boolean>(true);
   const [customPromoText, setCustomPromoText] = useState<string>('HARGA SPESIAL');
 
+  // Source / Purchase Invoice selection
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>(() => {
+    if (initialPurchaseInvoice) {
+      return initialPurchaseInvoice.id;
+    }
+    return 'all';
+  });
+
   // Product Selection State (Map product ID to copies)
   const [selectedItems, setSelectedItems] = useState<Record<string, number>>(() => {
+    if (initialPurchaseInvoice) {
+      const invoiceMap: Record<string, number> = {};
+      initialPurchaseInvoice.items.forEach((item) => {
+        const prod = products.find((p) => p.id === item.productId);
+        if (prod) {
+          invoiceMap[prod.id] = item.quantity || 1;
+        }
+      });
+      return invoiceMap;
+    }
     if (initialSelectedProduct) {
       return { [initialSelectedProduct.id]: 1 };
     }
@@ -89,17 +111,64 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
   const [previewPage, setPreviewPage] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<'preview' | 'items'>('preview');
 
+  // Active purchase invoice object
+  const activeInvoice = useMemo(() => {
+    if (selectedInvoiceId === 'all') return null;
+    return supplierPurchases.find((p) => p.id === selectedInvoiceId) || null;
+  }, [supplierPurchases, selectedInvoiceId]);
+
   // Handle single initial product updates
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialSelectedProduct) {
+      setSelectedInvoiceId('all');
       setSelectedItems({ [initialSelectedProduct.id]: 1 });
       setActiveTab('preview');
     }
   }, [initialSelectedProduct]);
 
+  // Handle initial purchase invoice updates
+  useEffect(() => {
+    if (initialPurchaseInvoice) {
+      setSelectedInvoiceId(initialPurchaseInvoice.id);
+      const invoiceMap: Record<string, number> = {};
+      initialPurchaseInvoice.items.forEach((item) => {
+        const prod = products.find((p) => p.id === item.productId);
+        if (prod) {
+          invoiceMap[prod.id] = item.quantity || 1;
+        }
+      });
+      setSelectedItems(invoiceMap);
+      setActiveTab('preview');
+    }
+  }, [initialPurchaseInvoice, products]);
+
+  // Handler to switch invoice and apply copies
+  const handleSelectInvoice = (invoiceId: string, copyMode: 'invoice_qty' | 'one_each' = 'invoice_qty') => {
+    setSelectedInvoiceId(invoiceId);
+    if (invoiceId === 'all') {
+      return;
+    }
+    const foundInvoice = supplierPurchases.find((p) => p.id === invoiceId);
+    if (foundInvoice) {
+      const invoiceMap: Record<string, number> = {};
+      foundInvoice.items.forEach((item) => {
+        const prod = products.find((p) => p.id === item.productId);
+        if (prod) {
+          invoiceMap[prod.id] = copyMode === 'invoice_qty' ? (item.quantity || 1) : 1;
+        }
+      });
+      setSelectedItems(invoiceMap);
+    }
+  };
+
   // Filtered product catalog for picker
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+    let list = products;
+    if (activeInvoice) {
+      const invoiceProductIds = new Set(activeInvoice.items.map((i) => i.productId));
+      list = list.filter((p) => invoiceProductIds.has(p.id));
+    }
+    return list.filter((p) => {
       const matchSearch =
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,7 +177,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
       const matchCat = categoryFilter === 'all' || p.categoryId === categoryFilter;
       return matchSearch && matchCat;
     });
-  }, [products, searchTerm, categoryFilter]);
+  }, [products, searchTerm, categoryFilter, activeInvoice]);
 
   // Flattened list of tags according to copies
   const flattenedTagsList: Product[] = useMemo(() => {
@@ -587,6 +656,76 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
         <div className="flex-1 flex overflow-hidden">
           {/* Left Settings Sidebar */}
           <div className="w-80 border-r border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-4 overflow-y-auto space-y-4 text-xs">
+            {/* 0. Purchase Invoice Source Selector */}
+            <div className="space-y-2 p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+              <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                  <Truck className="w-3.5 h-3.5" />
+                  <span>Sumber Data / Faktur</span>
+                </span>
+                {activeInvoice && (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-600 text-white">
+                    Faktur Aktif
+                  </span>
+                )}
+              </label>
+
+              <select
+                value={selectedInvoiceId}
+                onChange={(e) => handleSelectInvoice(e.target.value, 'invoice_qty')}
+                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium cursor-pointer"
+              >
+                <option value="all">Semua Master Katalog Produk</option>
+                {supplierPurchases.map((inv) => (
+                  <option key={inv.id} value={inv.id}>
+                    📄 {inv.invoiceNumber} - {inv.supplierName} ({inv.items.length} item)
+                  </option>
+                ))}
+              </select>
+
+              {activeInvoice ? (
+                <div className="space-y-2 pt-1">
+                  <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 text-[11px] space-y-1">
+                    <div className="flex justify-between font-bold text-slate-900 dark:text-white">
+                      <span>{activeInvoice.supplierName}</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-mono">
+                        {activeInvoice.items.length} Item
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400 text-[10px]">
+                      <span>{formatDate(activeInvoice.createdAt)}</span>
+                      <span>
+                        Total: {activeInvoice.items.reduce((s, i) => s + i.quantity, 0)} pcs
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectInvoice(activeInvoice.id, 'invoice_qty')}
+                      className="px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold cursor-pointer transition-colors shadow-2xs text-center"
+                      title="Salinan label disesuaikan persis dengan jumlah pcs yang dibeli di faktur"
+                    >
+                      Set Salinan = Qty Faktur
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectInvoice(activeInvoice.id, 'one_each')}
+                      className="px-2 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-[10px] font-bold cursor-pointer transition-colors text-center"
+                      title="Set 1 salinan label untuk setiap item pada faktur (untuk rak)"
+                    >
+                      Set 1 Label / Item
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  Pilih faktur pembelian masuk untuk mencetak pricetag / stiker barcode secara otomatis sesuai barang yang baru diterima.
+                </p>
+              )}
+            </div>
+
             {/* 1. Paper Size Selector */}
             <div className="space-y-1.5">
               <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
@@ -830,7 +969,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
               /* LIVE SHEET PREVIEW */
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Toolbar */}
-                <div className="px-4 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div className="px-4 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       Pratinjau Kertas {paperSize.toUpperCase()} (Halaman {previewPage} dari {totalPages})
@@ -838,6 +977,12 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     <span className="text-[11px] text-slate-400">
                       • {gridConfig.cols} Kolom × {gridConfig.rows} Baris
                     </span>
+                    {activeInvoice && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                        <Truck className="w-3 h-3" />
+                        Faktur: {activeInvoice.invoiceNumber}
+                      </span>
+                    )}
                   </div>
 
                   {/* Page Navigator */}
@@ -919,6 +1064,43 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Search & Actions Header */}
                 <div className="p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+                  {activeInvoice && (
+                    <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-2 flex-wrap text-xs">
+                      <div className="flex items-center gap-2">
+                        <Truck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <div>
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            Mode Faktur: {activeInvoice.invoiceNumber}
+                          </span>
+                          <span className="text-slate-500 dark:text-slate-400 text-[11px] ml-1.5">
+                            ({activeInvoice.supplierName} • {activeInvoice.items.length} item • Total{' '}
+                            {activeInvoice.items.reduce((s, i) => s + i.quantity, 0)} pcs)
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleSelectInvoice(activeInvoice.id, 'invoice_qty')}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer transition-colors shadow-2xs"
+                        >
+                          Salinan = Qty Faktur
+                        </button>
+                        <button
+                          onClick={() => handleSelectInvoice(activeInvoice.id, 'one_each')}
+                          className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-[11px] cursor-pointer transition-colors"
+                        >
+                          1 Label Tiap Item
+                        </button>
+                        <button
+                          onClick={() => setSelectedInvoiceId('all')}
+                          className="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-[11px] cursor-pointer"
+                        >
+                          Semua Katalog
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
                       <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -985,7 +1167,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     filteredProducts.map((p) => {
                       const copies = selectedItems[p.id] || 0;
                       const isSelected = copies > 0;
-                      const categoryObj = categories.find((c) => c.id === p.categoryId);
+                      const invoiceItem = activeInvoice?.items.find((i) => i.productId === p.id);
 
                       return (
                         <div
@@ -1021,6 +1203,11 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                                 {p.aisle && (
                                   <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
                                     {p.aisle}
+                                  </span>
+                                )}
+                                {invoiceItem && (
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 font-mono">
+                                    Qty Faktur: {invoiceItem.quantity} {p.unit || 'pcs'}
                                   </span>
                                 )}
                               </div>

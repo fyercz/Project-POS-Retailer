@@ -129,10 +129,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
           <div>
             <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-              Cashier Checkout
+              Kasir Pembayaran
             </span>
             <h3 className="font-bold text-base text-slate-900 dark:text-white leading-tight">
-              Process Order Payment
+              Proses Transaksi & Pembayaran
             </h3>
           </div>
           <button
@@ -150,9 +150,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
             {/* Method Tabs */}
             <div className="grid grid-cols-4 gap-2">
               {[
-                { method: 'cash' as PaymentMethod, label: 'Cash', icon: Banknote },
+                { method: 'cash' as PaymentMethod, label: 'Tunai', icon: Banknote },
                 { method: 'qris' as PaymentMethod, label: 'QRIS', icon: QrCode },
-                { method: 'card' as PaymentMethod, label: 'Card EDC', icon: CreditCard },
+                { method: 'card' as PaymentMethod, label: 'Kartu EDC', icon: CreditCard },
                 { method: 'transfer' as PaymentMethod, label: 'Transfer', icon: Building2 },
               ].map((item) => {
                 const Icon = item.icon;
@@ -169,7 +169,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     }`}
                   >
                     <Icon className="w-5 h-5" />
-                    <span className="text-[11px]">{item.label}</span>
+                    <span className="text-[11px] font-medium">{item.label}</span>
                   </button>
                 );
               })}
@@ -180,7 +180,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
               <div className="space-y-3.5 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Cash Tendered
+                    Uang Diterima dari Pembeli
                   </label>
                   <div className="relative">
                     <input
@@ -195,7 +195,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 {/* Quick Presets */}
                 <div>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block mb-1.5">
-                    Quick Nominal
+                    Pilihan Nominal Cepat
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {generateCashPresets().map((preset) => (
@@ -210,7 +210,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                         }`}
                       >
                         {preset === finalTotal
-                          ? `Exact (${formatCurrency(preset, settings.currency)})`
+                          ? `Uang Pas (${formatCurrency(preset, settings.currency)})`
                           : formatCurrency(preset, settings.currency)}
                       </button>
                     ))}
@@ -221,7 +221,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 flex items-center justify-between">
                   <div>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase font-semibold">
-                      Change Due (Kembalian)
+                      Uang Kembalian
                     </span>
                     <div
                       className={`text-lg font-black font-mono ${
@@ -232,7 +232,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     >
                       {isCashSufficient
                         ? formatCurrency(changeDue, settings.currency)
-                        : `Insufficient (-${formatCurrency(finalTotal - cashTendered, settings.currency)})`}
+                        : `Kurang (-${formatCurrency(finalTotal - cashTendered, settings.currency)})`}
                     </div>
                   </div>
                   {isCashSufficient && (
@@ -268,10 +268,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 <div>
                   <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
                     <Smartphone className="w-4 h-4 text-emerald-500" />
-                    <span>Scan with GoPay, OVO, Dana, BCA Mobile, ShopeePay</span>
+                    <span>Scan dengan GoPay, OVO, Dana, BCA, ShopeePay</span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Dynamic QR code expires in 04:59
+                    QRIS Dinamis siap di-scan pembeli
                   </p>
                 </div>
               </div>
@@ -281,7 +281,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Card Terminal / Bank Network
+                    Mesin EDC / Bank Penerbit Kartu
                   </label>
                   <div className="grid grid-cols-3 gap-1.5">
                     {['BCA EDC', 'Mandiri EDC', 'BRI EDC', 'BNI EDC', 'Visa', 'Mastercard'].map((b) => (
@@ -303,14 +303,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Card Last 4 Digits (Optional)
+                    4 Digit Terakhir Kartu (Opsional)
                   </label>
                   <input
                     type="text"
                     maxLength={4}
                     value={cardLast4}
                     onChange={(e) => setCardLast4(e.target.value.replace(/\D/g, ''))}
-                    placeholder="e.g. 4242"
+                    placeholder="Contoh: 4242"
                     className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
                   />
                 </div>
@@ -324,10 +324,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                   <p className="text-base font-black font-mono text-slate-900 dark:text-white">
                     8801 9283 0192 3881
                   </p>
-                  <p className="text-[11px] text-slate-500">Account Name: APEX COFFEE POS</p>
+                  <p className="text-[11px] text-slate-500">Atas Nama: {settings.storeName || 'Ulilmart'} POS</p>
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Auto-verification listens to incoming settlement webhook.
+                  Verifikasi otomatis aktif mendengarkan konfirmasi pembayaran.
                 </p>
               </div>
             )}
@@ -337,7 +337,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
           <div className="md:col-span-5 flex flex-col justify-between space-y-4 bg-slate-50/70 dark:bg-slate-950/70 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
             <div>
               <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2">
-                Order Breakdown ({cart.reduce((s, i) => s + i.quantity, 0)} items)
+                Rincian Pesanan ({cart.reduce((s, i) => s + i.quantity, 0)} item)
               </h4>
 
               <div className="space-y-1.5 max-h-36 overflow-y-auto text-xs pr-1">
@@ -358,10 +358,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 <div className="mt-3 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs">
                   <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-300">
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>Loyalty Rewards</span>
+                    <span>Poin Member Loyalitas</span>
                   </div>
                   <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">
-                    {selectedCustomer.name} will earn <strong>+{pointsEarned} points</strong> from this purchase.
+                    {selectedCustomer.name} akan mendapatkan <strong>+{pointsEarned} poin</strong> dari transaksi ini.
                   </p>
                 </div>
               )}
@@ -371,7 +371,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
             <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
               <div className="flex items-baseline justify-between">
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  Total Payable
+                  Total Tagihan
                 </span>
                 <span className="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">
                   {formatCurrency(finalTotal, settings.currency)}
@@ -386,7 +386,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Complete Payment & Print Receipt</span>
+                <span>Selesaikan & Cetak Nota Struk</span>
               </button>
             </div>
           </div>

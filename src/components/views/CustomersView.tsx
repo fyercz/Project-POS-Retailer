@@ -31,40 +31,40 @@ export const CustomersView: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-100 dark:bg-slate-950 overflow-hidden select-none">
       {/* Top Banner */}
-      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
+      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
         <div>
           <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Users className="w-5 h-5 text-emerald-500" />
-            <span>Customers CRM & Member</span>
+            <span>Member & Poin Reward</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Kelola data pelanggan, poin reward, dan riwayat belanja
+            Kelola langganan setia, kumpulin poin reward belanja, dan cek riwayat langganan
           </p>
         </div>
 
         {/* Action Button & Stats */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <div className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Total Member</span>
+            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 block">Member Terdaftar</span>
             <span className="font-bold text-slate-900 dark:text-white font-mono">
-              {customers.length} terdaftar
+              {customers.length} Orang
             </span>
           </div>
 
           <div className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-300">
-            <span className="text-[11px] font-medium block">Total Poin Loyalitas</span>
+            <span className="text-[10px] font-medium block">Poin Beredar</span>
             <span className="font-bold font-mono flex items-center gap-1">
-              <Award className="w-3.5 h-3.5" />
+              <Award className="w-3.5 h-3.5 text-amber-500" />
               {totalPointsInCirculation.toLocaleString()} Pts
             </span>
           </div>
 
           <button
             onClick={() => setIsNewCustomerModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer transition-colors"
+            className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95"
           >
             <UserPlus className="w-4 h-4" />
-            <span>Tambah Member</span>
+            <span>+ Tambah Member</span>
           </button>
         </div>
       </div>
@@ -77,8 +77,8 @@ export const CustomersView: React.FC = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari pelanggan berdasarkan nama, nomor telepon, atau email..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            placeholder="Cari nama member, no. WhatsApp, atau email..."
+            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
           />
         </div>
       </div>

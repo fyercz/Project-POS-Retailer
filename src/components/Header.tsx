@@ -95,11 +95,11 @@ export const Header: React.FC = () => {
   }, []);
 
   const navItems = [
-    { id: 'pos', label: 'Kasir POS', icon: Monitor, shortcut: 'F1' },
-    { id: 'transactions', label: 'Riwayat Transaksi', icon: Receipt, shortcut: '' },
-    { id: 'inventory', label: 'Stok & FEFO', icon: Package, shortcut: '' },
-    { id: 'customers', label: 'Member & CRM', icon: Users, shortcut: '' },
-    { id: 'reports', label: 'Laporan Penjualan', icon: BarChart3, shortcut: '' },
+    { id: 'pos', label: 'Kasir', icon: Monitor, shortcut: 'F1' },
+    { id: 'transactions', label: 'Riwayat Nota', icon: Receipt, shortcut: '' },
+    { id: 'inventory', label: 'Katalog & Stok', icon: Package, shortcut: '' },
+    { id: 'customers', label: 'Member & Poin', icon: Users, shortcut: '' },
+    { id: 'reports', label: 'Laporan & Omzet', icon: BarChart3, shortcut: '' },
   ] as const;
 
   const getRoleBadge = (role?: string) => {
@@ -130,12 +130,12 @@ export const Header: React.FC = () => {
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-lg flex items-center justify-center font-black text-slate-950 shadow-md shadow-emerald-500/20 text-base">
-              N
+              U
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <span className="font-bold text-base tracking-tight text-slate-900 dark:text-white">
-                  {settings.storeName || 'NexaMart Ritel'}
+                  {settings.storeName || 'Ulilmart Ritel'}
                 </span>
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border dark:border-emerald-800/50 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -200,13 +200,13 @@ export const Header: React.FC = () => {
             <select
               value={activeView}
               onChange={(e) => setActiveView(e.target.value as any)}
-              className="text-xs font-semibold px-2 py-1 rounded bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-800"
+              className="text-xs font-semibold px-2 py-1 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-800"
             >
-              <option value="pos">Kasir POS</option>
-              <option value="transactions">Riwayat Transaksi</option>
-              <option value="inventory">Stok & FEFO</option>
-              <option value="customers">Member CRM</option>
-              <option value="reports">Laporan Penjualan</option>
+              <option value="pos">🛒 Kasir</option>
+              <option value="transactions">🧾 Riwayat Nota</option>
+              <option value="inventory">📦 Katalog & Stok</option>
+              <option value="customers">✨ Member & Poin</option>
+              <option value="reports">📊 Laporan & Omzet</option>
             </select>
           </div>
 

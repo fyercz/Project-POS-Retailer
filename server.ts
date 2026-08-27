@@ -153,7 +153,7 @@ app.post('/api/ai/scan-invoice', async (req, res) => {
 
   try {
     const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
-    const prompt = `Anda adalah Sistem OCR & AI Scanner Faktur Pembelian Supplier Ritel Ritel Modern untuk "${storeSettings?.storeName || 'NexaMart'}".
+    const prompt = `Anda adalah Sistem OCR & AI Scanner Faktur Pembelian Supplier Ritel Ritel Modern untuk "${storeSettings?.storeName || 'Ulilmart'}".
 Diberikan gambar faktur/nota pembelian kertas/surat jalan dari distributor/supplier.
 
 Katalog Produk yang sudah terdaftar di toko:
@@ -262,7 +262,7 @@ app.post('/api/ai/visual-stock-opname', async (req, res) => {
       mimeType: mimeType || 'image/jpeg',
     }));
 
-    const prompt = `Anda adalah AI Inspector & Visual Stock Opname Auditor untuk supermarket "${storeSettings?.storeName || 'NexaMart'}".
+    const prompt = `Anda adalah AI Inspector & Visual Stock Opname Auditor untuk supermarket "${storeSettings?.storeName || 'Ulilmart'}".
 Area/Rak yang diaudit: ${shelfArea || 'Display Rak Toko'}.
 Tipe Scan: ${scannedType === 'video_stream' ? 'Rekaman Video / Frame Berurutan Rak' : 'Foto Rak Fisik'}.
 
@@ -351,7 +351,7 @@ app.post('/api/ai/upsell-recommendations', async (req, res) => {
   };
 
   try {
-    const prompt = `Anda adalah Asisten AI Kasir & Merchandising Pintar untuk toko ritel modern "${storeName || 'NexaMart'}".
+    const prompt = `Anda adalah Asisten AI Kasir & Merchandising Pintar untuk toko ritel modern "${storeName || 'Ulilmart'}".
 Diberikan daftar item dalam keranjang belanja pelanggan saat ini:
 Keranjang: ${JSON.stringify(cartItems?.map((i: any) => ({ name: i.product?.name || i.name, qty: i.quantity, price: i.totalPrice })) || [])}
 Tier Pelanggan: ${customerTier || 'Reguler'}
@@ -442,7 +442,7 @@ app.post('/api/ai/inventory-forecast', async (req, res) => {
   };
 
   try {
-    const prompt = `Anda adalah AI Supply Chain & Inventory Strategist untuk toko ritel modern "${storeSettings?.storeName || 'NexaMart'}".
+    const prompt = `Anda adalah AI Supply Chain & Inventory Strategist untuk toko ritel modern "${storeSettings?.storeName || 'Ulilmart'}".
 Data Produk Toko (Stok, Min Stock, Kategori, Harga Beli, Harga Jual, Expired Date, Aisle/Rak):
 ${JSON.stringify((products || []).map((p: any) => ({
   id: p.id,
@@ -528,7 +528,7 @@ app.post('/api/ai/daily-insights', async (req, res) => {
   };
 
   try {
-    const prompt = `Anda adalah Direktur Operasional & Konsultan AI Ritel Modern untuk "${settings?.storeName || 'NexaMart'}".
+    const prompt = `Anda adalah Direktur Operasional & Konsultan AI Ritel Modern untuk "${settings?.storeName || 'Ulilmart'}".
 Ringkasan Data Penjualan Hari Ini:
 - Total Omzet: Rp ${totalRev.toLocaleString('id-ID')}
 - Jumlah Transaksi Sukses: ${completedTx.length}
@@ -589,7 +589,7 @@ app.post('/api/ai/generate-promo', async (req, res) => {
   };
 
   try {
-    const prompt = `Anda adalah AI Marketing Ritel Kreatif untuk supermarket/minimarket "${settings?.storeName || 'NexaMart'}".
+    const prompt = `Anda adalah AI Marketing Ritel Kreatif untuk supermarket/minimarket "${settings?.storeName || 'Ulilmart'}".
 Tema Kampanye: ${campaignTheme || 'Promo Spesial Ritel Modern'}
 Target Kategori: ${targetCategory || 'Semua Kategori'}
 Daftar Produk: ${JSON.stringify((products || []).slice(0, 15).map((p: any) => ({ name: p.name, category: p.categoryId, price: p.price })))}
@@ -659,7 +659,7 @@ app.post('/api/ai/smart-chat', async (req, res) => {
   };
 
   try {
-    const prompt = `Anda adalah "Gemini Retail AI Copilot", asisten kecerdasan buatan terintegrasi untuk kasir dan store manager toko ritel modern NexaMart.
+    const prompt = `Anda adalah "Gemini Retail AI Copilot", asisten kecerdasan buatan terintegrasi untuk kasir dan store manager toko ritel modern Ulilmart.
 Konteks Toko:
 - Total Produk: ${products?.length || 0} item (Kategori: Sembako, Minuman, Snack, Makanan Instan, Produk Segar, Perawatan Tubuh, Pembersih Rumah, Roti).
 - Total Member: ${customers?.length || 0} pelanggan
@@ -707,7 +707,7 @@ async function setupViteOrStatic() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`NexaMart Retail Server running on http://0.0.0.0:${PORT}`);
+    console.log(`Ulilmart Retail Server running on http://0.0.0.0:${PORT}`);
   });
 }
 
