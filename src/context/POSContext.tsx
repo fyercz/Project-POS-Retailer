@@ -11,6 +11,7 @@ import {
   PaymentDetails,
   StoreSettings,
   SelectedOption,
+  WholesaleUnit,
   AIUpsellSuggestion,
   SalesReturn,
   PurchaseReturn,
@@ -47,15 +48,23 @@ interface POSContextType {
   setFilterLowStock: (val: boolean) => void;
   updateProductStock: (productId: string, newStock: number) => void;
   addProduct: (product: Omit<Product, 'id'>) => Product;
+  addProductsBatch: (products: Omit<Product, 'id'>[]) => Product[];
   updateProduct: (id: string, updated: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
   resetToRetailDefaults: () => void;
 
   // Cart
   cart: CartItem[];
-  addToCart: (product: Product, selectedOptions?: SelectedOption[], notes?: string) => void;
+  addToCart: (
+    product: Product,
+    selectedOptions?: SelectedOption[],
+    notes?: string,
+    selectedUnit?: WholesaleUnit
+  ) => void;
   updateCartItemQuantity: (cartItemId: string, delta: number) => void;
   setCartItemQuantity: (cartItemId: string, quantity: number) => void;
+  updateCartItemUnit: (cartItemId: string, unit: WholesaleUnit | undefined) => void;
+  updateCartItemDiscount: (cartItemId: string, discountPercent: number) => void;
   removeFromCart: (cartItemId: string) => void;
   clearCart: () => void;
   updateCartItemNote: (cartItemId: string, notes: string) => void;
@@ -73,7 +82,7 @@ interface POSContextType {
   usePoints: boolean;
   setUsePoints: (use: boolean) => void;
 
-  // Pricing calculations
+  // Pricing & Profit Margin Point calculations
   subtotal: number;
   taxAmount: number;
   serviceChargeAmount: number;
@@ -82,6 +91,8 @@ interface POSContextType {
   totalDiscount: number;
   finalTotal: number;
   pointsEarned: number;
+  pointsEligibleSpend: number;
+  minProfitPercentForPoints: number;
 
   // Held Orders (Order Parking)
   heldOrders: HeldOrder[];
@@ -163,7 +174,16 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Catalog State
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('pos_retail_products_v2');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    const rawList: Product[] = saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    const seenIds = new Set<string>();
+    return rawList.map((p, idx) => {
+      let id = p.id;
+      if (!id || seenIds.has(id)) {
+        id = `prod-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`;
+      }
+      seenIds.add(id);
+      return { ...p, id };
+    });
   });
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -173,7 +193,30 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Cart State
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('pos_active_cart');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      const parsed: CartItem[] = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((item) => {
+        const unitPrice = item.unitPrice ?? item.product?.price ?? 0;
+        const multiplier = item.selectedUnit?.multiplier || 1;
+        const costPrice =
+          item.selectedUnit?.costPrice !== undefined
+            ? item.selectedUnit.costPrice
+            : (item.product?.costPrice ?? 0) * multiplier;
+        const profitNominal = unitPrice - costPrice;
+        const calcMargin = unitPrice > 0 ? (profitNominal / unitPrice) * 100 : 0;
+        const profitMarginPercent = item.profitMarginPercent !== undefined ? item.profitMarginPercent : calcMargin;
+        const isPointsEligible = item.isPointsEligible !== undefined ? item.isPointsEligible : (profitMarginPercent >= 15);
+        return {
+          ...item,
+          profitMarginPercent,
+          isPointsEligible,
+        };
+      });
+    } catch {
+      return [];
+    }
   });
 
   // Order Details
@@ -229,22 +272,73 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Returns state (Sales Returns and Supplier Purchase Returns)
   const [salesReturns, setSalesReturns] = useState<SalesReturn[]>(() => {
     const saved = localStorage.getItem('pos_sales_returns');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      const list: SalesReturn[] = JSON.parse(saved);
+      const seen = new Set<string>();
+      return list.map((r, i) => {
+        let id = r.id;
+        if (!id || seen.has(id)) {
+          id = `ret-sale-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`;
+        }
+        seen.add(id);
+        return { ...r, id };
+      });
+    } catch {
+      return [];
+    }
   });
 
   const [purchaseReturns, setPurchaseReturns] = useState<PurchaseReturn[]>(() => {
     const saved = localStorage.getItem('pos_purchase_returns');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      const list: PurchaseReturn[] = JSON.parse(saved);
+      const seen = new Set<string>();
+      return list.map((r, i) => {
+        let id = r.id;
+        if (!id || seen.has(id)) {
+          id = `ret-sup-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`;
+        }
+        seen.add(id);
+        return { ...r, id };
+      });
+    } catch {
+      return [];
+    }
   });
 
   const [supplierPurchases, setSupplierPurchases] = useState<SupplierPurchase[]>(() => {
     const saved = localStorage.getItem('pos_supplier_purchases_v2');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      const list: SupplierPurchase[] = JSON.parse(saved);
+      const seen = new Set<string>();
+      return list.map((p, i) => {
+        let id = p.id;
+        if (!id || seen.has(id)) {
+          id = `purch-sup-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`;
+        }
+        seen.add(id);
+        return { ...p, id };
+      });
+    } catch {
+      return [];
+    }
   });
 
   const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
     const saved = localStorage.getItem('pos_retail_suppliers_v2');
-    return saved ? JSON.parse(saved) : INITIAL_SUPPLIERS;
+    const rawList: Supplier[] = saved ? JSON.parse(saved) : INITIAL_SUPPLIERS;
+    const seen = new Set<string>();
+    return rawList.map((s, i) => {
+      let id = s.id;
+      if (!id || seen.has(id)) {
+        id = `sup-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`;
+      }
+      seen.add(id);
+      return { ...s, id };
+    });
   });
 
   // Multi-Employee & Shift Management States
@@ -425,26 +519,79 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [cartProductIdsKey, selectedCustomer?.tier, fetchUpsellSuggestions, cart.length]);
 
+  // Helper: Hitung harga & margin profit per item barang
+  const minProfitPercentForPoints = settings.minProfitPercentForPoints ?? 15;
+
+  const calculateItemPricing = (
+    product: Product,
+    quantity: number,
+    selectedUnit?: WholesaleUnit,
+    selectedOptions: SelectedOption[] = [],
+    itemDiscountPercent: number = 0
+  ) => {
+    const optionsExtra = selectedOptions.reduce((sum, opt) => sum + opt.extraPrice, 0);
+    const unitPrice = selectedUnit ? selectedUnit.price : product.price + optionsExtra;
+    const multiplier = selectedUnit?.multiplier || 1;
+    const effectiveCostPrice =
+      selectedUnit?.costPrice !== undefined ? selectedUnit.costPrice : product.costPrice * multiplier;
+    const discountMultiplier = Math.max(0, 1 - itemDiscountPercent / 100);
+    const effectiveUnitPrice = unitPrice * discountMultiplier;
+    const totalPrice = effectiveUnitPrice * quantity;
+
+    // Profit margin persentase barang (bukan profit transaksi)
+    const profitNominal = effectiveUnitPrice - effectiveCostPrice;
+    const profitMarginPercent = effectiveUnitPrice > 0 ? (profitNominal / effectiveUnitPrice) * 100 : 0;
+    const isPointsEligible = profitMarginPercent >= minProfitPercentForPoints;
+
+    return {
+      unitPrice,
+      totalPrice,
+      profitMarginPercent,
+      isPointsEligible,
+    };
+  };
+
   // Cart operations
-  const addToCart = (product: Product, selectedOptions: SelectedOption[] = [], notes: string = '') => {
+  const addToCart = (
+    product: Product,
+    selectedOptions: SelectedOption[] = [],
+    notes: string = '',
+    selectedUnit?: WholesaleUnit
+  ) => {
     const optionsKey = selectedOptions
       .map((o) => `${o.groupName}:${o.choiceName}`)
       .sort()
       .join('|');
-    const cartItemId = optionsKey ? `${product.id}-${optionsKey}` : product.id;
+    const unitKey = selectedUnit ? `unit-${selectedUnit.id}` : 'unit-base';
+    const cartItemId = optionsKey ? `${product.id}-${unitKey}-${optionsKey}` : `${product.id}-${unitKey}`;
 
-    const optionsExtra = selectedOptions.reduce((sum, opt) => sum + opt.extraPrice, 0);
-    const unitPrice = product.price + optionsExtra;
+    const { unitPrice, totalPrice, profitMarginPercent, isPointsEligible } = calculateItemPricing(
+      product,
+      1,
+      selectedUnit,
+      selectedOptions,
+      0
+    );
 
     setCart((prevCart) => {
       const existingIndex = prevCart.findIndex((item) => item.id === cartItemId);
       if (existingIndex > -1) {
         const updated = [...prevCart];
         const newQty = updated[existingIndex].quantity + 1;
+        const recalc = calculateItemPricing(
+          product,
+          newQty,
+          selectedUnit,
+          selectedOptions,
+          updated[existingIndex].itemDiscountPercent || 0
+        );
         updated[existingIndex] = {
           ...updated[existingIndex],
           quantity: newQty,
-          totalPrice: unitPrice * newQty,
+          unitPrice: recalc.unitPrice,
+          totalPrice: recalc.totalPrice,
+          profitMarginPercent: recalc.profitMarginPercent,
+          isPointsEligible: recalc.isPointsEligible,
           notes: notes || updated[existingIndex].notes,
         };
         return updated;
@@ -453,10 +600,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: cartItemId,
           product,
           quantity: 1,
+          selectedUnit,
           selectedOptions,
           notes,
+          itemDiscountPercent: 0,
           unitPrice,
-          totalPrice: unitPrice,
+          totalPrice,
+          profitMarginPercent,
+          isPointsEligible,
         };
         return [...prevCart, newItem];
       }
@@ -470,10 +621,20 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (item.id === cartItemId) {
             const newQty = item.quantity + delta;
             if (newQty <= 0) return null;
+            const recalc = calculateItemPricing(
+              item.product,
+              newQty,
+              item.selectedUnit,
+              item.selectedOptions,
+              item.itemDiscountPercent || 0
+            );
             return {
               ...item,
               quantity: newQty,
-              totalPrice: item.unitPrice * newQty,
+              unitPrice: recalc.unitPrice,
+              totalPrice: recalc.totalPrice,
+              profitMarginPercent: recalc.profitMarginPercent,
+              isPointsEligible: recalc.isPointsEligible,
             };
           }
           return item;
@@ -489,10 +650,112 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return prevCart.map((item) => {
         if (item.id === cartItemId) {
+          const recalc = calculateItemPricing(
+            item.product,
+            quantity,
+            item.selectedUnit,
+            item.selectedOptions,
+            item.itemDiscountPercent || 0
+          );
           return {
             ...item,
             quantity,
-            totalPrice: item.unitPrice * quantity,
+            unitPrice: recalc.unitPrice,
+            totalPrice: recalc.totalPrice,
+            profitMarginPercent: recalc.profitMarginPercent,
+            isPointsEligible: recalc.isPointsEligible,
+          };
+        }
+        return item;
+      });
+    });
+  };
+
+  const updateCartItemUnit = (cartItemId: string, newUnit: WholesaleUnit | undefined) => {
+    setCart((prevCart) => {
+      const itemToUpdate = prevCart.find((i) => i.id === cartItemId);
+      if (!itemToUpdate) return prevCart;
+
+      const product = itemToUpdate.product;
+      const selectedOptions = itemToUpdate.selectedOptions || [];
+      const optionsKey = selectedOptions
+        .map((o) => `${o.groupName}:${o.choiceName}`)
+        .sort()
+        .join('|');
+      const unitKey = newUnit ? `unit-${newUnit.id}` : 'unit-base';
+      const newCartItemId = optionsKey ? `${product.id}-${unitKey}-${optionsKey}` : `${product.id}-${unitKey}`;
+
+      const recalc = calculateItemPricing(
+        product,
+        itemToUpdate.quantity,
+        newUnit,
+        selectedOptions,
+        itemToUpdate.itemDiscountPercent || 0
+      );
+
+      // If key changes and target already exists, merge them
+      if (newCartItemId !== cartItemId) {
+        const existingIdx = prevCart.findIndex((i) => i.id === newCartItemId);
+        if (existingIdx > -1) {
+          const mergedQty = prevCart[existingIdx].quantity + itemToUpdate.quantity;
+          const mergedRecalc = calculateItemPricing(
+            product,
+            mergedQty,
+            newUnit,
+            selectedOptions,
+            itemToUpdate.itemDiscountPercent || 0
+          );
+          return prevCart
+            .filter((i) => i.id !== cartItemId)
+            .map((i) =>
+              i.id === newCartItemId
+                ? {
+                    ...i,
+                    quantity: mergedQty,
+                    unitPrice: mergedRecalc.unitPrice,
+                    totalPrice: mergedRecalc.totalPrice,
+                    profitMarginPercent: mergedRecalc.profitMarginPercent,
+                    isPointsEligible: mergedRecalc.isPointsEligible,
+                  }
+                : i
+            );
+        }
+      }
+
+      return prevCart.map((i) =>
+        i.id === cartItemId
+          ? {
+              ...i,
+              id: newCartItemId,
+              selectedUnit: newUnit,
+              unitPrice: recalc.unitPrice,
+              totalPrice: recalc.totalPrice,
+              profitMarginPercent: recalc.profitMarginPercent,
+              isPointsEligible: recalc.isPointsEligible,
+            }
+          : i
+      );
+    });
+  };
+
+  const updateCartItemDiscount = (cartItemId: string, discountPercent: number) => {
+    setCart((prevCart) => {
+      return prevCart.map((item) => {
+        if (item.id === cartItemId) {
+          const recalc = calculateItemPricing(
+            item.product,
+            item.quantity,
+            item.selectedUnit,
+            item.selectedOptions,
+            discountPercent
+          );
+          return {
+            ...item,
+            itemDiscountPercent: discountPercent,
+            unitPrice: recalc.unitPrice,
+            totalPrice: recalc.totalPrice,
+            profitMarginPercent: recalc.profitMarginPercent,
+            isPointsEligible: recalc.isPointsEligible,
           };
         }
         return item;
@@ -577,8 +840,18 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const serviceChargeAmount = 0;
   const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount));
 
-  // Points earned calculation (1 point per 10k IDR)
-  const pointsEarned = Math.floor(finalTotal / (settings.pointsRatio || 10000));
+  // Poin Loyalitas: HANYA didapatkan dari belanja item produk dengan profit margin >= minProfitPercentForPoints (15%)
+  // Profit barang dihitung per item produk, bukan profit agregat transaksi
+  const pointsEligibleSpend = cart
+    .filter((item) => item.isPointsEligible)
+    .reduce((sum, item) => sum + item.totalPrice, 0);
+
+  // Proporsi nilai belanja setelah potongan diskon/voucher untuk item yang eligible
+  const effectiveEligibleSpend =
+    subtotal > 0 ? Math.max(0, (pointsEligibleSpend / subtotal) * finalTotal) : 0;
+
+  // 1 poin tiap pointsRatio (default Rp 10.000) dari item profit >= 15%
+  const pointsEarned = Math.floor(effectiveEligibleSpend / (settings.pointsRatio || 10000));
 
   // Held Orders (Order Parking)
   const holdCurrentOrder = (note?: string): boolean => {
@@ -604,7 +877,27 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const recallHeldOrder = (heldOrder: HeldOrder) => {
-    setCart(heldOrder.items);
+    const sanitized = (heldOrder.items || []).map((item) => {
+      const unitPrice = item.unitPrice ?? item.product?.price ?? 0;
+      const multiplier = item.selectedUnit?.multiplier || 1;
+      const costPrice =
+        item.selectedUnit?.costPrice !== undefined
+          ? item.selectedUnit.costPrice
+          : (item.product?.costPrice ?? 0) * multiplier;
+      const profitNominal = unitPrice - costPrice;
+      const calcMargin = unitPrice > 0 ? (profitNominal / unitPrice) * 100 : 0;
+      const profitMarginPercent = item.profitMarginPercent !== undefined ? item.profitMarginPercent : calcMargin;
+      const isPointsEligible =
+        item.isPointsEligible !== undefined
+          ? item.isPointsEligible
+          : profitMarginPercent >= (settings.minProfitPercentForPoints ?? 15);
+      return {
+        ...item,
+        profitMarginPercent,
+        isPointsEligible,
+      };
+    });
+    setCart(sanitized);
     setOrderType(heldOrder.orderType);
     setTableNumber(heldOrder.tableNumber || '');
     setSelectedCustomer(heldOrder.customer || null);
@@ -774,6 +1067,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       pointsUsed: pointsUsed > 0 ? pointsUsed : undefined,
       pointsDiscount: pointsDiscount > 0 ? pointsDiscount : undefined,
       pointsEarned,
+      pointsEligibleSpend,
       finalTotal,
       payment,
       cashierName: currentCashierName,
@@ -795,14 +1089,18 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     });
 
-    // 1. Deduct Product Stock
+    // 1. Deduct Product Stock (mengalikan quantity dengan multiplier satuan grosir jika ada)
     setProducts((prevProducts) =>
       prevProducts.map((p) => {
-        const cartMatch = cart.find((item) => item.product.id === p.id);
-        if (cartMatch) {
+        const cartMatches = cart.filter((item) => item.product.id === p.id);
+        if (cartMatches.length > 0) {
+          const totalQtyDeduction = cartMatches.reduce(
+            (sum, item) => sum + item.quantity * (item.selectedUnit?.multiplier || 1),
+            0
+          );
           return {
             ...p,
-            stock: Math.max(0, p.stock - cartMatch.quantity),
+            stock: Math.max(0, p.stock - totalQtyDeduction),
           };
         }
         return p;
@@ -864,7 +1162,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const processSalesReturn = (returnData: Omit<SalesReturn, 'id' | 'createdAt'>): SalesReturn => {
     const newReturn: SalesReturn = {
       ...returnData,
-      id: `ret-sale-${Date.now()}`,
+      id: `ret-sale-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       createdAt: new Date().toISOString(),
     };
 
@@ -908,7 +1206,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const processPurchaseReturn = (returnData: Omit<PurchaseReturn, 'id' | 'createdAt'>): PurchaseReturn => {
     const newReturn: PurchaseReturn = {
       ...returnData,
-      id: `ret-sup-${Date.now()}`,
+      id: `ret-sup-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       createdAt: new Date().toISOString(),
     };
 
@@ -933,7 +1231,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const processSupplierPurchase = (purchaseData: Omit<SupplierPurchase, 'id' | 'createdAt'>): SupplierPurchase => {
     const newPurchase: SupplierPurchase = {
       ...purchaseData,
-      id: `purch-sup-${Date.now()}`,
+      id: `purch-sup-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       createdAt: new Date().toISOString(),
     };
 
@@ -967,12 +1265,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addProduct = (productData: Omit<Product, 'id'>): Product => {
+    const uniqueSuffix = Math.random().toString(36).substring(2, 8);
     const newProduct: Product = {
       ...productData,
-      id: `ret-${Date.now()}`,
+      id: `prod-${Date.now()}-${uniqueSuffix}`,
     };
     setProducts((prev) => [newProduct, ...prev]);
     return newProduct;
+  };
+
+  const addProductsBatch = (productsData: Omit<Product, 'id'>[]): Product[] => {
+    const timestamp = Date.now();
+    const newProducts: Product[] = productsData.map((data, idx) => ({
+      ...data,
+      id: `prod-${timestamp}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+    }));
+    setProducts((prev) => [...newProducts, ...prev]);
+    return newProducts;
   };
 
   const updateProduct = (id: string, updated: Partial<Product>) => {
@@ -988,7 +1297,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addSupplier = (supplierData: Omit<Supplier, 'id' | 'createdAt'>): Supplier => {
     const newSupplier: Supplier = {
       ...supplierData,
-      id: `sup-${Date.now()}`,
+      id: `sup-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       createdAt: new Date().toISOString().split('T')[0],
     };
     setSuppliers((prev) => [newSupplier, ...prev]);
@@ -1035,7 +1344,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addCustomer = (customerData: Omit<Customer, 'id' | 'points' | 'totalSpent' | 'ordersCount'>): Customer => {
     const newCust: Customer = {
       ...customerData,
-      id: `cust-${Date.now()}`,
+      id: `cust-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       points: 20,
       totalSpent: 0,
       ordersCount: 0,
@@ -1064,6 +1373,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setFilterLowStock,
         updateProductStock,
         addProduct,
+        addProductsBatch,
         updateProduct,
         deleteProduct,
         resetToRetailDefaults,
@@ -1071,6 +1381,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addToCart,
         updateCartItemQuantity,
         setCartItemQuantity,
+        updateCartItemUnit,
+        updateCartItemDiscount,
         removeFromCart,
         clearCart,
         updateCartItemNote,
@@ -1093,6 +1405,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         totalDiscount,
         finalTotal,
         pointsEarned,
+        pointsEligibleSpend,
+        minProfitPercentForPoints,
         heldOrders,
         holdCurrentOrder,
         recallHeldOrder,

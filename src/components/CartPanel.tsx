@@ -14,16 +14,22 @@ import {
   ChevronRight,
   MessageSquare,
   Zap,
+  Boxes,
+  AlertTriangle,
+  HelpCircle,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { CustomerModal } from './CustomerModal';
+import { WholesaleUnit } from '../types';
 
 export const CartPanel: React.FC = () => {
   const {
     cart,
     addToCart,
     updateCartItemQuantity,
+    updateCartItemUnit,
+    updateCartItemDiscount,
     removeFromCart,
     clearCart,
     updateCartItemNote,
@@ -40,6 +46,8 @@ export const CartPanel: React.FC = () => {
     pointsDiscount,
     totalDiscount,
     finalTotal,
+    pointsEligibleSpend,
+    minProfitPercentForPoints,
     holdCurrentOrder,
     setIsPaymentModalOpen,
     settings,
@@ -94,6 +102,9 @@ export const CartPanel: React.FC = () => {
     setActiveEditingNoteId(null);
   };
 
+  const estimatedPoints = Math.floor(pointsEligibleSpend / (settings.pointsRatio || 10000));
+  const nonEligibleSpend = Math.max(0, subtotal - pointsEligibleSpend);
+
   return (
     <div
       id="pos-cart-panel"
@@ -138,8 +149,8 @@ export const CartPanel: React.FC = () => {
               </p>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                 {selectedCustomer
-                  ? `Member ${selectedCustomer.tier} • ${selectedCustomer.points} Poin`
-                  : 'Klik untuk pilih / tambah member'}
+                  ? `Member ${selectedCustomer.tier} • ${selectedCustomer.points} Poin (Dapat +${estimatedPoints} Poin)`
+                  : 'Klik untuk pilih / tambah member (kumpulkan poin)'}
               </p>
             </div>
           </div>
@@ -148,115 +159,167 @@ export const CartPanel: React.FC = () => {
       </div>
 
       {/* Cart Items List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50/30 dark:bg-slate-900">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-slate-50/30 dark:bg-slate-900">
         {cart.length > 0 ? (
-          cart.map((item) => (
-            <div
-              key={item.id}
-              className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800/90 bg-white dark:bg-slate-950/70 hover:border-emerald-500/50 transition-all flex flex-col gap-1.5 shadow-2xs"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h5 className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
-                    {item.product.name}
-                  </h5>
+          cart.map((item) => {
+            const hasWholesaleOptions =
+              item.product.wholesaleUnits && item.product.wholesaleUnits.length > 0;
 
-                  {/* Selected Modifiers */}
-                  {item.selectedOptions && item.selectedOptions.length > 0 && (
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 space-x-1">
-                      {item.selectedOptions.map((opt, idx) => (
-                        <span key={idx} className="bg-slate-200/60 dark:bg-slate-800 px-1.5 py-0.2 rounded">
-                          {opt.choiceName}
+            return (
+              <div
+                key={item.id}
+                className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800/90 bg-white dark:bg-slate-950/70 hover:border-emerald-500/50 transition-all flex flex-col gap-1.5 shadow-2xs"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
+                      {item.product.name}
+                    </h5>
+
+                    {/* Unit Selector (Eceran vs Grosir/Dus/Slop/Lusin) */}
+                    {hasWholesaleOptions && (
+                      <div className="flex items-center gap-1 mt-1 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => updateCartItemUnit(item.id, undefined)}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium border cursor-pointer transition-colors ${
+                            !item.selectedUnit
+                              ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
+                              : 'bg-slate-100 dark:bg-slate-850 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          Eceran ({item.product.unit || 'pcs'})
+                        </button>
+                        {item.product.wholesaleUnits?.map((wu) => (
+                          <button
+                            key={wu.id}
+                            type="button"
+                            onClick={() => updateCartItemUnit(item.id, wu)}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-medium border cursor-pointer transition-colors ${
+                              item.selectedUnit?.id === wu.id
+                                ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
+                                : 'bg-slate-100 dark:bg-slate-850 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                            }`}
+                          >
+                            {wu.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Selected Modifiers */}
+                    {item.selectedOptions && item.selectedOptions.length > 0 && (
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 space-x-1 mt-0.5">
+                        {item.selectedOptions.map((opt, idx) => (
+                          <span key={idx} className="bg-slate-200/60 dark:bg-slate-800 px-1.5 py-0.2 rounded">
+                            {opt.choiceName}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Profit Margin & Points Eligibility Badge */}
+                    <div className="flex items-center gap-1.5 mt-1">
+                      {item.isPointsEligible ? (
+                        <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.2 rounded flex items-center gap-1">
+                          <Award className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
+                          <span>Margin {(item.profitMarginPercent ?? 0).toFixed(1)}% • Poin Aktif</span>
                         </span>
-                      ))}
+                      ) : (
+                        <span className="text-[10px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-1.5 py-0.2 rounded flex items-center gap-1">
+                          <AlertTriangle className="w-2.5 h-2.5 text-amber-500 shrink-0" />
+                          <span>Margin {(item.profitMarginPercent ?? 0).toFixed(1)}% • Non-Poin (&lt;15%)</span>
+                        </span>
+                      )}
                     </div>
-                  )}
 
-                  {/* Notes / Special Instructions */}
-                  {item.notes && (
-                    <p className="text-[10px] text-amber-600 dark:text-amber-400 italic flex items-center gap-1 mt-0.5">
-                      <Sparkles className="w-2.5 h-2.5" />
-                      {item.notes}
-                    </p>
-                  )}
+                    {/* Notes / Special Instructions */}
+                    {item.notes && (
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400 italic flex items-center gap-1 mt-0.5">
+                        <Sparkles className="w-2.5 h-2.5" />
+                        {item.notes}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Price */}
+                  <div className="text-right shrink-0">
+                    <div className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                      {formatCurrency(item.totalPrice, settings.currency)}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      @{formatCurrency(item.unitPrice, settings.currency)}
+                      {item.selectedUnit ? `/${item.selectedUnit.name}` : `/${item.product.unit || 'pcs'}`}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Price */}
-                <div className="text-right shrink-0">
-                  <div className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                    {formatCurrency(item.totalPrice, settings.currency)}
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-mono">
-                    @{formatCurrency(item.unitPrice, settings.currency)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Quantity Stepper & Notes Editor */}
-              <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => handleOpenNoteEdit(item.id, item.notes)}
-                  className="text-[11px] text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 flex items-center gap-1 cursor-pointer"
-                >
-                  <MessageSquare className="w-3 h-3" />
-                  <span>{item.notes ? 'Ubah catatan' : '+ Catatan'}</span>
-                </button>
-
-                <div className="flex items-center space-x-1.5">
+                {/* Quantity Stepper & Notes Editor */}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
                   <button
                     type="button"
-                    onClick={() => updateCartItemQuantity(item.id, -1)}
-                    className="w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                    onClick={() => handleOpenNoteEdit(item.id, item.notes)}
+                    className="text-[11px] text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 flex items-center gap-1 cursor-pointer"
                   >
-                    {item.quantity === 1 ? <Trash2 className="w-3 h-3 text-rose-500" /> : <Minus className="w-3 h-3" />}
+                    <MessageSquare className="w-3 h-3" />
+                    <span>{item.notes ? 'Ubah catatan' : '+ Catatan'}</span>
                   </button>
-                  <span className="w-6 text-center font-bold text-xs font-mono text-slate-900 dark:text-slate-100">
-                    {item.quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => updateCartItemQuantity(item.id, 1)}
-                    className="w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-slate-950 flex items-center justify-center transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
 
-              {/* In-line Note Editor Form */}
-              {activeEditingNoteId === item.id && (
-                <div className="pt-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
-                  <input
-                    type="text"
-                    value={itemNoteText}
-                    onChange={(e) => setItemNoteText(e.target.value)}
-                    placeholder="Enter instructions (e.g. less ice)..."
-                    className="flex-1 text-[11px] p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none"
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => handleSaveNote(item.id)}
-                    className="px-2 py-1 text-[11px] bg-emerald-500 text-slate-950 rounded-lg font-bold cursor-pointer"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setActiveEditingNoteId(null)}
-                    className="px-1.5 py-1 text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      type="button"
+                      onClick={() => updateCartItemQuantity(item.id, -1)}
+                      className="w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      {item.quantity === 1 ? <Trash2 className="w-3 h-3 text-rose-500" /> : <Minus className="w-3 h-3" />}
+                    </button>
+                    <span className="w-6 text-center font-bold text-xs font-mono text-slate-900 dark:text-slate-100">
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateCartItemQuantity(item.id, 1)}
+                      className="w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-slate-950 flex items-center justify-center transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))
+
+                {/* In-line Note Editor Form */}
+                {activeEditingNoteId === item.id && (
+                  <div className="pt-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
+                    <input
+                      type="text"
+                      value={itemNoteText}
+                      onChange={(e) => setItemNoteText(e.target.value)}
+                      placeholder="Masukkan catatan item..."
+                      className="flex-1 text-[11px] p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleSaveNote(item.id)}
+                      className="px-2 py-1 text-[11px] bg-emerald-500 text-slate-950 rounded-lg font-bold cursor-pointer"
+                    >
+                      Simpan
+                    </button>
+                    <button
+                      onClick={() => setActiveEditingNoteId(null)}
+                      className="px-1.5 py-1 text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 dark:text-slate-500">
             <ShoppingBag className="w-12 h-12 stroke-[1.3] mb-2 opacity-40 text-emerald-500" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Cart is Empty</p>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Keranjang Kosong</p>
             <p className="text-xs text-slate-400 max-w-[200px] mt-1">
-              Select products from catalog or scan a barcode to begin order.
+              Pilih produk dari katalog atau scan barcode untuk memulai transaksi.
             </p>
           </div>
         )}
@@ -379,7 +442,7 @@ export const CartPanel: React.FC = () => {
           </div>
         )}
 
-        {/* Pricing Line items */}
+        {/* Pricing Line items & Loyalty Points Logic */}
         <div className="space-y-1 text-xs pt-1 border-t border-slate-200 dark:border-slate-800/80">
           <div className="flex justify-between text-slate-600 dark:text-slate-400">
             <span>Subtotal</span>
@@ -395,9 +458,38 @@ export const CartPanel: React.FC = () => {
             </div>
           )}
 
+          {/* Points Eligibility Breakdown */}
+          {cart.length > 0 && (
+            <div className="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 text-[11px] space-y-1">
+              <div className="flex justify-between items-center text-emerald-900 dark:text-emerald-300 font-semibold">
+                <span className="flex items-center gap-1">
+                  <Award className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Belanja Berpoin (Margin ≥15%)</span>
+                </span>
+                <span className="font-mono">{formatCurrency(pointsEligibleSpend, settings.currency)}</span>
+              </div>
+
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 text-[10px]">
+                <span>Estimasi Poin Diperoleh:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                  +{estimatedPoints} Poin
+                </span>
+              </div>
+
+              {nonEligibleSpend > 0 && (
+                <p className="text-[9px] text-amber-700 dark:text-amber-400/90 leading-tight pt-0.5 flex items-start gap-1">
+                  <AlertTriangle className="w-2.5 h-2.5 text-amber-500 shrink-0 mt-0.5" />
+                  <span>
+                    Item senilai {formatCurrency(nonEligibleSpend)} memiliki margin &lt;15% (rokok/promo margin tipis) sehingga tidak dihitung dalam akumulasi poin member.
+                  </span>
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Grand Total */}
           <div className="flex justify-between items-baseline pt-2 border-t border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
-            <span className="font-bold text-sm">Total Belanja</span>
+            <span className="font-bold text-sm">Total Tagihan</span>
             <span className="font-black text-lg text-emerald-600 dark:text-emerald-400 font-mono">
               {formatCurrency(finalTotal, settings.currency)}
             </span>

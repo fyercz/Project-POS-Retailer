@@ -690,6 +690,597 @@ Kembalikan JSON:
   }
 });
 
+// ==========================================
+// 8. ONLINE INTERNET DATABASE PRODUCT & BARCODE MATCHING (Open Food Facts + Gemini Retail KB)
+// ==========================================
+
+// Built-in Indonesian Retail FMCG Knowledge Base for instant high-speed matching & offline fallback
+const INDO_FMCG_OFFLINE_DB: Array<{
+  barcode: string;
+  name: string;
+  brand: string;
+  categoryId: string;
+  unit: string;
+  price: number;
+  costPrice: number;
+  image: string;
+  description: string;
+  wholesaleUnits: Array<{ name: string; multiplier: number; price: number; costPrice: number }>;
+}> = [
+  {
+    barcode: '8998866200223',
+    name: 'Indomie Mi Instan Goreng Spesial 80g',
+    brand: 'Indomie',
+    categoryId: 'cat-instant',
+    unit: 'bungkus',
+    price: 3500,
+    costPrice: 2850,
+    image: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&auto=format&fit=crop&q=60',
+    description: 'Mi instan goreng legendaris rasa spesial dengan bumbu minyak gurih dan bawang goreng renyah.',
+    wholesaleUnits: [
+      { name: 'Pak (5 Bks)', multiplier: 5, price: 16500, costPrice: 14000 },
+      { name: 'Dus (40 Bks)', multiplier: 40, price: 122000, costPrice: 112000 },
+    ],
+  },
+  {
+    barcode: '8998866200230',
+    name: 'Indomie Mi Instan Kuah Rasa Ayam Bawang 69g',
+    brand: 'Indomie',
+    categoryId: 'cat-instant',
+    unit: 'bungkus',
+    price: 3300,
+    costPrice: 2700,
+    image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&auto=format&fit=crop&q=60',
+    description: 'Mi kuah instan rasa kaldu ayam bawang gurih khas Nusantara.',
+    wholesaleUnits: [
+      { name: 'Pak (5 Bks)', multiplier: 5, price: 15500, costPrice: 13200 },
+      { name: 'Dus (40 Bks)', multiplier: 40, price: 118000, costPrice: 106000 },
+    ],
+  },
+  {
+    barcode: '8999999002018',
+    name: 'Mie Sedaap Goreng Original Crispy 90g',
+    brand: 'Mie Sedaap',
+    categoryId: 'cat-instant',
+    unit: 'bungkus',
+    price: 3500,
+    costPrice: 2800,
+    image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400&auto=format&fit=crop&q=60',
+    description: 'Mi goreng dengan taburan kriuk-kriuk bawang gurih renyah lebih banyak.',
+    wholesaleUnits: [
+      { name: 'Pak (5 Bks)', multiplier: 5, price: 16500, costPrice: 13800 },
+      { name: 'Dus (40 Bks)', multiplier: 40, price: 121000, costPrice: 110000 },
+    ],
+  },
+  {
+    barcode: '8992753311105',
+    name: 'Aqua Air Mineral Botol PET 600ml',
+    brand: 'Aqua',
+    categoryId: 'cat-bev',
+    unit: 'botol',
+    price: 4000,
+    costPrice: 2900,
+    image: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=400&auto=format&fit=crop&q=60',
+    description: 'Air mineral murni pegunungan alami dari mata air terpilih.',
+    wholesaleUnits: [
+      { name: 'Dus (24 Btl)', multiplier: 24, price: 82000, costPrice: 69000 },
+    ],
+  },
+  {
+    barcode: '8996001414001',
+    name: 'Le Minerale Air Mineral Botol 600ml',
+    brand: 'Le Minerale',
+    categoryId: 'cat-bev',
+    unit: 'botol',
+    price: 3500,
+    costPrice: 2600,
+    image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400&auto=format&fit=crop&q=60',
+    description: 'Air mineral dengan kandungan mineral alami yang ada manis-manisnya.',
+    wholesaleUnits: [
+      { name: 'Dus (24 Btl)', multiplier: 24, price: 74000, costPrice: 62000 },
+    ],
+  },
+  {
+    barcode: '8991002101344',
+    name: 'Teh Botol Sosro Kotak Original 250ml',
+    brand: 'Sosro',
+    categoryId: 'cat-bev',
+    unit: 'kotak',
+    price: 4500,
+    costPrice: 3400,
+    image: 'https://images.unsplash.com/photo-1556881286-fc6915169721?w=400&auto=format&fit=crop&q=60',
+    description: 'Teh melati manis khas Indonesia dalam kemasan kotak higienis.',
+    wholesaleUnits: [
+      { name: 'Dus (24 Kotak)', multiplier: 24, price: 96000, costPrice: 81000 },
+    ],
+  },
+  {
+    barcode: '8992775211018',
+    name: 'Bimoli Minyak Goreng Pouch Refill 2 Liter',
+    brand: 'Bimoli',
+    categoryId: 'cat-staple',
+    unit: 'pouch',
+    price: 38500,
+    costPrice: 33800,
+    image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop&q=60',
+    description: 'Minyak goreng kelapa sawit murni kualitas emas kaya vitamin E.',
+    wholesaleUnits: [
+      { name: 'Dus / Karton (6 Pouch)', multiplier: 6, price: 224000, costPrice: 201000 },
+    ],
+  },
+  {
+    barcode: '8993175538118',
+    name: 'SunCo Minyak Goreng Pouch 2 Liter',
+    brand: 'SunCo',
+    categoryId: 'cat-staple',
+    unit: 'pouch',
+    price: 37500,
+    costPrice: 33000,
+    image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop&q=60',
+    description: 'Minyak goreng bening tidak mudah beku terbuat dari buah kelapa sawit segar.',
+    wholesaleUnits: [
+      { name: 'Dus / Karton (6 Pouch)', multiplier: 6, price: 219000, costPrice: 196000 },
+    ],
+  },
+  {
+    barcode: '8991001111221',
+    name: 'Kapal Api Kopi Bubuk Special Mix 24g (10 Sachet)',
+    brand: 'Kapal Api',
+    categoryId: 'cat-bev',
+    unit: 'renceng',
+    price: 15000,
+    costPrice: 12200,
+    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&auto=format&fit=crop&q=60',
+    description: 'Kopi bubuk hitam paduan biji kopi pilihan dengan gula murni.',
+    wholesaleUnits: [
+      { name: 'Eceran (1 Sachet)', multiplier: 0.1, price: 2000, costPrice: 1300 },
+      { name: 'Dus (12 Renceng)', multiplier: 12, price: 168000, costPrice: 144000 },
+    ],
+  },
+  {
+    barcode: '8992695123456',
+    name: 'Sampoerna A Mild Rokok Filter 16 Batang',
+    brand: 'Sampoerna',
+    categoryId: 'cat-cig',
+    unit: 'bungkus',
+    price: 35000,
+    costPrice: 32000,
+    image: 'https://images.unsplash.com/photo-1527061011665-3652c757a4d4?w=400&auto=format&fit=crop&q=60',
+    description: 'Rokok kretek filter mild rendah tar dan nikotin.',
+    wholesaleUnits: [
+      { name: 'Slop (10 Bks)', multiplier: 10, price: 342000, costPrice: 318000 },
+      { name: 'Bal (20 Slop / 200 Bks)', multiplier: 200, price: 6780000, costPrice: 6340000 },
+    ],
+  },
+  {
+    barcode: '8999999050019',
+    name: 'Rinso Molto Deterjen Bubuk Anti Noda Classic Fresh 770g',
+    brand: 'Rinso',
+    categoryId: 'cat-clean',
+    unit: 'bungkus',
+    price: 24500,
+    costPrice: 19800,
+    image: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400&auto=format&fit=crop&q=60',
+    description: 'Deterjen bubuk dengan keharuman tahan lama Molto dan formulasi hilangkan noda membandel 1x kucek.',
+    wholesaleUnits: [
+      { name: 'Dus / Karton (12 Bks)', multiplier: 12, price: 276000, costPrice: 234000 },
+    ],
+  },
+  {
+    barcode: '8999999051016',
+    name: 'Sunlight Pencuci Piring Jeruk Nipis 100 Pouch 650ml',
+    brand: 'Sunlight',
+    categoryId: 'cat-clean',
+    unit: 'pouch',
+    price: 14000,
+    costPrice: 11200,
+    image: 'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=400&auto=format&fit=crop&q=60',
+    description: 'Cairan pencuci piring ekstrak jeruk nipis asli tangguh bersihkan lemak.',
+    wholesaleUnits: [
+      { name: 'Dus / Karton (12 Pouch)', multiplier: 12, price: 156000, costPrice: 132000 },
+    ],
+  },
+  {
+    barcode: '8999999052013',
+    name: 'Lifebuoy Sabun Mandi Batang Total 10 Red 110g',
+    brand: 'Lifebuoy',
+    categoryId: 'cat-pers',
+    unit: 'pcs',
+    price: 4500,
+    costPrice: 3400,
+    image: 'https://images.unsplash.com/photo-1607006311820-d65717280523?w=400&auto=format&fit=crop&q=60',
+    description: 'Sabun antibakteri perlindungan total melawan 10 kuman penyebab masalah kesehatan.',
+    wholesaleUnits: [
+      { name: 'Lusin (12 Pcs)', multiplier: 12, price: 49000, costPrice: 40000 },
+      { name: 'Karton (72 Pcs)', multiplier: 72, price: 285000, costPrice: 238000 },
+    ],
+  },
+  {
+    barcode: '8999999053010',
+    name: 'Pepsodent Pasta Gigi Pencegah Gigi Berlubang 190g',
+    brand: 'Pepsodent',
+    categoryId: 'cat-pers',
+    unit: 'pcs',
+    price: 16500,
+    costPrice: 13000,
+    image: 'https://images.unsplash.com/photo-1559591937-e16104840833?w=400&auto=format&fit=crop&q=60',
+    description: 'Pasta gigi dengan Mikro Kalsium aktif dan Pro-Fluoride kompleks untuk gigi sehat kuat.',
+    wholesaleUnits: [
+      { name: 'Lusin (12 Pcs)', multiplier: 12, price: 186000, costPrice: 154000 },
+    ],
+  },
+  {
+    barcode: '8991001410010',
+    name: 'Chitato Keripik Kentang Sapi Panggang 68g',
+    brand: 'Chitato',
+    categoryId: 'cat-snk',
+    unit: 'bungkus',
+    price: 11500,
+    costPrice: 9200,
+    image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&auto=format&fit=crop&q=60',
+    description: 'Keripik kentang bergelombang rasa beef barbeque yang renyah dan gurih mantap.',
+    wholesaleUnits: [
+      { name: 'Dus (30 Bks)', multiplier: 30, price: 320000, costPrice: 270000 },
+    ],
+  },
+  {
+    barcode: '8992775311022',
+    name: 'Beras Premium Setra Ramos Cap Pandan Wangi 5kg',
+    brand: 'Pandan Wangi',
+    categoryId: 'cat-staple',
+    unit: 'sak',
+    price: 78000,
+    costPrice: 69000,
+    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&auto=format&fit=crop&q=60',
+    description: 'Beras putih pulen alami mutu super tanpa pemutih dan tanpa pengawet.',
+    wholesaleUnits: [
+      { name: 'Bal / Karung (5 Sak / 25kg)', multiplier: 5, price: 375000, costPrice: 340000 },
+    ],
+  },
+];
+
+// 8.1 Lookup Product by Barcode (Open Food Facts + Gemini AI Enrichment)
+app.post('/api/online/lookup-barcode', async (req, res) => {
+  const { barcode } = req.body;
+  if (!barcode || typeof barcode !== 'string') {
+    return res.status(400).json({ success: false, message: 'Barcode tidak valid' });
+  }
+
+  const cleanBarcode = barcode.trim();
+
+  // 1. Check local knowledge base first for ultra-fast instant response
+  const localMatch = INDO_FMCG_OFFLINE_DB.find((item) => item.barcode === cleanBarcode);
+
+  // 2. Fetch from Open Food Facts Database API (Public Global & Indonesian FMCG Catalog)
+  let offData: any = null;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const offRes = await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cleanBarcode)}.json`,
+      {
+        headers: {
+          'User-Agent': 'UlilmartPOS/1.0 (Retail POS Database Sync)',
+        },
+        signal: controller.signal,
+      }
+    );
+    clearTimeout(timeoutId);
+
+    if (offRes.ok) {
+      const json = await offRes.json();
+      if (json.status === 1 && json.product) {
+        const p = json.product;
+        offData = {
+          barcode: cleanBarcode,
+          name: p.product_name_id || p.product_name || p.generic_name || '',
+          brand: p.brands || '',
+          quantity: p.quantity || '',
+          image: p.image_front_small_url || p.image_front_url || p.image_url || '',
+          categories: p.categories || '',
+          source: 'Open Food Facts Database',
+        };
+      }
+    }
+  } catch {
+    // Open Food Facts network timeout or not available, continue to AI/Local
+  }
+
+  // 3. If no Gemini API key or offline, return local match or formatted Open Food Facts data
+  if (!process.env.GEMINI_API_KEY) {
+    if (localMatch) {
+      return res.json({
+        success: true,
+        source: 'Indonesian Retail FMCG Database',
+        data: localMatch,
+        isAiEnriched: false,
+      });
+    }
+
+    if (offData && offData.name) {
+      const isLiquid = offData.name.toLowerCase().includes('minyak') || offData.name.toLowerCase().includes('air') || offData.name.toLowerCase().includes('susu');
+      const fallbackUnit = isLiquid ? 'botol' : offData.name.toLowerCase().includes('mi') ? 'bungkus' : 'pcs';
+      return res.json({
+        success: true,
+        source: 'Open Food Facts Online Database',
+        data: {
+          barcode: cleanBarcode,
+          name: offData.name + (offData.quantity ? ` ${offData.quantity}` : ''),
+          brand: offData.brand || 'Umum',
+          categoryId: 'cat-staple',
+          unit: fallbackUnit,
+          price: 15000,
+          costPrice: 12000,
+          image: offData.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&auto=format&fit=crop&q=60',
+          description: `Produk teridentifikasi dari Open Food Facts: ${offData.name}`,
+          wholesaleUnits: [
+            { name: `Dus (24 ${fallbackUnit})`, multiplier: 24, price: 340000, costPrice: 280000 }
+          ]
+        },
+        isAiEnriched: false,
+      });
+    }
+
+    return res.json({
+      success: false,
+      message: `Barcode ${cleanBarcode} belum ditemukan di Open Food Facts atau database lokal.`,
+    });
+  }
+
+  // 4. Enrich with Gemini AI using Internet Retail Knowledge Base
+  try {
+    const prompt = `Anda adalah Database Manager Ritel Modern & FMCG Indonesia.
+Diberikan Barcode EAN-13: "${cleanBarcode}"
+Data dari Open Food Facts (jika ada): ${JSON.stringify(offData || {})}
+Data Lokal Toko (jika ada): ${JSON.stringify(localMatch || {})}
+
+TUGAS:
+Identifikasi nama resmi produk, brand, kemasan gramasi resmi, kategori standar, estimasi harga jual eceran (HET) dan modal (HPP) di minimarket Indonesia (Indomaret, Alfamart, Superindo, Warung Madura), serta kemasan grosir standar (Dus, Slop, Renceng, Karton, Bal).
+
+Kategori yang valid (pilih salah satu id):
+- "cat-staple" (Sembako & Minyak & Beras & Gula)
+- "cat-bev" (Minuman & Kopi & Teh & Susu)
+- "cat-snk" (Makanan Ringan & Biskuit & Cokelat)
+- "cat-instant" (Mi Instan & Makanan Cepat Saji)
+- "cat-pers" (Perawatan Tubuh & Sabun & Pasta Gigi)
+- "cat-clean" (Pembersih Rumah & Deterjen & Cuci Piring)
+- "cat-fresh" (Produk Segar & Telur & Buah)
+- "cat-bakery" (Roti & Selai)
+- "cat-cig" (Rokok & Tembakau)
+- "cat-other" (Lainnya)
+
+Kembalikan format JSON murni:
+{
+  "barcode": "${cleanBarcode}",
+  "name": "Nama Resmi Lengkap dengan Gramasi (misal: Indomie Mi Instan Goreng Spesial 80g)",
+  "brand": "Nama Brand/Merk",
+  "categoryId": "cat-instant",
+  "unit": "bungkus | pcs | botol | kaleng | pouch | sak | renceng",
+  "price": 3500, // Estimasi harga jual eceran Rp
+  "costPrice": 2850, // Estimasi harga modal Rp (margin 15-25%)
+  "image": "url gambar kemasan atau biarkan string url placeholder",
+  "description": "Deskripsi singkat 1 kalimat spesifikasi produk",
+  "wholesaleUnits": [
+    {
+      "name": "Pak (5 Bks) atau Dus (40 Bks) atau Slop (10 Bks)",
+      "multiplier": 40,
+      "price": 122000,
+      "costPrice": 112000
+    }
+  ]
+}
+`;
+
+    const rawText = await callGeminiSafe(prompt, 0.1);
+    if (rawText) {
+      const parsed = JSON.parse(rawText);
+      if (offData?.image && (!parsed.image || parsed.image.includes('placeholder'))) {
+        parsed.image = offData.image;
+      }
+      return res.json({
+        success: true,
+        source: offData ? 'Open Food Facts + Gemini Online AI' : 'Gemini Retail Internet KB',
+        data: parsed,
+        isAiEnriched: true,
+      });
+    }
+  } catch (err) {
+    console.error('Barcode lookup AI error:', err);
+  }
+
+  // Fallback to local or OFF
+  if (localMatch) {
+    return res.json({
+      success: true,
+      source: 'Indonesian Retail FMCG Database',
+      data: localMatch,
+      isAiEnriched: false,
+    });
+  }
+
+  res.json({
+    success: false,
+    message: `Barcode ${cleanBarcode} tidak ditemukan di database internet.`,
+  });
+});
+
+// 8.2 Search Products by Keyword in Internet Database
+app.post('/api/online/search-products', async (req, res) => {
+  const { query } = req.body;
+  if (!query || typeof query !== 'string') {
+    return res.json({ success: true, results: [] });
+  }
+
+  const qLower = query.toLowerCase().trim();
+
+  // Local filter
+  const localResults = INDO_FMCG_OFFLINE_DB.filter(
+    (item) =>
+      item.name.toLowerCase().includes(qLower) ||
+      item.brand.toLowerCase().includes(qLower) ||
+      item.barcode.includes(qLower)
+  );
+
+  // Gemini Search & Enrichment
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const prompt = `Anda adalah Database Mesin Pencari Produk FMCG & Ritel Indonesia.
+Kata kunci pencarian user: "${query}"
+
+TUGAS:
+Cari dan hasilkan 3 hingga 6 produk ritel asli yang beredar di minimarket/supermarket Indonesia yang paling sesuai dengan kata kunci tersebut.
+Lengkapi dengan barcode EAN-13 Indonesia resmi (biasanya awalan 899...), brand, kategori, harga pasar eceran & modal, serta pilihan satuan grosir (Dus/Slop/Karton/Renceng).
+
+Kembalikan format JSON murni array:
+[
+  {
+    "barcode": "8998866200223",
+    "name": "Indomie Mi Instan Goreng Spesial 80g",
+    "brand": "Indomie",
+    "categoryId": "cat-instant",
+    "unit": "bungkus",
+    "price": 3500,
+    "costPrice": 2850,
+    "image": "https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&auto=format&fit=crop&q=60",
+    "description": "Deskripsi singkat produk",
+    "wholesaleUnits": [
+      { "name": "Dus (40 Bks)", "multiplier": 40, "price": 122000, "costPrice": 112000 }
+    ]
+  }
+]
+`;
+
+      const rawText = await callGeminiSafe(prompt, 0.2);
+      if (rawText) {
+        const parsed = JSON.parse(rawText);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return res.json({
+            success: true,
+            source: 'Gemini Online Retail Database',
+            results: parsed,
+          });
+        }
+      }
+    } catch {
+      // Continue to local
+    }
+  }
+
+  res.json({
+    success: true,
+    source: 'Indonesian FMCG Catalog',
+    results: localResults,
+  });
+});
+
+// 8.3 Batch Match and Reconcile Import Data against Internet Database
+app.post('/api/online/match-batch', async (req, res) => {
+  const { items } = req.body;
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.json({ success: true, matchedItems: [] });
+  }
+
+  // Pre-process with local DB
+  const localMatched = items.map((it: any) => {
+    const raw = (it.rawInput || it.name || '').toLowerCase();
+    const bc = (it.barcode || '').trim();
+
+    const byBc = bc ? INDO_FMCG_OFFLINE_DB.find((d) => d.barcode === bc) : null;
+    const byName = INDO_FMCG_OFFLINE_DB.find((d) =>
+      raw.includes(d.brand.toLowerCase()) && raw.includes(d.name.toLowerCase().slice(0, 8))
+    );
+
+    const hit = byBc || byName;
+    if (hit) {
+      return {
+        id: it.id,
+        rawInput: it.rawInput || it.name,
+        name: hit.name,
+        brand: hit.brand,
+        barcode: hit.barcode,
+        categoryId: hit.categoryId,
+        unit: hit.unit,
+        price: it.price > 0 ? it.price : hit.price,
+        costPrice: it.costPrice > 0 ? it.costPrice : hit.costPrice,
+        stock: it.stock > 0 ? it.stock : 24,
+        wholesaleUnits: hit.wholesaleUnits,
+        image: hit.image,
+        matchConfidence: 0.98,
+        matchStatus: 'verified' as const,
+        matchSource: 'Indonesian FMCG Master Database',
+      };
+    }
+    return null;
+  });
+
+  if (!process.env.GEMINI_API_KEY) {
+    const fallbackResults = items.map((it: any, idx: number) => {
+      if (localMatched[idx]) return localMatched[idx];
+      return {
+        ...it,
+        matchConfidence: 0.7,
+        matchStatus: 'suggested' as const,
+        matchSource: 'Rule-based Corrector',
+      };
+    });
+    return res.json({ success: true, matchedItems: fallbackResults });
+  }
+
+  try {
+    const prompt = `Anda adalah Database Reconciliation Engine untuk toko ritel FMCG & Swalayan Indonesia.
+Daftar data barang yang diimpor oleh kasir / admin (mungkin singkatan ekstrem, salah ketik, atau tanpa barcode):
+${JSON.stringify(items.map((it: any) => ({ id: it.id, input: it.rawInput || it.name, barcode: it.barcode, price: it.price, costPrice: it.costPrice, stock: it.stock })))}
+
+TUGAS:
+Cocokkan setiap baris dengan data katalog produk resmi di database ritel FMCG Indonesia:
+1. Perbaiki nama menjadi nama resmi lengkap dengan brand dan gramasi (misal: "indomi grg sps 80g" -> "Indomie Mi Instan Goreng Spesial 80g").
+2. Lengkapi Barcode EAN-13 resmi Indonesia jika kosong atau tidak valid (awalan 899...).
+3. Tentukan Brand, Kategori (cat-staple, cat-bev, cat-snk, cat-instant, cat-pers, cat-clean, cat-fresh, cat-bakery, cat-cig, cat-other), dan Satuan standar.
+4. Tentukan standar kemasan grosir (Dus, Slop, Renceng, Karton, Bal) sesuai kebiasaan distributor FMCG.
+5. Estimasi harga jual dan harga modal yang wajar jika belum diisi.
+
+Kembalikan format JSON array objek:
+[
+  {
+    "id": "id_dari_input",
+    "rawInput": "input_asli",
+    "name": "Nama Resmi Lengkap",
+    "brand": "Brand",
+    "barcode": "8998866200223",
+    "categoryId": "cat-instant",
+    "unit": "bungkus",
+    "price": 3500,
+    "costPrice": 2850,
+    "stock": 40,
+    "matchConfidence": 0.98,
+    "matchStatus": "verified" | "suggested",
+    "matchSource": "Database Internet FMCG & AI",
+    "wholesaleUnits": [
+      { "name": "Dus (40 Bks)", "multiplier": 40, "price": 122000, "costPrice": 112000 }
+    ]
+  }
+]
+`;
+
+    const rawText = await callGeminiSafe(prompt, 0.1);
+    if (rawText) {
+      const parsed = JSON.parse(rawText);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return res.json({
+          success: true,
+          matchedItems: parsed,
+          source: 'Gemini Internet Database Reconciliation',
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Batch match error:', err);
+  }
+
+  const defaultResults = items.map((it: any, idx: number) => localMatched[idx] || it);
+  res.json({ success: true, matchedItems: defaultResults });
+});
+
 // Vite Middleware for development & Static Serving for production
 async function setupViteOrStatic() {
   if (process.env.NODE_ENV !== 'production') {

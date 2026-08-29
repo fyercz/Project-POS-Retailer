@@ -114,7 +114,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <span>Mata Uang & Poin Loyalitas</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1">
                   Mata Uang
@@ -122,7 +122,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <select
                   value={formData.currency}
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value as any })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold"
+                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold text-xs"
                 >
                   <option value="IDR">IDR (Rp) - Rupiah</option>
                   <option value="USD">USD ($) - Dollar</option>
@@ -130,8 +130,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               </div>
 
               <div>
-                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1">
-                  Rasio Perolehan Poin (Rp)
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
+                  Min Margin Poin (%)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={formData.minProfitPercentForPoints ?? 15}
+                  onChange={(e) => setFormData({ ...formData, minProfitPercentForPoints: Number(e.target.value) })}
+                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  placeholder="15"
+                />
+                <span className="text-[10px] text-slate-400">Min. profit barang dapat poin</span>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
+                  Rasio Poin (Rp)
                 </label>
                 <input
                   type="number"
@@ -139,10 +156,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   step={1000}
                   value={formData.pointsRatio || 10000}
                   onChange={(e) => setFormData({ ...formData, pointsRatio: Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono"
+                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="10000"
                 />
-                <span className="text-[10px] text-slate-400">1 poin tiap kelipatan belanja ini</span>
+                <span className="text-[10px] text-slate-400">1 poin per kelipatan</span>
               </div>
             </div>
           </div>

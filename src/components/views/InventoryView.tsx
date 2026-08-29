@@ -34,6 +34,8 @@ import {
   SlidersHorizontal,
   ExternalLink,
   Tag,
+  Upload,
+  Globe,
 } from 'lucide-react';
 import { usePOS } from '../../context/POSContext';
 import { Product, PurchaseReturn, PurchaseReturnItem, SupplierPurchase, SupplierPurchaseItem, Supplier } from '../../types';
@@ -44,6 +46,8 @@ import { AIVisualStockOpnameModal } from '../AIVisualStockOpnameModal';
 import { ProductFormModal } from '../ProductFormModal';
 import { SupplierFormModal } from '../SupplierFormModal';
 import { PriceTagModal } from '../PriceTagModal';
+import { DataImportModal } from '../DataImportModal';
+import { OnlineDatabaseMatcherModal } from '../OnlineDatabaseMatcherModal';
 
 interface ReceivingItem {
   productId: string;
@@ -91,6 +95,12 @@ export const InventoryView: React.FC = () => {
   const [isPriceTagModalOpen, setIsPriceTagModalOpen] = useState(false);
   const [productForPriceTag, setProductForPriceTag] = useState<Product | null>(null);
   const [purchaseForPriceTag, setPurchaseForPriceTag] = useState<SupplierPurchase | null>(null);
+
+  // Smart Data Import Modal State
+  const [isDataImportOpen, setIsDataImportOpen] = useState(false);
+
+  // Online Database & Barcode Matcher Modal State
+  const [isOnlineMatcherOpen, setIsOnlineMatcherOpen] = useState(false);
 
   // Master Supplier Modal State
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
@@ -684,14 +694,34 @@ export const InventoryView: React.FC = () => {
         {/* Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap">
           {activeTab === 'inventory' && (
-            <button
-              id="btn-add-product"
-              onClick={handleOpenAddProduct}
-              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ Tambah Produk</span>
-            </button>
+            <>
+              <button
+                id="btn-add-product"
+                onClick={handleOpenAddProduct}
+                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Tambah Produk</span>
+              </button>
+              <button
+                id="btn-open-data-import"
+                onClick={() => setIsDataImportOpen(true)}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-700/20 cursor-pointer transition-all active:scale-95"
+                title="Import data produk massal & auto-koreksi gramasi / ejaan"
+              >
+                <Upload className="w-4 h-4 text-emerald-300" />
+                <span>Import & Koreksi Data</span>
+              </button>
+              <button
+                id="btn-open-online-matcher"
+                onClick={() => setIsOnlineMatcherOpen(true)}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-700 to-cyan-700 hover:from-teal-600 hover:to-cyan-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-teal-700/20 cursor-pointer transition-all active:scale-95"
+                title="Cari & cocokkan barcode/nama produk di Open Food Facts & AI Database"
+              >
+                <Globe className="w-4 h-4 text-teal-300" />
+                <span>Database Online (OFF)</span>
+              </button>
+            </>
           )}
 
           {activeTab === 'suppliers' && (
@@ -2275,6 +2305,18 @@ export const InventoryView: React.FC = () => {
         }}
         initialSelectedProduct={productForPriceTag}
         initialPurchaseInvoice={purchaseForPriceTag}
+      />
+
+      {/* Smart Data Import & Grammar/Gramasi Auto-Corrector */}
+      <DataImportModal
+        isOpen={isDataImportOpen}
+        onClose={() => setIsDataImportOpen(false)}
+      />
+
+      {/* Online FMCG & Open Food Facts Database Matcher */}
+      <OnlineDatabaseMatcherModal
+        isOpen={isOnlineMatcherOpen}
+        onClose={() => setIsOnlineMatcherOpen(false)}
       />
     </div>
   );

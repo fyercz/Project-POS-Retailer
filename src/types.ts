@@ -12,6 +12,16 @@ export interface ProductCategory {
   color?: string;
 }
 
+export interface WholesaleUnit {
+  id: string;
+  name: string; // e.g. 'Dus', 'Slop', 'Lusin', 'Karton', 'Renceng', 'Bal', 'Pak', 'Kodi'
+  multiplier: number; // e.g. 40 pcs (Indomie/dus), 10 bungkus (Rokok/slop), 12 pcs (Minyak 1L/karton atau Lusin), 6 pcs (Minyak 2L/karton)
+  price: number; // Harga jual grosir untuk 1 satuan ini
+  costPrice?: number; // Modal grosir (default: costPrice * multiplier)
+  barcode?: string; // Barcode karton/slop
+  minOrderQty?: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -24,7 +34,8 @@ export interface Product {
   stock: number;
   minStock: number;
   unit: string;
-  image: string;
+  wholesaleUnits?: WholesaleUnit[];
+  image?: string;
   aisle?: string; // e.g., 'Lorong 2 - Rak B3'
   expiryDate?: string; // e.g., '2026-11-20'
   batchNumber?: string;
@@ -44,14 +55,17 @@ export interface SelectedOption {
 }
 
 export interface CartItem {
-  id: string; // unique item id in cart (product.id + options hash)
+  id: string; // unique item id in cart (product.id + selectedUnit + options hash)
   product: Product;
   quantity: number;
+  selectedUnit?: WholesaleUnit; // Satuan grosir jika dipilih (Dus/Slop/Lusin/Karton/Renceng/Pcs)
   selectedOptions: SelectedOption[];
   notes?: string;
   itemDiscountPercent?: number;
   unitPrice: number;
   totalPrice: number;
+  profitMarginPercent?: number; // Persentase profit margin barang
+  isPointsEligible?: boolean; // True jika profit margin barang >= 15% (syarat perolehan poin)
 }
 
 export interface Customer {
@@ -112,6 +126,7 @@ export interface Transaction {
   pointsUsed?: number;
   pointsDiscount?: number;
   pointsEarned: number;
+  pointsEligibleSpend?: number; // Total belanja dari barang yang memenuhi syarat profit >= 15%
   finalTotal: number;
   payment: PaymentDetails;
   cashierName: string;
@@ -227,6 +242,7 @@ export interface StoreSettings {
   currency: CurrencyType;
   enableThermal58mm: boolean;
   pointsRatio: number; // 1 point per 10,000 IDR
+  minProfitPercentForPoints: number; // e.g. 15% minimal profit margin barang untuk menghasilkan poin
 }
 
 // Gemini AI Retail Interfaces

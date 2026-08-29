@@ -17,8 +17,13 @@ import {
   Check,
   AlertCircle,
   RefreshCw,
+  Boxes,
+  Trash2,
+  Award,
+  AlertTriangle,
+  Globe,
 } from 'lucide-react';
-import { Product } from '../types';
+import { Product, WholesaleUnit } from '../types';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 
@@ -41,6 +46,21 @@ const SAMPLE_IMAGES = [
   { label: 'Pembersih Rumah', url: 'https://images.unsplash.com/photo-1585837575652-267c041d77d4?auto=format&fit=crop&w=600&q=80' },
 ];
 
+const PRESET_UNITS = [
+  { name: 'Dus (40 Pcs)', multiplier: 40, label: 'Dus Mie (40 pcs)' },
+  { name: 'Dus / Karton (12 Pcs)', multiplier: 12, label: 'Dus Minyak 1L / Sabun (12 pcs)' },
+  { name: 'Dus / Karton (6 Pouch)', multiplier: 6, label: 'Dus Minyak 2L (6 pcs)' },
+  { name: 'Slop (10 Bungkus)', multiplier: 10, label: 'Slop Rokok (10 bks)' },
+  { name: 'Bal (200 Bungkus / 20 Slop)', multiplier: 200, label: 'Bal Rokok (200 bks)' },
+  { name: 'Dus (24 Botol)', multiplier: 24, label: 'Dus Aqua/Minuman (24 btl)' },
+  { name: 'Renceng (10 Sachet)', multiplier: 10, label: 'Renceng Kopi/Susu (10 sch)' },
+  { name: 'Dus (120 Sachet / 12 Renceng)', multiplier: 120, label: 'Dus Kopi (120 sch)' },
+  { name: 'Lusin (12 Pcs)', multiplier: 12, label: 'Lusin Sabun/Barang (12 pcs)' },
+  { name: 'Karton (72 Pcs / 6 Lusin)', multiplier: 72, label: 'Karton Sabun (72 pcs)' },
+  { name: 'Bal / Karung (5 Sak / 25kg)', multiplier: 5, label: 'Bal Beras 5kg (5 sak)' },
+  { name: 'Pak (5 Pcs)', multiplier: 5, label: 'Pak Mini (5 pcs)' },
+];
+
 export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   isOpen,
   onClose,
@@ -48,7 +68,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onSuccess,
   onPrintPriceTag,
 }) => {
-  const { categories, addProduct, updateProduct } = usePOS();
+  const { categories, addProduct, updateProduct, settings } = usePOS();
 
   const isEditMode = Boolean(productToEdit);
 
@@ -70,7 +90,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [promoBadge, setPromoBadge] = useState('');
   const [isPopular, setIsPopular] = useState(false);
   const [description, setDescription] = useState('');
+  const [wholesaleUnits, setWholesaleUnits] = useState<WholesaleUnit[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [onlineLoading, setOnlineLoading] = useState(false);
+  const [onlineFeedback, setOnlineFeedback] = useState<{ type: 'success' | 'error'; message: string; source?: string } | null>(null);
 
   useEffect(() => {
     if (productToEdit) {
@@ -91,6 +114,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setPromoBadge(productToEdit.promoBadge || '');
       setIsPopular(Boolean(productToEdit.isPopular));
       setDescription(productToEdit.description || '');
+      setWholesaleUnits(productToEdit.wholesaleUnits || []);
     } else {
       // Reset defaults for new item
       setName('');
@@ -111,6 +135,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setPromoBadge('');
       setIsPopular(false);
       setDescription('');
+      setWholesaleUnits([]);
     }
     setErrors({});
   }, [productToEdit, isOpen]);
@@ -122,6 +147,133 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     setBarcode(random12);
   };
 
+  const handleOnlineBarcodeLookup = async (codeToUse?: string) => {
+    const code = (codeToUse || barcode).trim();
+    if (!code) {
+      setOnlineFeedback({ type: 'error', message: 'Masukkan barcode terlebih dahulu.' });
+      return;
+    }
+
+    setOnlineLoading(true);
+    setOnlineFeedback(null);
+
+    try {
+      const res = await fetch('/api/online/lookup-barcode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ barcode: code }),
+      });
+      const json = await res.json();
+
+      if (json.success && json.data) {
+        const item = json.data;
+        if (item.name) setName(item.name);
+        if (item.brand) setBrand(item.brand);
+        if (item.categoryId) setCategoryId(item.categoryId);
+        if (item.unit) setUnit(item.unit);
+        if (item.price > 0) setPrice(item.price);
+        if (item.costPrice > 0) setCostPrice(item.costPrice);
+        if (item.image && !item.image.includes('placeholder')) setImage(item.image);
+        if (item.description) setDescription(item.description);
+
+        if (Array.isArray(item.wholesaleUnits) && item.wholesaleUnits.length > 0) {
+          setWholesaleUnits(
+            item.wholesaleUnits.map((u: any, idx: number) => ({
+              id: `wh-${Date.now()}-${idx}`,
+              name: u.name,
+              multiplier: u.multiplier,
+              price: u.price,
+              costPrice: u.costPrice,
+              barcode: `${code}-${u.multiplier}`,
+            }))
+          );
+        }
+
+        setOnlineFeedback({
+          type: 'success',
+          message: `Berhasil mencocokkan produk dari ${json.source || 'Database Internet'}!`,
+          source: json.source,
+        });
+      } else {
+        setOnlineFeedback({
+          type: 'error',
+          message: json.message || `Barcode ${code} tidak ditemukan di database internet.`,
+        });
+      }
+    } catch {
+      setOnlineFeedback({
+        type: 'error',
+        message: 'Gagal terhubung ke database online. Pastikan koneksi aktif.',
+      });
+    } finally {
+      setOnlineLoading(false);
+    }
+  };
+
+  const handleOnlineNameSearch = async () => {
+    const q = name.trim();
+    if (!q) {
+      setOnlineFeedback({ type: 'error', message: 'Ketik nama produk terlebih dahulu.' });
+      return;
+    }
+
+    setOnlineLoading(true);
+    setOnlineFeedback(null);
+
+    try {
+      const res = await fetch('/api/online/search-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q }),
+      });
+      const json = await res.json();
+
+      if (json.success && Array.isArray(json.results) && json.results.length > 0) {
+        const item = json.results[0];
+        if (item.name) setName(item.name);
+        if (item.brand) setBrand(item.brand);
+        if (item.barcode) setBarcode(item.barcode);
+        if (item.categoryId) setCategoryId(item.categoryId);
+        if (item.unit) setUnit(item.unit);
+        if (item.price > 0) setPrice(item.price);
+        if (item.costPrice > 0) setCostPrice(item.costPrice);
+        if (item.image) setImage(item.image);
+        if (item.description) setDescription(item.description);
+
+        if (Array.isArray(item.wholesaleUnits) && item.wholesaleUnits.length > 0) {
+          setWholesaleUnits(
+            item.wholesaleUnits.map((u: any, idx: number) => ({
+              id: `wh-${Date.now()}-${idx}`,
+              name: u.name,
+              multiplier: u.multiplier,
+              price: u.price,
+              costPrice: u.costPrice,
+              barcode: `${item.barcode}-${u.multiplier}`,
+            }))
+          );
+        }
+
+        setOnlineFeedback({
+          type: 'success',
+          message: `Berhasil mencocokkan dengan data resmi: "${item.name}"!`,
+          source: json.source,
+        });
+      } else {
+        setOnlineFeedback({
+          type: 'error',
+          message: `Tidak ditemukan produk "${q}" di database internet.`,
+        });
+      }
+    } catch {
+      setOnlineFeedback({
+        type: 'error',
+        message: 'Gagal terhubung ke database online.',
+      });
+    } finally {
+      setOnlineLoading(false);
+    }
+  };
+
   const handleGenerateSku = () => {
     const catCode = categoryId.slice(0, 3).toUpperCase();
     const rand = Math.floor(100 + Math.random() * 900);
@@ -129,7 +281,36 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   };
 
   const marginNominal = Math.max(0, price - costPrice);
-  const marginPercent = price > 0 ? ((marginNominal / price) * 100).toFixed(1) : '0';
+  const marginPercent = price > 0 ? (marginNominal / price) * 100 : 0;
+  const isEligibleForPoints = marginPercent >= (settings.minProfitPercentForPoints ?? 15);
+
+  const handleAddWholesaleUnit = (preset?: { name: string; multiplier: number }) => {
+    const multiplier = preset ? preset.multiplier : 10;
+    const unitName = preset ? preset.name : `Dus (${multiplier} ${unit})`;
+    const suggestedPrice = Math.round((price * multiplier * 0.95) / 500) * 500; // 5% grosir discount
+    const suggestedCost = costPrice * multiplier;
+
+    const newUnit: WholesaleUnit = {
+      id: `wh-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name: unitName,
+      multiplier,
+      price: suggestedPrice > 0 ? suggestedPrice : price * multiplier,
+      costPrice: suggestedCost > 0 ? suggestedCost : undefined,
+      barcode: barcode ? `${barcode}-${multiplier}` : undefined,
+    };
+
+    setWholesaleUnits((prev) => [...prev, newUnit]);
+  };
+
+  const handleUpdateWholesaleUnit = (id: string, updated: Partial<WholesaleUnit>) => {
+    setWholesaleUnits((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, ...updated } : u))
+    );
+  };
+
+  const handleDeleteWholesaleUnit = (id: string) => {
+    setWholesaleUnits((prev) => prev.filter((u) => u.id !== id));
+  };
 
   const validate = () => {
     const errs: { [key: string]: string } = {};
@@ -165,6 +346,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       promoBadge: promoBadge.trim() || undefined,
       isPopular,
       description: description.trim() || undefined,
+      wholesaleUnits: wholesaleUnits.length > 0 ? wholesaleUnits : undefined,
     };
 
     if (isEditMode && productToEdit) {
@@ -211,26 +393,79 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-5">
+          {/* Online Match Feedback Banner */}
+          {onlineFeedback && (
+            <div
+              className={`p-3.5 rounded-xl border flex items-start gap-3 text-xs animate-in fade-in-50 ${
+                onlineFeedback.type === 'success'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                  : 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300'
+              }`}
+            >
+              {onlineFeedback.type === 'success' ? (
+                <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1">
+                <p className="font-bold">{onlineFeedback.message}</p>
+                {onlineFeedback.source && (
+                  <p className="text-[11px] opacity-80 mt-0.5">Sumber Data: {onlineFeedback.source}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setOnlineFeedback(null)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* Section 1: Informasi Pokok */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Informasi Utama Produk</span>
-            </h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Informasi Utama Produk</span>
+              </h4>
+              <button
+                type="button"
+                onClick={handleOnlineNameSearch}
+                disabled={onlineLoading}
+                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              >
+                <Globe className="w-3 h-3" />
+                <span>{onlineLoading ? 'Mencari...' : 'Cari di Database Internet'}</span>
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Nama Produk / Barang <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Contoh: Beras Pandan Wangi Premium 5kg, Indomie Goreng Spesial..."
-                  className={`w-full px-3 py-2 text-sm rounded-xl border ${
-                    errors.name ? 'border-rose-500 bg-rose-50/20' : 'border-slate-300 dark:border-slate-700'
-                  } bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none`}
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Contoh: Beras Pandan Wangi Premium 5kg, Indomie Goreng Spesial..."
+                    className={`flex-1 px-3 py-2 text-sm rounded-xl border ${
+                      errors.name ? 'border-rose-500 bg-rose-50/20' : 'border-slate-300 dark:border-slate-700'
+                    } bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleOnlineNameSearch}
+                    disabled={onlineLoading || !name.trim()}
+                    className="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1 hover:bg-emerald-100 cursor-pointer disabled:opacity-40"
+                    title="Cari spesifikasi produk online dari nama"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Cari Online</span>
+                  </button>
+                </div>
                 {errors.name && <p className="text-[11px] text-rose-500 mt-1">{errors.name}</p>}
               </div>
 
@@ -306,13 +541,24 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Barcode EAN-13 <span className="text-rose-500">*</span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={handleGenerateBarcode}
-                    className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
-                  >
-                    <RefreshCw className="w-2.5 h-2.5" /> Acak EAN
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleOnlineBarcodeLookup()}
+                      disabled={onlineLoading || !barcode.trim()}
+                      className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer font-bold disabled:opacity-40"
+                      title="Cek ke database Open Food Facts & Internet"
+                    >
+                      <Globe className="w-2.5 h-2.5" /> Cek Online
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGenerateBarcode}
+                      className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <RefreshCw className="w-2.5 h-2.5" /> Acak EAN
+                    </button>
+                  </div>
                 </div>
                 <div className="relative">
                   <Barcode className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -356,11 +602,24 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-3 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Harga Beli (Modal/HPP) & Harga Jual</span>
+                <span>Harga Beli (Modal/HPP) & Harga Jual Eceran</span>
               </span>
-              <span className="text-xs normal-case font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                Margin: <strong className="font-bold">{marginPercent}%</strong> ({formatCurrency(marginNominal)})
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs normal-case font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+                  Margin: <strong className="font-bold">{(marginPercent ?? 0).toFixed(1)}%</strong> ({formatCurrency(marginNominal)})
+                </span>
+                {isEligibleForPoints ? (
+                  <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500 text-slate-950 shadow-2xs">
+                    <Award className="w-3 h-3 stroke-[2.5]" />
+                    <span>Dapat Poin Member (≥15%)</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    <AlertTriangle className="w-3 h-3 text-amber-500" />
+                    <span>Tanpa Poin (&lt;15%)</span>
+                  </span>
+                )}
+              </div>
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -384,7 +643,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Harga Jual Konsumen <span className="text-rose-500">*</span>
+                  Harga Jual Konsumen (Eceran) <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
@@ -401,6 +660,163 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 {errors.price && <p className="text-[11px] text-rose-500 mt-1">{errors.price}</p>}
               </div>
             </div>
+          </div>
+
+          {/* Section: Satuan Grosir (Wholesale Units) */}
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Boxes className="w-4 h-4 text-emerald-500" />
+                  <span>Satuan Grosir & Bertingkat (Dus, Slop, Lusin, Karton, Renceng, Bal)</span>
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Atur kemasan grosir dengan harga khusus. Kasir dapat memilih satuan ini langsung saat transaksi.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleAddWholesaleUnit()}
+                className="px-3 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>+ Satuan Grosir</span>
+              </button>
+            </div>
+
+            {/* Quick Preset Buttons */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-1">
+              <span className="text-[10px] text-slate-400 font-medium">Preset cepat:</span>
+              {PRESET_UNITS.slice(0, 6).map((preset, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleAddWholesaleUnit(preset)}
+                  className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-white dark:bg-slate-800 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950 dark:hover:text-emerald-300 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
+                >
+                  +{preset.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Wholesale Units List */}
+            {wholesaleUnits.length > 0 ? (
+              <div className="space-y-2.5 pt-2">
+                {wholesaleUnits.map((u, idx) => {
+                  const unitHpp = (u.costPrice ?? costPrice * u.multiplier);
+                  const unitNominal = Math.max(0, u.price - unitHpp);
+                  const unitMargin = u.price > 0 ? (unitNominal / u.price) * 100 : 0;
+                  const unitPointsEligible = unitMargin >= (settings.minProfitPercentForPoints ?? 15);
+
+                  return (
+                    <div
+                      key={u.id}
+                      className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-2.5 shadow-2xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-bold flex items-center justify-center">
+                            {idx + 1}
+                          </span>
+                          <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                            {u.name}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            (Isi: {u.multiplier} {unit})
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                              unitPointsEligible
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                                : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                            }`}
+                          >
+                            Margin {(unitMargin ?? 0).toFixed(1)}% {unitPointsEligible ? '• Poin Aktif' : '• Tanpa Poin (<15%)'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteWholesaleUnit(u.id)}
+                            className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
+                            title="Hapus Satuan Grosir"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                        <div className="sm:col-span-1">
+                          <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
+                            Nama Satuan
+                          </label>
+                          <input
+                            type="text"
+                            value={u.name}
+                            onChange={(e) => handleUpdateWholesaleUnit(u.id, { name: e.target.value })}
+                            placeholder="Dus (40 Pcs)"
+                            className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
+                            Isi / Multiplier ({unit})
+                          </label>
+                          <input
+                            type="number"
+                            min={2}
+                            value={u.multiplier}
+                            onChange={(e) => {
+                              const newMult = Math.max(1, Number(e.target.value));
+                              handleUpdateWholesaleUnit(u.id, {
+                                multiplier: newMult,
+                                costPrice: costPrice * newMult,
+                              });
+                            }}
+                            className="w-full px-2.5 py-1.5 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
+                            Harga Jual Grosir (Rp)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            step={500}
+                            value={u.price || ''}
+                            onChange={(e) => handleUpdateWholesaleUnit(u.id, { price: Number(e.target.value) })}
+                            className="w-full px-2.5 py-1.5 text-xs font-mono font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
+                            Harga Modal HPP (Rp)
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            step={500}
+                            value={u.costPrice ?? (costPrice * u.multiplier)}
+                            onChange={(e) => handleUpdateWholesaleUnit(u.id, { costPrice: Number(e.target.value) })}
+                            className="w-full px-2.5 py-1.5 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-3 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-400 dark:text-slate-500">
+                Belum ada satuan grosir. Klik tombol <span className="font-semibold text-emerald-600">+ Satuan Grosir</span> atau pilih preset di atas untuk menambahkan dus/slop/lusin.
+              </div>
+            )}
           </div>
 
           {/* Section 4: Stok, Lokasi Rak & Batch FEFO */}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Plus, SlidersHorizontal, AlertTriangle, Check, Flame } from 'lucide-react';
-import { Product } from '../types';
+import { Plus, SlidersHorizontal, AlertTriangle, Check, Flame, Boxes } from 'lucide-react';
+import { Product, WholesaleUnit } from '../types';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { ProductCustomizerModal } from './ProductCustomizerModal';
@@ -12,9 +12,11 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart, settings, cart } = usePOS();
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
+  const [showWholesaleDropdown, setShowWholesaleDropdown] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
   const hasOptions = Boolean(product.options && product.options.length > 0);
+  const hasWholesale = Boolean(product.wholesaleUnits && product.wholesaleUnits.length > 0);
   const isOutOfStock = product.stock <= 0;
   const isLowStock = product.stock > 0 && product.stock <= product.minStock;
 
@@ -32,6 +34,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       setJustAdded(true);
       setTimeout(() => setJustAdded(false), 600);
     }
+  };
+
+  const handleAddWholesale = (e: React.MouseEvent, unit: WholesaleUnit) => {
+    e.stopPropagation();
+    addToCart(product, undefined, undefined, unit);
+    setShowWholesaleDropdown(false);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 600);
   };
 
   return (
@@ -58,6 +68,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {cartQuantity > 0 && (
                 <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 text-[11px] font-black flex items-center justify-center shadow-xs">
                   {cartQuantity}
+                </span>
+              )}
+              {hasWholesale && (
+                <span className="flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <Boxes className="w-2.5 h-2.5 text-emerald-500" />
+                  Grosir
                 </span>
               )}
               {product.isPopular && (
@@ -107,9 +123,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Card Footer: Price & Add Button */}
-        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between relative">
           <div>
-            <span className="text-[10px] text-slate-400 block font-medium">Harga</span>
+            <span className="text-[10px] text-slate-400 block font-medium">Harga Eceran</span>
             <span className="font-black text-sm text-emerald-600 dark:text-emerald-400 font-mono">
               {formatCurrency(product.price, settings.currency)}
             </span>
@@ -122,6 +138,55 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 Varian
               </span>
             )}
+
+            {hasWholesale && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowWholesaleDropdown(!showWholesaleDropdown);
+                  }}
+                  className="px-2 py-1 text-[10px] font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Pilih Kemasan Grosir"
+                >
+                  <Boxes className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>Grosir</span>
+                </button>
+
+                {showWholesaleDropdown && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute right-0 bottom-full mb-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-2 z-30 space-y-1.5 animate-in fade-in zoom-in-95 duration-100"
+                  >
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1">
+                      Pilih Satuan Grosir:
+                    </div>
+                    {product.wholesaleUnits?.map((wu) => (
+                      <button
+                        key={wu.id}
+                        type="button"
+                        onClick={(e) => handleAddWholesale(e, wu)}
+                        className="w-full text-left p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-xs flex items-center justify-between border border-slate-100 dark:border-slate-800 cursor-pointer transition-colors"
+                      >
+                        <div>
+                          <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">
+                            {wu.name}
+                          </div>
+                          <div className="text-[9px] text-slate-400">
+                            Isi {wu.multiplier} {product.unit}
+                          </div>
+                        </div>
+                        <div className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]">
+                          {formatCurrency(wu.price, settings.currency)}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               type="button"
               id={`btn-add-${product.id}`}
