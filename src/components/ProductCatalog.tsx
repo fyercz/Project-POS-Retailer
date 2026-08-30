@@ -34,6 +34,7 @@ export const ProductCatalog: React.FC = () => {
     setSearchQuery,
     filterLowStock,
     setFilterLowStock,
+    setActiveView,
   } = usePOS();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -165,19 +166,40 @@ export const ProductCatalog: React.FC = () => {
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
+        ) : products.length === 0 ? (
+          <div className="h-72 flex flex-col items-center justify-center text-center p-6 text-slate-400 dark:text-slate-500 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 my-4">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-3">
+              <Package className="w-7 h-7" />
+            </div>
+            <p className="text-base font-bold text-slate-800 dark:text-slate-200">Katalog Produk Masih Kosong</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-4 leading-relaxed">
+              Belum ada produk dalam master data. Tambahkan produk satuan atau impor master data CSV Anda dengan mudah.
+            </p>
+            <button
+              onClick={() => setActiveView('inventory')}
+              className="px-4 py-2 text-xs rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all shadow-md shadow-emerald-500/20 cursor-pointer flex items-center gap-2"
+            >
+              <Package className="w-3.5 h-3.5" />
+              <span>Kelola & Impor Produk</span>
+            </button>
+          </div>
         ) : (
           <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-slate-400 dark:text-slate-500">
             <Package className="w-12 h-12 stroke-[1.5] mb-2 opacity-50" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No products found</p>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tidak ada produk yang cocok</p>
             <p className="text-xs text-slate-400 max-w-xs mt-1">
-              Try adjusting your search query or switching category filter.
+              Coba sesuaikan kata kunci pencarian atau ganti filter kategori produk.
             </p>
-            {searchQuery && (
+            {(searchQuery || selectedCategory !== 'all' || filterLowStock) && (
               <button
-                onClick={() => setSearchQuery('')}
-                className="mt-3 px-3 py-1 text-xs rounded-lg bg-emerald-500 text-slate-950 font-bold cursor-pointer"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                  setFilterLowStock(false);
+                }}
+                className="mt-3 px-3 py-1.5 text-xs rounded-lg bg-emerald-500 text-slate-950 font-bold cursor-pointer"
               >
-                Clear Search Filter
+                Reset Filter Pencarian
               </button>
             )}
           </div>

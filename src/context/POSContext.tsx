@@ -49,6 +49,10 @@ interface POSContextType {
   updateProductStock: (productId: string, newStock: number) => void;
   addProduct: (product: Omit<Product, 'id'>) => Product;
   addProductsBatch: (products: Omit<Product, 'id'>[]) => Product[];
+  deleteProductsBatch: (ids: string[]) => void;
+  clearImportedProducts: () => void;
+  resetProductsToDefault: () => void;
+  clearAllProducts: () => void;
   updateProduct: (id: string, updated: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
   resetToRetailDefaults: () => void;
@@ -173,7 +177,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Catalog State
   const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('pos_retail_products_v2');
+    // Clear out old mock sample dataset if present
+    localStorage.removeItem('pos_retail_products_v2');
+    const saved = localStorage.getItem('pos_retail_products_v3');
     const rawList: Product[] = saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
     const seenIds = new Set<string>();
     return rawList.map((p, idx) => {
@@ -234,7 +240,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Transactions History
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const saved = localStorage.getItem('pos_retail_tx_v2');
+    localStorage.removeItem('pos_retail_tx_v2');
+    const saved = localStorage.getItem('pos_retail_tx_v3');
     return saved ? JSON.parse(saved) : INITIAL_RECENT_TRANSACTIONS;
   });
 
@@ -395,7 +402,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sync to local storage
   useEffect(() => {
-    localStorage.setItem('pos_retail_products_v2', JSON.stringify(products));
+    localStorage.setItem('pos_retail_products_v3', JSON.stringify(products));
   }, [products]);
 
   useEffect(() => {
@@ -407,7 +414,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [heldOrders]);
 
   useEffect(() => {
-    localStorage.setItem('pos_retail_tx_v2', JSON.stringify(transactions));
+    localStorage.setItem('pos_retail_tx_v3', JSON.stringify(transactions));
   }, [transactions]);
 
   useEffect(() => {
@@ -1284,6 +1291,24 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newProducts;
   };
 
+  const deleteProductsBatch = (ids: string[]) => {
+    const idSet = new Set(ids);
+    setProducts((prev) => prev.filter((p) => !idSet.has(p.id)));
+  };
+
+  const clearImportedProducts = () => {
+    const initialIds = new Set(INITIAL_PRODUCTS.map((p) => p.id));
+    setProducts((prev) => prev.filter((p) => initialIds.has(p.id)));
+  };
+
+  const resetProductsToDefault = () => {
+    setProducts(INITIAL_PRODUCTS);
+  };
+
+  const clearAllProducts = () => {
+    setProducts([]);
+  };
+
   const updateProduct = (id: string, updated: Partial<Product>) => {
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
@@ -1316,8 +1341,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetToRetailDefaults = () => {
     localStorage.removeItem('pos_retail_products_v2');
+    localStorage.removeItem('pos_retail_products_v3');
     localStorage.removeItem('pos_retail_suppliers_v2');
     localStorage.removeItem('pos_retail_tx_v2');
+    localStorage.removeItem('pos_retail_tx_v3');
     localStorage.removeItem('pos_retail_customers_v2');
     localStorage.removeItem('pos_retail_settings_v2');
     localStorage.removeItem('pos_active_cart');
@@ -1374,6 +1401,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateProductStock,
         addProduct,
         addProductsBatch,
+        deleteProductsBatch,
+        clearImportedProducts,
+        resetProductsToDefault,
+        clearAllProducts,
         updateProduct,
         deleteProduct,
         resetToRetailDefaults,

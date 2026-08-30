@@ -547,9 +547,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       onClick={() => handleOnlineBarcodeLookup()}
                       disabled={onlineLoading || !barcode.trim()}
                       className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer font-bold disabled:opacity-40"
-                      title="Cek ke database Open Food Facts & Internet"
+                      title="Cek ke Google Search Grounding & Internet"
                     >
-                      <Globe className="w-2.5 h-2.5" /> Cek Online
+                      <Globe className="w-2.5 h-2.5" /> Cek Google Grounding
                     </button>
                     <button
                       type="button"

@@ -38,6 +38,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { usePOS } from '../../context/POSContext';
+import { INITIAL_PRODUCTS } from '../../data/mockData';
 import { Product, PurchaseReturn, PurchaseReturnItem, SupplierPurchase, SupplierPurchaseItem, Supplier } from '../../types';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { printViaIframe, exportToCSV } from '../../utils/printHelper';
@@ -68,6 +69,10 @@ export const InventoryView: React.FC = () => {
     products,
     updateProductStock,
     deleteProduct,
+    deleteProductsBatch,
+    clearImportedProducts,
+    resetProductsToDefault,
+    clearAllProducts,
     settings,
     openGeminiCopilot,
     purchaseReturns,
@@ -81,6 +86,19 @@ export const InventoryView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'inventory' | 'suppliers' | 'purchases' | 'returns'>('inventory');
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [productOriginFilter, setProductOriginFilter] = useState<'all' | 'imported' | 'default'>('all');
+
+  // Multi-Selection State for Batch Actions
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [isClearImportedModalOpen, setIsClearImportedModalOpen] = useState(false);
+  const [isResetCatalogModalOpen, setIsResetCatalogModalOpen] = useState(false);
+
+  // Helper to distinguish imported products from initial seed products
+  const initialProductIds = new Set(INITIAL_PRODUCTS.map((p) => p.id));
+  const isImportedProduct = (p: Product) => !initialProductIds.has(p.id);
+  const importedProducts = products.filter(isImportedProduct);
+  const importedCount = importedProducts.length;
 
   // Supplier Tab Filter State
   const [supplierSearch, setSupplierSearch] = useState('');
@@ -157,7 +175,13 @@ export const InventoryView: React.FC = () => {
       p.barcode.includes(query) ||
       (p.brand && p.brand.toLowerCase().includes(query));
     const matchCat = categoryFilter === 'all' || p.categoryId === categoryFilter;
-    return matchQuery && matchCat;
+    const matchOrigin =
+      productOriginFilter === 'all'
+        ? true
+        : productOriginFilter === 'imported'
+        ? isImportedProduct(p)
+        : !isImportedProduct(p);
+    return matchQuery && matchCat && matchOrigin;
   });
 
   const filteredSuppliers = suppliers.filter((s) => {
@@ -214,6 +238,7 @@ export const InventoryView: React.FC = () => {
   const handleConfirmDeleteProduct = () => {
     if (productToDelete) {
       deleteProduct(productToDelete.id);
+      setSelectedProductIds((prev) => prev.filter((id) => id !== productToDelete.id));
       setNotificationMsg({
         type: 'delete',
         text: `Produk "${productToDelete.name}" (${productToDelete.sku}) berhasil dihapus dari master data.`,
@@ -221,6 +246,64 @@ export const InventoryView: React.FC = () => {
       setTimeout(() => setNotificationMsg(null), 5000);
       setProductToDelete(null);
     }
+  };
+
+  const handleConfirmClearImported = () => {
+    const totalDeleted = importedCount;
+    clearImportedProducts();
+    setSelectedProductIds([]);
+    setIsClearImportedModalOpen(false);
+    setNotificationMsg({
+      type: 'delete',
+      text: `Berhasil menghapus ${totalDeleted} master produk hasil impor dari sistem.`,
+    });
+    setTimeout(() => setNotificationMsg(null), 5000);
+  };
+
+  const handleConfirmBulkDelete = () => {
+    const count = selectedProductIds.length;
+    if (count === 0) return;
+    deleteProductsBatch(selectedProductIds);
+    setSelectedProductIds([]);
+    setIsBulkDeleteModalOpen(false);
+    setNotificationMsg({
+      type: 'delete',
+      text: `Berhasil menghapus ${count} produk terpilih secara massal dari master data.`,
+    });
+    setTimeout(() => setNotificationMsg(null), 5000);
+  };
+
+  const handleConfirmResetDefault = () => {
+    resetProductsToDefault();
+    setSelectedProductIds([]);
+    setIsResetCatalogModalOpen(false);
+    setNotificationMsg({
+      type: 'success',
+      text: `Katalog master produk berhasil direset kembali ke 40 produk bawaan ritel.`,
+    });
+    setTimeout(() => setNotificationMsg(null), 5000);
+  };
+
+  const handleToggleSelectAll = () => {
+    const filteredIds = filteredProducts.map((p) => p.id);
+    const allSelected = filteredIds.length > 0 && filteredIds.every((id) => selectedProductIds.includes(id));
+    if (allSelected) {
+      const filteredSet = new Set(filteredIds);
+      setSelectedProductIds((prev) => prev.filter((id) => !filteredSet.has(id)));
+    } else {
+      setSelectedProductIds((prev) => Array.from(new Set([...prev, ...filteredIds])));
+    }
+  };
+
+  const handleToggleSelectProduct = (id: string) => {
+    setSelectedProductIds((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllImported = () => {
+    const importedIds = products.filter(isImportedProduct).map((p) => p.id);
+    setSelectedProductIds(importedIds);
   };
 
   const handleOpenAddSupplier = () => {
@@ -712,14 +795,25 @@ export const InventoryView: React.FC = () => {
                 <Upload className="w-4 h-4 text-emerald-300" />
                 <span>Import & Koreksi Data</span>
               </button>
+              {importedCount > 0 && (
+                <button
+                  id="btn-clear-imported-products"
+                  onClick={() => setIsClearImportedModalOpen(true)}
+                  className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1.5 border border-rose-300 dark:border-rose-800 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                  title="Hapus seluruh master data barang yang telah diimpor"
+                >
+                  <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                  <span>Hapus Data Impor ({importedCount})</span>
+                </button>
+              )}
               <button
                 id="btn-open-online-matcher"
                 onClick={() => setIsOnlineMatcherOpen(true)}
                 className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-700 to-cyan-700 hover:from-teal-600 hover:to-cyan-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-teal-700/20 cursor-pointer transition-all active:scale-95"
-                title="Cari & cocokkan barcode/nama produk di Open Food Facts & AI Database"
+                title="Cari & cocokkan barcode/nama produk di Google Search Grounding & Gemini AI"
               >
                 <Globe className="w-4 h-4 text-teal-300" />
-                <span>Database Online (OFF)</span>
+                <span>Google Grounding</span>
               </button>
             </>
           )}
@@ -803,13 +897,13 @@ export const InventoryView: React.FC = () => {
           </div>
         </div>
 
-        {/* Category Filters */}
+        {/* Category & Origin Filters */}
         {activeTab === 'inventory' ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="px-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 cursor-pointer font-medium"
             >
               <option value="all">Semua Kategori</option>
               <option value="groceries">Sembako & Beras</option>
@@ -821,6 +915,26 @@ export const InventoryView: React.FC = () => {
               <option value="dairy">Susu & Produk Dingin</option>
               <option value="bakery">Roti & Sarapan</option>
             </select>
+
+            <select
+              value={productOriginFilter}
+              onChange={(e) => setProductOriginFilter(e.target.value as any)}
+              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="all">Semua Asal Produk ({products.length})</option>
+              <option value="imported">Khusus Hasil Impor ({importedCount})</option>
+              <option value="default">Katalog Bawaan ({products.length - importedCount})</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => setIsResetCatalogModalOpen(true)}
+              className="px-2.5 py-1.5 text-[11px] font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+              title="Reset seluruh katalog produk ke setelan awal 40 item default"
+            >
+              <RefreshCw className="w-3 h-3 text-slate-400" />
+              <span>Reset Default</span>
+            </button>
           </div>
         ) : activeTab === 'suppliers' ? (
           <div className="flex items-center gap-2">
@@ -924,6 +1038,48 @@ export const InventoryView: React.FC = () => {
         )}
       </div>
 
+      {/* Batch Action Bar for Selected Products */}
+      {activeTab === 'inventory' && selectedProductIds.length > 0 && (
+        <div className="bg-slate-900 text-white px-4 py-2.5 flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top-2 duration-150 border-b border-slate-800 shadow-md">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="font-bold flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-[11px] font-black">
+                {selectedProductIds.length}
+              </span>
+              <span>Produk Terpilih</span>
+            </span>
+
+            {importedCount > 0 && (
+              <button
+                type="button"
+                onClick={handleSelectAllImported}
+                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold border border-slate-700 cursor-pointer transition-colors"
+              >
+                Pilih Semua Hasil Impor ({importedCount})
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedProductIds([])}
+              className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold text-xs cursor-pointer transition-colors"
+            >
+              Batal Pilihan
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsBulkDeleteModalOpen(true)}
+              className="px-3.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Hapus Terpilih ({selectedProductIds.length})</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Content View */}
       <div className="flex-1 overflow-auto">
         {activeTab === 'inventory' ? (
@@ -931,6 +1087,18 @@ export const InventoryView: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
               <tr>
+                <th className="py-3 px-3 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      filteredProducts.length > 0 &&
+                      filteredProducts.every((p) => selectedProductIds.includes(p.id))
+                    }
+                    onChange={handleToggleSelectAll}
+                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
+                    title="Pilih semua produk pada filter saat ini"
+                  />
+                </th>
                 <th className="py-3 px-4">Produk / Barang</th>
                 <th className="py-3 px-4">Brand & Lokasi Rak</th>
                 <th className="py-3 px-4">SKU / Barcode</th>
@@ -946,19 +1114,38 @@ export const InventoryView: React.FC = () => {
                 filteredProducts.map((prod) => {
                   const isLow = prod.stock <= prod.minStock;
                   const isZero = prod.stock === 0;
+                  const isImported = isImportedProduct(prod);
+                  const isSelected = selectedProductIds.includes(prod.id);
 
                   return (
                     <tr
                       key={prod.id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group"
+                      className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group ${
+                        isSelected ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : ''
+                      }`}
                     >
+                      {/* Checkbox Select */}
+                      <td className="py-3 px-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelectProduct(prod.id)}
+                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
+                        />
+                      </td>
+
                       {/* Product Name & Details */}
                       <td className="py-3 px-4">
                         <div>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <p className="font-bold text-slate-900 dark:text-white leading-tight">
                               {prod.name}
                             </p>
+                            {isImported && (
+                              <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-teal-100 text-teal-800 dark:bg-teal-950/80 dark:text-teal-300 border border-teal-300 dark:border-teal-700">
+                                HASIL IMPOR
+                              </span>
+                            )}
                             {prod.promoBadge && (
                               <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
                                 {prod.promoBadge}
@@ -1089,10 +1276,10 @@ export const InventoryView: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
                     <Package className="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
                     <p className="font-semibold text-slate-700 dark:text-slate-300">Tidak ada produk ditemukan</p>
-                    <p className="text-xs text-slate-400 mt-1">Coba gunakan kata kunci pencarian lain atau tambahkan item produk baru.</p>
+                    <p className="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau filter asal barang.</p>
                     <button
                       onClick={handleOpenAddProduct}
                       className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-500 cursor-pointer"
@@ -2318,6 +2505,195 @@ export const InventoryView: React.FC = () => {
         isOpen={isOnlineMatcherOpen}
         onClose={() => setIsOnlineMatcherOpen(false)}
       />
+
+      {/* Confirmation Modal: Hapus Semua Data Impor */}
+      {isClearImportedModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                    Hapus Seluruh Data Barang Impor?
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Tindakan ini akan menghapus semua master produk yang ditambahkan dari file Excel / CSV / AI Scanner
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700 text-xs space-y-2 mb-4">
+                <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                  <span>Jumlah Data Impor Dihapus:</span>
+                  <strong className="text-rose-600 dark:text-rose-400 font-mono text-sm">
+                    {importedCount} Barang
+                  </strong>
+                </div>
+                <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                  <span>Produk Bawaan Tetap Tersimpan:</span>
+                  <strong className="text-emerald-600 dark:text-emerald-400 font-mono text-sm">
+                    {products.length - importedCount} Barang
+                  </strong>
+                </div>
+
+                {importedProducts.length > 0 && (
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+                    <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Contoh barang impor yang akan dihapus:
+                    </p>
+                    <div className="max-h-28 overflow-y-auto space-y-1 pr-1 font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                      {importedProducts.slice(0, 5).map((p) => (
+                        <div key={p.id} className="flex justify-between items-center bg-white dark:bg-slate-900 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800">
+                          <span className="truncate pr-2">{p.name}</span>
+                          <span className="text-[10px] text-slate-400 shrink-0">{p.sku}</span>
+                        </div>
+                      ))}
+                      {importedProducts.length > 5 && (
+                        <p className="text-[10px] text-slate-400 italic text-center pt-0.5">
+                          ...dan {importedProducts.length - 5} produk impor lainnya
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-xl text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2 mb-6">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <span>
+                  Penghapusan ini aman terhadap katalog bawaan toko. Riwayat transaksi kasir yang sudah tercatat sebelumnya tidak akan hilang.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsClearImportedModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmClearImported}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Ya, Hapus Semua Data Impor ({importedCount})</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal: Hapus Terpilih (Batch Delete) */}
+      {isBulkDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                    Hapus {selectedProductIds.length} Produk Terpilih?
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Produk yang dicentang akan dihapus secara permanen dari master inventaris
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200 dark:border-slate-700 text-xs mb-6">
+                <p className="font-bold text-slate-700 dark:text-slate-300 mb-2">
+                  Daftar Produk yang akan dihapus:
+                </p>
+                <div className="max-h-36 overflow-y-auto space-y-1 pr-1 font-mono text-[11px]">
+                  {products
+                    .filter((p) => selectedProductIds.includes(p.id))
+                    .map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex justify-between items-center bg-white dark:bg-slate-900 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
+                      >
+                        <span className="truncate pr-2">{p.name}</span>
+                        <span className="text-[10px] text-slate-400 shrink-0">{p.sku}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsBulkDeleteModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmBulkDelete}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Hapus {selectedProductIds.length} Produk</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal: Reset ke Default 40 Produk */}
+      {isResetCatalogModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
+                  <RefreshCw className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                    Reset Katalog ke 40 Produk Bawaan?
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Mengembalikan seluruh master data barang ke 40 item ritel standar toko
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+                Tindakan ini akan menghapus semua produk impor maupun custom yang dibuat, dan mengembalikan katalog ke 40 produk sembako, makanan, minuman, dan perlengkapan ritel bawaan.
+              </p>
+
+              <div className="flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsResetCatalogModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmResetDefault}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20 transition-all active:scale-95"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Reset ke 40 Produk Bawaan</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

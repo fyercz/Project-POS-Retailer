@@ -19,7 +19,9 @@ import {
 } from 'lucide-react';
 import { Product, WholesaleUnit } from '../types';
 import { usePOS } from '../context/POSContext';
+import { INITIAL_PRODUCTS } from '../data/mockData';
 import { formatCurrency } from '../utils/formatters';
+import { mapCategory, getImageForCategory } from '../data/importHelpers';
 
 interface DataImportModalProps {
   isOpen: boolean;
@@ -39,6 +41,7 @@ interface ParsedItem {
   stock: number;
   sku: string;
   barcode: string;
+  aisle?: string;
   wholesaleUnits: WholesaleUnit[];
   corrections: string[];
   profitMarginPercent: number;
@@ -46,36 +49,190 @@ interface ParsedItem {
   selected: boolean;
 }
 
-const SAMPLE_RAW_DATA = `indomi grg spsial 80 gr, 2700, 3100, 120
-myk grg bmol 2 ltr, 33500, 38500, 36
-myk grg snia 1 ltr, 16800, 19500, 48
-rokok samporna mild 16 btg, 31500, 34000, 80
-rokok djarum supr 12 btg, 22000, 24000, 60
-kopi kapal api spc mix 24 gr, 1100, 1500, 200
-kopi luwak wite koffie 20 gr, 1200, 1600, 150
-sbun lifbouy red 110 gr, 3800, 4800, 72
-sabun b29 piring 750 ml, 9500, 12500, 40
-shampo sunslk black 170 ml, 18500, 23500, 30
-pasta gigi pepsoden 190 gr, 12500, 16000, 45
-beras pandn wngi 5 kg, 68000, 78000, 25
-susu uht ultr coklat 1000 ml, 17500, 21500, 36
-air min aqua btl 600 ml, 2800, 3500, 96
-biskut khong guan kalg 1600 gr, 85000, 105000, 12`;
+const SAMPLE_RAW_DATA = `8999999190112, indomi grg spsial 80 gr, 2700, 3100, 120
+8992775211029, myk grg bmol 2 ltr, 33500, 38500, 36
+8993175532014, myk grg snia 1 ltr, 16800, 19500, 48
+8999909001234, rokok samporna mild 16 btg, 31500, 34000, 80
+8998866200112, rokok djarum supr 12 btg, 22000, 24000, 60
+8991001100223, kopi kapal api spc mix 24 gr, 1100, 1500, 200
+8992745330101, kopi luwak wite koffie 20 gr, 1200, 1600, 150
+8999999052212, sbun lifbouy red 110 gr, 3800, 4800, 72
+8992741981203, sabun b29 piring 750 ml, 9500, 12500, 40
+8999999041121, shampo sunslk black 170 ml, 18500, 23500, 30
+8999999031102, pasta gigi pepsoden 190 gr, 12500, 16000, 45
+8991234567890, beras pandn wngi 5 kg, 68000, 78000, 25
+8992745110021, susu uht ultr coklat 1000 ml, 17500, 21500, 36
+8992741910012, air min aqua btl 600 ml, 2800, 3500, 96
+8992388011200, biskut khong guan kalg 1600 gr, 85000, 105000, 12`;
 
 export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClose }) => {
-  const { addProductsBatch, settings } = usePOS();
+  const { products, addProductsBatch, clearImportedProducts, settings } = usePOS();
   const minProfitPoints = settings.minProfitPercentForPoints ?? 15;
 
   const [rawInput, setRawInput] = useState(SAMPLE_RAW_DATA);
   const [importedCount, setImportedCount] = useState<number | null>(null);
+  const [clearMessage, setClearMessage] = useState<string | null>(null);
+
+  // Check how many imported products exist in system
+  const initialProductIds = useMemo(() => new Set(INITIAL_PRODUCTS.map((p) => p.id)), []);
+  const currentImportedCount = useMemo(
+    () => products.filter((p) => !initialProductIds.has(p.id)).length,
+    [products, initialProductIds]
+  );
+
+  const handleClearPreviousImported = () => {
+    const count = currentImportedCount;
+    clearImportedProducts();
+    setClearMessage(`Berhasil menghapus ${count} data master produk impor dari katalog.`);
+    setTimeout(() => setClearMessage(null), 4000);
+  };
+
+  // Helper to parse price/cost/stock numbers formatted as Rp, with dots/commas
+  const parsePriceNumber = (val: string | undefined, defaultVal = 0): number => {
+    if (!val) return defaultVal;
+    let str = val.replace(/Rp|\s/gi, '').trim();
+    if (/^\d{1,3}(\.\d{3})+$/.test(str)) {
+      str = str.replace(/\./g, '');
+    } else if (/^\d{1,3}(,\d{3})+$/.test(str)) {
+      str = str.replace(/,/g, '');
+    } else {
+      str = str.replace(/[^0-9]/g, '');
+    }
+    const num = parseInt(str, 10);
+    return isNaN(num) ? defaultVal : num;
+  };
 
   // Indonesian Retail Text & Gramasi Normalization Engine
-  const normalizeIndonesianRetail = (line: string, index: number): ParsedItem => {
-    const parts = line.split(',').map((p) => p.trim());
-    let rawName = parts[0] || `Barang #${index + 1}`;
-    const rawCost = Number(parts[1]) || 5000;
-    const rawPrice = Number(parts[2]) || Math.round(rawCost * 1.25);
-    const rawStock = Number(parts[3]) || 24;
+  const normalizeIndonesianRetail = (line: string, index: number): ParsedItem | null => {
+    if (!line.trim()) return null;
+
+    // Detect delimiter: tab, semicolon, pipe, or comma
+    let delimiter = ',';
+    if (line.includes('\t')) delimiter = '\t';
+    else if (line.includes(';')) delimiter = ';';
+    else if (line.includes('|')) delimiter = '|';
+    else if (line.includes(',')) delimiter = ',';
+
+    const rawParts = line.split(delimiter).map((p) => p.trim());
+    const lineLower = line.toLowerCase();
+
+    // Check if header row
+    if (
+      (lineLower.includes('barcode') && lineLower.includes('nama')) ||
+      (lineLower.includes('nama produk') && lineLower.includes('harga')) ||
+      (lineLower.includes('harga beli') && lineLower.includes('harga jual'))
+    ) {
+      return null; // Skip header row
+    }
+
+    // Extended 9+ column CSV format (Barcode;Nama;Terkoreksi;Kategori;Satuan;Modal;Harga;Stok;MinStok;Lokasi)
+    if (rawParts.length >= 9 && rawParts[3] && isNaN(Number(rawParts[3]))) {
+      const rawBarcode = rawParts[0] || `899${Math.floor(100000000 + Math.random() * 900000000)}`;
+      const rawName = rawParts[1] || `Barang #${index + 1}`;
+      const wasCorrected = rawParts[2] === 'Ya';
+      const catStr = rawParts[3] || 'Sembako & Bumbu Dapur';
+      const unit = rawParts[4] || 'pcs';
+      const rawCost = parsePriceNumber(rawParts[5], 0);
+      const rawPrice = parsePriceNumber(rawParts[6], rawCost > 0 ? Math.round(rawCost * 1.25) : 5000);
+      const rawStock = parsePriceNumber(rawParts[7], 10);
+      const aisle = rawParts[9] || 'Lorong Toko';
+
+      const categoryId = mapCategory(catStr);
+      const brand = rawName.split(' ')[0] || 'Umum';
+
+      const corrections: string[] = [];
+      if (wasCorrected) {
+        corrections.push('Nama terstandardisasi ritel');
+      }
+
+      // Wholesale units generator
+      const wholesaleUnits: WholesaleUnit[] = [];
+      const lowerFull = rawName.toLowerCase();
+      if (categoryId === 'instant' || lowerFull.includes('mie') || lowerFull.includes('indomie')) {
+        wholesaleUnits.push({
+          id: `wh-dus-${index}`,
+          name: 'Dus (40 Bungkus)',
+          multiplier: 40,
+          price: Math.round((rawPrice * 40 * 0.94) / 1000) * 1000,
+          costPrice: rawCost * 40,
+        });
+      } else if (categoryId === 'beverages' && (unit === 'botol' || unit === 'pcs' || unit === 'kotak')) {
+        wholesaleUnits.push({
+          id: `wh-dus-${index}`,
+          name: 'Dus (24 Pcs)',
+          multiplier: 24,
+          price: Math.round((rawPrice * 24 * 0.93) / 1000) * 1000,
+          costPrice: rawCost * 24,
+        });
+      } else if (rawCost > 0) {
+        wholesaleUnits.push({
+          id: `wh-pak-${index}`,
+          name: `Pak / Karton (12 ${unit})`,
+          multiplier: 12,
+          price: Math.round((rawPrice * 12 * 0.95) / 500) * 500,
+          costPrice: rawCost * 12,
+        });
+      }
+
+      const marginNominal = Math.max(0, rawPrice - rawCost);
+      const profitMarginPercent = rawPrice > 0 ? (marginNominal / rawPrice) * 100 : 0;
+      const isPointsEligible = profitMarginPercent >= minProfitPoints;
+      const sku = `SKU-${categoryId.slice(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+
+      return {
+        id: `parsed-csv-${index}-${rawBarcode}`,
+        originalText: line,
+        name: rawName,
+        brand,
+        gramasi: '',
+        categoryId,
+        unit,
+        costPrice: rawCost,
+        price: rawPrice,
+        stock: rawStock,
+        sku,
+        barcode: rawBarcode,
+        aisle,
+        wholesaleUnits,
+        corrections,
+        profitMarginPercent,
+        isPointsEligible,
+        selected: true,
+      };
+    }
+
+    // Standard Formula: [0] Barcode, [1] Nama Produk, [2] Harga Beli, [3] Harga Jual, [4] Stok
+    let rawBarcode = '';
+    let rawName = '';
+    let rawCost = 0;
+    let rawPrice = 0;
+    let rawStock = 0;
+
+    if (rawParts.length >= 5) {
+      // 5-Column Standard: Barcode, Nama Produk, Harga Beli, Harga Jual, Stok
+      rawBarcode = rawParts[0].trim();
+      rawName = rawParts[1].trim() || `Barang #${index + 1}`;
+      rawCost = parsePriceNumber(rawParts[2], 0);
+      rawPrice = parsePriceNumber(rawParts[3], rawCost > 0 ? Math.round(rawCost * 1.25) : 5000);
+      rawStock = parsePriceNumber(rawParts[4], 10);
+    } else if (rawParts.length === 4) {
+      // 4-Column Fallback: Nama Produk, Harga Beli, Harga Jual, Stok (auto-generated barcode)
+      rawName = rawParts[0].trim() || `Barang #${index + 1}`;
+      rawCost = parsePriceNumber(rawParts[1], 0);
+      rawPrice = parsePriceNumber(rawParts[2], rawCost > 0 ? Math.round(rawCost * 1.25) : 5000);
+      rawStock = parsePriceNumber(rawParts[3], 10);
+    } else {
+      // Shorter line
+      rawName = rawParts[0]?.trim() || `Barang #${index + 1}`;
+      rawCost = parsePriceNumber(rawParts[1], 0);
+      rawPrice = parsePriceNumber(rawParts[2], rawCost > 0 ? Math.round(rawCost * 1.25) : 5000);
+      rawStock = 10;
+    }
+
+    // Auto-generate valid EAN-13 barcode if missing or invalid
+    if (!rawBarcode || rawBarcode.length < 4) {
+      rawBarcode = `899${Math.floor(100000000 + Math.random() * 900000000)}`;
+    }
 
     const corrections: string[] = [];
 
@@ -331,10 +488,10 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
     const isPointsEligible = profitMarginPercent >= minProfitPoints;
 
     const sku = `SKU-${categoryId.slice(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
-    const barcode = `899${Math.floor(100000000 + Math.random() * 900000000)}`;
+    const barcode = rawBarcode;
 
     return {
-      id: `parsed-${index}-${Date.now()}`,
+      id: `parsed-${index}-${Date.now()}-${barcode}`,
       originalText: line,
       name: finalName,
       brand,
@@ -360,7 +517,8 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
       .split('\n')
       .map((l) => l.trim())
       .filter((l) => l.length > 0)
-      .map((l, idx) => normalizeIndonesianRetail(l, idx));
+      .map((l, idx) => normalizeIndonesianRetail(l, idx))
+      .filter((it): it is ParsedItem => it !== null);
   }, [rawInput, minProfitPoints]);
 
   const [itemsState, setItemsState] = useState<ParsedItem[]>([]);
@@ -375,7 +533,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
   const handleMatchInternetDatabase = async () => {
     if (itemsState.length === 0) return;
     setMatchingInternet(true);
-    setInternetSyncStatus('Menghubungi Open Food Facts API & AI Retail Database...');
+    setInternetSyncStatus('Menghubungi Google Search Grounding & Gemini AI...');
 
     try {
       const payload = itemsState.map((it) => ({
@@ -430,19 +588,24 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                     }))
                   : it.wholesaleUnits,
               corrections: [
-                ...it.corrections.filter((c) => !c.includes('Database Internet')),
-                `🌐 Terverifikasi Database Internet (${hit.matchSource || 'OFF & AI'})`,
+                ...it.corrections.filter((c) => !c.includes('Database Internet') && !c.includes('Google Grounding')),
+                `🌐 Terverifikasi Google Search Grounding (${hit.matchSource || 'Google Search'})`,
               ],
             };
           })
         );
 
         setInternetSyncStatus(
-          `✅ Berhasil mencocokkan ${data.matchedItems.length} produk dengan database internet (Open Food Facts + AI)!`
+          `✅ Berhasil mencocokkan ${data.matchedItems.length} produk dengan Google Search Grounding & Gemini AI!`
         );
+        setTimeout(() => setInternetSyncStatus(null), 4000);
+      } else {
+        setInternetSyncStatus('Gagal menyelaraskan dengan Google Search Grounding.');
+        setTimeout(() => setInternetSyncStatus(null), 4000);
       }
     } catch {
-      setInternetSyncStatus('⚠️ Gagal terhubung ke database online. Menggunakan hasil normalizer lokal.');
+      setInternetSyncStatus('⚠️ Gagal terhubung ke Google Grounding. Menggunakan hasil normalizer lokal.');
+      setTimeout(() => setInternetSyncStatus(null), 4000);
     } finally {
       setMatchingInternet(false);
     }
@@ -475,10 +638,11 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
       price: it.price,
       costPrice: it.costPrice,
       stock: it.stock,
-      minStock: Math.max(4, Math.floor(it.stock * 0.2)),
+      minStock: Math.max(2, Math.floor(it.stock * 0.2)),
       unit: it.unit,
+      aisle: it.aisle || 'Lorong Toko',
       wholesaleUnits: it.wholesaleUnits.length > 0 ? it.wholesaleUnits : undefined,
-      image: '',
+      image: getImageForCategory(it.categoryId, it.name),
     }));
 
     addProductsBatch(payloads);
@@ -525,29 +689,111 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {/* Section 1: Raw Input Box */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Tempel Data Mentah (Format: Nama Produk, Harga Beli, Harga Jual, Stok)</span>
-              </label>
+          {/* Notification when cleared */}
+          {clearMessage && (
+            <div className="p-3 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold flex items-center justify-between animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4" />
+                <span>{clearMessage}</span>
+              </div>
               <button
                 type="button"
-                onClick={() => setRawInput(SAMPLE_RAW_DATA)}
-                className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                onClick={() => setClearMessage(null)}
+                className="p-1 hover:opacity-80 cursor-pointer"
               >
-                <RefreshCw className="w-3 h-3" /> Muat Contoh Data Retail
+                <X className="w-3.5 h-3.5" />
               </button>
+            </div>
+          )}
+
+          {/* Existing Imported Items Info Bar */}
+          {currentImportedCount > 0 && (
+            <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 text-xs flex-wrap">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="text-slate-700 dark:text-slate-300">
+                  Saat ini terdapat <strong>{currentImportedCount} produk hasil impor</strong> di dalam master katalog toko.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearPreviousImported}
+                className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                title="Hapus semua produk impor yang pernah dimasukkan sebelumnya"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Hapus Data Impor Sebelumnya ({currentImportedCount})</span>
+              </button>
+            </div>
+          )}
+
+          {/* Section 1: Raw Input Box */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Tempel Data Produk (Format: Barcode, Nama Produk, Harga Beli, Harga Jual, Stok)</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(
+                      '8999999190112, indomi grg spsial 80 gr, 2700, 3100, 120\n8992775211029, myk grg bmol 2 ltr, 33500, 38500, 36\n8993175532014, myk grg snia 1 ltr, 16800, 19500, 48'
+                    );
+                    setClearMessage('Template format disalin ke clipboard!');
+                    setTimeout(() => setClearMessage(null), 3000);
+                  }}
+                  className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 cursor-pointer"
+                >
+                  <Copy className="w-3 h-3" /> Salin Template
+                </button>
+                <span className="text-slate-300 dark:text-slate-700">|</span>
+                <button
+                  type="button"
+                  onClick={() => setRawInput(SAMPLE_RAW_DATA)}
+                  className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" /> Muat Contoh Data Retail (15 Produk)
+                </button>
+              </div>
+            </div>
+
+            {/* Visual Column Formula Chips */}
+            <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+              <span className="text-slate-400 font-semibold">Urutan Kolom:</span>
+              <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-mono font-bold">
+                1. Barcode
+              </span>
+              <span className="text-slate-400 font-bold">,</span>
+              <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-mono font-bold">
+                2. Nama Produk
+              </span>
+              <span className="text-slate-400 font-bold">,</span>
+              <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 font-mono font-bold">
+                3. Harga Beli (HPP)
+              </span>
+              <span className="text-slate-400 font-bold">,</span>
+              <span className="px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 font-mono font-bold">
+                4. Harga Jual
+              </span>
+              <span className="text-slate-400 font-bold">,</span>
+              <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 font-mono font-bold">
+                5. Stok
+              </span>
             </div>
 
             <textarea
               rows={5}
               value={rawInput}
               onChange={(e) => setRawInput(e.target.value)}
-              placeholder="Contoh: indomi grg spsial 80 gr, 2700, 3100, 120..."
+              placeholder="Contoh: 8999999190112, indomi grg spsial 80 gr, 2700, 3100, 120&#10;8992775211029, myk grg bmol 2 ltr, 33500, 38500, 36..."
               className="w-full p-3 text-xs font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none leading-relaxed"
             />
+            <div className="flex items-center justify-between text-[10px] text-slate-400">
+              <span>*Mendukung pemisah koma (,), titik koma (;), atau tab dari copy-paste Excel / Google Sheets.</span>
+              <span>Baris header akan diabaikan otomatis.</span>
+            </div>
           </div>
 
           {/* Section 2: Smart Auto-Correction & Preview Table */}
@@ -591,14 +837,14 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                   onClick={handleMatchInternetDatabase}
                   disabled={matchingInternet || itemsState.length === 0}
                   className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50 transition-all"
-                  title="Cocokkan nama singkatan dengan katalog resmi Open Food Facts & AI Retail Database"
+                  title="Cocokkan nama singkatan dengan katalog resmi melalui Google Search Grounding & Gemini AI"
                 >
                   {matchingInternet ? (
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <Globe className="w-3.5 h-3.5" />
                   )}
-                  <span>{matchingInternet ? 'Sinkronisasi Internet...' : 'Cocokkan dg Database Internet (OFF & AI)'}</span>
+                  <span>{matchingInternet ? 'Mencari di Google Grounding...' : 'Cocokkan dg Google Grounding & AI'}</span>
                 </button>
 
                 <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
@@ -630,9 +876,12 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                       {/* Name & Diff */}
                       <div className="flex items-center justify-between gap-2">
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                               {item.name}
+                            </span>
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700">
+                              📊 {item.barcode}
                             </span>
                             <span className="text-[10px] font-semibold px-2 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                               {item.brand}

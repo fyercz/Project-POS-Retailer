@@ -44,7 +44,7 @@ async function callGeminiSafe(
   }
 
   const ai = getGeminiClient();
-  const modelsToTry = ['gemini-3.7-flash', 'gemini-2.5-flash'];
+  const modelsToTry = ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite'];
 
   for (const model of modelsToTry) {
     try {
@@ -60,8 +60,12 @@ async function callGeminiSafe(
       if (response.text) {
         return response.text;
       }
-    } catch {
-      // Continue to next model or fallback gracefully without crashing
+    } catch (err: any) {
+      const status = err?.status || err?.code;
+      if (status !== 429 && status !== 'RESOURCE_EXHAUSTED') {
+        console.warn(`Gemini generation warning with ${model}:`, err?.message || err);
+      }
+      // Continue to next fallback model or fallback gracefully
       continue;
     }
   }
@@ -80,7 +84,7 @@ async function callGeminiVisionSafe(
   }
 
   const ai = getGeminiClient();
-  const modelsToTry = ['gemini-3.7-flash', 'gemini-2.5-flash'];
+  const modelsToTry = ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite'];
 
   const parts: any[] = [{ text: prompt }];
   for (const img of images) {
@@ -106,7 +110,95 @@ async function callGeminiVisionSafe(
       if (response.text) {
         return response.text;
       }
-    } catch {
+    } catch (err: any) {
+      const status = err?.status || err?.code;
+      if (status !== 429 && status !== 'RESOURCE_EXHAUSTED') {
+        console.warn(`Gemini vision warning with ${model}:`, err?.message || err);
+      }
+      continue;
+    }
+  }
+
+  return null;
+}
+
+// Robust JSON parser for Grounding / Text responses
+function extractJsonFromText(rawText: string): any {
+  if (!rawText) return null;
+  try {
+    return JSON.parse(rawText);
+  } catch {}
+
+  const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (jsonMatch && jsonMatch[1]) {
+    try {
+      return JSON.parse(jsonMatch[1].trim());
+    } catch {}
+  }
+
+  const firstBrace = rawText.indexOf('{');
+  const lastBrace = rawText.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    try {
+      return JSON.parse(rawText.slice(firstBrace, lastBrace + 1));
+    } catch {}
+  }
+
+  const firstBracket = rawText.indexOf('[');
+  const lastBracket = rawText.lastIndexOf(']');
+  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+    try {
+      return JSON.parse(rawText.slice(firstBracket, lastBracket + 1));
+    } catch {}
+  }
+
+  return null;
+}
+
+// Helper to call Gemini with Google Search Grounding (Live Web Search & Sources)
+async function callGeminiWithSearch(
+  prompt: string,
+  temperature = 0.1
+): Promise<{ text: string; sources: Array<{ uri: string; title: string }> } | null> {
+  if (!process.env.GEMINI_API_KEY) {
+    return null;
+  }
+
+  const ai = getGeminiClient();
+  const modelsToTry = ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite'];
+
+  for (const model of modelsToTry) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          tools: [{ googleSearch: {} }],
+          temperature,
+        },
+      });
+
+      const text = response.text || '';
+      const rawChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      const sources: Array<{ uri: string; title: string }> = [];
+
+      for (const chunk of rawChunks) {
+        if ((chunk as any).web?.uri) {
+          sources.push({
+            uri: (chunk as any).web.uri,
+            title: (chunk as any).web.title || 'Google Search Result',
+          });
+        }
+      }
+
+      if (text) {
+        return { text, sources };
+      }
+    } catch (err: any) {
+      const status = err?.status || err?.code;
+      if (status !== 429 && status !== 'RESOURCE_EXHAUSTED') {
+        console.warn(`Gemini search grounding warning with ${model}:`, err?.message || err);
+      }
       continue;
     }
   }
@@ -691,7 +783,7 @@ Kembalikan JSON:
 });
 
 // ==========================================
-// 8. ONLINE INTERNET DATABASE PRODUCT & BARCODE MATCHING (Open Food Facts + Gemini Retail KB)
+// 8. ONLINE PRODUCT & BARCODE LOOKUP (Google Search Grounding + Gemini AI)
 // ==========================================
 
 // Built-in Indonesian Retail FMCG Knowledge Base for instant high-speed matching & offline fallback
@@ -939,7 +1031,7 @@ const INDO_FMCG_OFFLINE_DB: Array<{
   },
 ];
 
-// 8.1 Lookup Product by Barcode (Open Food Facts + Gemini AI Enrichment)
+// 8.1 Lookup Product by Barcode (Google Search Grounding + Gemini AI)
 app.post('/api/online/lookup-barcode', async (req, res) => {
   const { barcode } = req.body;
   if (!barcode || typeof barcode !== 'string') {
@@ -948,121 +1040,46 @@ app.post('/api/online/lookup-barcode', async (req, res) => {
 
   const cleanBarcode = barcode.trim();
 
-  // 1. Check local knowledge base first for ultra-fast instant response
+  // 1. Check local knowledge base first for ultra-fast instant match
   const localMatch = INDO_FMCG_OFFLINE_DB.find((item) => item.barcode === cleanBarcode);
 
-  // 2. Fetch from Open Food Facts Database API (Public Global & Indonesian FMCG Catalog)
-  let offData: any = null;
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
-    const offRes = await fetch(
-      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cleanBarcode)}.json`,
-      {
-        headers: {
-          'User-Agent': 'UlilmartPOS/1.0 (Retail POS Database Sync)',
-        },
-        signal: controller.signal,
-      }
-    );
-    clearTimeout(timeoutId);
-
-    if (offRes.ok) {
-      const json = await offRes.json();
-      if (json.status === 1 && json.product) {
-        const p = json.product;
-        offData = {
-          barcode: cleanBarcode,
-          name: p.product_name_id || p.product_name || p.generic_name || '',
-          brand: p.brands || '',
-          quantity: p.quantity || '',
-          image: p.image_front_small_url || p.image_front_url || p.image_url || '',
-          categories: p.categories || '',
-          source: 'Open Food Facts Database',
-        };
-      }
-    }
-  } catch {
-    // Open Food Facts network timeout or not available, continue to AI/Local
-  }
-
-  // 3. If no Gemini API key or offline, return local match or formatted Open Food Facts data
-  if (!process.env.GEMINI_API_KEY) {
-    if (localMatch) {
-      return res.json({
-        success: true,
-        source: 'Indonesian Retail FMCG Database',
-        data: localMatch,
-        isAiEnriched: false,
-      });
-    }
-
-    if (offData && offData.name) {
-      const isLiquid = offData.name.toLowerCase().includes('minyak') || offData.name.toLowerCase().includes('air') || offData.name.toLowerCase().includes('susu');
-      const fallbackUnit = isLiquid ? 'botol' : offData.name.toLowerCase().includes('mi') ? 'bungkus' : 'pcs';
-      return res.json({
-        success: true,
-        source: 'Open Food Facts Online Database',
-        data: {
-          barcode: cleanBarcode,
-          name: offData.name + (offData.quantity ? ` ${offData.quantity}` : ''),
-          brand: offData.brand || 'Umum',
-          categoryId: 'cat-staple',
-          unit: fallbackUnit,
-          price: 15000,
-          costPrice: 12000,
-          image: offData.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&auto=format&fit=crop&q=60',
-          description: `Produk teridentifikasi dari Open Food Facts: ${offData.name}`,
-          wholesaleUnits: [
-            { name: `Dus (24 ${fallbackUnit})`, multiplier: 24, price: 340000, costPrice: 280000 }
-          ]
-        },
-        isAiEnriched: false,
-      });
-    }
-
-    return res.json({
-      success: false,
-      message: `Barcode ${cleanBarcode} belum ditemukan di Open Food Facts atau database lokal.`,
-    });
-  }
-
-  // 4. Enrich with Gemini AI using Internet Retail Knowledge Base
-  try {
-    const prompt = `Anda adalah Database Manager Ritel Modern & FMCG Indonesia.
-Diberikan Barcode EAN-13: "${cleanBarcode}"
-Data dari Open Food Facts (jika ada): ${JSON.stringify(offData || {})}
-Data Lokal Toko (jika ada): ${JSON.stringify(localMatch || {})}
+  // 2. Perform live Google Search Grounding with Gemini
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const prompt = `Gunakan Google Search grounding untuk mencari produk ritel, minimarket, atau FMCG Indonesia yang memiliki Barcode EAN-13: "${cleanBarcode}".
+Cari di web Indonesia seperti KlikIndomaret, Alfagift, Tokopedia, Shopee, Blibli, atau database resmi produk barcode Indonesia.
 
 TUGAS:
-Identifikasi nama resmi produk, brand, kemasan gramasi resmi, kategori standar, estimasi harga jual eceran (HET) dan modal (HPP) di minimarket Indonesia (Indomaret, Alfamart, Superindo, Warung Madura), serta kemasan grosir standar (Dus, Slop, Renceng, Karton, Bal).
+1. Identifikasi nama resmi produk, nama brand/merk, gramasi kemasan resmi (misal 80g, 600ml, 2L, 500g).
+2. Tentukan kategori yang tepat:
+   - "cat-staple" (Sembako & Beras & Minyak & Gula)
+   - "cat-bev" (Minuman & Kopi & Teh & Susu)
+   - "cat-snk" (Makanan Ringan & Biskuit & Snack)
+   - "cat-instant" (Mi Instan & Makanan Siap Saji)
+   - "cat-pers" (Perawatan Tubuh & Sabun & Shampo & Pasta Gigi)
+   - "cat-clean" (Pembersih Rumah & Cuci Piring & Deterjen)
+   - "cat-fresh" (Produk Segar & Telur & Buah & Sayur)
+   - "cat-bakery" (Roti & Selai)
+   - "cat-cig" (Rokok & Tembakau)
+   - "cat-other" (Lainnya)
+3. Tentukan satuan dasar: "bungkus | pcs | botol | kaleng | pouch | sak | renceng | kotak".
+4. Estimasi harga jual eceran (HET Rp) di toko ritel Indonesia dan harga modal HPP (margin 15-25%).
+5. Susun opsi grosir standar (Dus, Karton, Slop, Renceng, atau Bal) sesuai standar distributor di Indonesia.
 
-Kategori yang valid (pilih salah satu id):
-- "cat-staple" (Sembako & Minyak & Beras & Gula)
-- "cat-bev" (Minuman & Kopi & Teh & Susu)
-- "cat-snk" (Makanan Ringan & Biskuit & Cokelat)
-- "cat-instant" (Mi Instan & Makanan Cepat Saji)
-- "cat-pers" (Perawatan Tubuh & Sabun & Pasta Gigi)
-- "cat-clean" (Pembersih Rumah & Deterjen & Cuci Piring)
-- "cat-fresh" (Produk Segar & Telur & Buah)
-- "cat-bakery" (Roti & Selai)
-- "cat-cig" (Rokok & Tembakau)
-- "cat-other" (Lainnya)
-
-Kembalikan format JSON murni:
+Kembalikan HANYA format JSON valid berikut (tanpa teks pengantar tambahan):
 {
   "barcode": "${cleanBarcode}",
-  "name": "Nama Resmi Lengkap dengan Gramasi (misal: Indomie Mi Instan Goreng Spesial 80g)",
-  "brand": "Nama Brand/Merk",
+  "name": "Nama Resmi Produk Lengkap dengan Gramasi",
+  "brand": "Nama Merk / Brand",
   "categoryId": "cat-instant",
-  "unit": "bungkus | pcs | botol | kaleng | pouch | sak | renceng",
-  "price": 3500, // Estimasi harga jual eceran Rp
-  "costPrice": 2850, // Estimasi harga modal Rp (margin 15-25%)
-  "image": "url gambar kemasan atau biarkan string url placeholder",
-  "description": "Deskripsi singkat 1 kalimat spesifikasi produk",
+  "unit": "bungkus",
+  "price": 3500,
+  "costPrice": 2850,
+  "image": "https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&auto=format&fit=crop&q=60",
+  "description": "Deskripsi singkat spesifikasi produk ritel",
   "wholesaleUnits": [
     {
-      "name": "Pak (5 Bks) atau Dus (40 Bks) atau Slop (10 Bks)",
+      "name": "Dus (40 Bks)",
       "multiplier": 40,
       "price": 122000,
       "costPrice": 112000
@@ -1071,40 +1088,46 @@ Kembalikan format JSON murni:
 }
 `;
 
-    const rawText = await callGeminiSafe(prompt, 0.1);
-    if (rawText) {
-      const parsed = JSON.parse(rawText);
-      if (offData?.image && (!parsed.image || parsed.image.includes('placeholder'))) {
-        parsed.image = offData.image;
+      const searchResult = await callGeminiWithSearch(prompt, 0.1);
+      if (searchResult && searchResult.text) {
+        const parsed = extractJsonFromText(searchResult.text);
+        if (parsed && parsed.name && parsed.name !== 'Nama Resmi Produk') {
+          // If local match exists, preserve high quality local image if AI returned default
+          if (localMatch?.image && (!parsed.image || parsed.image.includes('placeholder') || parsed.image.includes('unsplash'))) {
+            parsed.image = localMatch.image;
+          }
+          return res.json({
+            success: true,
+            source: 'Google Search Grounding (Live Web)',
+            data: parsed,
+            groundingSources: searchResult.sources,
+            isAiEnriched: true,
+          });
+        }
       }
-      return res.json({
-        success: true,
-        source: offData ? 'Open Food Facts + Gemini Online AI' : 'Gemini Retail Internet KB',
-        data: parsed,
-        isAiEnriched: true,
-      });
+    } catch (err) {
+      console.error('Google search grounding barcode lookup error:', err);
     }
-  } catch (err) {
-    console.error('Barcode lookup AI error:', err);
   }
 
-  // Fallback to local or OFF
+  // Fallback to local catalog if search grounding is offline or returned no match
   if (localMatch) {
     return res.json({
       success: true,
       source: 'Indonesian Retail FMCG Database',
       data: localMatch,
+      groundingSources: [],
       isAiEnriched: false,
     });
   }
 
   res.json({
     success: false,
-    message: `Barcode ${cleanBarcode} tidak ditemukan di database internet.`,
+    message: `Barcode ${cleanBarcode} tidak ditemukan di Google Search Grounding atau database lokal.`,
   });
 });
 
-// 8.2 Search Products by Keyword in Internet Database
+// 8.2 Search Products by Keyword (Google Search Grounding + Gemini AI)
 app.post('/api/online/search-products', async (req, res) => {
   const { query } = req.body;
   if (!query || typeof query !== 'string') {
@@ -1121,17 +1144,17 @@ app.post('/api/online/search-products', async (req, res) => {
       item.barcode.includes(qLower)
   );
 
-  // Gemini Search & Enrichment
+  // Gemini Google Search Grounding
   if (process.env.GEMINI_API_KEY) {
     try {
-      const prompt = `Anda adalah Database Mesin Pencari Produk FMCG & Ritel Indonesia.
-Kata kunci pencarian user: "${query}"
+      const prompt = `Gunakan Google Search grounding untuk mencari katalog produk ritel/minimarket/supermarket di Indonesia dengan kata kunci: "${query}".
+Cari di web e-commerce ritel Indonesia (KlikIndomaret, Alfagift, Tokopedia, Shopee, Blibli, Superindo).
 
 TUGAS:
-Cari dan hasilkan 3 hingga 6 produk ritel asli yang beredar di minimarket/supermarket Indonesia yang paling sesuai dengan kata kunci tersebut.
-Lengkapi dengan barcode EAN-13 Indonesia resmi (biasanya awalan 899...), brand, kategori, harga pasar eceran & modal, serta pilihan satuan grosir (Dus/Slop/Karton/Renceng).
+Cari 3 hingga 6 produk asli yang paling sesuai dengan kata kunci tersebut.
+Lengkapi setiap produk dengan Barcode EAN-13 Indonesia resmi (awalan 899... jika produk lokal Indonesia), Brand, Kategori (cat-staple, cat-bev, cat-snk, cat-instant, cat-pers, cat-clean, cat-fresh, cat-bakery, cat-cig, cat-other), Satuan, Harga Jual Eceran (HET Rp), Harga Modal (HPP Rp), dan opsi kemasan grosir (Dus/Karton/Slop/Renceng).
 
-Kembalikan format JSON murni array:
+Kembalikan HANYA format JSON valid array:
 [
   {
     "barcode": "8998866200223",
@@ -1150,19 +1173,20 @@ Kembalikan format JSON murni array:
 ]
 `;
 
-      const rawText = await callGeminiSafe(prompt, 0.2);
-      if (rawText) {
-        const parsed = JSON.parse(rawText);
+      const searchResult = await callGeminiWithSearch(prompt, 0.1);
+      if (searchResult && searchResult.text) {
+        const parsed = extractJsonFromText(searchResult.text);
         if (Array.isArray(parsed) && parsed.length > 0) {
           return res.json({
             success: true,
-            source: 'Gemini Online Retail Database',
+            source: 'Google Search Grounding (Live Web)',
             results: parsed,
+            groundingSources: searchResult.sources,
           });
         }
       }
-    } catch {
-      // Continue to local
+    } catch (err) {
+      console.error('Google search grounding keyword search error:', err);
     }
   }
 
@@ -1170,10 +1194,11 @@ Kembalikan format JSON murni array:
     success: true,
     source: 'Indonesian FMCG Catalog',
     results: localResults,
+    groundingSources: [],
   });
 });
 
-// 8.3 Batch Match and Reconcile Import Data against Internet Database
+// 8.3 Batch Match and Reconcile Import Data (Google Search Grounding + Gemini AI)
 app.post('/api/online/match-batch', async (req, res) => {
   const { items } = req.body;
   if (!Array.isArray(items) || items.length === 0) {
@@ -1213,33 +1238,20 @@ app.post('/api/online/match-batch', async (req, res) => {
     return null;
   });
 
-  if (!process.env.GEMINI_API_KEY) {
-    const fallbackResults = items.map((it: any, idx: number) => {
-      if (localMatched[idx]) return localMatched[idx];
-      return {
-        ...it,
-        matchConfidence: 0.7,
-        matchStatus: 'suggested' as const,
-        matchSource: 'Rule-based Corrector',
-      };
-    });
-    return res.json({ success: true, matchedItems: fallbackResults });
-  }
-
-  try {
-    const prompt = `Anda adalah Database Reconciliation Engine untuk toko ritel FMCG & Swalayan Indonesia.
-Daftar data barang yang diimpor oleh kasir / admin (mungkin singkatan ekstrem, salah ketik, atau tanpa barcode):
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const prompt = `Gunakan Google Search grounding untuk memverifikasi dan mencocokkan daftar barang ritel Indonesia berikut dengan katalog resmi live web:
 ${JSON.stringify(items.map((it: any) => ({ id: it.id, input: it.rawInput || it.name, barcode: it.barcode, price: it.price, costPrice: it.costPrice, stock: it.stock })))}
 
 TUGAS:
-Cocokkan setiap baris dengan data katalog produk resmi di database ritel FMCG Indonesia:
-1. Perbaiki nama menjadi nama resmi lengkap dengan brand dan gramasi (misal: "indomi grg sps 80g" -> "Indomie Mi Instan Goreng Spesial 80g").
+Cocokkan setiap baris dengan data katalog produk resmi dari Google Search:
+1. Perbaiki nama menjadi nama resmi lengkap dengan brand dan gramasi resmi (misal: "indomi grg sps 80g" -> "Indomie Mi Instan Goreng Spesial 80g").
 2. Lengkapi Barcode EAN-13 resmi Indonesia jika kosong atau tidak valid (awalan 899...).
 3. Tentukan Brand, Kategori (cat-staple, cat-bev, cat-snk, cat-instant, cat-pers, cat-clean, cat-fresh, cat-bakery, cat-cig, cat-other), dan Satuan standar.
 4. Tentukan standar kemasan grosir (Dus, Slop, Renceng, Karton, Bal) sesuai kebiasaan distributor FMCG.
 5. Estimasi harga jual dan harga modal yang wajar jika belum diisi.
 
-Kembalikan format JSON array objek:
+Kembalikan HANYA format JSON valid array objek:
 [
   {
     "id": "id_dari_input",
@@ -1253,8 +1265,8 @@ Kembalikan format JSON array objek:
     "costPrice": 2850,
     "stock": 40,
     "matchConfidence": 0.98,
-    "matchStatus": "verified" | "suggested",
-    "matchSource": "Database Internet FMCG & AI",
+    "matchStatus": "verified",
+    "matchSource": "Google Search Grounding & Gemini",
     "wholesaleUnits": [
       { "name": "Dus (40 Bks)", "multiplier": 40, "price": 122000, "costPrice": 112000 }
     ]
@@ -1262,23 +1274,34 @@ Kembalikan format JSON array objek:
 ]
 `;
 
-    const rawText = await callGeminiSafe(prompt, 0.1);
-    if (rawText) {
-      const parsed = JSON.parse(rawText);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return res.json({
-          success: true,
-          matchedItems: parsed,
-          source: 'Gemini Internet Database Reconciliation',
-        });
+      const searchResult = await callGeminiWithSearch(prompt, 0.1);
+      if (searchResult && searchResult.text) {
+        const parsed = extractJsonFromText(searchResult.text);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return res.json({
+            success: true,
+            matchedItems: parsed,
+            groundingSources: searchResult.sources,
+            source: 'Google Search Grounding (Live Web)',
+          });
+        }
       }
+    } catch (err) {
+      console.error('Google search grounding batch match error:', err);
     }
-  } catch (err) {
-    console.error('Batch match error:', err);
   }
 
-  const defaultResults = items.map((it: any, idx: number) => localMatched[idx] || it);
-  res.json({ success: true, matchedItems: defaultResults });
+  const defaultResults = items.map((it: any, idx: number) => {
+    if (localMatched[idx]) return localMatched[idx];
+    return {
+      ...it,
+      matchConfidence: 0.7,
+      matchStatus: 'suggested' as const,
+      matchSource: 'Rule-based Corrector',
+    };
+  });
+
+  res.json({ success: true, matchedItems: defaultResults, groundingSources: [] });
 });
 
 // Vite Middleware for development & Static Serving for production

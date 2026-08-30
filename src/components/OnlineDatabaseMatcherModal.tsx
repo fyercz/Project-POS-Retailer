@@ -28,6 +28,11 @@ interface OnlineDatabaseMatcherModalProps {
   onSelectForForm?: (matchedData: Partial<Product>) => void;
 }
 
+interface GroundingSource {
+  uri: string;
+  title: string;
+}
+
 interface OnlineProductResult {
   barcode: string;
   name: string;
@@ -40,6 +45,7 @@ interface OnlineProductResult {
   description?: string;
   wholesaleUnits?: WholesaleUnit[];
   source?: string;
+  groundingSources?: GroundingSource[];
 }
 
 export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProps> = ({
@@ -58,6 +64,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
   const [barcodeResult, setBarcodeResult] = useState<OnlineProductResult | null>(null);
   const [searchResults, setSearchResults] = useState<OnlineProductResult[]>([]);
+  const [groundingSources, setGroundingSources] = useState<GroundingSource[]>([]);
   const [dataSource, setDataSource] = useState<string>('');
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [successToast, setSuccessToast] = useState<string | null>(null);
@@ -79,6 +86,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
     setLoading(true);
     setErrorMsg(null);
     setBarcodeResult(null);
+    setGroundingSources([]);
     setSearched(true);
 
     try {
@@ -91,12 +99,15 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
       if (data.success && data.data) {
         setBarcodeResult(data.data);
-        setDataSource(data.source || 'Database Internet');
+        setDataSource(data.source || 'Google Search Grounding (Live Web)');
+        if (Array.isArray(data.groundingSources)) {
+          setGroundingSources(data.groundingSources);
+        }
       } else {
-        setErrorMsg(data.message || `Barcode "${target}" tidak ditemukan di database internet.`);
+        setErrorMsg(data.message || `Barcode "${target}" tidak ditemukan di Google Grounding atau database internet.`);
       }
     } catch {
-      setErrorMsg('Gagal terhubung ke layanan database internet. Periksa koneksi.');
+      setErrorMsg('Gagal terhubung ke layanan Google Grounding. Periksa koneksi internet.');
     } finally {
       setLoading(false);
     }
@@ -112,6 +123,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
     setLoading(true);
     setErrorMsg(null);
     setSearchResults([]);
+    setGroundingSources([]);
     setSearched(true);
 
     try {
@@ -124,15 +136,18 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
       if (data.success && Array.isArray(data.results)) {
         setSearchResults(data.results);
-        setDataSource(data.source || 'Database Internet FMCG');
+        setDataSource(data.source || 'Google Search Grounding (Live Web)');
+        if (Array.isArray(data.groundingSources)) {
+          setGroundingSources(data.groundingSources);
+        }
         if (data.results.length === 0) {
           setErrorMsg(`Tidak ditemukan produk yang cocok untuk kata kunci "${target}".`);
         }
       } else {
-        setErrorMsg('Tidak dapat memproses hasil pencarian database online.');
+        setErrorMsg('Tidak dapat memproses hasil pencarian Google Search Grounding.');
       }
     } catch {
-      setErrorMsg('Gagal terhubung ke layanan database internet.');
+      setErrorMsg('Gagal terhubung ke layanan Google Search Grounding.');
     } finally {
       setLoading(false);
     }
@@ -220,12 +235,12 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                   Pencocokan Database Online & Cek Barcode Internet
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                  <Zap className="w-3 h-3" /> Live Internet Sync
+                  <Zap className="w-3 h-3" /> Google Grounding Live Web
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Terhubung ke Open Food Facts API & AI Retail Database Indonesia untuk mencocokkan data produk resmi,
-                gramasi, foto kemasan & standar grosir.
+                Terhubung langsung ke Google Search Grounding & Gemini AI untuk verifikasi data resmi produk Indonesia,
+                gramasi, foto kemasan, dan multi-kemasan grosir secara real-time.
               </p>
             </div>
           </div>
@@ -283,7 +298,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
           <div className="ml-auto hidden sm:flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            <span>Database Internet Aktif (Open Food Facts + AI)</span>
+            <span>Google Search Grounding Aktif</span>
           </div>
         </div>
 
@@ -454,6 +469,30 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                                   {wh.multiplier}x {barcodeResult.unit} = {formatCurrency(wh.price)}
                                 </span>
                               </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Grounding Sources (Google Search Web Citations) */}
+                      {groundingSources.length > 0 && (
+                        <div className="p-3 bg-slate-50 dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <Globe className="w-3 h-3 text-emerald-500" />
+                            <span>Sumber Google Search Grounding:</span>
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {groundingSources.slice(0, 4).map((src, idx) => (
+                              <a
+                                key={idx}
+                                href={src.uri}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium"
+                              >
+                                <ExternalLink className="w-2.5 h-2.5" />
+                                <span className="max-w-[200px] truncate">{src.title || src.uri}</span>
+                              </a>
                             ))}
                           </div>
                         </div>
@@ -671,10 +710,10 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                   <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center">
                     1
                   </div>
-                  <h5 className="text-xs font-bold text-slate-900 dark:text-white">Open Food Facts API</h5>
+                  <h5 className="text-xs font-bold text-slate-900 dark:text-white">Google Search Grounding</h5>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Mencocokkan barcode EAN-13 Indonesia (awalan 899...) secara global untuk mendapatkan nama resmi,
-                    brand produsen, dan foto kemasan produk.
+                    Mencari dan memverifikasi barcode EAN-13 Indonesia (awalan 899...) langsung dari hasil live web search
+                    ritel Indonesia (KlikIndomaret, Alfagift, Tokopedia, produsen resmi).
                   </p>
                 </div>
 
@@ -684,8 +723,8 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                   </div>
                   <h5 className="text-xs font-bold text-slate-900 dark:text-white">AI Retail Normalizer</h5>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    AI otomatis menstandarkan gramasi kemasan (80g, 600ml, 2L) dan memetakan kategori ritel minimarket
-                    secara akurat.
+                    AI otomatis menstandarkan gramasi kemasan (80g, 600ml, 2L), brand produsen, serta mengestimasi HET dan HPP
+                    sesuai harga pasar ritel Indonesia.
                   </p>
                 </div>
 
@@ -693,10 +732,10 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                   <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center justify-center">
                     3
                   </div>
-                  <h5 className="text-xs font-bold text-slate-900 dark:text-white">Auto Standar Grosir</h5>
+                  <h5 className="text-xs font-bold text-slate-900 dark:text-white">Auto Multi-Kemasan Grosir</h5>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Menyusun opsi satuan grosir standar distributor (Dus isi 40, Slop isi 10, Karton isi 6) dengan
-                    estimasi harga pasaran dan margin laba &ge; 15%.
+                    Menyusun opsi satuan grosir standar distributor (Dus isi 40, Slop isi 10, Karton isi 6, Bal isi 200) dengan
+                    estimasi harga grosir dan margin laba &ge; 15%.
                   </p>
                 </div>
               </div>
@@ -708,7 +747,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/40">
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <Globe className="w-4 h-4 text-emerald-500" />
-            <span>Terhubung ke Open Food Facts & Katalog FMCG Indonesia</span>
+            <span>Terhubung ke Google Search Grounding & Katalog Ritel FMCG Indonesia</span>
           </div>
           <button
             onClick={onClose}
