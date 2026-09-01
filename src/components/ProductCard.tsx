@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
 import { Plus, SlidersHorizontal, AlertTriangle, Check, Flame, Boxes } from 'lucide-react';
-import { Product, WholesaleUnit } from '../types';
+import { Product, WholesaleUnit, CurrencyType } from '../types';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { ProductCustomizerModal } from './ProductCustomizerModal';
 
 interface ProductCardProps {
   product: Product;
+  cartQuantity?: number;
+  currency?: CurrencyType;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addToCart, settings, cart } = usePOS();
+const ProductCardComponent: React.FC<ProductCardProps> = ({
+  product,
+  cartQuantity: propCartQuantity,
+  currency = 'IDR',
+}) => {
+  const { addToCart } = usePOS();
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
   const [showWholesaleDropdown, setShowWholesaleDropdown] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
@@ -20,10 +26,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const isOutOfStock = product.stock <= 0;
   const isLowStock = product.stock > 0 && product.stock <= product.minStock;
 
-  // Check how many of this product are in current cart
-  const cartQuantity = cart
-    .filter((item) => item.product.id === product.id)
-    .reduce((sum, item) => sum + item.quantity, 0);
+  const cartQuantity = propCartQuantity ?? 0;
 
   const handleCardClick = () => {
     if (isOutOfStock) return;
@@ -127,7 +130,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <div>
             <span className="text-[10px] text-slate-400 block font-medium">Harga Eceran</span>
             <span className="font-black text-sm text-emerald-600 dark:text-emerald-400 font-mono">
-              {formatCurrency(product.price, settings.currency)}
+              {formatCurrency(product.price, currency)}
             </span>
           </div>
 
@@ -178,7 +181,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                           </div>
                         </div>
                         <div className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]">
-                          {formatCurrency(wu.price, settings.currency)}
+                          {formatCurrency(wu.price, currency)}
                         </div>
                       </button>
                     ))}
@@ -215,3 +218,5 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     </>
   );
 };
+
+export const ProductCard = React.memo(ProductCardComponent);

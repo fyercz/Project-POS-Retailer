@@ -17,20 +17,21 @@ import {
   DollarSign,
   Tag,
   Boxes,
+  Copy,
+  Check,
+  Award,
+  Link,
+  ArrowRight,
+  Database,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
-import { Product, WholesaleUnit } from '../types';
+import { Product, WholesaleUnit, GroundingSource } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
 interface OnlineDatabaseMatcherModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectForForm?: (matchedData: Partial<Product>) => void;
-}
-
-interface GroundingSource {
-  uri: string;
-  title: string;
 }
 
 interface OnlineProductResult {
@@ -46,6 +47,8 @@ interface OnlineProductResult {
   wholesaleUnits?: WholesaleUnit[];
   source?: string;
   groundingSources?: GroundingSource[];
+  isTop3GoogleResult?: boolean;
+  googleRank?: number;
 }
 
 export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProps> = ({
@@ -68,12 +71,20 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
   const [dataSource, setDataSource] = useState<string>('');
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [copiedUrlIndex, setCopiedUrlIndex] = useState<number | null>(null);
 
   if (!isOpen) return null;
 
   const showToast = (msg: string) => {
     setSuccessToast(msg);
     setTimeout(() => setSuccessToast(null), 3500);
+  };
+
+  const handleCopyUrl = (url: string, index: number) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrlIndex(index);
+    showToast('📋 Tautan sitasi Google Search berhasil disalin ke clipboard!');
+    setTimeout(() => setCopiedUrlIndex(null), 2000);
   };
 
   const handleLookupBarcode = async (codeToLookup?: string) => {
@@ -100,7 +111,9 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
       if (data.success && data.data) {
         setBarcodeResult(data.data);
         setDataSource(data.source || 'Google Search Grounding (Live Web)');
-        if (Array.isArray(data.groundingSources)) {
+        if (Array.isArray(data.top3GoogleSources) && data.top3GoogleSources.length > 0) {
+          setGroundingSources(data.top3GoogleSources);
+        } else if (Array.isArray(data.groundingSources)) {
           setGroundingSources(data.groundingSources);
         }
       } else {
@@ -137,7 +150,9 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
       if (data.success && Array.isArray(data.results)) {
         setSearchResults(data.results);
         setDataSource(data.source || 'Google Search Grounding (Live Web)');
-        if (Array.isArray(data.groundingSources)) {
+        if (Array.isArray(data.top3GoogleSources) && data.top3GoogleSources.length > 0) {
+          setGroundingSources(data.top3GoogleSources);
+        } else if (Array.isArray(data.groundingSources)) {
           setGroundingSources(data.groundingSources);
         }
         if (data.results.length === 0) {
@@ -153,7 +168,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
     }
   };
 
-  const handleImportToCatalog = (item: OnlineProductResult) => {
+  const handleImportToCatalog = (item: OnlineProductResult, citationUrl?: string) => {
     // Check if barcode already exists in catalog
     const existing = products.find((p) => p.barcode === item.barcode);
     if (existing) {
@@ -165,6 +180,12 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
     const prefix = item.categoryId.replace('cat-', '').toUpperCase().slice(0, 3);
     const randomCode = Math.floor(1000 + Math.random() * 9000);
     const sku = `${prefix}-${item.brand ? item.brand.slice(0, 3).toUpperCase() : 'PRD'}-${randomCode}`;
+
+    const sourceNote = citationUrl
+      ? `Terverifikasi Google Search Engine (${citationUrl})`
+      : groundingSources.length > 0
+      ? `Terverifikasi Google Search: ${groundingSources[0].domain}`
+      : 'Terverifikasi Google Search Grounding';
 
     const newProduct: Omit<Product, 'id'> = {
       name: item.name,
@@ -178,11 +199,13 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
       minStock: 8,
       unit: item.unit || 'pcs',
       image: item.image || '',
-      description: item.description,
+      description: item.description
+        ? `${item.description} [${sourceNote}]`
+        : `Produk resmi terverifikasi [${sourceNote}].`,
       wholesaleUnits:
         item.wholesaleUnits && item.wholesaleUnits.length > 0
           ? item.wholesaleUnits.map((u, idx) => ({
-              id: `wh-${Date.now()}-${idx}`,
+              id: `wh-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 5)}`,
               name: u.name,
               multiplier: u.multiplier,
               price: u.price,
@@ -194,7 +217,72 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
     addProduct(newProduct);
     setAddedIds((prev) => new Set([...prev, item.barcode]));
-    showToast(`✅ "${item.name}" berhasil ditambahkan ke katalog toko!`);
+    showToast(`✅ "${item.name}" berhasil dimasukkan ke sistem katalog toko!`);
+  };
+
+  // Mass-import Top 3 Google Search Results into system catalog
+  const handleImportTop3ToCatalog = () => {
+    const targetItems = searchResults.slice(0, 3);
+    if (targetItems.length === 0) {
+      showToast('⚠️ Tidak ada produk hasil pencarian yang dapat dimasukkan.');
+      return;
+    }
+
+    let countAdded = 0;
+    const newlyAdded = new Set(addedIds);
+
+    targetItems.forEach((item, index) => {
+      const existing = products.find((p) => p.barcode === item.barcode);
+      if (!existing && !newlyAdded.has(item.barcode)) {
+        const prefix = item.categoryId.replace('cat-', '').toUpperCase().slice(0, 3);
+        const randomCode = Math.floor(1000 + Math.random() * 9000);
+        const sku = `${prefix}-${item.brand ? item.brand.slice(0, 3).toUpperCase() : 'PRD'}-${randomCode}`;
+        const citation = groundingSources[index] || groundingSources[0];
+
+        const sourceNote = citation
+          ? `Top #${index + 1} Google Search (${citation.domain || citation.title})`
+          : `Top #${index + 1} Google Search Result`;
+
+        const newProduct: Omit<Product, 'id'> = {
+          name: item.name,
+          brand: item.brand,
+          sku,
+          barcode: item.barcode,
+          categoryId: item.categoryId || 'cat-staple',
+          price: item.price,
+          costPrice: item.costPrice,
+          stock: 40,
+          minStock: 8,
+          unit: item.unit || 'pcs',
+          image: item.image || '',
+          description: item.description
+            ? `${item.description} [${sourceNote}]`
+            : `Produk terverifikasi [${sourceNote}].`,
+          wholesaleUnits:
+            item.wholesaleUnits && item.wholesaleUnits.length > 0
+              ? item.wholesaleUnits.map((u, idx) => ({
+                  id: `wh-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 5)}`,
+                  name: u.name,
+                  multiplier: u.multiplier,
+                  price: u.price,
+                  costPrice: u.costPrice,
+                  barcode: `${item.barcode}-${u.multiplier}`,
+                }))
+              : undefined,
+        };
+
+        addProduct(newProduct);
+        newlyAdded.add(item.barcode);
+        countAdded++;
+      }
+    });
+
+    setAddedIds(newlyAdded);
+    if (countAdded > 0) {
+      showToast(`🎉 Berhasil memasukkan ${countAdded} produk Top 3 Google Search ke dalam sistem toko!`);
+    } else {
+      showToast(`ℹ️ Semua produk dari Top 3 Google Search sudah ada di sistem toko.`);
+    }
   };
 
   const handleSendToForm = (item: OnlineProductResult) => {
@@ -220,6 +308,28 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
     return found ? found.name : 'Umum';
   };
 
+  const getRankBadge = (rank: number) => {
+    if (rank === 1) {
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 flex items-center gap-1 shadow-xs">
+          <span>🥇</span> Top #1 Google Search
+        </span>
+      );
+    }
+    if (rank === 2) {
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600 flex items-center gap-1">
+          <span>🥈</span> Top #2 Google Search
+        </span>
+      );
+    }
+    return (
+      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-orange-100 dark:bg-orange-950/70 text-orange-800 dark:text-orange-300 border border-orange-300 dark:border-orange-700 flex items-center gap-1">
+        <span>🥉</span> Top #3 Google Search
+      </span>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
@@ -235,12 +345,11 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                   Pencocokan Database Online & Cek Barcode Internet
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                  <Zap className="w-3 h-3" /> Google Grounding Live Web
+                  <Zap className="w-3 h-3" /> Google Search Engine Grounding
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Terhubung langsung ke Google Search Grounding & Gemini AI untuk verifikasi data resmi produk Indonesia,
-                gramasi, foto kemasan, dan multi-kemasan grosir secara real-time.
+                Terhubung ke Google Search Engine & Gemini AI untuk menyaring Top 3 sitasi sumber web terpercaya dan memasukkannya ke sistem toko.
               </p>
             </div>
           </div>
@@ -298,20 +407,128 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
           <div className="ml-auto hidden sm:flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            <span>Google Search Grounding Aktif</span>
+            <span>Top 3 Google Search Grounding Aktif</span>
           </div>
         </div>
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Top 3 Citations Card (Universal Google Web Citations Block) */}
+          {groundingSources.length > 0 && (
+            <div className="bg-gradient-to-br from-emerald-950/20 via-teal-950/10 to-slate-900/40 rounded-2xl border border-emerald-500/30 p-4 shadow-lg space-y-3 animate-in fade-in-50">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                    <Award className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>Top 3 Sitasi Sumber Web Google Search Engine</span>
+                      <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                        {groundingSources.length} Sumber Terindeks
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Sitasi web resmi hasil query search engine Google untuk verifikasi spesifikasi, katalog, &amp; harga ritel.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Batch Button for Top 3 Import */}
+                {activeTab === 'keyword' && searchResults.length > 0 && (
+                  <button
+                    onClick={handleImportTop3ToCatalog}
+                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer active:scale-95 transition-transform"
+                  >
+                    <Database className="w-3.5 h-3.5" />
+                    <span>Masukkan Top 3 Hasil ke Sistem</span>
+                  </button>
+                )}
+              </div>
+
+              {/* 3 Citation Grid Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
+                {groundingSources.slice(0, 3).map((src, idx) => {
+                  const rank = src.rank || idx + 1;
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-white dark:bg-slate-800/90 rounded-xl border border-slate-200 dark:border-slate-700/80 p-3 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-colors shadow-xs"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-1">
+                          {getRankBadge(rank)}
+                          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-bold truncate max-w-[110px]">
+                            {src.domain || 'google.com'}
+                          </span>
+                        </div>
+                        <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-2 leading-snug">
+                          {src.title || 'Hasil Pencarian Google Ritel Indonesia'}
+                        </h5>
+                        {src.snippet && (
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                            {src.snippet}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Citation Actions */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-1.5">
+                        <button
+                          onClick={() => handleCopyUrl(src.uri, idx)}
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                          title="Salin Tautan Web"
+                        >
+                          {copiedUrlIndex === idx ? (
+                            <Check className="w-3 h-3 text-emerald-500" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                          <span>Salin</span>
+                        </button>
+
+                        <a
+                          href={src.uri}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 text-[10px] font-bold flex items-center gap-1 transition-colors"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span>Buka Web</span>
+                        </a>
+
+                        {/* Quick Add Product related to this citation */}
+                        {activeTab === 'keyword' && searchResults[idx] && (
+                          <button
+                            onClick={() => handleImportToCatalog(searchResults[idx], src.uri)}
+                            disabled={addedIds.has(searchResults[idx].barcode)}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
+                              addedIds.has(searchResults[idx].barcode)
+                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                            }`}
+                            title="Masukkan produk ini ke sistem toko"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>{addedIds.has(searchResults[idx].barcode) ? 'Tersimpan' : 'Ke Sistem'}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Barcode Search Form */}
           {activeTab === 'barcode' && (
             <div className="space-y-4">
               <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center justify-between">
-                  <span>Pindai atau Masukkan Barcode Kemasan Fisik:</span>
+                  <span>Pindai atau Masukkan Barcode (Angka / Alfanumerik):</span>
                   <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-normal">
-                    Contoh: 8998866200223 (Indomie), 8992753311105 (Aqua), 8992775211018 (Bimoli)
+                    Mendukung EAN-13 (899...) &amp; Alfanumerik (ZN-SHMP-170, BC-1029)
                   </span>
                 </label>
                 <div className="flex gap-2">
@@ -322,7 +539,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                       value={barcodeInput}
                       onChange={(e) => setBarcodeInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleLookupBarcode()}
-                      placeholder="Scan atau ketik kode barcode di sini..."
+                      placeholder="Scan atau ketik kode barcode angka / alfanumerik di sini..."
                       autoFocus
                       className="w-full pl-10 pr-4 py-2.5 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     />
@@ -342,10 +559,11 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                   <span className="text-[10px] text-slate-400 font-semibold mr-1">Coba Barcode Contoh:</span>
                   {[
                     { label: 'Indomie Goreng', code: '8998866200223' },
+                    { label: 'Zinc Shampoo 170ml', code: '8998866500118' },
                     { label: 'Aqua 600ml', code: '8992753311105' },
                     { label: 'Bimoli 2L', code: '8992775211018' },
-                    { label: 'Sampoerna Mild', code: '8992695123456' },
-                    { label: 'Rinso Molto', code: '8999999050019' },
+                    { label: 'Zinc Men Sachet', code: '8998866500125' },
+                    { label: 'Alfanumerik (ZN-SHMP-170)', code: 'ZN-SHMP-170' },
                   ].map((sample) => (
                     <button
                       key={sample.code}
@@ -355,7 +573,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                       }}
                       className="px-2 py-1 rounded-md text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 hover:text-emerald-700 dark:hover:text-emerald-400 font-mono transition-colors cursor-pointer"
                     >
-                      {sample.label} ({sample.code.slice(-5)})
+                      {sample.label}
                     </button>
                   ))}
                 </div>
@@ -405,7 +623,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                     {/* Details Info */}
                     <div className="md:col-span-3 space-y-3">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                             {barcodeResult.brand || 'Brand Terdaftar'}
                           </span>
@@ -474,32 +692,8 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                         </div>
                       )}
 
-                      {/* Grounding Sources (Google Search Web Citations) */}
-                      {groundingSources.length > 0 && (
-                        <div className="p-3 bg-slate-50 dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-1.5">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                            <Globe className="w-3 h-3 text-emerald-500" />
-                            <span>Sumber Google Search Grounding:</span>
-                          </span>
-                          <div className="flex flex-wrap gap-2">
-                            {groundingSources.slice(0, 4).map((src, idx) => (
-                              <a
-                                key={idx}
-                                href={src.uri}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium"
-                              >
-                                <ExternalLink className="w-2.5 h-2.5" />
-                                <span className="max-w-[200px] truncate">{src.title || src.uri}</span>
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
                       {/* Action Buttons */}
-                      <div className="pt-2 flex items-center gap-3">
+                      <div className="pt-2 flex items-center gap-3 flex-wrap">
                         <button
                           onClick={() => handleImportToCatalog(barcodeResult)}
                           disabled={addedIds.has(barcodeResult.barcode)}
@@ -511,7 +705,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                         >
                           <Plus className="w-4 h-4" />
                           <span>
-                            {addedIds.has(barcodeResult.barcode) ? 'Sudah Ditambahkan' : 'Tambahkan ke Katalog Toko'}
+                            {addedIds.has(barcodeResult.barcode) ? 'Sudah Ada di Sistem' : 'Masukkan ke Sistem Toko'}
                           </span>
                         </button>
 
@@ -588,20 +782,38 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
               {/* Search Results Grid */}
               {searchResults.length > 0 && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
-                    <span>
-                      Ditemukan <strong>{searchResults.length} produk</strong> dari database internet:
-                    </span>
-                    <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">{dataSource}</span>
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1 flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span>
+                        Ditemukan <strong>{searchResults.length} produk</strong> dari Google Search Engine:
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleImportTop3ToCatalog}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                      >
+                        <Database className="w-3.5 h-3.5" />
+                        <span>Masukkan Top 3 ke Sistem</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {searchResults.map((item, idx) => {
                       const isAdded = addedIds.has(item.barcode);
+                      const isTop3 = idx < 3;
+                      const rank = idx + 1;
+
                       return (
                         <div
                           key={idx}
-                          className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500/50 transition-all flex flex-col justify-between space-y-3"
+                          className={`bg-white dark:bg-slate-800 p-4 rounded-xl border transition-all flex flex-col justify-between space-y-3 ${
+                            isTop3
+                              ? 'border-emerald-500/50 shadow-md ring-1 ring-emerald-500/20'
+                              : 'border-slate-200 dark:border-slate-700'
+                          }`}
                         >
                           <div className="flex items-start gap-3">
                             {item.image ? (
@@ -622,6 +834,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                {isTop3 && getRankBadge(rank)}
                                 {item.brand && (
                                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
                                     {item.brand}
@@ -665,7 +878,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                               }`}
                             >
                               <Plus className="w-3.5 h-3.5" />
-                              <span>{isAdded ? 'Sudah Ditambahkan' : 'Tambah ke Toko'}</span>
+                              <span>{isAdded ? 'Sudah Ada di Sistem' : 'Masukkan ke Sistem'}</span>
                             </button>
 
                             {onSelectForForm && (
@@ -703,17 +916,16 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
             <div className="p-6 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800/40 dark:to-slate-800/20 border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-bold text-sm">
                 <Info className="w-4 h-4 text-emerald-500" />
-                <span>Bagaimana Sistem Pencocokan Database Internet Bekerja?</span>
+                <span>Bagaimana Sistem Pencocokan Database Google Bekerja?</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
                   <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center">
                     1
                   </div>
-                  <h5 className="text-xs font-bold text-slate-900 dark:text-white">Google Search Grounding</h5>
+                  <h5 className="text-xs font-bold text-slate-900 dark:text-white">Top 3 Google Search Citations</h5>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Mencari dan memverifikasi barcode EAN-13 Indonesia (awalan 899...) langsung dari hasil live web search
-                    ritel Indonesia (KlikIndomaret, Alfagift, Tokopedia, produsen resmi).
+                    Menampilkan 3 sitasi web teratas dari indeks Google Search ritel Indonesia (KlikIndomaret, Alfagift, Tokopedia, produsen resmi) dan dapat dimasukkan langsung ke sistem.
                   </p>
                 </div>
 
@@ -747,7 +959,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/40">
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <Globe className="w-4 h-4 text-emerald-500" />
-            <span>Terhubung ke Google Search Grounding & Katalog Ritel FMCG Indonesia</span>
+            <span>Terhubung ke Google Search Engine Grounding &amp; Katalog Ritel FMCG Indonesia</span>
           </div>
           <button
             onClick={onClose}

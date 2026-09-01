@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Product,
@@ -400,54 +400,76 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [aiUpsellSuggestions, setAiUpsellSuggestions] = useState<AIUpsellSuggestion[]>([]);
   const [isFetchingUpsell, setIsFetchingUpsell] = useState(false);
 
-  // Sync to local storage
-  useEffect(() => {
-    localStorage.setItem('pos_retail_products_v3', JSON.stringify(products));
-  }, [products]);
+  // Debounced Sync to local storage to prevent main-thread UI lag during rapid operations
+  const pendingStorageSaves = useRef<Record<string, any>>({});
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const scheduleSave = useCallback((key: string, data: any) => {
+    pendingStorageSaves.current[key] = data;
+    if (!saveTimeoutRef.current) {
+      saveTimeoutRef.current = setTimeout(() => {
+        try {
+          const saves = pendingStorageSaves.current;
+          pendingStorageSaves.current = {};
+          for (const [k, v] of Object.entries(saves)) {
+            localStorage.setItem(k, JSON.stringify(v));
+          }
+        } catch {
+          // Ignore quota errors gracefully
+        } finally {
+          saveTimeoutRef.current = null;
+        }
+      }, 300);
+    }
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('pos_active_cart', JSON.stringify(cart));
-  }, [cart]);
+    scheduleSave('pos_retail_products_v3', products);
+  }, [products, scheduleSave]);
 
   useEffect(() => {
-    localStorage.setItem('pos_held_orders', JSON.stringify(heldOrders));
-  }, [heldOrders]);
+    scheduleSave('pos_active_cart', cart);
+  }, [cart, scheduleSave]);
 
   useEffect(() => {
-    localStorage.setItem('pos_retail_tx_v3', JSON.stringify(transactions));
-  }, [transactions]);
+    scheduleSave('pos_held_orders', heldOrders);
+  }, [heldOrders, scheduleSave]);
 
   useEffect(() => {
-    localStorage.setItem('pos_retail_customers_v2', JSON.stringify(customers));
-  }, [customers]);
+    scheduleSave('pos_retail_tx_v3', transactions);
+  }, [transactions, scheduleSave]);
 
   useEffect(() => {
-    localStorage.setItem('pos_retail_settings_v2', JSON.stringify(settings));
-  }, [settings]);
+    scheduleSave('pos_retail_customers_v2', customers);
+  }, [customers, scheduleSave]);
 
   useEffect(() => {
-    localStorage.setItem('pos_vouchers', JSON.stringify(vouchers));
-  }, [vouchers]);
+    scheduleSave('pos_retail_settings_v2', settings);
+  }, [settings, scheduleSave]);
 
   useEffect(() => {
-    localStorage.setItem('pos_sales_returns', JSON.stringify(salesReturns));
-  }, [salesReturns]);
+    scheduleSave('pos_vouchers', vouchers);
+  }, [vouchers, scheduleSave]);
 
   useEffect(() => {
-    localStorage.setItem('pos_purchase_returns', JSON.stringify(purchaseReturns));
-  }, [purchaseReturns]);
+    scheduleSave('pos_sales_returns', salesReturns);
+  }, [salesReturns, scheduleSave]);
 
   useEffect(() => {
-    localStorage.setItem('pos_supplier_purchases_v2', JSON.stringify(supplierPurchases));
-  }, [supplierPurchases]);
+    scheduleSave('pos_purchase_returns', purchaseReturns);
+  }, [purchaseReturns, scheduleSave]);
 
   useEffect(() => {
-    localStorage.setItem('pos_retail_suppliers_v2', JSON.stringify(suppliers));
-  }, [suppliers]);
+    scheduleSave('pos_supplier_purchases_v2', supplierPurchases);
+  }, [supplierPurchases, scheduleSave]);
 
   useEffect(() => {
-    localStorage.setItem('pos_employees_v2', JSON.stringify(employees));
-  }, [employees]);
+    scheduleSave('pos_retail_suppliers_v2', suppliers);
+  }, [suppliers, scheduleSave]);
+
+  useEffect(() => {
+    scheduleSave('pos_employees_v2', employees);
+  }, [employees, scheduleSave]);
 
   useEffect(() => {
     if (activeEmployee) {
@@ -463,9 +485,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     if (currentShift) {
-      localStorage.setItem('pos_current_shift_v1', JSON.stringify(currentShift));
+      scheduleSave('pos_current_shift_v1', currentShift);
     }
-  }, [currentShift]);
+  }, [currentShift, scheduleSave]);
 
   // Open Gemini Drawer with specific tab
   const openGeminiCopilot = (tab: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat' = 'upsell') => {
@@ -815,31 +837,37 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setVouchers((prev) => [v, ...prev]);
   };
 
-  // Calculations
-  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  // Memoized Calculations
+  const subtotal = useMemo(() => {
+    return cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  }, [cart]);
 
   // Voucher discount calculation
-  let voucherDiscount = 0;
-  if (appliedVoucher && subtotal >= appliedVoucher.minSpend) {
-    if (appliedVoucher.discountType === 'percentage') {
-      voucherDiscount = (subtotal * appliedVoucher.value) / 100;
-      if (appliedVoucher.maxDiscount && voucherDiscount > appliedVoucher.maxDiscount) {
-        voucherDiscount = appliedVoucher.maxDiscount;
+  const voucherDiscount = useMemo(() => {
+    if (appliedVoucher && subtotal >= appliedVoucher.minSpend) {
+      if (appliedVoucher.discountType === 'percentage') {
+        const disc = (subtotal * appliedVoucher.value) / 100;
+        return appliedVoucher.maxDiscount && disc > appliedVoucher.maxDiscount
+          ? appliedVoucher.maxDiscount
+          : disc;
       }
-    } else {
-      voucherDiscount = appliedVoucher.value;
+      return appliedVoucher.value;
     }
-  }
+    return 0;
+  }, [appliedVoucher, subtotal]);
 
   // Loyalty Points discount (1 point = 100 IDR)
-  let pointsDiscount = 0;
-  if (usePoints && selectedCustomer && selectedCustomer.points > 0) {
-    const maxUsablePoints = selectedCustomer.points;
-    pointsDiscount = maxUsablePoints * 100;
-    if (pointsDiscount > subtotal - voucherDiscount) {
-      pointsDiscount = Math.max(0, subtotal - voucherDiscount);
+  const pointsDiscount = useMemo(() => {
+    if (usePoints && selectedCustomer && selectedCustomer.points > 0) {
+      const maxUsablePoints = selectedCustomer.points;
+      const disc = maxUsablePoints * 100;
+      if (disc > subtotal - voucherDiscount) {
+        return Math.max(0, subtotal - voucherDiscount);
+      }
+      return disc;
     }
-  }
+    return 0;
+  }, [usePoints, selectedCustomer, subtotal, voucherDiscount]);
 
   const totalDiscount = voucherDiscount + pointsDiscount;
   // Sales Tax & Surcharges removed on sales as requested
@@ -849,9 +877,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Poin Loyalitas: HANYA didapatkan dari belanja item produk dengan profit margin >= minProfitPercentForPoints (15%)
   // Profit barang dihitung per item produk, bukan profit agregat transaksi
-  const pointsEligibleSpend = cart
-    .filter((item) => item.isPointsEligible)
-    .reduce((sum, item) => sum + item.totalPrice, 0);
+  const pointsEligibleSpend = useMemo(() => {
+    return cart
+      .filter((item) => item.isPointsEligible)
+      .reduce((sum, item) => sum + item.totalPrice, 0);
+  }, [cart]);
 
   // Proporsi nilai belanja setelah potongan diskon/voucher untuk item yang eligible
   const effectiveEligibleSpend =
@@ -1385,116 +1415,161 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
+  const contextValue = useMemo(
+    () => ({
+      activeView,
+      setActiveView,
+      products,
+      categories: INITIAL_CATEGORIES,
+      selectedCategory,
+      setSelectedCategory,
+      searchQuery,
+      setSearchQuery,
+      filterLowStock,
+      setFilterLowStock,
+      updateProductStock,
+      addProduct,
+      addProductsBatch,
+      deleteProductsBatch,
+      clearImportedProducts,
+      resetProductsToDefault,
+      clearAllProducts,
+      updateProduct,
+      deleteProduct,
+      resetToRetailDefaults,
+      cart,
+      addToCart,
+      updateCartItemQuantity,
+      setCartItemQuantity,
+      updateCartItemUnit,
+      updateCartItemDiscount,
+      removeFromCart,
+      clearCart,
+      updateCartItemNote,
+      orderType,
+      setOrderType,
+      tableNumber,
+      setTableNumber,
+      selectedCustomer,
+      setSelectedCustomer,
+      appliedVoucher,
+      applyVoucher,
+      removeVoucher,
+      usePoints,
+      setUsePoints,
+      subtotal,
+      taxAmount,
+      serviceChargeAmount,
+      voucherDiscount,
+      pointsDiscount,
+      totalDiscount,
+      finalTotal,
+      pointsEarned,
+      pointsEligibleSpend,
+      minProfitPercentForPoints,
+      heldOrders,
+      holdCurrentOrder,
+      recallHeldOrder,
+      deleteHeldOrder,
+      isPaymentModalOpen,
+      setIsPaymentModalOpen,
+      processPayment,
+      transactions,
+      activeReceipt,
+      setActiveReceipt,
+      voidTransaction,
+      salesReturns,
+      processSalesReturn,
+      purchaseReturns,
+      processPurchaseReturn,
+      supplierPurchases,
+      processSupplierPurchase,
+      suppliers,
+      addSupplier,
+      updateSupplier,
+      deleteSupplier,
+      customers,
+      addCustomer,
+      settings,
+      updateSettings,
+      vouchers,
+      addVoucher,
+      isGeminiCopilotOpen,
+      setIsGeminiCopilotOpen,
+      activeCopilotTab,
+      setActiveCopilotTab,
+      openGeminiCopilot,
+      aiUpsellSuggestions,
+      isFetchingUpsell,
+      fetchUpsellSuggestions,
+      // Multi-Employee & Shift
+      employees,
+      activeEmployee,
+      isLocked,
+      setIsLocked,
+      isEmployeeManagementOpen,
+      setIsEmployeeManagementOpen,
+      isShiftModalOpen,
+      setIsShiftModalOpen,
+      currentShift,
+      loginWithPin,
+      quickSwitchEmployee,
+      lockScreen,
+      unlockScreen,
+      logoutEmployee,
+      addEmployee,
+      updateEmployee,
+      deleteEmployee,
+      startNewShift,
+      closeCurrentShift,
+    }),
+    [
+      activeView,
+      products,
+      selectedCategory,
+      searchQuery,
+      filterLowStock,
+      cart,
+      orderType,
+      tableNumber,
+      selectedCustomer,
+      appliedVoucher,
+      usePoints,
+      subtotal,
+      voucherDiscount,
+      pointsDiscount,
+      totalDiscount,
+      finalTotal,
+      pointsEarned,
+      pointsEligibleSpend,
+      minProfitPercentForPoints,
+      heldOrders,
+      isPaymentModalOpen,
+      transactions,
+      activeReceipt,
+      salesReturns,
+      purchaseReturns,
+      supplierPurchases,
+      suppliers,
+      customers,
+      settings,
+      vouchers,
+      isGeminiCopilotOpen,
+      activeCopilotTab,
+      aiUpsellSuggestions,
+      isFetchingUpsell,
+      fetchUpsellSuggestions,
+      employees,
+      activeEmployee,
+      isLocked,
+      isEmployeeManagementOpen,
+      isShiftModalOpen,
+      currentShift,
+    ]
+  );
+
   return (
-    <POSContext.Provider
-      value={{
-        activeView,
-        setActiveView,
-        products,
-        categories: INITIAL_CATEGORIES,
-        selectedCategory,
-        setSelectedCategory,
-        searchQuery,
-        setSearchQuery,
-        filterLowStock,
-        setFilterLowStock,
-        updateProductStock,
-        addProduct,
-        addProductsBatch,
-        deleteProductsBatch,
-        clearImportedProducts,
-        resetProductsToDefault,
-        clearAllProducts,
-        updateProduct,
-        deleteProduct,
-        resetToRetailDefaults,
-        cart,
-        addToCart,
-        updateCartItemQuantity,
-        setCartItemQuantity,
-        updateCartItemUnit,
-        updateCartItemDiscount,
-        removeFromCart,
-        clearCart,
-        updateCartItemNote,
-        orderType,
-        setOrderType,
-        tableNumber,
-        setTableNumber,
-        selectedCustomer,
-        setSelectedCustomer,
-        appliedVoucher,
-        applyVoucher,
-        removeVoucher,
-        usePoints,
-        setUsePoints,
-        subtotal,
-        taxAmount,
-        serviceChargeAmount,
-        voucherDiscount,
-        pointsDiscount,
-        totalDiscount,
-        finalTotal,
-        pointsEarned,
-        pointsEligibleSpend,
-        minProfitPercentForPoints,
-        heldOrders,
-        holdCurrentOrder,
-        recallHeldOrder,
-        deleteHeldOrder,
-        isPaymentModalOpen,
-        setIsPaymentModalOpen,
-        processPayment,
-        transactions,
-        activeReceipt,
-        setActiveReceipt,
-        voidTransaction,
-        salesReturns,
-        processSalesReturn,
-        purchaseReturns,
-        processPurchaseReturn,
-        supplierPurchases,
-        processSupplierPurchase,
-        suppliers,
-        addSupplier,
-        updateSupplier,
-        deleteSupplier,
-        customers,
-        addCustomer,
-        settings,
-        updateSettings,
-        vouchers,
-        addVoucher,
-        isGeminiCopilotOpen,
-        setIsGeminiCopilotOpen,
-        activeCopilotTab,
-        setActiveCopilotTab,
-        openGeminiCopilot,
-        aiUpsellSuggestions,
-        isFetchingUpsell,
-        fetchUpsellSuggestions,
-        // Multi-Employee & Shift
-        employees,
-        activeEmployee,
-        isLocked,
-        setIsLocked,
-        isEmployeeManagementOpen,
-        setIsEmployeeManagementOpen,
-        isShiftModalOpen,
-        setIsShiftModalOpen,
-        currentShift,
-        loginWithPin,
-        quickSwitchEmployee,
-        lockScreen,
-        unlockScreen,
-        logoutEmployee,
-        addEmployee,
-        updateEmployee,
-        deleteEmployee,
-        startNewShift,
-        closeCurrentShift,
-      }}
-    >
+    <POSContext.Provider value={contextValue}>
       {children}
     </POSContext.Provider>
   );

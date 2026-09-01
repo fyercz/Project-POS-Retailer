@@ -142,9 +142,19 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleGenerateBarcode = () => {
-    const random12 = `899${Math.floor(100000000 + Math.random() * 900000000)}`;
-    setBarcode(random12);
+  const handleGenerateBarcode = (type: 'numeric' | 'alphanumeric' = 'numeric') => {
+    if (type === 'alphanumeric') {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let randomCode = '';
+      for (let i = 0; i < 6; i++) {
+        randomCode += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      const categoryPrefix = (categoryId.replace('cat-', '') || 'BC').toUpperCase().slice(0, 3);
+      setBarcode(`${categoryPrefix}-${randomCode}`);
+    } else {
+      const random12 = `899${Math.floor(100000000 + Math.random() * 900000000)}`;
+      setBarcode(random12);
+    }
   };
 
   const handleOnlineBarcodeLookup = async (codeToUse?: string) => {
@@ -539,9 +549,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Barcode EAN-13 <span className="text-rose-500">*</span>
+                    Barcode / Kode Bar (Angka / Alfanumerik) <span className="text-rose-500">*</span>
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => handleOnlineBarcodeLookup()}
@@ -549,14 +559,23 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer font-bold disabled:opacity-40"
                       title="Cek ke Google Search Grounding & Internet"
                     >
-                      <Globe className="w-2.5 h-2.5" /> Cek Google Grounding
+                      <Globe className="w-2.5 h-2.5" /> Cek Grounding
                     </button>
                     <button
                       type="button"
-                      onClick={handleGenerateBarcode}
+                      onClick={() => handleGenerateBarcode('numeric')}
                       className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                      title="Acak Barcode Angka EAN-13"
                     >
                       <RefreshCw className="w-2.5 h-2.5" /> Acak EAN
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateBarcode('alphanumeric')}
+                      className="text-[10px] text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                      title="Acak Barcode Alfanumerik (Huruf & Angka Code-128)"
+                    >
+                      <RefreshCw className="w-2.5 h-2.5" /> Acak Alfanumerik
                     </button>
                   </div>
                 </div>
@@ -566,11 +585,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     type="text"
                     value={barcode}
                     onChange={(e) => setBarcode(e.target.value)}
-                    placeholder="899999901001"
+                    placeholder="Contoh: 8998866200223 atau ZN-SHMP-170"
                     className="w-full pl-9 pr-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
                 {errors.barcode && <p className="text-[11px] text-rose-500 mt-1">{errors.barcode}</p>}
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                  Bisa berupa angka murni (EAN-13/UPC) atau kombinasi huruf &amp; angka (Code-128).
+                </p>
               </div>
 
               <div>

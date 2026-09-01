@@ -1,6 +1,6 @@
 export type ThemeMode = 'dark' | 'light';
 
-export type CurrencyType = 'IDR' | 'USD';
+export type CurrencyType = 'IDR';
 
 export type OrderType = 'sale' | 'takeaway' | 'delivery' | 'dine_in';
 
@@ -375,5 +375,15 @@ export interface StockOpnameHistory {
   mode: 'visual_ai' | 'barcode_burst' | 'manual';
   items: AIStockOpnameDetectedItem[];
   notes?: string;
+}
+
+// Google Search Grounding & Web Citation Interfaces
+export interface GroundingSource {
+  rank: number; // 1, 2, 3
+  title: string;
+  uri: string;
+  domain: string;
+  snippet?: string;
+  sourceType: 'Google Web Search' | 'Retail Marketplace' | 'Official Distributor' | 'Katalog FMCG';
 }
 

@@ -1,10 +1,7 @@
 import { CurrencyType } from '../types';
 
-export const formatCurrency = (amount: number, currency: CurrencyType = 'IDR'): string => {
-  if (currency === 'IDR') {
-    return `Rp ${Math.round(amount).toLocaleString('id-ID')}`;
-  }
-  return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export const formatCurrency = (amount: number, _currency: string = 'IDR'): string => {
+  return `Rp ${Math.round(amount).toLocaleString('id-ID')}`;
 };
 
 export const formatRupiah = (amount: number): string => {

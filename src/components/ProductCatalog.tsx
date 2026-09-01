@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import {
   Search,
   ScanBarcode,
@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Flame,
   X,
+  ChevronDown,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { ProductCard } from './ProductCard';
@@ -35,9 +36,12 @@ export const ProductCatalog: React.FC = () => {
     filterLowStock,
     setFilterLowStock,
     setActiveView,
+    settings,
+    cart,
   } = usePOS();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [displayLimit, setDisplayLimit] = useState(48);
 
   // Global F2 shortcut to focus search input
   useEffect(() => {
@@ -52,24 +56,58 @@ export const ProductCatalog: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Filter products
-  const filteredProducts = products.filter((product) => {
-    // Category match
-    const categoryMatch = selectedCategory === 'all' || product.categoryId === selectedCategory;
+  // Reset display limit on filter/search change
+  useEffect(() => {
+    setDisplayLimit(48);
+  }, [selectedCategory, searchQuery, filterLowStock]);
 
-    // Search or barcode match
+  // Memoized Cart quantities map so ProductCards don't need to filter cart array independently
+  const cartQuantityMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (let i = 0; i < cart.length; i++) {
+      const item = cart[i];
+      map[item.product.id] = (map[item.product.id] || 0) + item.quantity;
+    }
+    return map;
+  }, [cart]);
+
+  // Memoized Category counts
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: products.length };
+    for (let i = 0; i < products.length; i++) {
+      const catId = products[i].categoryId;
+      counts[catId] = (counts[catId] || 0) + 1;
+    }
+    return counts;
+  }, [products]);
+
+  // Memoized Filtered products
+  const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    const searchMatch =
-      !query ||
-      product.name.toLowerCase().includes(query) ||
-      product.sku.toLowerCase().includes(query) ||
-      product.barcode.toLowerCase().includes(query);
+    return products.filter((product) => {
+      // Category match
+      const categoryMatch = selectedCategory === 'all' || product.categoryId === selectedCategory;
 
-    // Low stock filter
-    const stockMatch = !filterLowStock || product.stock <= product.minStock;
+      // Search or barcode match
+      const searchMatch =
+        !query ||
+        product.name.toLowerCase().includes(query) ||
+        product.sku.toLowerCase().includes(query) ||
+        product.barcode.toLowerCase().includes(query) ||
+        (product.brand && product.brand.toLowerCase().includes(query));
 
-    return categoryMatch && searchMatch && stockMatch;
-  });
+      // Low stock filter
+      const stockMatch = !filterLowStock || product.stock <= product.minStock;
+
+      return categoryMatch && searchMatch && stockMatch;
+    });
+  }, [products, selectedCategory, searchQuery, filterLowStock]);
+
+  const visibleProducts = useMemo(() => {
+    return filteredProducts.slice(0, displayLimit);
+  }, [filteredProducts, displayLimit]);
+
+  const hasMore = filteredProducts.length > displayLimit;
 
   return (
     <div id="pos-product-catalog" className="flex flex-col h-full overflow-hidden bg-white dark:bg-slate-950">
@@ -125,10 +163,7 @@ export const ProductCatalog: React.FC = () => {
           {categories.map((cat) => {
             const Icon = CATEGORY_ICONS[cat.iconName] || LayoutGrid;
             const isSelected = selectedCategory === cat.id;
-            const count =
-              cat.id === 'all'
-                ? products.length
-                : products.filter((p) => p.categoryId === cat.id).length;
+            const count = categoryCounts[cat.id] || 0;
 
             return (
               <button
@@ -161,10 +196,30 @@ export const ProductCatalog: React.FC = () => {
       {/* Product Grid Area */}
       <div className="flex-1 p-3 overflow-y-auto bg-slate-100/60 dark:bg-slate-950">
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+              {visibleProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  cartQuantity={cartQuantityMap[product.id] || 0}
+                  currency={settings.currency}
+                />
+              ))}
+            </div>
+
+            {hasMore && (
+              <div className="text-center pt-2 pb-4">
+                <button
+                  type="button"
+                  onClick={() => setDisplayLimit((prev) => prev + 48)}
+                  className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <ChevronDown className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Tampilkan Lebih Banyak ({visibleProducts.length} dari {filteredProducts.length} barang)</span>
+                </button>
+              </div>
+            )}
           </div>
         ) : products.length === 0 ? (
           <div className="h-72 flex flex-col items-center justify-center text-center p-6 text-slate-400 dark:text-slate-500 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 my-4">

@@ -116,17 +116,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1">
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Mata Uang
                 </label>
-                <select
-                  value={formData.currency}
-                  onChange={(e) => setFormData({ ...formData, currency: e.target.value as any })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold text-xs"
-                >
-                  <option value="IDR">IDR (Rp) - Rupiah</option>
-                  <option value="USD">USD ($) - Dollar</option>
-                </select>
+                <div className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 font-bold text-xs flex items-center justify-between">
+                  <span>IDR (Rp) - Rupiah</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                    Baku
+                  </span>
+                </div>
               </div>
 
               <div>

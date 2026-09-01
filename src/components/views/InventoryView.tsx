@@ -172,7 +172,7 @@ export const InventoryView: React.FC = () => {
       !query ||
       p.name.toLowerCase().includes(query) ||
       p.sku.toLowerCase().includes(query) ||
-      p.barcode.includes(query) ||
+      p.barcode.toLowerCase().includes(query) ||
       (p.brand && p.brand.toLowerCase().includes(query));
     const matchCat = categoryFilter === 'all' || p.categoryId === categoryFilter;
     const matchOrigin =
