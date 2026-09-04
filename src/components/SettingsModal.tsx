@@ -146,7 +146,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
               <div>
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
-                  Rasio Poin (Rp)
+                  Rasio Perolehan Poin (Rp)
                 </label>
                 <input
                   type="number"
@@ -157,7 +157,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="10000"
                 />
-                <span className="text-[10px] text-slate-400">1 poin per kelipatan</span>
+                <span className="text-[10px] text-slate-400">1 poin per kelipatan belanja</span>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
+                  Nilai Diskon Poin (Rp/Poin)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  step={10}
+                  value={formData.pointRedemptionRate ?? 100}
+                  onChange={(e) => setFormData({ ...formData, pointRedemptionRate: Number(e.target.value) })}
+                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  placeholder="100"
+                />
+                <span className="text-[10px] text-slate-400">Nilai diskon per 1 poin (cth: Rp 100)</span>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
+                  Min. Poin Ditukar
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  step={5}
+                  value={formData.minRedeemPoints ?? 10}
+                  onChange={(e) => setFormData({ ...formData, minRedeemPoints: Number(e.target.value) })}
+                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  placeholder="10"
+                />
+                <span className="text-[10px] text-slate-400">Ambang batas minimum tukar poin</span>
               </div>
             </div>
           </div>

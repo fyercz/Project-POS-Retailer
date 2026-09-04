@@ -633,7 +633,7 @@ export const InventoryView: React.FC = () => {
 
   const handleExportStockCSV = () => {
     const filename = `Katalog_Stok_${settings.storeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}`;
-    const headers = ['SKU', 'Barcode', 'Nama Produk', 'Brand', 'Kategori', 'Stok', 'Satuan', 'Min Stok', 'Harga Modal (HPP)', 'Harga Jual', 'Margin (Rp)', 'Lokasi Rak', 'Exp Date'];
+    const headers = ['SKU', 'Barcode', 'Nama Produk', 'Brand', 'Kategori', 'Stok', 'Satuan', 'Min Stok', 'Harga Modal (HPP)', 'Harga Jual', 'Margin (Rp)', 'Exp Date'];
     const rows = products.map((p) => [
       p.sku,
       p.barcode || '-',
@@ -646,7 +646,6 @@ export const InventoryView: React.FC = () => {
       Math.round(p.costPrice || 0),
       Math.round(p.price),
       Math.round(p.price - (p.costPrice || 0)),
-      p.aisle || '-',
       p.expiryDate || '-',
     ]);
     exportToCSV(filename, headers, rows);
@@ -1100,7 +1099,7 @@ export const InventoryView: React.FC = () => {
                   />
                 </th>
                 <th className="py-3 px-4">Produk / Barang</th>
-                <th className="py-3 px-4">Brand & Lokasi Rak</th>
+                <th className="py-3 px-4">Brand</th>
                 <th className="py-3 px-4">SKU / Barcode</th>
                 <th className="py-3 px-4 text-right">Harga Modal</th>
                 <th className="py-3 px-4 text-right">Harga Jual</th>
@@ -1158,13 +1157,10 @@ export const InventoryView: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* Brand & Aisle */}
+                      {/* Brand */}
                       <td className="py-3 px-4">
                         <div className="font-semibold text-emerald-600 dark:text-emerald-400">
                           {prod.brand || '-'}
-                        </div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                          {prod.aisle || 'Rak Reguler'}
                         </div>
                       </td>
 

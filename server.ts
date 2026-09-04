@@ -10,7 +10,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Lazy initialization of Gemini Client
 let geminiClient: GoogleGenAI | null = null;
@@ -373,6 +374,114 @@ async function callGeminiWithSearch(
   return null;
 }
 
+// ==========================================
+// POS CLOUD BACKEND TRANSACTION SYNC STORAGE
+// ==========================================
+// In-memory Cloud Ledger for transactions pushed from POS terminals & offline queues
+const cloudTransactionsStore = new Map<string, any>();
+
+// 1. Cloud Sync Status & Heartbeat Endpoint
+app.get('/api/pos/sync-status', (req, res) => {
+  res.json({
+    status: 'online',
+    cloudSynced: true,
+    serverTime: new Date().toISOString(),
+    totalCloudTransactions: cloudTransactionsStore.size,
+  });
+});
+
+// 2. Batch Cloud Push for Offline & Background Sync Transactions
+app.post('/api/pos/transactions/sync', (req, res) => {
+  try {
+    const { transactions, deviceId, cashierName } = req.body;
+
+    if (!Array.isArray(transactions)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Data transaksi tidak valid. Harus berupa array.',
+      });
+    }
+
+    const now = new Date().toISOString();
+    const syncedIds: string[] = [];
+
+    for (const tx of transactions) {
+      if (!tx || (!tx.id && !tx.invoiceNumber)) continue;
+
+      const recordKey = tx.id || tx.invoiceNumber;
+      const enrichedRecord = {
+        ...tx,
+        syncStatus: 'synced',
+        syncedAt: now,
+        cloudStoredAt: now,
+        syncedByDevice: deviceId || 'pos-terminal-web',
+        syncedByCashier: cashierName || tx.cashierName || 'Kasir',
+      };
+
+      cloudTransactionsStore.set(recordKey, enrichedRecord);
+      syncedIds.push(recordKey);
+    }
+
+    console.log(`[Cloud Sync] Synced ${syncedIds.length} transactions to cloud storage at ${now}. Total in cloud: ${cloudTransactionsStore.size}`);
+
+    res.json({
+      success: true,
+      syncedCount: syncedIds.length,
+      syncedIds,
+      serverTime: now,
+      totalCloudTransactions: cloudTransactionsStore.size,
+    });
+  } catch (err: any) {
+    console.error('Error in POS transactions sync:', err);
+    res.status(500).json({
+      success: false,
+      error: err.message || 'Gagal menyinkronkan transaksi ke cloud',
+    });
+  }
+});
+
+// 3. Single Transaction Push to Cloud
+app.post('/api/pos/transactions', (req, res) => {
+  try {
+    const tx = req.body;
+    if (!tx || (!tx.id && !tx.invoiceNumber)) {
+      return res.status(400).json({ success: false, error: 'Transaksi tidak valid' });
+    }
+
+    const now = new Date().toISOString();
+    const recordKey = tx.id || tx.invoiceNumber;
+    const enriched = {
+      ...tx,
+      syncStatus: 'synced',
+      syncedAt: now,
+      cloudStoredAt: now,
+    };
+
+    cloudTransactionsStore.set(recordKey, enriched);
+
+    res.json({
+      success: true,
+      transaction: enriched,
+      serverTime: now,
+    });
+  } catch (err: any) {
+    console.error('Error posting single transaction:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 4. Retrieve All Cloud Transactions
+app.get('/api/pos/transactions', (req, res) => {
+  const list = Array.from(cloudTransactionsStore.values()).sort(
+    (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+  );
+  res.json({
+    success: true,
+    count: list.length,
+    transactions: list,
+  });
+});
+
 // 6. AI Supplier Purchase Invoice OCR / Image Scanner
 app.post('/api/ai/scan-invoice', async (req, res) => {
   const { imageBase64, mimeType, catalogProducts, storeSettings } = req.body;
@@ -517,7 +626,7 @@ app.post('/api/ai/visual-stock-opname', async (req, res) => {
 
   try {
     const formattedImages = imagesArray.map((imgStr: string) => ({
-      data: imgStr.replace(/^data:image\/[a-z]+;base64,/, ''),
+      data: typeof imgStr === 'string' ? imgStr.replace(/^data:[^;]+;base64,/, '') : '',
       mimeType: mimeType || 'image/jpeg',
     }));
 
@@ -577,7 +686,11 @@ TUGAS:
       return res.json(generateRuleBasedOpname());
     }
 
-    const parsed = JSON.parse(rawText);
+    const parsed = extractJsonFromText(rawText);
+    if (!parsed || !Array.isArray(parsed.items)) {
+      return res.json(generateRuleBasedOpname());
+    }
+
     res.json({ ...parsed, isAiGenerated: true });
   } catch (err) {
     console.error('Visual stock opname error:', err);

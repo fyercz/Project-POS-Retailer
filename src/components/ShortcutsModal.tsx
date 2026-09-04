@@ -13,6 +13,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
     { key: 'Alt + T', action: 'Toggle Dark / Light Theme', icon: SunMoon, highlight: true },
     { key: 'Alt + L', action: 'Kunci Layar & Ganti Kasir / Login PIN', icon: Monitor, highlight: true },
     { key: 'F2', action: 'Focus Product Search & Barcode Input', icon: Search },
+    { key: 'F3', action: 'Buka Scanner Barcode Kamera (Auto Add ke Cart)', icon: Search, highlight: true },
     { key: 'F4', action: 'Hold / Park Current Order', icon: PauseCircle },
     { key: 'F9', action: 'Quick Checkout & Payment Modal', icon: CreditCard, highlight: true },
     { key: 'Esc', action: 'Close Any Open Modal / Dialog', icon: X },

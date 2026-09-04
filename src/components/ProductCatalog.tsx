@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useMemo, useState } from 'react';
 import {
   Search,
   ScanBarcode,
+  Camera,
   LayoutGrid,
   Coffee,
   Utensils,
@@ -38,6 +39,7 @@ export const ProductCatalog: React.FC = () => {
     setActiveView,
     settings,
     cart,
+    setIsBarcodeScannerOpen,
   } = usePOS();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -140,6 +142,21 @@ export const ProductCatalog: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Camera Barcode Scanner Trigger Button */}
+          <button
+            type="button"
+            id="btn-open-barcode-scanner"
+            onClick={() => setIsBarcodeScannerOpen(true)}
+            className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-emerald-500/40 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:border-emerald-700/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 transition-all cursor-pointer shadow-2xs shrink-0 active:scale-95"
+            title="Buka Kamera Barcode Scanner (Tekan F3)"
+          >
+            <Camera className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden md:inline">Scan Barcode</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-200/60 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-300">
+              F3
+            </span>
+          </button>
 
           {/* Quick Filter: Low Stock */}
           <button

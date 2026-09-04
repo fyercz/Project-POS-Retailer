@@ -19,6 +19,9 @@ import { GeminiRetailCopilot } from './components/GeminiRetailCopilot';
 import { EmployeeLockScreen } from './components/EmployeeLockScreen';
 import { EmployeeManagementModal } from './components/EmployeeManagementModal';
 import { ShiftModal } from './components/ShiftModal';
+import { OfflineSyncModal } from './components/OfflineSyncModal';
+import { OfflineNotificationBanner } from './components/OfflineNotificationBanner';
+import { BarcodeScannerModal } from './components/BarcodeScannerModal';
 
 const POSMainApp: React.FC = () => {
   const {
@@ -33,6 +36,9 @@ const POSMainApp: React.FC = () => {
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors duration-200">
       {/* Top Main Navigation Header */}
       <Header />
+
+      {/* Offline Status & Cloud Sync Notification Banner */}
+      <OfflineNotificationBanner />
 
       {/* Main Content Viewport */}
       <main className="flex-1 flex overflow-hidden">
@@ -83,6 +89,12 @@ const POSMainApp: React.FC = () => {
 
       {/* Shift Summary & Drawer Reconciliation Modal */}
       <ShiftModal />
+
+      {/* Offline Caching & Cloud Background Sync Modal */}
+      <OfflineSyncModal />
+
+      {/* Camera Barcode Scanner Modal with Auto-Add */}
+      <BarcodeScannerModal />
     </div>
   );
 };

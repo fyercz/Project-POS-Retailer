@@ -194,7 +194,10 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
 
               {transaction.discountAmount > 0 && (
                 <div className="flex justify-between text-slate-700">
-                  <span>Diskon {transaction.voucherCode ? `(${transaction.voucherCode})` : ''}</span>
+                  <span>
+                    Diskon {transaction.voucherCode ? `(${transaction.voucherCode})` : ''}
+                    {transaction.pointsUsed && transaction.pointsUsed > 0 ? ` (Poin: -${transaction.pointsUsed} pts)` : ''}
+                  </span>
                   <span>-{formatCurrency(transaction.discountAmount, settings.currency)}</span>
                 </div>
               )}
@@ -227,10 +230,21 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
               )}
             </div>
 
-            {/* Points info */}
-            {transaction.pointsEarned > 0 && (
-              <div className="py-1.5 text-center text-[10px] text-slate-700 bg-slate-100 my-2 rounded">
-                Points Earned: +{transaction.pointsEarned} pts
+            {/* Loyalty Points info */}
+            {((transaction.pointsEarned && transaction.pointsEarned > 0) || (transaction.pointsUsed && transaction.pointsUsed > 0)) && (
+              <div className="py-1.5 px-2 text-center text-[10px] text-slate-700 bg-slate-100 my-2 rounded space-y-0.5">
+                {transaction.pointsUsed && transaction.pointsUsed > 0 ? (
+                  <div className="flex justify-between font-mono">
+                    <span>Poin Ditukar:</span>
+                    <span className="font-bold text-amber-700">-{transaction.pointsUsed} Pts</span>
+                  </div>
+                ) : null}
+                {transaction.pointsEarned && transaction.pointsEarned > 0 ? (
+                  <div className="flex justify-between font-mono">
+                    <span>Poin Diperoleh:</span>
+                    <span className="font-bold text-emerald-700">+{transaction.pointsEarned} Pts</span>
+                  </div>
+                ) : null}
               </div>
             )}
 

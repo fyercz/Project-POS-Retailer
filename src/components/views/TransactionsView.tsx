@@ -20,6 +20,9 @@ import {
   Plus,
   Minus,
   Check,
+  Cloud,
+  CloudOff,
+  RefreshCw,
 } from 'lucide-react';
 import { usePOS } from '../../context/POSContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
@@ -27,10 +30,21 @@ import { Transaction, SalesReturn, SalesReturnItem } from '../../types';
 import { ReportPrintModal } from '../ReportPrintModal';
 
 export const TransactionsView: React.FC = () => {
-  const { transactions, setActiveReceipt, voidTransaction, settings, salesReturns, processSalesReturn } = usePOS();
+  const {
+    transactions,
+    setActiveReceipt,
+    voidTransaction,
+    settings,
+    salesReturns,
+    processSalesReturn,
+    pendingSyncCount,
+    setIsSyncModalOpen,
+    isOnline,
+  } = usePOS();
   const [activeTab, setActiveTab] = useState<'sales' | 'returns'>('sales');
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState<string>('all');
+  const [syncFilter, setSyncFilter] = useState<'all' | 'synced' | 'pending_sync'>('all');
   const [selectedTxForVoid, setSelectedTxForVoid] = useState<Transaction | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
@@ -138,7 +152,12 @@ export const TransactionsView: React.FC = () => {
 
     const methodMatch = methodFilter === 'all' || tx.payment.method === methodFilter;
 
-    return searchMatch && methodMatch;
+    const syncMatch =
+      syncFilter === 'all' ||
+      (syncFilter === 'synced' && (tx.syncStatus === 'synced' || !tx.syncStatus)) ||
+      (syncFilter === 'pending_sync' && tx.syncStatus === 'pending_sync');
+
+    return searchMatch && methodMatch && syncMatch;
   });
 
   const filteredReturns = salesReturns.filter((r) => {
@@ -236,17 +255,44 @@ export const TransactionsView: React.FC = () => {
 
           {/* Payment Method Filter */}
           {activeTab === 'sales' && (
-            <select
-              value={methodFilter}
-              onChange={(e) => setMethodFilter(e.target.value)}
-              className="px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer"
-            >
-              <option value="all">Semua Cara Bayar</option>
-              <option value="cash">💵 Tunai (Cash)</option>
-              <option value="qris">📱 QRIS Instan</option>
-              <option value="card">💳 Kartu Debit/Kredit</option>
-              <option value="transfer">🏦 Transfer Bank</option>
-            </select>
+            <>
+              <select
+                value={methodFilter}
+                onChange={(e) => setMethodFilter(e.target.value)}
+                className="px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer"
+              >
+                <option value="all">Semua Cara Bayar</option>
+                <option value="cash">💵 Tunai (Cash)</option>
+                <option value="qris">📱 QRIS Instan</option>
+                <option value="card">💳 Kartu Debit/Kredit</option>
+                <option value="transfer">🏦 Transfer Bank</option>
+              </select>
+
+              {/* Cloud Sync Filter */}
+              <select
+                id="filter-sync-status"
+                value={syncFilter}
+                onChange={(e) => setSyncFilter(e.target.value as any)}
+                className="px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer"
+              >
+                <option value="all">Semua Status Cloud</option>
+                <option value="synced">☁️ Tersinkron Cloud</option>
+                <option value="pending_sync">⏳ Menunggu Sinkron ({pendingSyncCount})</option>
+              </select>
+
+              {/* Quick Sync Button if pending items */}
+              {pendingSyncCount > 0 && (
+                <button
+                  id="btn-quick-sync-header"
+                  onClick={() => setIsSyncModalOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors animate-pulse"
+                  title="Ada transaksi offline di antrean lokal! Klik untuk sinkronkan."
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Sync Cloud ({pendingSyncCount})</span>
+                </button>
+              )}
+            </>
           )}
 
           <button
@@ -374,6 +420,23 @@ export const TransactionsView: React.FC = () => {
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                                 SELESAI
                               </span>
+                            )}
+
+                            {/* Cloud Sync Status Indicator */}
+                            {tx.syncStatus === 'pending_sync' ? (
+                              <div
+                                onClick={() => setIsSyncModalOpen(true)}
+                                className="mt-1 flex items-center justify-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 cursor-pointer hover:underline"
+                                title="Transaksi disimpan lokal, menunggu koneksi cloud untuk diunggah"
+                              >
+                                <CloudOff className="w-3 h-3" />
+                                <span>Antrean Lokal</span>
+                              </div>
+                            ) : (
+                              <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-slate-400 dark:text-slate-500">
+                                <Cloud className="w-3 h-3 text-emerald-500" />
+                                <span>Cloud Synced</span>
+                              </div>
                             )}
                           </td>
 

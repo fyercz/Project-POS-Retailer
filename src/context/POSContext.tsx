@@ -4,6 +4,8 @@ import {
   Product,
   CartItem,
   Customer,
+  MemberTier,
+  PointHistoryEntry,
   Voucher,
   HeldOrder,
   Transaction,
@@ -19,6 +21,8 @@ import {
   Supplier,
   Employee,
   ShiftSummary,
+  OfflineSyncState,
+  CloudSyncResult,
 } from '../types';
 import {
   INITIAL_CATEGORIES,
@@ -31,6 +35,7 @@ import {
   INITIAL_EMPLOYEES,
 } from '../data/mockData';
 import { generateInvoiceNumber } from '../utils/formatters';
+import { offlineSyncManager } from '../utils/offlineSyncManager';
 
 interface POSContextType {
   // Navigation
@@ -85,6 +90,10 @@ interface POSContextType {
   removeVoucher: () => void;
   usePoints: boolean;
   setUsePoints: (use: boolean) => void;
+  pointsToRedeem: number;
+  setPointsToRedeem: (points: number) => void;
+  maxRedeemablePoints: number;
+  pointRedemptionRate: number;
 
   // Pricing & Profit Margin Point calculations
   subtotal: number;
@@ -129,7 +138,9 @@ interface POSContextType {
 
   // Customers CRM
   customers: Customer[];
-  addCustomer: (customer: Omit<Customer, 'id' | 'points' | 'totalSpent' | 'ordersCount'>) => Customer;
+  addCustomer: (customer: Omit<Customer, 'id' | 'points' | 'totalSpent' | 'ordersCount' | 'pointsHistory'> & { initialPoints?: number }) => Customer;
+  adjustCustomerPoints: (customerId: string, pointsDelta: number, reason: string, type?: 'adjusted' | 'bonus') => void;
+  updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
 
   // Settings & Helpers
   settings: StoreSettings;
@@ -167,6 +178,31 @@ interface POSContextType {
   deleteEmployee: (id: string) => { success: boolean; message: string };
   startNewShift: (startingCash: number) => ShiftSummary;
   closeCurrentShift: (actualCashEnding: number, notes?: string) => ShiftSummary;
+
+  // Offline PWA & Cloud Background Sync
+  isOnline: boolean;
+  isOfflineSimulated: boolean;
+  toggleOfflineSimulation: (enable?: boolean) => void;
+  pendingSyncCount: number;
+  isSyncing: boolean;
+  lastSyncTime: string | null;
+  serviceWorkerActive: boolean;
+  backgroundSyncSupported: boolean;
+  syncPendingTransactions: () => Promise<CloudSyncResult>;
+  isSyncModalOpen: boolean;
+  setIsSyncModalOpen: (open: boolean) => void;
+  syncNotification: string | null;
+  clearSyncNotification: () => void;
+
+  // Barcode Scanner Camera & Auto-Add
+  isBarcodeScannerOpen: boolean;
+  setIsBarcodeScannerOpen: (open: boolean) => void;
+  scanBarcodeAndAddToCart: (code: string) => {
+    success: boolean;
+    product?: Product;
+    message: string;
+    unit?: WholesaleUnit;
+  };
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -230,7 +266,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [tableNumber, setTableNumber] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
-  const [usePoints, setUsePoints] = useState<boolean>(false);
+  const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
 
   // Held Orders
   const [heldOrders, setHeldOrders] = useState<HeldOrder[]>(() => {
@@ -245,10 +281,36 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_RECENT_TRANSACTIONS;
   });
 
-  // Customers
+  // Customers with loyalty tracking & points ledger
   const [customers, setCustomers] = useState<Customer[]>(() => {
-    const saved = localStorage.getItem('pos_retail_customers_v2');
-    return saved ? JSON.parse(saved) : INITIAL_CUSTOMERS;
+    const savedV3 = localStorage.getItem('pos_retail_customers_v3');
+    if (savedV3) {
+      try {
+        return JSON.parse(savedV3);
+      } catch {
+        // fallback
+      }
+    }
+    const savedV2 = localStorage.getItem('pos_retail_customers_v2');
+    if (savedV2) {
+      try {
+        const parsed = JSON.parse(savedV2);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((c: any) => {
+            const match = INITIAL_CUSTOMERS.find((init) => init.id === c.id);
+            return {
+              ...c,
+              tier: c.tier && c.tier !== 'Regular' ? c.tier : (match ? match.tier : 'Bronze'),
+              pointsHistory: c.pointsHistory || (match ? match.pointsHistory : []),
+              joinedDate: c.joinedDate || (match ? match.joinedDate : '2025-08-01'),
+            };
+          });
+        }
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_CUSTOMERS;
   });
 
   // Store Settings
@@ -263,6 +325,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (parsed.receiptFooterMessage && /nexamart/i.test(parsed.receiptFooterMessage)) {
           parsed.receiptFooterMessage = parsed.receiptFooterMessage.replace(/nexamart/gi, 'ulilmart');
         }
+        parsed.pointRedemptionRate = parsed.pointRedemptionRate || 100;
+        parsed.minRedeemPoints = parsed.minRedeemPoints !== undefined ? parsed.minRedeemPoints : 10;
         return parsed;
       } catch {
         return DEFAULT_STORE_SETTINGS;
@@ -400,6 +464,78 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [aiUpsellSuggestions, setAiUpsellSuggestions] = useState<AIUpsellSuggestion[]>([]);
   const [isFetchingUpsell, setIsFetchingUpsell] = useState(false);
 
+  // Offline PWA & Cloud Background Sync States
+  const [syncState, setSyncState] = useState<OfflineSyncState>(() => offlineSyncManager.getState());
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [syncNotification, setSyncNotification] = useState<string | null>(null);
+
+  // Barcode Scanner Camera State
+  const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
+
+  // Global F3 Shortcut to toggle Barcode Scanner
+  useEffect(() => {
+    const handleBarcodeShortcut = (e: KeyboardEvent) => {
+      if (e.key === 'F3') {
+        e.preventDefault();
+        setIsBarcodeScannerOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleBarcodeShortcut);
+    return () => window.removeEventListener('keydown', handleBarcodeShortcut);
+  }, []);
+
+  // Subscribe to offline sync manager and listen for sync events
+  useEffect(() => {
+    const unsubscribe = offlineSyncManager.subscribe((state) => {
+      setSyncState(state);
+    });
+
+    const handleSyncedEvent = (e: any) => {
+      const count = e.detail?.count || 0;
+      const syncedIds: string[] = e.detail?.syncedIds || [];
+
+      if (syncedIds.length > 0) {
+        setTransactions((prev) =>
+          prev.map((tx) =>
+            syncedIds.includes(tx.id)
+              ? { ...tx, syncStatus: 'synced', syncedAt: new Date().toISOString() }
+              : tx
+          )
+        );
+      }
+
+      if (count > 0) {
+        setSyncNotification(`Koneksi pulih! ${count} transaksi offline berhasil disinkronkan ke cloud.`);
+        setTimeout(() => setSyncNotification(null), 7000);
+      }
+    };
+
+    window.addEventListener('pos-transactions-synced', handleSyncedEvent);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('pos-transactions-synced', handleSyncedEvent);
+    };
+  }, []);
+
+  const syncPendingTransactions = useCallback(async (): Promise<CloudSyncResult> => {
+    const result = await offlineSyncManager.syncPendingTransactions();
+    if (result.success && result.syncedCount > 0) {
+      setTransactions((prev) =>
+        prev.map((tx) =>
+          result.syncedIds?.includes(tx.id)
+            ? { ...tx, syncStatus: 'synced', syncedAt: result.serverTime || new Date().toISOString() }
+            : tx
+        )
+      );
+    }
+    return result;
+  }, []);
+
+  const clearSyncNotification = useCallback(() => {
+    setSyncNotification(null);
+  }, []);
+
   // Debounced Sync to local storage to prevent main-thread UI lag during rapid operations
   const pendingStorageSaves = useRef<Record<string, any>>({});
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -440,7 +576,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [transactions, scheduleSave]);
 
   useEffect(() => {
-    scheduleSave('pos_retail_customers_v2', customers);
+    scheduleSave('pos_retail_customers_v3', customers);
   }, [customers, scheduleSave]);
 
   useEffect(() => {
@@ -642,6 +778,74 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     });
   };
+
+  const scanBarcodeAndAddToCart = useCallback(
+    (
+      scannedBarcode: string
+    ): {
+      success: boolean;
+      product?: Product;
+      message: string;
+      unit?: WholesaleUnit;
+    } => {
+      const code = (scannedBarcode || '').trim();
+      if (!code) {
+        return { success: false, message: 'Barcode tidak boleh kosong' };
+      }
+
+      const cleanCode = code.toLowerCase();
+
+      // 1. Direct barcode match
+      let matchedProduct = products.find((p) => (p.barcode || '').toLowerCase() === cleanCode);
+      let matchedUnit: WholesaleUnit | undefined;
+
+      // 2. Check wholesale units barcode match (e.g. box/carton specific barcode)
+      if (!matchedProduct) {
+        for (const p of products) {
+          const u = (p.wholesaleUnits || []).find(
+            (unit) => (unit.barcode || '').toLowerCase() === cleanCode
+          );
+          if (u) {
+            matchedProduct = p;
+            matchedUnit = u;
+            break;
+          }
+        }
+      }
+
+      // 3. Check SKU match
+      if (!matchedProduct) {
+        matchedProduct = products.find((p) => (p.sku || '').toLowerCase() === cleanCode);
+      }
+
+      // 4. Fuzzy numeric match (strip leading zeros)
+      if (!matchedProduct) {
+        const unpadded = cleanCode.replace(/^0+/, '');
+        if (unpadded.length >= 4) {
+          matchedProduct = products.find(
+            (p) => (p.barcode || '').replace(/^0+/, '').toLowerCase() === unpadded
+          );
+        }
+      }
+
+      if (matchedProduct) {
+        addToCart(matchedProduct, undefined, undefined, matchedUnit);
+        const unitLabel = matchedUnit ? ` (${matchedUnit.name})` : '';
+        return {
+          success: true,
+          product: matchedProduct,
+          unit: matchedUnit,
+          message: `${matchedProduct.name}${unitLabel} berhasil ditambahkan ke keranjang!`,
+        };
+      } else {
+        return {
+          success: false,
+          message: `Produk dengan barcode "${code}" tidak ditemukan di katalog toko.`,
+        };
+      }
+    },
+    [products, addToCart]
+  );
 
   const updateCartItemQuantity = (cartItemId: string, delta: number) => {
     setCart((prevCart) => {
@@ -856,18 +1060,42 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return 0;
   }, [appliedVoucher, subtotal]);
 
-  // Loyalty Points discount (1 point = 100 IDR)
+  // Loyalty Points discount calculations (configurable rate: default 1 point = Rp 100 discount)
+  const pointRedemptionRate = settings.pointRedemptionRate || 100;
+
+  const maxRedeemablePoints = useMemo(() => {
+    if (!selectedCustomer || selectedCustomer.points <= 0) return 0;
+    const remainingBill = Math.max(0, subtotal - voucherDiscount);
+    const maxPointsByBill = Math.floor(remainingBill / pointRedemptionRate);
+    return Math.min(selectedCustomer.points, maxPointsByBill);
+  }, [selectedCustomer, subtotal, voucherDiscount, pointRedemptionRate]);
+
+  // Points to redeem capped at customer balance and payable total
+  const effectivePointsToRedeem = Math.min(pointsToRedeem, maxRedeemablePoints);
+
   const pointsDiscount = useMemo(() => {
-    if (usePoints && selectedCustomer && selectedCustomer.points > 0) {
-      const maxUsablePoints = selectedCustomer.points;
-      const disc = maxUsablePoints * 100;
-      if (disc > subtotal - voucherDiscount) {
-        return Math.max(0, subtotal - voucherDiscount);
-      }
-      return disc;
+    if (!selectedCustomer || effectivePointsToRedeem <= 0) {
+      return 0;
     }
-    return 0;
-  }, [usePoints, selectedCustomer, subtotal, voucherDiscount]);
+    const remainingBill = Math.max(0, subtotal - voucherDiscount);
+    const disc = effectivePointsToRedeem * pointRedemptionRate;
+    return Math.min(disc, remainingBill);
+  }, [selectedCustomer, effectivePointsToRedeem, pointRedemptionRate, subtotal, voucherDiscount]);
+
+  const usePoints = effectivePointsToRedeem > 0;
+
+  const setUsePoints = (use: boolean) => {
+    if (use) {
+      setPointsToRedeem(maxRedeemablePoints);
+    } else {
+      setPointsToRedeem(0);
+    }
+  };
+
+  const handleSetPointsToRedeem = (pts: number) => {
+    const clamped = Math.max(0, Math.min(Math.floor(pts || 0), maxRedeemablePoints));
+    setPointsToRedeem(clamped);
+  };
 
   const totalDiscount = voucherDiscount + pointsDiscount;
   // Sales Tax & Surcharges removed on sales as requested
@@ -887,8 +1115,20 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const effectiveEligibleSpend =
     subtotal > 0 ? Math.max(0, (pointsEligibleSpend / subtotal) * finalTotal) : 0;
 
-  // 1 poin tiap pointsRatio (default Rp 10.000) dari item profit >= 15%
-  const pointsEarned = Math.floor(effectiveEligibleSpend / (settings.pointsRatio || 10000));
+  // Multiplier berdasarkan Member Tier: Regular/Bronze: 1x, Silver: 1.2x, Gold: 1.5x, Platinum: 2x
+  const tierMultiplier = useMemo(() => {
+    if (!selectedCustomer) return 1;
+    switch (selectedCustomer.tier) {
+      case 'Platinum': return 2;
+      case 'Gold': return 1.5;
+      case 'Silver': return 1.2;
+      default: return 1;
+    }
+  }, [selectedCustomer]);
+
+  // 1 poin tiap pointsRatio (default Rp 10.000) dari item profit >= 15% dikalikan tier multiplier
+  const basePointsEarned = Math.floor(effectiveEligibleSpend / (settings.pointsRatio || 10000));
+  const pointsEarned = Math.floor(basePointsEarned * tierMultiplier);
 
   // Held Orders (Order Parking)
   const holdCurrentOrder = (note?: string): boolean => {
@@ -1084,13 +1324,16 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Complete Payment & Save Transaction
   const processPayment = (payment: PaymentDetails): Transaction => {
-    const pointsUsed = usePoints && selectedCustomer ? Math.floor(pointsDiscount / 100) : 0;
+    const pointsUsed = usePoints && selectedCustomer ? Math.min(effectivePointsToRedeem, selectedCustomer.points) : 0;
     const currentCashierName = activeEmployee
       ? `${activeEmployee.name} (${activeEmployee.roleTitle || activeEmployee.role})`
       : 'Kasir Utama';
 
+    const isCurrentlyOnline = offlineSyncManager.isOnline();
+    const nowIso = new Date().toISOString();
+
     const newTx: Transaction = {
-      id: `tx-${Date.now()}`,
+      id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       invoiceNumber: generateInvoiceNumber(),
       orderType,
       tableNumber: tableNumber || undefined,
@@ -1109,9 +1352,32 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payment,
       cashierName: currentCashierName,
       branchName: settings.branchName,
-      createdAt: new Date().toISOString(),
+      createdAt: nowIso,
       status: 'completed',
+      syncStatus: isCurrentlyOnline ? 'synced' : 'pending_sync',
+      syncedAt: isCurrentlyOnline ? nowIso : undefined,
+      offlineCreated: !isCurrentlyOnline,
+      syncRetryCount: 0,
     };
+
+    // Offline caching & Cloud Background Sync handling
+    if (!isCurrentlyOnline) {
+      offlineSyncManager.savePendingTransaction(newTx).catch((err) => {
+        console.error('[POS] Gagal menyimpan transaksi offline lokal:', err);
+      });
+    } else {
+      // Push to cloud; fallback to offline queue if server connection fails
+      fetch('/api/pos/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTx),
+      }).catch(async (err) => {
+        console.warn('[POS] Gagal push transaksi instan, beralih ke antrean offline lokal:', err);
+        newTx.syncStatus = 'pending_sync';
+        newTx.offlineCreated = true;
+        await offlineSyncManager.savePendingTransaction(newTx);
+      });
+    }
 
     // Update Shift Metrics
     setCurrentShift((prev) => {
@@ -1144,21 +1410,64 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
-    // 2. Update Customer Points & Total Spent (Tier is strictly Regular)
+    // 2. Update Customer Points Ledger, Balance & Tier Progression
     if (selectedCustomer) {
       setCustomers((prevCustomers) =>
         prevCustomers.map((cust) => {
           if (cust.id === selectedCustomer.id) {
-            const updatedPoints = Math.max(0, cust.points - pointsUsed + pointsEarned);
+            const actualPointsUsed = pointsUsed;
             const updatedSpent = cust.totalSpent + finalTotal;
             const updatedOrders = cust.ordersCount + 1;
 
+            // Tier progression based on accumulated spending
+            let newTier: MemberTier = cust.tier || 'Bronze';
+            if (updatedSpent >= 10000000) newTier = 'Platinum';
+            else if (updatedSpent >= 5000000) newTier = 'Gold';
+            else if (updatedSpent >= 1000000) newTier = 'Silver';
+            else newTier = 'Bronze';
+
+            const newHistoryEntries: PointHistoryEntry[] = [];
+            let runningBalance = cust.points;
+
+            // Log point redemption for discount
+            if (actualPointsUsed > 0) {
+              runningBalance = Math.max(0, runningBalance - actualPointsUsed);
+              newHistoryEntries.push({
+                id: `pth-rd-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
+                type: 'redeemed',
+                points: -actualPointsUsed,
+                balanceAfter: runningBalance,
+                description: `Tukar ${actualPointsUsed} Poin untuk Diskon Kasir Rp ${(pointsDiscount || 0).toLocaleString('id-ID')}`,
+                transactionId: newTx.id,
+                invoiceNumber: newTx.invoiceNumber,
+                date: nowIso,
+                operatorName: currentCashierName,
+              });
+            }
+
+            // Log points earned from eligible items
+            if (pointsEarned > 0) {
+              runningBalance = runningBalance + pointsEarned;
+              newHistoryEntries.push({
+                id: `pth-en-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
+                type: 'earned',
+                points: pointsEarned,
+                balanceAfter: runningBalance,
+                description: `Perolehan Poin Belanja Transaksi ${newTx.invoiceNumber}`,
+                transactionId: newTx.id,
+                invoiceNumber: newTx.invoiceNumber,
+                date: nowIso,
+                operatorName: currentCashierName,
+              });
+            }
+
             return {
               ...cust,
-              points: updatedPoints,
+              points: runningBalance,
               totalSpent: updatedSpent,
               ordersCount: updatedOrders,
-              tier: 'Regular',
+              tier: newTier,
+              pointsHistory: [...newHistoryEntries, ...(cust.pointsHistory || [])],
             };
           }
           return cust;
@@ -1185,6 +1494,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     clearCart();
     setTableNumber('');
     setSelectedCustomer(null);
+    setPointsToRedeem(0);
     setIsPaymentModalOpen(false);
 
     return newTx;
@@ -1398,17 +1708,84 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setHeldOrders([]);
   };
 
-  const addCustomer = (customerData: Omit<Customer, 'id' | 'points' | 'totalSpent' | 'ordersCount'>): Customer => {
+  const addCustomer = (
+    customerData: Omit<Customer, 'id' | 'points' | 'totalSpent' | 'ordersCount' | 'pointsHistory'> & { initialPoints?: number }
+  ): Customer => {
+    const initPoints = customerData.initialPoints !== undefined ? customerData.initialPoints : 25;
+    const nowIso = new Date().toISOString();
     const newCust: Customer = {
       ...customerData,
       id: `cust-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      points: 20,
+      tier: customerData.tier || 'Bronze',
+      points: initPoints,
       totalSpent: 0,
       ordersCount: 0,
+      joinedDate: nowIso.slice(0, 10),
+      pointsHistory: initPoints > 0 ? [
+        {
+          id: `pth-${Date.now()}`,
+          type: 'bonus',
+          points: initPoints,
+          balanceAfter: initPoints,
+          description: 'Bonus Pendaftaran Member Baru Ulilmart',
+          date: nowIso,
+          operatorName: activeEmployee?.name || 'Kasir',
+        }
+      ] : [],
     };
     setCustomers((prev) => [newCust, ...prev]);
     setSelectedCustomer(newCust);
     return newCust;
+  };
+
+  const adjustCustomerPoints = (
+    customerId: string,
+    pointsDelta: number,
+    reason: string,
+    type: 'adjusted' | 'bonus' = 'adjusted'
+  ) => {
+    const nowIso = new Date().toISOString();
+    setCustomers((prev) =>
+      prev.map((cust) => {
+        if (cust.id === customerId) {
+          const newPoints = Math.max(0, cust.points + pointsDelta);
+          const historyEntry: PointHistoryEntry = {
+            id: `pth-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
+            type,
+            points: pointsDelta,
+            balanceAfter: newPoints,
+            description: reason || (pointsDelta >= 0 ? 'Penambahan Poin Manual' : 'Pengurangan Poin Manual'),
+            date: nowIso,
+            operatorName: activeEmployee?.name || 'Kasir / Supervisor',
+          };
+          const updatedCust = {
+            ...cust,
+            points: newPoints,
+            pointsHistory: [historyEntry, ...(cust.pointsHistory || [])],
+          };
+          if (selectedCustomer?.id === customerId) {
+            setSelectedCustomer(updatedCust);
+          }
+          return updatedCust;
+        }
+        return cust;
+      })
+    );
+  };
+
+  const updateCustomer = (customerId: string, updates: Partial<Customer>) => {
+    setCustomers((prev) =>
+      prev.map((cust) => {
+        if (cust.id === customerId) {
+          const updated = { ...cust, ...updates };
+          if (selectedCustomer?.id === customerId) {
+            setSelectedCustomer(updated);
+          }
+          return updated;
+        }
+        return cust;
+      })
+    );
   };
 
   const updateSettings = (newSettings: Partial<StoreSettings>) => {
@@ -1457,6 +1834,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       removeVoucher,
       usePoints,
       setUsePoints,
+      pointsToRedeem,
+      setPointsToRedeem: handleSetPointsToRedeem,
+      maxRedeemablePoints,
+      pointRedemptionRate,
       subtotal,
       taxAmount,
       serviceChargeAmount,
@@ -1490,6 +1871,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteSupplier,
       customers,
       addCustomer,
+      adjustCustomerPoints,
+      updateCustomer,
       settings,
       updateSettings,
       vouchers,
@@ -1522,6 +1905,24 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteEmployee,
       startNewShift,
       closeCurrentShift,
+      // Offline PWA & Cloud Background Sync
+      isOnline: syncState.isOnline,
+      isOfflineSimulated: syncState.isOfflineSimulated,
+      toggleOfflineSimulation: (enable?: boolean) => offlineSyncManager.toggleOfflineSimulation(enable),
+      pendingSyncCount: syncState.pendingCount,
+      isSyncing: syncState.isSyncing,
+      lastSyncTime: syncState.lastSyncTime,
+      serviceWorkerActive: syncState.serviceWorkerActive,
+      backgroundSyncSupported: syncState.backgroundSyncSupported,
+      syncPendingTransactions,
+      isSyncModalOpen,
+      setIsSyncModalOpen,
+      syncNotification,
+      clearSyncNotification,
+      // Barcode Scanner Camera & Auto-Add
+      isBarcodeScannerOpen,
+      setIsBarcodeScannerOpen,
+      scanBarcodeAndAddToCart,
     }),
     [
       activeView,
@@ -1535,6 +1936,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       selectedCustomer,
       appliedVoucher,
       usePoints,
+      pointsToRedeem,
+      maxRedeemablePoints,
+      pointRedemptionRate,
       subtotal,
       voucherDiscount,
       pointsDiscount,
@@ -1565,6 +1969,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isEmployeeManagementOpen,
       isShiftModalOpen,
       currentShift,
+      syncState,
+      syncPendingTransactions,
+      isSyncModalOpen,
+      syncNotification,
+      clearSyncNotification,
+      isBarcodeScannerOpen,
+      scanBarcodeAndAddToCart,
     ]
   );
 

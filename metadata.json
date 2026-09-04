@@ -1,6 +1,6 @@
 {
   "name": "Point of Sales",
-  "description": "Modern Retail Store Point of Sale (POS) application integrated with Gemini AI Copilot, FEFO inventory tracking, AI OCR invoice scanning, visual stock opname via camera/video, smart cross-sell cashier recommendations, purchase order forecasting, and retail promotional generator.",
+  "description": "Modern Retail Store Point of Sale (POS) application with offline-first PWA caching and background cloud sync, Gemini AI Copilot, FEFO inventory tracking, AI OCR invoice scanning, visual stock opname via camera/video, smart cross-sell recommendations, purchase order forecasting, and retail promotional generator.",
   "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

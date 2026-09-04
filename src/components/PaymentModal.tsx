@@ -11,6 +11,7 @@ import {
   Sparkles,
   Smartphone,
   ShieldCheck,
+  CloudOff,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { PaymentMethod, PaymentDetails } from '../types';
@@ -29,6 +30,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
     pointsEarned,
     processPayment,
     settings,
+    isOnline,
   } = usePOS();
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
@@ -377,6 +379,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                   {formatCurrency(finalTotal, settings.currency)}
                 </span>
               </div>
+
+              {/* Offline Awareness Notice */}
+              {!isOnline && (
+                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                  <CloudOff className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                  <span>
+                    <strong>Mode Offline:</strong> Transaksi akan dicatat ke IndexedDB lokal kasir dan otomatis diunggah ke cloud saat internet terhubung kembali.
+                  </span>
+                </div>
+              )}
 
               <button
                 type="button"

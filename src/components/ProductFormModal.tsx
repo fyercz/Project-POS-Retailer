@@ -10,7 +10,6 @@ import {
   Tag,
   Calendar,
   Layers,
-  MapPin,
   Image as ImageIcon,
   Sparkles,
   Percent,
@@ -83,7 +82,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [stock, setStock] = useState<number>(10);
   const [minStock, setMinStock] = useState<number>(5);
   const [unit, setUnit] = useState('pcs');
-  const [aisle, setAisle] = useState('Lorong 1 - Rak A1');
   const [expiryDate, setExpiryDate] = useState('2027-12-31');
   const [batchNumber, setBatchNumber] = useState('');
   const [image, setImage] = useState('');
@@ -107,7 +105,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setStock(productToEdit.stock || 0);
       setMinStock(productToEdit.minStock || 5);
       setUnit(productToEdit.unit || 'pcs');
-      setAisle(productToEdit.aisle || 'Lorong 1 - Rak A1');
       setExpiryDate(productToEdit.expiryDate || '2027-12-31');
       setBatchNumber(productToEdit.batchNumber || '');
       setImage(productToEdit.image || SAMPLE_IMAGES[0].url);
@@ -128,7 +125,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setStock(24);
       setMinStock(6);
       setUnit('pcs');
-      setAisle('Lorong 1 - Rak A1');
       setExpiryDate('2027-12-31');
       setBatchNumber(`BCH-${randNum}`);
       setImage(SAMPLE_IMAGES[0].url);
@@ -349,7 +345,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       stock: Number(stock),
       minStock: Number(minStock),
       unit: unit.trim() || 'pcs',
-      aisle: aisle.trim() || undefined,
       expiryDate: expiryDate || undefined,
       batchNumber: batchNumber.trim() || undefined,
       image: image.trim() || SAMPLE_IMAGES[0].url,
@@ -841,13 +836,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             )}
           </div>
 
-          {/* Section 4: Stok, Lokasi Rak & Batch FEFO */}
+          {/* Section 4: Stok & Batch FEFO */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-amber-500" />
-              <span>Inventaris, Lokasi Rak & Batch FEFO</span>
+              <span>Inventaris, Stok & Batch FEFO</span>
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Stok Saat Ini
@@ -872,22 +867,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   onChange={(e) => setMinStock(Number(e.target.value))}
                   className="w-full px-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Lokasi Rak Display
-                </label>
-                <div className="relative">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={aisle}
-                    onChange={(e) => setAisle(e.target.value)}
-                    placeholder="Lorong 1 - Rak A1"
-                    className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
               </div>
 
               <div>

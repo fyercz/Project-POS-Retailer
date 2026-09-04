@@ -512,6 +512,17 @@ function smartFuzzyMatchWord(word: string): { matched: string; reason: string } 
 export function parsePriceNumber(val: string | undefined, defaultVal = 0): number {
   if (!val) return defaultVal;
   let str = val.replace(/Rp|IDR|\s/gi, '').trim();
+  // Check if it's a decimal number like 4499.93 or 0.11
+  if (/^\d+\.\d{1,2}$/.test(str)) {
+    const flt = parseFloat(str);
+    return isNaN(flt) ? defaultVal : Math.round(flt);
+  }
+  // Check Indonesian thousands with comma decimal: e.g. 4.499,93 or 4499,93
+  if (/^\d+(\.\d{3})*,\d{1,2}$/.test(str)) {
+    const cleaned = str.replace(/\./g, '').replace(',', '.');
+    const flt = parseFloat(cleaned);
+    return isNaN(flt) ? defaultVal : Math.round(flt);
+  }
   if (/^\d{1,3}(\.\d{3})+$/.test(str)) {
     str = str.replace(/\./g, '');
   } else if (/^\d{1,3}(,\d{3})+$/.test(str)) {
@@ -794,8 +805,10 @@ export function parseRetailLine(
   // Skip header rows
   if (
     (lineLower.includes('barcode') && lineLower.includes('nama')) ||
+    (lineLower.includes('kode') && lineLower.includes('nama')) ||
     (lineLower.includes('nama produk') && lineLower.includes('harga')) ||
     (lineLower.includes('harga beli') && lineLower.includes('harga jual')) ||
+    (lineLower.includes('display rak') && lineLower.includes('perolehan')) ||
     (lineLower.startsWith('no;') && lineLower.includes('nama')) ||
     (lineLower.startsWith('no,') && lineLower.includes('nama'))
   ) {
@@ -820,7 +833,25 @@ export function parseRetailLine(
     const rawParts = line.split(delimiter).map((p) => p.replace(/^["']|["']$/g, '').trim());
 
     if (rawParts.length >= 5) {
-      if (isLikelyBarcode(rawParts[0])) {
+      // Check if format is: Kode Barang, Nama Barang, Display Rak, Jumlah, Harga Perolehan
+      const col2Val = parsePriceNumber(rawParts[2], -1);
+      const col3Val = parsePriceNumber(rawParts[3], -1);
+      const col4Val = parsePriceNumber(rawParts[4], -1);
+
+      const isDisplayJumlahPerolehan =
+        col4Val >= 0 &&
+        col3Val >= 0 &&
+        col2Val >= 0 &&
+        (col4Val >= 100 || (col4Val === 0 && col3Val <= 1000));
+
+      if (isDisplayJumlahPerolehan) {
+        rawBarcode = extractCleanBarcode(rawParts[0]);
+        rawName = rawParts[1] || `Produk #${index + 1}`;
+        rawCost = Math.round(col4Val * 100) / 100;
+        rawStock = Math.max(0, col3Val);
+        rawPrice = rawCost > 0 ? Math.ceil((rawCost * 1.25) / 100) * 100 : 5000;
+        if (rawParts[5]) rawCategoryHint = rawParts[5];
+      } else if (isLikelyBarcode(rawParts[0])) {
         rawBarcode = extractCleanBarcode(rawParts[0]);
         rawName = rawParts[1] || `Produk #${index + 1}`;
         rawCost = parsePriceNumber(rawParts[2], 0);

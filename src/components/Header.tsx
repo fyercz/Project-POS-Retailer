@@ -22,12 +22,14 @@ import {
   Shield,
   Briefcase,
   UserCheck,
+  ScanBarcode,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { usePOS } from '../context/POSContext';
 import { HeldOrdersModal } from './HeldOrdersModal';
 import { ShortcutsModal } from './ShortcutsModal';
 import { SettingsModal } from './SettingsModal';
+import { OfflineSyncBadge } from './OfflineSyncBadge';
 
 export const Header: React.FC = () => {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -46,6 +48,7 @@ export const Header: React.FC = () => {
     setIsEmployeeManagementOpen,
     setIsShiftModalOpen,
     quickSwitchEmployee,
+    setIsBarcodeScannerOpen,
   } = usePOS();
 
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -209,6 +212,23 @@ export const Header: React.FC = () => {
               <option value="reports">📊 Laporan & Omzet</option>
             </select>
           </div>
+
+          {/* Cloud & Offline Background Sync Badge */}
+          <OfflineSyncBadge />
+
+          {/* Barcode Camera Scanner */}
+          <button
+            id="btn-header-open-scanner"
+            onClick={() => setIsBarcodeScannerOpen(true)}
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-700/50 dark:text-emerald-300 dark:hover:bg-emerald-900/50 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Scan Barcode Kamera (F3)"
+          >
+            <ScanBarcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden md:inline">Scan</span>
+            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-emerald-200/50 dark:bg-emerald-900/70 text-emerald-900 dark:text-emerald-300">
+              F3
+            </span>
+          </button>
 
           {/* Held Orders Quick Access */}
           <button

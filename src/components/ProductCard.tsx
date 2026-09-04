@@ -104,7 +104,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             {product.name}
           </h4>
 
-          {/* SKU, Barcode, Aisle & Exp */}
+          {/* SKU, Stok & Exp */}
           <div className="mt-2 space-y-1 text-[10px] text-slate-500 dark:text-slate-400 font-mono">
             <div className="flex items-center justify-between">
               <span>SKU: {product.sku}</span>
@@ -112,14 +112,9 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                 Stok: {product.stock} {product.unit}
               </span>
             </div>
-            {product.aisle && (
-              <div className="flex items-center justify-between text-[9px] text-slate-400">
-                <span className="bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded">
-                  {product.aisle}
-                </span>
-                {product.expiryDate && (
-                  <span>Exp: {product.expiryDate}</span>
-                )}
+            {product.expiryDate && (
+              <div className="flex items-center justify-end text-[9px] text-slate-400">
+                <span>Exp: {product.expiryDate}</span>
               </div>
             )}
           </div>

@@ -68,15 +68,32 @@ export interface CartItem {
   isPointsEligible?: boolean; // True jika profit margin barang >= 15% (syarat perolehan poin)
 }
 
+export type MemberTier = 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Regular';
+
+export interface PointHistoryEntry {
+  id: string;
+  type: 'earned' | 'redeemed' | 'adjusted' | 'bonus';
+  points: number; // positive for earned/bonus, negative for redeemed/adjusted down
+  balanceAfter: number;
+  description: string;
+  date: string;
+  transactionId?: string;
+  invoiceNumber?: string;
+  operatorName?: string;
+}
+
 export interface Customer {
   id: string;
   name: string;
   phone: string;
   email?: string;
-  tier: 'Regular';
+  tier: MemberTier;
   points: number;
   totalSpent: number;
   ordersCount: number;
+  joinedDate?: string;
+  notes?: string;
+  pointsHistory?: PointHistoryEntry[];
 }
 
 export interface Voucher {
@@ -136,6 +153,11 @@ export interface Transaction {
   returnedAmount?: number;
   returnReason?: string;
   returnedAt?: string;
+  // Offline & Cloud Background Sync fields
+  syncStatus?: 'synced' | 'pending_sync' | 'sync_failed';
+  syncedAt?: string;
+  offlineCreated?: boolean;
+  syncRetryCount?: number;
 }
 
 export interface SalesReturnItem {
@@ -241,7 +263,9 @@ export interface StoreSettings {
   serviceChargePercent: number; // e.g. 0% for retail
   currency: CurrencyType;
   enableThermal58mm: boolean;
-  pointsRatio: number; // 1 point per 10,000 IDR
+  pointsRatio: number; // 1 point per 10,000 IDR belanja
+  pointRedemptionRate?: number; // Nilai 1 poin = Rp X diskon kasir (default 100)
+  minRedeemPoints?: number; // Minimal poin untuk dapat ditukarkan di kasir (default 10)
   minProfitPercentForPoints: number; // e.g. 15% minimal profit margin barang untuk menghasilkan poin
 }
 
@@ -385,5 +409,25 @@ export interface GroundingSource {
   domain: string;
   snippet?: string;
   sourceType: 'Google Web Search' | 'Retail Marketplace' | 'Official Distributor' | 'Katalog FMCG';
+}
+
+// Offline PWA & Background Sync interfaces
+export interface OfflineSyncState {
+  isOnline: boolean;
+  isOfflineSimulated: boolean;
+  isSyncing: boolean;
+  pendingCount: number;
+  lastSyncTime: string | null;
+  serviceWorkerActive: boolean;
+  backgroundSyncSupported: boolean;
+}
+
+export interface CloudSyncResult {
+  success: boolean;
+  syncedCount: number;
+  syncedIds: string[];
+  serverTime?: string;
+  totalCloudTransactions?: number;
+  error?: string;
 }
 
