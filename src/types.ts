@@ -22,6 +22,21 @@ export interface WholesaleUnit {
   minOrderQty?: number;
 }
 
+export interface PriceHistoryRecord {
+  id: string;
+  productId: string;
+  date: string; // ISO date string e.g. '2026-09-15T08:30:00Z'
+  costPrice: number; // Harga Modal (HPP)
+  sellingPrice: number; // Harga Jual Retail
+  previousCostPrice?: number;
+  previousSellingPrice?: number;
+  changeType: 'purchase_receiving' | 'manual_update' | 'bulk_adjust' | 'promotion' | 'initial_record';
+  sourceReference?: string; // e.g. 'Faktur INV-SUP-2026-001', 'Penyesuaian Manual Kasir', 'Pembaruan Master Data'
+  supplierName?: string;
+  notes?: string;
+  recordedBy?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -42,6 +57,7 @@ export interface Product {
   isPopular?: boolean;
   promoBadge?: string;
   description?: string;
+  priceHistory?: PriceHistoryRecord[];
   options?: {
     name: string;
     choices: { name: string; extraPrice: number }[];
@@ -103,6 +119,8 @@ export interface Voucher {
   minSpend: number;
   maxDiscount?: number;
   description: string;
+  minProfitMargin?: number;
+  projectedMarginPercent?: number;
 }
 
 export interface HeldOrder {
@@ -281,10 +299,29 @@ export interface AIForecastItem {
   productId: string;
   productName: string;
   currentStock: number;
+  minStock?: number;
   recommendedOrderQty: number;
   urgency: 'KRITIS' | 'TINGGI' | 'SEDANG' | 'OPTIMAL' | string;
   estimatedDaysLeft: number;
   actionAdvice: string;
+  sku?: string;
+  barcode?: string;
+  unit?: string;
+  category?: string;
+  costPrice?: number;
+  estimatedSubtotal?: number;
+  suggestedSupplier?: string;
+}
+
+export interface AIPurchaseOrderPlan {
+  summary: string;
+  healthScore?: number;
+  totalEstimatedBudget?: number;
+  totalItemsToRestock?: number;
+  forecasts: AIForecastItem[];
+  deadstockOrExpiryAlerts?: { productName: string; issue: string; suggestedPromotion: string }[];
+  isAiGenerated?: boolean;
+  generatedAt?: string;
 }
 
 export interface AIDailyInsights {
@@ -306,10 +343,31 @@ export interface AIPromoResult {
   bundleItems?: string[];
   description: string;
   isAiGenerated?: boolean;
+  originalMarginPercent?: number;
+  projectedMarginPercent?: number;
+  minProfitMargin?: number;
+  estimatedProfitAmount?: number;
+  marginSafetyStatus?: 'safe' | 'capped' | 'warning';
+  ownerSafetyNote?: string;
 }
 
 // Multi-Employee & Shift Management Interfaces
 export type EmployeeRole = 'cashier' | 'supervisor' | 'inventory' | 'owner';
+export type AppView = 'pos' | 'transactions' | 'inventory' | 'reports' | 'customers';
+
+export interface RolePermissions {
+  role: EmployeeRole;
+  roleLabel: string;
+  allowedViews: AppView[];
+  canEditStock: boolean;
+  canEditPrices: boolean;
+  canVoidTransaction: boolean;
+  canApplyCustomDiscount: boolean;
+  canViewReports: boolean;
+  canManageEmployees: boolean;
+  canManageSettings: boolean;
+  description: string;
+}
 
 export interface Employee {
   id: string;
@@ -429,5 +487,109 @@ export interface CloudSyncResult {
   serverTime?: string;
   totalCloudTransactions?: number;
   error?: string;
+}
+
+// Backup & Restore Point Interfaces
+export interface BackupPayload {
+  version: string;
+  app: string;
+  exportedAt: string;
+  exportedBy: string;
+  storeName: string;
+  branchName: string;
+  data: {
+    products: Product[];
+    suppliers?: Supplier[];
+    customers?: Customer[];
+    transactions?: Transaction[];
+    salesReturns?: SalesReturn[];
+    purchaseReturns?: PurchaseReturn[];
+    supplierPurchases?: SupplierPurchase[];
+    settings?: StoreSettings;
+    vouchers?: Voucher[];
+    employees?: Employee[];
+    heldOrders?: HeldOrder[];
+    currentShift?: ShiftSummary | null;
+  };
+  summary: {
+    totalProducts: number;
+    totalSuppliers: number;
+    totalCustomers: number;
+    totalTransactions: number;
+    totalSalesReturns: number;
+    totalSupplierPurchases: number;
+    totalEmployees: number;
+  };
+}
+
+export interface RestorePoint {
+  id: string;
+  title: string;
+  note?: string;
+  type: 'manual' | 'auto_pre_restore' | 'auto_pre_reset' | 'scheduled';
+  createdAt: string;
+  createdBy: string;
+  summary: {
+    totalProducts: number;
+    totalSuppliers: number;
+    totalCustomers: number;
+    totalTransactions: number;
+    totalStockValue?: number;
+  };
+  payload: BackupPayload;
+}
+
+// Multi-Client LAN Server Database Interfaces
+export type LANRole = 'HOST' | 'CLIENT' | 'STANDALONE';
+
+export interface LANClient {
+  id: string;
+  name: string;
+  role: 'HOST' | 'CLIENT';
+  ip?: string;
+  deviceType?: 'desktop' | 'tablet' | 'mobile';
+  lastSeen: string;
+  isOnline: boolean;
+  transactionsCount: number;
+  userAgent?: string;
+}
+
+export interface LANServerLog {
+  id: string;
+  timestamp: string;
+  level: 'info' | 'success' | 'warn';
+  message: string;
+}
+
+export interface LANServerStatus {
+  isServerRunning: boolean;
+  role: 'HOST';
+  port: number;
+  localIps: string[];
+  primaryIp: string;
+  recommendedUrl: string;
+  webOrigin?: string;
+  isCloudEnvironment?: boolean;
+  serverUptime: number;
+  connectedClients: LANClient[];
+  stats: {
+    totalProducts: number;
+    totalTransactions: number;
+    totalCustomers: number;
+    totalHeldOrders: number;
+    dbSizeKb: number;
+    lastUpdated: string;
+  };
+  recentLogs: LANServerLog[];
+}
+
+export interface LANConfig {
+  role: LANRole;
+  serverUrl: string;
+  clientName: string;
+  clientId: string;
+  autoSync: boolean;
+  syncInterval: number; // in seconds
+  customHostIp?: string; // Optional user-defined local IP (e.g. 192.168.1.15)
 }
 

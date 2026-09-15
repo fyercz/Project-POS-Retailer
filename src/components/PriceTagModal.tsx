@@ -252,7 +252,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
   }, [flattenedTagsList, previewPage, gridConfig.itemsPerPage]);
 
   // Adjust preview page if out of bounds
-  React.useEffect(() => {
+  useEffect(() => {
     if (previewPage > totalPages) {
       setPreviewPage(totalPages);
     }

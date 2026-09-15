@@ -23,6 +23,9 @@ import {
   ShiftSummary,
   OfflineSyncState,
   CloudSyncResult,
+  BackupPayload,
+  RestorePoint,
+  PriceHistoryRecord,
 } from '../types';
 import {
   INITIAL_CATEGORIES,
@@ -36,6 +39,15 @@ import {
 } from '../data/mockData';
 import { generateInvoiceNumber } from '../utils/formatters';
 import { offlineSyncManager } from '../utils/offlineSyncManager';
+import {
+  getLANConfig,
+  registerLANClient,
+  sendLANHeartbeat,
+  pushTransactionToLANServer,
+  pushLANSharedHeldOrder,
+  deleteLANSharedHeldOrder,
+  fetchLANSharedHeldOrders,
+} from '../utils/lanSyncManager';
 
 interface POSContextType {
   // Navigation
@@ -52,6 +64,14 @@ interface POSContextType {
   filterLowStock: boolean;
   setFilterLowStock: (val: boolean) => void;
   updateProductStock: (productId: string, newStock: number) => void;
+  bulkAdjustProducts: (
+    adjustments: Array<{
+      id: string;
+      stock?: number;
+      expiryDate?: string;
+    }>,
+    auditNote?: string
+  ) => void;
   addProduct: (product: Omit<Product, 'id'>) => Product;
   addProductsBatch: (products: Omit<Product, 'id'>[]) => Product[];
   deleteProductsBatch: (ids: string[]) => void;
@@ -59,6 +79,12 @@ interface POSContextType {
   resetProductsToDefault: () => void;
   clearAllProducts: () => void;
   updateProduct: (id: string, updated: Partial<Product>) => void;
+  recordProductPriceChange: (
+    productId: string,
+    newCostPrice: number,
+    newSellingPrice: number,
+    historyRecord: PriceHistoryRecord
+  ) => void;
   deleteProduct: (id: string) => void;
   resetToRetailDefaults: () => void;
 
@@ -154,6 +180,10 @@ interface POSContextType {
   activeCopilotTab: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat';
   setActiveCopilotTab: (tab: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat') => void;
   openGeminiCopilot: (tab?: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat') => void;
+  triggerRestockPlanAnalysis: () => void;
+  restockPlanTriggerCounter: number;
+  pendingReceivingFromPO: Array<{ productId: string; quantity: number; costPrice: number; expiryDate?: string }> | null;
+  setPendingReceivingFromPO: (items: Array<{ productId: string; quantity: number; costPrice: number; expiryDate?: string }> | null) => void;
   aiUpsellSuggestions: AIUpsellSuggestion[];
   isFetchingUpsell: boolean;
   fetchUpsellSuggestions: () => Promise<void>;
@@ -203,6 +233,30 @@ interface POSContextType {
     message: string;
     unit?: WholesaleUnit;
   };
+
+  // Backup & Restore Points
+  restorePoints: RestorePoint[];
+  createRestorePoint: (title: string, note?: string, type?: 'manual' | 'auto_pre_restore' | 'auto_pre_reset' | 'scheduled') => RestorePoint;
+  deleteRestorePoint: (id: string) => void;
+  restoreFromPoint: (pointId: string, mode?: 'overwrite' | 'merge', createSafetyPoint?: boolean) => { success: boolean; message: string };
+  restoreFromPayload: (payload: BackupPayload, mode?: 'overwrite' | 'merge', createSafetyPoint?: boolean) => { success: boolean; message: string };
+  generateBackupPayload: () => BackupPayload;
+  downloadBackupFile: (options?: {
+    customFileName?: string;
+    pretty?: boolean;
+    selectedModules?: Record<string, boolean>;
+  }) => { success: boolean; fileName: string; sizeKb: string };
+  isBackupRestoreOpen: boolean;
+  setIsBackupRestoreOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  // Multi-Client LAN Server Database Hub
+  isLANModalOpen: boolean;
+  setIsLANModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  applyMasterLANData: (data: {
+    products: Product[];
+    transactions?: Transaction[];
+    customers?: Customer[];
+    suppliers?: Supplier[];
+  }) => void;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -215,8 +269,18 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [products, setProducts] = useState<Product[]>(() => {
     // Clear out old mock sample dataset if present
     localStorage.removeItem('pos_retail_products_v2');
-    const saved = localStorage.getItem('pos_retail_products_v3');
-    const rawList: Product[] = saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    let rawList: Product[] = INITIAL_PRODUCTS;
+    try {
+      const saved = localStorage.getItem('pos_retail_products_v3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          rawList = parsed;
+        }
+      }
+    } catch {
+      rawList = INITIAL_PRODUCTS;
+    }
     const seenIds = new Set<string>();
     return rawList.map((p, idx) => {
       let id = p.id;
@@ -270,15 +334,31 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Held Orders
   const [heldOrders, setHeldOrders] = useState<HeldOrder[]>(() => {
-    const saved = localStorage.getItem('pos_held_orders');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('pos_held_orders');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+    } catch {
+      return [];
+    }
+    return [];
   });
 
   // Transactions History
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     localStorage.removeItem('pos_retail_tx_v2');
-    const saved = localStorage.getItem('pos_retail_tx_v3');
-    return saved ? JSON.parse(saved) : INITIAL_RECENT_TRANSACTIONS;
+    try {
+      const saved = localStorage.getItem('pos_retail_tx_v3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : INITIAL_RECENT_TRANSACTIONS;
+      }
+    } catch {
+      return INITIAL_RECENT_TRANSACTIONS;
+    }
+    return INITIAL_RECENT_TRANSACTIONS;
   });
 
   // Customers with loyalty tracking & points ledger
@@ -399,8 +479,18 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
-    const saved = localStorage.getItem('pos_retail_suppliers_v2');
-    const rawList: Supplier[] = saved ? JSON.parse(saved) : INITIAL_SUPPLIERS;
+    let rawList: Supplier[] = INITIAL_SUPPLIERS;
+    try {
+      const saved = localStorage.getItem('pos_retail_suppliers_v2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          rawList = parsed;
+        }
+      }
+    } catch {
+      rawList = INITIAL_SUPPLIERS;
+    }
     const seen = new Set<string>();
     return rawList.map((s, i) => {
       let id = s.id;
@@ -414,19 +504,37 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Multi-Employee & Shift Management States
   const [employees, setEmployees] = useState<Employee[]>(() => {
-    const saved = localStorage.getItem('pos_employees_v2');
-    return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
+    try {
+      const saved = localStorage.getItem('pos_employees_v2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_EMPLOYEES;
   });
 
   const [activeEmployee, setActiveEmployee] = useState<Employee | null>(() => {
-    const savedEmpId = localStorage.getItem('pos_active_employee_id');
-    const savedEmployeesStr = localStorage.getItem('pos_employees_v2');
-    const allEmployees: Employee[] = savedEmployeesStr ? JSON.parse(savedEmployeesStr) : INITIAL_EMPLOYEES;
-    if (savedEmpId) {
-      const match = allEmployees.find((e) => e.id === savedEmpId);
-      if (match) return match;
+    try {
+      const savedEmpId = localStorage.getItem('pos_active_employee_id');
+      const savedEmployeesStr = localStorage.getItem('pos_employees_v2');
+      let allEmployees: Employee[] = INITIAL_EMPLOYEES;
+      if (savedEmployeesStr) {
+        try {
+          const parsed = JSON.parse(savedEmployeesStr);
+          if (Array.isArray(parsed) && parsed.length > 0) allEmployees = parsed;
+        } catch {}
+      }
+      if (savedEmpId) {
+        const match = allEmployees.find((e) => e.id === savedEmpId);
+        if (match) return match;
+      }
+      return allEmployees[0] || INITIAL_EMPLOYEES[0];
+    } catch {
+      return INITIAL_EMPLOYEES[0];
     }
-    return allEmployees[0] || INITIAL_EMPLOYEES[0];
   });
 
   const [isLocked, setIsLocked] = useState<boolean>(() => {
@@ -437,8 +545,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
 
   const [currentShift, setCurrentShift] = useState<ShiftSummary | null>(() => {
-    const saved = localStorage.getItem('pos_current_shift_v1');
-    if (saved) return JSON.parse(saved);
+    try {
+      const saved = localStorage.getItem('pos_current_shift_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
     return {
       id: `shift-${Date.now()}`,
       employeeId: INITIAL_EMPLOYEES[0].id,
@@ -461,6 +573,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Gemini AI Copilot States
   const [isGeminiCopilotOpen, setIsGeminiCopilotOpen] = useState(false);
   const [activeCopilotTab, setActiveCopilotTab] = useState<'upsell' | 'forecast' | 'insights' | 'promo' | 'chat'>('upsell');
+  const [restockPlanTriggerCounter, setRestockPlanTriggerCounter] = useState(0);
+  const [pendingReceivingFromPO, setPendingReceivingFromPO] = useState<
+    Array<{ productId: string; quantity: number; costPrice: number; expiryDate?: string }> | null
+  >(null);
   const [aiUpsellSuggestions, setAiUpsellSuggestions] = useState<AIUpsellSuggestion[]>([]);
   const [isFetchingUpsell, setIsFetchingUpsell] = useState(false);
 
@@ -471,6 +587,28 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Barcode Scanner Camera State
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
+
+  // Backup & Restore Points State
+  const [isBackupRestoreOpen, setIsBackupRestoreOpen] = useState(false);
+  // Multi-Client LAN Server Database Hub State
+  const [isLANModalOpen, setIsLANModalOpen] = useState(false);
+  const [restorePoints, setRestorePoints] = useState<RestorePoint[]>(() => {
+    try {
+      const saved = localStorage.getItem('pos_restore_points_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('pos_restore_points_v1', JSON.stringify(restorePoints));
+    } catch (err) {
+      console.warn('Gagal menyimpan restore point ke local storage:', err);
+    }
+  }, [restorePoints]);
 
   // Global F3 Shortcut to toggle Barcode Scanner
   useEffect(() => {
@@ -535,6 +673,79 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearSyncNotification = useCallback(() => {
     setSyncNotification(null);
   }, []);
+
+  const applyMasterLANData = useCallback(
+    (data: {
+      products: Product[];
+      transactions?: Transaction[];
+      customers?: Customer[];
+      suppliers?: Supplier[];
+    }) => {
+      if (Array.isArray(data.products) && data.products.length > 0) {
+        setProducts(data.products);
+      }
+      if (Array.isArray(data.transactions) && data.transactions.length > 0) {
+        setTransactions(data.transactions);
+      }
+      if (Array.isArray(data.customers) && data.customers.length > 0) {
+        setCustomers(data.customers);
+      }
+      if (Array.isArray(data.suppliers) && data.suppliers.length > 0) {
+        setSuppliers(data.suppliers);
+      }
+    },
+    []
+  );
+
+  // Multi-Client LAN Server Database Heartbeat & Real-Time Sync Listener
+  useEffect(() => {
+    registerLANClient();
+
+    const handleLanStockUpdated = (e: any) => {
+      const { updatedStocks } = e.detail || {};
+      if (Array.isArray(updatedStocks) && updatedStocks.length > 0) {
+        setProducts((prev) =>
+          prev.map((p) => {
+            const match = updatedStocks.find((u: any) => u.productId === p.id);
+            return match ? { ...p, stock: match.newStock } : p;
+          })
+        );
+      }
+    };
+
+    window.addEventListener('lan-stock-updated', handleLanStockUpdated);
+
+    const interval = setInterval(async () => {
+      try {
+        const cfg = getLANConfig();
+        if (cfg.role === 'STANDALONE') return;
+
+        await sendLANHeartbeat(transactions.length);
+
+        if (cfg.role === 'CLIENT' && cfg.autoSync) {
+          const sharedOrders = await fetchLANSharedHeldOrders();
+          if (Array.isArray(sharedOrders) && sharedOrders.length > 0) {
+            setHeldOrders((prevLocal) => {
+              const localMap = new Map(prevLocal.map((o) => [o.id, o]));
+              sharedOrders.forEach((so) => {
+                if (!localMap.has(so.id)) {
+                  localMap.set(so.id, so);
+                }
+              });
+              return Array.from(localMap.values());
+            });
+          }
+        }
+      } catch (err) {
+        // Silently catch network or parsing hiccups during periodic heartbeat
+      }
+    }, 10000);
+
+    return () => {
+      window.removeEventListener('lan-stock-updated', handleLanStockUpdated);
+      clearInterval(interval);
+    };
+  }, [transactions.length]);
 
   // Debounced Sync to local storage to prevent main-thread UI lag during rapid operations
   const pendingStorageSaves = useRef<Record<string, any>>({});
@@ -630,6 +841,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveCopilotTab(tab);
     setIsGeminiCopilotOpen(true);
   };
+
+  // Trigger Gemini Restock Plan Analysis specifically
+  const triggerRestockPlanAnalysis = useCallback(() => {
+    setActiveCopilotTab('forecast');
+    setIsGeminiCopilotOpen(true);
+    setRestockPlanTriggerCounter((prev) => prev + 1);
+  }, []);
 
   // Fetch AI Upsell recommendations from server with unique product ID caching
   const lastFetchedCartKeyRef = useRef<string>('');
@@ -1147,6 +1365,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setHeldOrders((prev) => [newHeld, ...prev]);
+    pushLANSharedHeldOrder(newHeld).catch(() => {});
     clearCart();
     setTableNumber('');
     setSelectedCustomer(null);
@@ -1183,6 +1402,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteHeldOrder = (heldOrderId: string) => {
     setHeldOrders((prev) => prev.filter((o) => o.id !== heldOrderId));
+    deleteLANSharedHeldOrder(heldOrderId).catch(() => {});
   };
 
   // Employee Authentication & Shift Management Methods
@@ -1478,6 +1698,22 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // 3. Save Transaction
     setTransactions((prev) => [newTx, ...prev]);
 
+    // Push transaction to Multi-Client LAN Server Database for centralized ledger & stock auto-deduction
+    pushTransactionToLANServer(newTx)
+      .then((res) => {
+        if (res.success && res.updatedStocks && res.updatedStocks.length > 0) {
+          setProducts((prev) =>
+            prev.map((p) => {
+              const match = res.updatedStocks!.find((u) => u.productId === p.id);
+              return match ? { ...p, stock: match.newStock } : p;
+            })
+          );
+        }
+      })
+      .catch((err) => {
+        console.warn('[LAN] Push transaksi LAN offline fallback:', err);
+      });
+
     // 4. Confetti effect
     try {
       confetti({
@@ -1585,16 +1821,36 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // 1. Save supplier purchase record
     setSupplierPurchases((prev) => [newPurchase, ...prev]);
 
-    // 2. Increase stock and update product HPP costPrice
+    // 2. Increase stock and update product HPP costPrice & price history
     purchaseData.items.forEach((item) => {
       setProducts((prev) =>
         prev.map((p) => {
           if (p.id === item.productId) {
+            const hasCostChanged = item.costPrice > 0 && item.costPrice !== p.costPrice;
+            let updatedHistory = p.priceHistory ? [...p.priceHistory] : [];
+            if (hasCostChanged) {
+              const rec: PriceHistoryRecord = {
+                id: `ph-sup-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                productId: p.id,
+                date: new Date().toISOString(),
+                costPrice: item.costPrice,
+                sellingPrice: p.price,
+                previousCostPrice: p.costPrice,
+                previousSellingPrice: p.price,
+                changeType: 'purchase_receiving',
+                sourceReference: `Faktur ${newPurchase.invoiceNumber}`,
+                supplierName: newPurchase.supplierName,
+                notes: `Penerimaan barang dari faktur pembelian (+${item.quantity} ${p.unit})`,
+                recordedBy: newPurchase.receivedBy || 'Staff Gudang',
+              };
+              updatedHistory.push(rec);
+            }
             return {
               ...p,
               stock: p.stock + item.quantity,
               costPrice: item.costPrice > 0 ? item.costPrice : p.costPrice,
               expiryDate: item.expiryDate || p.expiryDate,
+              priceHistory: updatedHistory.length > 0 ? updatedHistory : p.priceHistory,
             };
           }
           return p;
@@ -1608,6 +1864,30 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateProductStock = (productId: string, newStock: number) => {
     setProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, stock: Math.max(0, newStock) } : p))
+    );
+  };
+
+  const bulkAdjustProducts = (
+    adjustments: Array<{
+      id: string;
+      stock?: number;
+      expiryDate?: string;
+    }>,
+    _auditNote?: string
+  ) => {
+    const adjMap = new Map<string, { stock?: number; expiryDate?: string }>();
+    adjustments.forEach((adj) => adjMap.set(adj.id, adj));
+
+    setProducts((prev) =>
+      prev.map((p) => {
+        const itemAdj = adjMap.get(p.id);
+        if (!itemAdj) return p;
+        return {
+          ...p,
+          stock: itemAdj.stock !== undefined ? Math.max(0, itemAdj.stock) : p.stock,
+          expiryDate: itemAdj.expiryDate !== undefined ? itemAdj.expiryDate : p.expiryDate,
+        };
+      })
     );
   };
 
@@ -1651,7 +1931,67 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateProduct = (id: string, updated: Partial<Product>) => {
     setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
+      prev.map((p) => {
+        if (p.id !== id) return p;
+
+        const newCost = updated.costPrice !== undefined ? updated.costPrice : p.costPrice;
+        const newPrice = updated.price !== undefined ? updated.price : p.price;
+        let priceHistory = updated.priceHistory ? [...updated.priceHistory] : p.priceHistory ? [...p.priceHistory] : [];
+
+        // If cost or price changed, auto-record a price history record if not already included
+        const costChanged = updated.costPrice !== undefined && updated.costPrice !== p.costPrice;
+        const priceChanged = updated.price !== undefined && updated.price !== p.price;
+
+        if (costChanged || priceChanged) {
+          const hasRecent = priceHistory.some(
+            (h) =>
+              h.costPrice === newCost &&
+              h.sellingPrice === newPrice &&
+              Date.now() - new Date(h.date).getTime() < 3000
+          );
+          if (!hasRecent) {
+            priceHistory.push({
+              id: `ph-edit-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              productId: p.id,
+              date: new Date().toISOString(),
+              costPrice: newCost,
+              sellingPrice: newPrice,
+              previousCostPrice: p.costPrice,
+              previousSellingPrice: p.price,
+              changeType: 'manual_update',
+              sourceReference: 'Pembaruan Master Data',
+              notes: 'Perubahan harga jual atau modal dari master data produk',
+              recordedBy: 'Admin Kasir',
+            });
+          }
+        }
+
+        return {
+          ...p,
+          ...updated,
+          priceHistory: priceHistory.length > 0 ? priceHistory : p.priceHistory,
+        };
+      })
+    );
+  };
+
+  const recordProductPriceChange = (
+    productId: string,
+    newCostPrice: number,
+    newSellingPrice: number,
+    historyRecord: PriceHistoryRecord
+  ) => {
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== productId) return p;
+        const existingHistory = p.priceHistory ? [...p.priceHistory] : [];
+        return {
+          ...p,
+          costPrice: newCostPrice,
+          price: newSellingPrice,
+          priceHistory: [...existingHistory, historyRecord],
+        };
+      })
     );
   };
 
@@ -1792,6 +2132,377 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
+  // -------------------------------------------------------------
+  // BACKUP & RESTORE POINT ENGINE
+  // -------------------------------------------------------------
+
+  const generateBackupPayload = useCallback((): BackupPayload => {
+    const operator = activeEmployee ? `${activeEmployee.name} (${activeEmployee.role.toUpperCase()})` : 'Administrator';
+    return {
+      version: '1.1.0',
+      app: 'Ulilmart SmartPOS Retail Pro',
+      exportedAt: new Date().toISOString(),
+      exportedBy: operator,
+      storeName: settings.storeName || 'Ulilmart Retail',
+      branchName: settings.branchName || 'Terminal Utama',
+      data: {
+        products,
+        suppliers,
+        customers,
+        transactions,
+        salesReturns,
+        purchaseReturns,
+        supplierPurchases,
+        settings,
+        vouchers,
+        employees,
+        heldOrders,
+        currentShift,
+      },
+      summary: {
+        totalProducts: products.length,
+        totalSuppliers: suppliers.length,
+        totalCustomers: customers.length,
+        totalTransactions: transactions.length,
+        totalSalesReturns: salesReturns.length,
+        totalSupplierPurchases: supplierPurchases.length,
+        totalEmployees: employees.length,
+      },
+    };
+  }, [
+    activeEmployee,
+    settings,
+    products,
+    suppliers,
+    customers,
+    transactions,
+    salesReturns,
+    purchaseReturns,
+    supplierPurchases,
+    vouchers,
+    employees,
+    heldOrders,
+    currentShift,
+  ]);
+
+  const downloadBackupFile = useCallback(
+    (options?: {
+      customFileName?: string;
+      pretty?: boolean;
+      selectedModules?: Record<string, boolean>;
+    }): { success: boolean; fileName: string; sizeKb: string } => {
+      const basePayload = generateBackupPayload();
+
+      let finalData = { ...basePayload.data };
+      if (options?.selectedModules) {
+        const mods = options.selectedModules;
+        finalData = {
+          products: mods.products !== false ? basePayload.data.products : [],
+          suppliers: mods.suppliers !== false ? basePayload.data.suppliers : [],
+          customers: mods.customers !== false ? basePayload.data.customers : [],
+          transactions: mods.transactions !== false ? basePayload.data.transactions : [],
+          salesReturns: mods.salesReturns !== false ? basePayload.data.salesReturns : [],
+          purchaseReturns: mods.purchaseReturns !== false ? basePayload.data.purchaseReturns : [],
+          supplierPurchases: mods.supplierPurchases !== false ? basePayload.data.supplierPurchases : [],
+          settings: mods.settings !== false ? basePayload.data.settings : basePayload.data.settings,
+          vouchers: mods.vouchers !== false ? basePayload.data.vouchers : [],
+          employees: mods.employees !== false ? basePayload.data.employees : [],
+          heldOrders: mods.heldOrders !== false ? basePayload.data.heldOrders : [],
+          currentShift: mods.shifts !== false ? basePayload.data.currentShift : null,
+        };
+      }
+
+      const payload: BackupPayload = {
+        ...basePayload,
+        data: finalData,
+        summary: {
+          totalProducts: finalData.products.length,
+          totalSuppliers: finalData.suppliers.length,
+          totalCustomers: finalData.customers.length,
+          totalTransactions: finalData.transactions.length,
+          totalSalesReturns: finalData.salesReturns.length,
+          totalSupplierPurchases: finalData.supplierPurchases.length,
+          totalEmployees: finalData.employees.length,
+        },
+      };
+
+      const jsonStr =
+        options?.pretty === false
+          ? JSON.stringify(payload)
+          : JSON.stringify(payload, null, 2);
+
+      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10);
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+      const cleanStore = (settings.storeName || 'ulilmart_pos')
+        .replace(/[^a-zA-Z0-9]/g, '_')
+        .toLowerCase();
+
+      let fileName =
+        options?.customFileName?.trim() ||
+        `backup_${cleanStore}_${dateStr}_${timeStr}.json`;
+      if (!fileName.toLowerCase().endsWith('.json')) {
+        fileName += '.json';
+      }
+
+      const url = URL.createObjectURL(blob);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = url;
+      downloadAnchor.download = fileName;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+
+      setTimeout(() => {
+        if (downloadAnchor.parentNode) {
+          downloadAnchor.parentNode.removeChild(downloadAnchor);
+        }
+        URL.revokeObjectURL(url);
+      }, 300);
+
+      const sizeKb = (blob.size / 1024).toFixed(1);
+      return { success: true, fileName, sizeKb };
+    },
+    [generateBackupPayload, settings.storeName]
+  );
+
+  const createRestorePoint = useCallback(
+    (
+      title: string,
+      note?: string,
+      type: 'manual' | 'auto_pre_restore' | 'auto_pre_reset' | 'scheduled' = 'manual'
+    ): RestorePoint => {
+      const payload = generateBackupPayload();
+      const totalStockVal = products.reduce((acc, p) => acc + (p.stock * (p.costPrice || p.price || 0)), 0);
+      const operator = activeEmployee ? `${activeEmployee.name} (${activeEmployee.role.toUpperCase()})` : 'System Administrator';
+
+      const newPoint: RestorePoint = {
+        id: `rp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        title: title.trim() || `Titik Pulih ${new Date().toLocaleDateString('id-ID')}`,
+        note: note?.trim(),
+        type,
+        createdAt: new Date().toISOString(),
+        createdBy: operator,
+        summary: {
+          totalProducts: payload.summary.totalProducts,
+          totalSuppliers: payload.summary.totalSuppliers,
+          totalCustomers: payload.summary.totalCustomers,
+          totalTransactions: payload.summary.totalTransactions,
+          totalStockValue: totalStockVal,
+        },
+        payload,
+      };
+
+      setRestorePoints((prev) => [newPoint, ...prev.slice(0, 24)]); // Retain up to 25 restore points
+      return newPoint;
+    },
+    [generateBackupPayload, activeEmployee, products]
+  );
+
+  const deleteRestorePoint = useCallback((id: string) => {
+    setRestorePoints((prev) => prev.filter((rp) => rp.id !== id));
+  }, []);
+
+  const restoreFromPayload = useCallback(
+    (
+      payload: BackupPayload,
+      mode: 'overwrite' | 'merge' = 'overwrite',
+      createSafetyPoint: boolean = true
+    ): { success: boolean; message: string } => {
+      if (!payload || !payload.data) {
+        return { success: false, message: 'Berkas cadangan tidak valid atau struktur data kosong.' };
+      }
+
+      if (createSafetyPoint) {
+        const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        createRestorePoint(
+          `Otomatis: Pra-Pemulihan (${nowTime})`,
+          `Snapshot pengaman otomatis sebelum menjalankan pemulihan data (${mode === 'overwrite' ? 'Timpa Penuh' : 'Penggabungan'}).`,
+          'auto_pre_restore'
+        );
+      }
+
+      try {
+        const d = payload.data;
+
+        // Defensive sanitization helper to guarantee no NaN or corrupted values corrupt database state
+        const sanitizeProductsList = (list: Product[]): Product[] => {
+          return list
+            .filter((p) => p && typeof p === 'object' && typeof p.id === 'string' && p.name)
+            .map((p) => {
+              const rawPrice = Number(p.price ?? (p as any).sellingPrice);
+              const price = isNaN(rawPrice) || rawPrice < 0 ? 0 : rawPrice;
+              const rawCost = Number(p.costPrice);
+              const costPrice = isNaN(rawCost) || rawCost < 0 ? 0 : rawCost;
+              const rawStock = Number(p.stock);
+              const stock = isNaN(rawStock) ? 0 : rawStock;
+              return {
+                ...p,
+                price,
+                costPrice,
+                stock,
+                categoryId: typeof p.categoryId === 'string' ? p.categoryId : (typeof (p as any).category === 'string' ? (p as any).category : 'cat_all'),
+                unit: typeof p.unit === 'string' ? p.unit : 'Pcs',
+                barcode: typeof p.barcode === 'string' ? p.barcode : '',
+              };
+            });
+        };
+
+        const sanitizeTransactionsList = (list: Transaction[]): Transaction[] => {
+          return list
+            .filter((t) => t && typeof t === 'object' && typeof t.id === 'string')
+            .map((t) => {
+              const rawFinal = Number(t.finalTotal ?? (t as any).total);
+              const finalTotal = isNaN(rawFinal) || rawFinal < 0 ? 0 : rawFinal;
+              return {
+                ...t,
+                finalTotal,
+                items: Array.isArray(t.items) ? t.items : [],
+                createdAt: typeof t.createdAt === 'string' ? t.createdAt : new Date().toISOString(),
+              };
+            });
+        };
+
+        const cleanProducts = Array.isArray(d.products) ? sanitizeProductsList(d.products) : null;
+        const cleanTransactions = Array.isArray(d.transactions) ? sanitizeTransactionsList(d.transactions) : null;
+
+        if (mode === 'overwrite') {
+          if (cleanProducts !== null) setProducts(cleanProducts);
+          if (Array.isArray(d.suppliers)) setSuppliers(d.suppliers.filter((s) => s && s.id && s.name));
+          if (Array.isArray(d.customers)) setCustomers(d.customers.filter((c) => c && c.id && c.name));
+          if (cleanTransactions !== null) setTransactions(cleanTransactions);
+          if (Array.isArray(d.salesReturns)) setSalesReturns(d.salesReturns);
+          if (Array.isArray(d.purchaseReturns)) setPurchaseReturns(d.purchaseReturns);
+          if (Array.isArray(d.supplierPurchases)) setSupplierPurchases(d.supplierPurchases);
+          if (d.settings) setSettings(d.settings);
+          if (Array.isArray(d.vouchers)) setVouchers(d.vouchers);
+          if (Array.isArray(d.employees) && d.employees.length > 0) setEmployees(d.employees);
+          if (Array.isArray(d.heldOrders)) setHeldOrders(d.heldOrders);
+          setCart([]);
+        } else {
+          // Merge mode
+          if (cleanProducts !== null) {
+            setProducts((prev) => {
+              const existingMap = new Map<string, Product>();
+              prev.forEach((p) => {
+                existingMap.set(p.id, p);
+                if (p.barcode) existingMap.set(`b_${p.barcode}`, p);
+              });
+              const merged = [...prev];
+              cleanProducts.forEach((newP) => {
+                const byId = existingMap.get(newP.id);
+                const byBarcode = newP.barcode ? existingMap.get(`b_${newP.barcode}`) : undefined;
+                if (!byId && !byBarcode) {
+                  merged.push(newP);
+                }
+              });
+              return merged;
+            });
+          }
+
+          if (Array.isArray(d.suppliers)) {
+            setSuppliers((prev) => {
+              const ids = new Set(prev.map((s) => s.id));
+              const names = new Set(prev.map((s) => s.name.toLowerCase().trim()));
+              const added = d.suppliers!.filter(
+                (s) => s && s.id && s.name && !ids.has(s.id) && !names.has(s.name.toLowerCase().trim())
+              );
+              return [...prev, ...added];
+            });
+          }
+
+          if (Array.isArray(d.customers)) {
+            setCustomers((prev) => {
+              const ids = new Set(prev.map((c) => c.id));
+              const phones = new Set(prev.map((c) => c.phone?.trim()).filter(Boolean));
+              const added = d.customers!.filter(
+                (c) => c && c.id && c.name && !ids.has(c.id) && (!c.phone || !phones.has(c.phone.trim()))
+              );
+              return [...prev, ...added];
+            });
+          }
+
+          if (cleanTransactions !== null) {
+            setTransactions((prev) => {
+              const ids = new Set(prev.map((t) => t.id));
+              const added = cleanTransactions.filter((t) => !ids.has(t.id));
+              return [...prev, ...added];
+            });
+          }
+
+          if (Array.isArray(d.salesReturns)) {
+            setSalesReturns((prev) => {
+              const ids = new Set(prev.map((r) => r.id));
+              const added = d.salesReturns!.filter((r) => r && r.id && !ids.has(r.id));
+              return [...prev, ...added];
+            });
+          }
+
+          if (Array.isArray(d.supplierPurchases)) {
+            setSupplierPurchases((prev) => {
+              const ids = new Set(prev.map((p) => p.id));
+              const added = d.supplierPurchases!.filter((p) => p && p.id && !ids.has(p.id));
+              return [...prev, ...added];
+            });
+          }
+        }
+
+        return {
+          success: true,
+          message: `Berhasil memulihkan data (${mode === 'overwrite' ? 'Timpa Penuh' : 'Penggabungan'}). Terkoreksi ${
+            cleanProducts?.length || 0
+          } produk & ${cleanTransactions?.length || 0} riwayat transaksi. Basis data telah diverifikasi aman.`,
+        };
+      } catch (err: any) {
+        return {
+          success: false,
+          message: `Gagal memproses pemulihan data: ${err?.message || 'Terjadi kesalahan sistem'}`,
+        };
+      }
+    },
+    [createRestorePoint]
+  );
+
+  const restoreFromPoint = useCallback(
+    (
+      pointId: string,
+      mode: 'overwrite' | 'merge' = 'overwrite',
+      createSafetyPoint: boolean = true
+    ): { success: boolean; message: string } => {
+      const targetPoint = restorePoints.find((rp) => rp.id === pointId);
+      if (!targetPoint) {
+        return { success: false, message: 'Titik pemulihan (Restore Point) tidak ditemukan.' };
+      }
+      return restoreFromPayload(targetPoint.payload, mode, createSafetyPoint);
+    },
+    [restorePoints, restoreFromPayload]
+  );
+
+  // Auto-seed initial baseline restore point on first boot so users have an immediate point to test
+  useEffect(() => {
+    if (restorePoints.length === 0 && products.length > 0) {
+      const payload = generateBackupPayload();
+      const totalStockVal = products.reduce((acc, p) => acc + (p.stock * (p.costPrice || p.price || 0)), 0);
+      const baseline: RestorePoint = {
+        id: `rp-baseline-${Date.now()}`,
+        title: 'Titik Pulih Awal (Baseline Toko)',
+        note: 'Snapshot cadangan awal otomatis sistem sebelum perubahan operasional kasir.',
+        type: 'manual',
+        createdAt: new Date().toISOString(),
+        createdBy: 'Sistem Ulilmart POS',
+        summary: {
+          totalProducts: payload.summary.totalProducts,
+          totalSuppliers: payload.summary.totalSuppliers,
+          totalCustomers: payload.summary.totalCustomers,
+          totalTransactions: payload.summary.totalTransactions,
+          totalStockValue: totalStockVal,
+        },
+        payload,
+      };
+      setRestorePoints([baseline]);
+    }
+  }, [generateBackupPayload, products, restorePoints.length]);
+
   const contextValue = useMemo(
     () => ({
       activeView,
@@ -1805,6 +2516,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       filterLowStock,
       setFilterLowStock,
       updateProductStock,
+      bulkAdjustProducts,
       addProduct,
       addProductsBatch,
       deleteProductsBatch,
@@ -1812,6 +2524,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       resetProductsToDefault,
       clearAllProducts,
       updateProduct,
+      recordProductPriceChange,
       deleteProduct,
       resetToRetailDefaults,
       cart,
@@ -1882,6 +2595,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       activeCopilotTab,
       setActiveCopilotTab,
       openGeminiCopilot,
+      triggerRestockPlanAnalysis,
+      restockPlanTriggerCounter,
+      pendingReceivingFromPO,
+      setPendingReceivingFromPO,
       aiUpsellSuggestions,
       isFetchingUpsell,
       fetchUpsellSuggestions,
@@ -1923,6 +2640,20 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isBarcodeScannerOpen,
       setIsBarcodeScannerOpen,
       scanBarcodeAndAddToCart,
+      // Backup & Restore Points
+      restorePoints,
+      createRestorePoint,
+      deleteRestorePoint,
+      restoreFromPoint,
+      restoreFromPayload,
+      generateBackupPayload,
+      downloadBackupFile,
+      isBackupRestoreOpen,
+      setIsBackupRestoreOpen,
+      // Multi-Client LAN Server Database Hub
+      isLANModalOpen,
+      setIsLANModalOpen,
+      applyMasterLANData,
     }),
     [
       activeView,
@@ -1976,6 +2707,16 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       clearSyncNotification,
       isBarcodeScannerOpen,
       scanBarcodeAndAddToCart,
+      restorePoints,
+      createRestorePoint,
+      deleteRestorePoint,
+      restoreFromPoint,
+      restoreFromPayload,
+      generateBackupPayload,
+      downloadBackupFile,
+      isBackupRestoreOpen,
+      isLANModalOpen,
+      applyMasterLANData,
     ]
   );
 

@@ -13,6 +13,7 @@ import {
   Flame,
   X,
   ChevronDown,
+  Database,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { ProductCard } from './ProductCard';
@@ -40,20 +41,38 @@ export const ProductCatalog: React.FC = () => {
     settings,
     cart,
     setIsBarcodeScannerOpen,
+    setIsBackupRestoreOpen,
+    addToCart,
   } = usePOS();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [displayLimit, setDisplayLimit] = useState(48);
 
-  // Global F2 shortcut to focus search input
+  // Global Keyboard Shortcuts (Ctrl+F / Cmd+F / F2 / Slash) to focus search bar
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F2') {
+      // Check if user pressed Ctrl+F or Cmd+F (Mac)
+      const isCtrlF = (e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F');
+      const isF2 = e.key === 'F2';
+
+      // Quick slash ('/') trigger when not typing inside an existing input or textarea
+      const target = e.target as HTMLElement | null;
+      const isTyping =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable);
+      const isSlash = e.key === '/' && !isTyping;
+
+      if (isCtrlF || isF2 || isSlash) {
         e.preventDefault();
-        searchInputRef.current?.focus();
-        searchInputRef.current?.select();
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+          searchInputRef.current.select();
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
@@ -83,27 +102,102 @@ export const ProductCatalog: React.FC = () => {
     return counts;
   }, [products]);
 
-  // Memoized Filtered products
+  // Memoized Filtered products by Name, SKU, Barcode, or Brand
   const filteredProducts = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+    const rawQuery = searchQuery.trim();
+    if (!rawQuery) {
+      return products.filter((product) => {
+        const categoryMatch = selectedCategory === 'all' || product.categoryId === selectedCategory;
+        const stockMatch = !filterLowStock || product.stock <= product.minStock;
+        return categoryMatch && stockMatch;
+      });
+    }
+
+    const query = rawQuery.toLowerCase();
+    // Normalized query stripping non-alphanumeric chars (e.g. dashes, spaces, underscores)
+    const normalizedQuery = query.replace(/[^a-z0-9]/gi, '');
+
+    // Allow explicit 'sku:...' prefix search if desired
+    const isExplicitSku = query.startsWith('sku:');
+    const skuSearchTerm = isExplicitSku ? query.replace(/^sku:\s*/, '') : query;
+    const normalizedSkuTerm = skuSearchTerm.replace(/[^a-z0-9]/gi, '');
+
     return products.filter((product) => {
       // Category match
       const categoryMatch = selectedCategory === 'all' || product.categoryId === selectedCategory;
 
-      // Search or barcode match
-      const searchMatch =
-        !query ||
-        product.name.toLowerCase().includes(query) ||
-        product.sku.toLowerCase().includes(query) ||
-        product.barcode.toLowerCase().includes(query) ||
-        (product.brand && product.brand.toLowerCase().includes(query));
-
       // Low stock filter
       const stockMatch = !filterLowStock || product.stock <= product.minStock;
+      if (!categoryMatch || !stockMatch) return false;
 
-      return categoryMatch && searchMatch && stockMatch;
+      const prodSku = (product.sku || '').toLowerCase();
+      const prodNormSku = prodSku.replace(/[^a-z0-9]/gi, '');
+      const prodName = (product.name || '').toLowerCase();
+      const prodBarcode = (product.barcode || '').toLowerCase();
+      const prodNormBarcode = prodBarcode.replace(/[^a-z0-9]/gi, '');
+      const prodBrand = (product.brand || '').toLowerCase();
+
+      // If explicit sku: prefix
+      if (isExplicitSku) {
+        return (
+          prodSku.includes(skuSearchTerm) ||
+          (normalizedSkuTerm.length > 0 && prodNormSku.includes(normalizedSkuTerm))
+        );
+      }
+
+      // Filter products by Name or SKU (with Barcode and Brand support)
+      const skuMatch =
+        prodSku.includes(query) ||
+        (normalizedQuery.length >= 2 && prodNormSku.includes(normalizedQuery));
+
+      const nameMatch = prodName.includes(query);
+
+      const barcodeMatch =
+        prodBarcode.includes(query) ||
+        (normalizedQuery.length >= 3 && prodNormBarcode.includes(normalizedQuery));
+
+      const brandMatch = prodBrand.includes(query);
+
+      return skuMatch || nameMatch || barcodeMatch || brandMatch;
     });
   }, [products, selectedCategory, searchQuery, filterLowStock]);
+
+  // Handle keyboard interaction inside search input (Enter to quick-add, Esc to clear/blur)
+  const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (searchQuery) {
+        setSearchQuery('');
+      } else {
+        searchInputRef.current?.blur();
+      }
+    } else if (e.key === 'Enter') {
+      // If user presses Enter and there is an exact SKU/barcode match or exactly 1 filtered product, add to cart
+      const trimmed = searchQuery.trim().toLowerCase();
+      if (!trimmed) return;
+
+      const cleanCode = trimmed.replace(/[^a-z0-9]/gi, '');
+
+      // Check for exact SKU or Barcode match first
+      const exactMatch = products.find(
+        (p) =>
+          p.sku.toLowerCase() === trimmed ||
+          p.sku.replace(/[^a-z0-9]/gi, '').toLowerCase() === cleanCode ||
+          p.barcode.toLowerCase() === trimmed ||
+          p.barcode.replace(/[^a-z0-9]/gi, '').toLowerCase() === cleanCode
+      );
+
+      if (exactMatch && exactMatch.stock > 0) {
+        e.preventDefault();
+        addToCart(exactMatch);
+        setSearchQuery('');
+      } else if (filteredProducts.length === 1 && filteredProducts[0].stock > 0) {
+        e.preventDefault();
+        addToCart(filteredProducts[0]);
+        setSearchQuery('');
+      }
+    }
+  };
 
   const visibleProducts = useMemo(() => {
     return filteredProducts.slice(0, displayLimit);
@@ -118,27 +212,50 @@ export const ProductCatalog: React.FC = () => {
         {/* Search Bar with Barcode Scanner Icon & Shortcuts */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
             <input
               ref={searchInputRef}
               id="pos-product-search-input"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama barang, merk, atau scan barcode (Tekan F2)..."
-              className="w-full pl-9 pr-14 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-2xs"
+              onKeyDown={handleSearchInputKeyDown}
+              placeholder="Cari nama barang, SKU, barcode (Tekan Ctrl+F / F2)..."
+              className="w-full pl-9 pr-24 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-2xs"
             />
             {searchQuery ? (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.5 rounded">
+                  {filteredProducts.length} hasil
+                </span>
+                <button
+                  type="button"
+                  id="btn-clear-product-search"
+                  onClick={() => {
+                    setSearchQuery('');
+                    searchInputRef.current?.focus();
+                  }}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded cursor-pointer transition-colors"
+                  title="Hapus pencarian (Esc)"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
             ) : (
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                <ScanBarcode className="w-3 h-3" />
-                <span>F2</span>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <span
+                  title="Tekan Ctrl+F atau Cmd+F untuk mencari nama / SKU"
+                  className="hidden sm:inline-flex items-center text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 px-1.5 py-0.5 rounded"
+                >
+                  Ctrl+F
+                </span>
+                <span
+                  title="Tekan F2 untuk mencari produk"
+                  className="inline-flex items-center gap-0.5 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 px-1.5 py-0.5 rounded"
+                >
+                  <ScanBarcode className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+                  <span>F2</span>
+                </span>
               </div>
             )}
           </div>
@@ -172,6 +289,19 @@ export const ProductCatalog: React.FC = () => {
           >
             <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
             <span className="hidden sm:inline">Stok Menipis</span>
+          </button>
+
+          {/* Backup & Restore Fast Action */}
+          <button
+            type="button"
+            id="btn-catalog-backup-restore"
+            onClick={() => setIsBackupRestoreOpen(true)}
+            className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-emerald-300/80 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-700/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 transition-all cursor-pointer shadow-2xs shrink-0 active:scale-95"
+            title="Pusat Cadangan & Titik Pemulihan (Backup & Restore - Tekan F9)"
+          >
+            <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden sm:inline">Backup &amp; Restore</span>
+            <span className="sm:hidden">Backup</span>
           </button>
         </div>
 

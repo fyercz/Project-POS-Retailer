@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Keyboard, SunMoon, Search, PauseCircle, Tag, CreditCard, Monitor } from 'lucide-react';
+import { X, Keyboard, SunMoon, Search, PauseCircle, Tag, CreditCard, Monitor, BookOpen, Laptop, Database, Network } from 'lucide-react';
 
 interface ShortcutsModalProps {
   isOpen: boolean;
@@ -10,13 +10,16 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
   if (!isOpen) return null;
 
   const shortcuts = [
-    { key: 'Alt + T', action: 'Toggle Dark / Light Theme', icon: SunMoon, highlight: true },
-    { key: 'Alt + L', action: 'Kunci Layar & Ganti Kasir / Login PIN', icon: Monitor, highlight: true },
-    { key: 'F2', action: 'Focus Product Search & Barcode Input', icon: Search },
-    { key: 'F3', action: 'Buka Scanner Barcode Kamera (Auto Add ke Cart)', icon: Search, highlight: true },
-    { key: 'F4', action: 'Hold / Park Current Order', icon: PauseCircle },
-    { key: 'F9', action: 'Quick Checkout & Payment Modal', icon: CreditCard, highlight: true },
-    { key: 'Esc', action: 'Close Any Open Modal / Dialog', icon: X },
+    { key: 'F1 / Alt + H', action: 'Buku Panduan & Manual Fitur Aplikasi', icon: BookOpen, highlight: true },
+    { key: 'Alt + N', action: 'Server Database Multi-Client LAN', icon: Network, highlight: true },
+    { key: 'Ctrl + F / F2', action: 'Fokus Pencarian Produk (Filter Nama / SKU / Barcode)', icon: Search, highlight: true },
+    { key: 'F3', action: 'Buka Scanner Barcode Kamera (Auto Add ke Cart)', icon: Search },
+    { key: 'F4', action: 'Parkir / Simpan Pesanan Sementara (Hold Order)', icon: PauseCircle },
+    { key: 'F9 / Alt + B', action: 'Pusat Cadangan & Pemulihan (Backup & Restore)', icon: Database, highlight: true },
+    { key: 'Alt + D / F11', action: 'Aplikasi Desktop & Layar Penuh Kiosk', icon: Laptop },
+    { key: 'Alt + L', action: 'Kunci Layar Kasir / Login PIN Otorisasi', icon: Monitor },
+    { key: 'Alt + T', action: 'Ganti Tema Gelap / Terang (Dark / Light)', icon: SunMoon },
+    { key: 'Esc', action: 'Tutup Dialog / Modal yang Sedang Aktif', icon: X },
   ];
 
   return (

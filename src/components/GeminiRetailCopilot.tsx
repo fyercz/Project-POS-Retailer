@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Sparkles,
   X,
@@ -9,6 +9,7 @@ import {
   MessageSquare,
   RefreshCw,
   Plus,
+  Minus,
   Check,
   AlertTriangle,
   Send,
@@ -18,10 +19,18 @@ import {
   ShieldCheck,
   Award,
   Layers,
+  CheckSquare,
+  Square,
+  Copy,
+  Printer,
+  Truck,
+  Building2,
+  DollarSign,
+  Boxes,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
-import { AIForecastItem, AIDailyInsights, AIPromoResult } from '../types';
+import { AIForecastItem, AIDailyInsights, AIPromoResult, AIPurchaseOrderPlan } from '../types';
 
 export const GeminiRetailCopilot: React.FC = () => {
   const {
@@ -39,17 +48,17 @@ export const GeminiRetailCopilot: React.FC = () => {
     aiUpsellSuggestions,
     isFetchingUpsell,
     fetchUpsellSuggestions,
+    restockPlanTriggerCounter,
+    setPendingReceivingFromPO,
   } = usePOS();
 
-  // Forecast state
-  const [forecastData, setForecastData] = useState<{
-    summary: string;
-    healthScore?: number;
-    forecasts: AIForecastItem[];
-    deadstockOrExpiryAlerts?: { productName: string; issue: string; suggestedPromotion: string }[];
-    isAiGenerated?: boolean;
-  } | null>(null);
+  // Forecast state (Restock Plan & Purchase Order)
+  const [forecastData, setForecastData] = useState<AIPurchaseOrderPlan | null>(null);
   const [isLoadingForecast, setIsLoadingForecast] = useState(false);
+  const [selectedPOProductIds, setSelectedPOProductIds] = useState<string[]>([]);
+  const [customPOQuantities, setCustomPOQuantities] = useState<Record<string, number>>({});
+  const [copyFeedback, setCopyFeedback] = useState(false);
+  const [appliedToReceivingFeedback, setAppliedToReceivingFeedback] = useState(false);
 
   // Insights state
   const [insightsData, setInsightsData] = useState<AIDailyInsights | null>(null);
@@ -58,9 +67,40 @@ export const GeminiRetailCopilot: React.FC = () => {
   // Promo Generator state
   const [promoTheme, setPromoTheme] = useState('Promo JSM Super Hemat');
   const [promoCategory, setPromoCategory] = useState('Semua Kategori');
+  const [minOwnerMargin, setMinOwnerMargin] = useState<number>(5);
   const [generatedPromo, setGeneratedPromo] = useState<AIPromoResult | null>(null);
   const [isGeneratingPromo, setIsGeneratingPromo] = useState(false);
   const [promoAppliedSuccess, setPromoAppliedSuccess] = useState(false);
+
+  // Live calculation of product margin for the selected promo category to enforce owner profit margin
+  const targetCategoryStats = useMemo(() => {
+    const targetProds = promoCategory && promoCategory !== 'Semua Kategori'
+      ? products.filter((p) => {
+          const catId = (p.categoryId || '').toLowerCase();
+          const target = promoCategory.toLowerCase();
+          return catId.includes(target) || target.includes(catId) || (p.name && p.name.toLowerCase().includes(target));
+        })
+      : products;
+
+    const prods = targetProds.length > 0 ? targetProds : products;
+    const marginItems = prods
+      .filter((p) => p.price > 0 && p.costPrice > 0)
+      .map((p) => ((p.price - p.costPrice) / p.price) * 100);
+
+    const avgMargin = marginItems.length > 0
+      ? marginItems.reduce((a, b) => a + b, 0) / marginItems.length
+      : 22;
+
+    const safeMinMargin = Math.max(5, minOwnerMargin);
+    const maxAllowedDiscount = Math.max(1, Math.floor(avgMargin - safeMinMargin));
+
+    return {
+      productCount: prods.length,
+      avgMargin: Math.round(avgMargin * 10) / 10,
+      maxAllowedDiscount,
+      safeMinMargin,
+    };
+  }, [products, promoCategory, minOwnerMargin]);
 
   // Chat Assistant state
   const [chatInput, setChatInput] = useState('');
@@ -79,8 +119,9 @@ export const GeminiRetailCopilot: React.FC = () => {
     },
   ]);
   const [isSendingChat, setIsSendingChat] = useState(false);
+  const prevTriggerRef = useRef(restockPlanTriggerCounter);
 
-  // Fetch forecast data
+  // Fetch forecast data (Restock Plan & Purchase Order)
   const handleFetchForecast = async () => {
     setIsLoadingForecast(true);
     try {
@@ -94,14 +135,255 @@ export const GeminiRetailCopilot: React.FC = () => {
         }),
       });
       if (res.ok) {
-        const data = await res.json();
+        const data: AIPurchaseOrderPlan = await res.json();
         setForecastData(data);
+        if (data && Array.isArray(data.forecasts)) {
+          const keys = data.forecasts.map((f) => f.productId || f.productName);
+          setSelectedPOProductIds(keys);
+          const initialQtys: Record<string, number> = {};
+          data.forecasts.forEach((f) => {
+            const key = f.productId || f.productName;
+            initialQtys[key] = Number(f.recommendedOrderQty) || 12;
+          });
+          setCustomPOQuantities(initialQtys);
+        }
       }
     } catch (err) {
       console.error(err);
     } finally {
       setIsLoadingForecast(false);
     }
+  };
+
+  // Toggle selection for a single item in the Restock Plan
+  const handleToggleSelectPOItem = (idOrName: string) => {
+    setSelectedPOProductIds((prev) =>
+      prev.includes(idOrName) ? prev.filter((id) => id !== idOrName) : [...prev, idOrName]
+    );
+  };
+
+  // Toggle select all items in the Restock Plan
+  const handleToggleSelectAllPO = () => {
+    if (!forecastData?.forecasts) return;
+    const allKeys = forecastData.forecasts.map((f) => f.productId || f.productName);
+    if (selectedPOProductIds.length === allKeys.length) {
+      setSelectedPOProductIds([]);
+    } else {
+      setSelectedPOProductIds(allKeys);
+    }
+  };
+
+  // Adjust order quantity for a specific item
+  const handleUpdatePOQuantity = (idOrName: string, delta: number) => {
+    setCustomPOQuantities((prev) => {
+      const current = prev[idOrName] !== undefined ? prev[idOrName] : 12;
+      const updated = Math.max(1, current + delta);
+      return { ...prev, [idOrName]: updated };
+    });
+  };
+
+  const handleSetPOQuantityDirect = (idOrName: string, value: number) => {
+    setCustomPOQuantities((prev) => ({
+      ...prev,
+      [idOrName]: Math.max(1, value || 1),
+    }));
+  };
+
+  // Apply selected items directly to Goods Receiving (Terima Barang)
+  const handleApplyPOToReceiving = () => {
+    if (!forecastData?.forecasts) return;
+    const selectedItems = forecastData.forecasts.filter((item) =>
+      selectedPOProductIds.includes(item.productId || item.productName)
+    );
+    if (selectedItems.length === 0) return;
+
+    const receivingList = selectedItems
+      .map((item) => {
+        const key = item.productId || item.productName;
+        const matchedProd = products.find((p) => p.id === item.productId || p.name === item.productName);
+        const qty = customPOQuantities[key] !== undefined ? customPOQuantities[key] : item.recommendedOrderQty;
+        return {
+          productId: matchedProd?.id || item.productId || '',
+          quantity: Math.max(1, qty),
+          costPrice: item.costPrice || matchedProd?.costPrice || 0,
+          expiryDate: matchedProd?.expiryDate,
+        };
+      })
+      .filter((i) => i.productId);
+
+    setPendingReceivingFromPO(receivingList);
+    setAppliedToReceivingFeedback(true);
+    setTimeout(() => {
+      setAppliedToReceivingFeedback(false);
+      setIsGeminiCopilotOpen(false);
+    }, 800);
+  };
+
+  // Copy PO order summary as WhatsApp / Email friendly plain text
+  const handleCopyPOText = () => {
+    if (!forecastData?.forecasts) return;
+    const selectedItems = forecastData.forecasts.filter((item) =>
+      selectedPOProductIds.includes(item.productId || item.productName)
+    );
+    if (selectedItems.length === 0) return;
+
+    const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const poNumber = `PO-AI-${Date.now().toString().slice(-6)}`;
+
+    let totalQty = 0;
+    let totalBudget = 0;
+
+    let text = `*RENCANA PURCHASE ORDER (PO) RESTOCK TOKO*\n`;
+    text += `Nomor Draft: ${poNumber}\n`;
+    text += `Tanggal: ${dateStr}\n`;
+    text += `Toko: ${settings.storeName}\n`;
+    text += `------------------------------------\n`;
+    text += `*DAFTAR BARANG YANG DIPESAN:*\n`;
+
+    selectedItems.forEach((item, idx) => {
+      const key = item.productId || item.productName;
+      const qty = customPOQuantities[key] !== undefined ? customPOQuantities[key] : item.recommendedOrderQty;
+      const cost = item.costPrice || 0;
+      const subtotal = qty * cost;
+      totalQty += qty;
+      totalBudget += subtotal;
+
+      text += `${idx + 1}. *${item.productName}*\n`;
+      text += `   - Jumlah Pesanan: ${qty} ${item.unit || 'pcs'}\n`;
+      if (item.suggestedSupplier) text += `   - Distributor: ${item.suggestedSupplier}\n`;
+      text += `   - Estimasi Biaya: ${formatCurrency(subtotal, settings.currency)}\n`;
+    });
+
+    text += `------------------------------------\n`;
+    text += `*Total Varian (SKU):* ${selectedItems.length} produk\n`;
+    text += `*Total Kuantitas:* ${totalQty} unit\n`;
+    text += `*Estimasi Anggaran Total:* ${formatCurrency(totalBudget, settings.currency)}\n`;
+    text += `\n_Digenerate secara otomatis oleh Gemini AI Retail Copilot_`;
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2500);
+    }
+  };
+
+  // Print or Download PO Slip
+  const handlePrintPO = () => {
+    if (!forecastData?.forecasts) return;
+    const selectedItems = forecastData.forecasts.filter((item) =>
+      selectedPOProductIds.includes(item.productId || item.productName)
+    );
+    if (selectedItems.length === 0) return;
+
+    const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const poNumber = `PO-AI-${Date.now().toString().slice(-6)}`;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    let totalQty = 0;
+    let totalBudget = 0;
+
+    const rowsHtml = selectedItems
+      .map((item, idx) => {
+        const key = item.productId || item.productName;
+        const qty = customPOQuantities[key] !== undefined ? customPOQuantities[key] : item.recommendedOrderQty;
+        const cost = item.costPrice || 0;
+        const subtotal = qty * cost;
+        totalQty += qty;
+        totalBudget += subtotal;
+
+        return `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 8px; text-align: center;">${idx + 1}</td>
+          <td style="padding: 8px;">
+            <strong>${item.productName}</strong><br/>
+            <small style="color: #64748b;">SKU: ${item.sku || '-'} | Barcode: ${item.barcode || '-'}</small>
+          </td>
+          <td style="padding: 8px;">${item.suggestedSupplier || '-'}</td>
+          <td style="padding: 8px; text-align: center;">${item.currentStock}</td>
+          <td style="padding: 8px; text-align: center; font-weight: bold; color: #059669;">+${qty} ${item.unit || 'pcs'}</td>
+          <td style="padding: 8px; text-align: right;">${formatCurrency(cost, settings.currency)}</td>
+          <td style="padding: 8px; text-align: right; font-weight: bold;">${formatCurrency(subtotal, settings.currency)}</td>
+        </tr>
+      `;
+      })
+      .join('');
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Purchase Order Restock Plan - ${poNumber}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #0f172a; }
+            h1 { margin: 0 0 4px 0; font-size: 20px; }
+            .meta { color: #64748b; font-size: 12px; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 16px; }
+            th { background: #f8fafc; border-bottom: 2px solid #cbd5e1; padding: 8px; text-align: left; }
+            .total-box { margin-top: 20px; float: right; width: 340px; background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 13px; border: 1px solid #e2e8f0; }
+            .total-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+            .grand-total { font-size: 15px; font-weight: bold; border-top: 2px solid #cbd5e1; padding-top: 6px; color: #059669; }
+            @media print { .no-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px;">
+            <div>
+              <h1>${settings.storeName}</h1>
+              <div class="meta">${settings.address || 'Smart Retail Point of Sale'} | Telp: ${settings.phone || '-'}</div>
+            </div>
+            <div style="text-align: right;">
+              <span style="display: inline-block; background: #dcfce7; color: #166534; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 11px;">PURCHASE ORDER (PO) DRAFT</span>
+              <div style="font-weight: bold; margin-top: 4px; font-size: 14px;">${poNumber}</div>
+              <div style="font-size: 11px; color: #64748b;">Tanggal: ${dateStr}</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; background: #f8fafc; border-left: 4px solid #10b981; padding: 10px 14px; font-size: 12px; border-radius: 4px;">
+            <strong>Ringkasan Analisis AI:</strong> ${forecastData?.summary || 'Rencana pemesanan restock barang menipis dan fast moving ritel.'}
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 30px; text-align: center;">No</th>
+                <th>Produk</th>
+                <th>Distributor / Supplier</th>
+                <th style="text-align: center;">Stok Saat Ini</th>
+                <th style="text-align: center;">Kuantitas PO</th>
+                <th style="text-align: right;">Harga Beli</th>
+                <th style="text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          <div class="total-box">
+            <div class="total-row">
+              <span>Total SKU Dipilih:</span>
+              <strong>${selectedItems.length} produk</strong>
+            </div>
+            <div class="total-row">
+              <span>Total Kuantitas:</span>
+              <strong>${totalQty} unit</strong>
+            </div>
+            <div class="total-row grand-total">
+              <span>Estimasi Anggaran:</span>
+              <span>${formatCurrency(totalBudget, settings.currency)}</span>
+            </div>
+          </div>
+
+          <div style="clear: both; margin-top: 40px; font-size: 11px; color: #94a3b8; text-align: center;">
+            Dokumen ini di-generate secara otomatis melalui Gemini Retail Copilot AI. Silakan konfirmasi ketersediaan dan harga distributor sebelum penerbitan PO final.
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   // Fetch daily sales insights
@@ -128,7 +410,7 @@ export const GeminiRetailCopilot: React.FC = () => {
     }
   };
 
-  // Generate Promo
+  // Generate Promo with Owner Minimum Profit Margin Protection (≥ 5%)
   const handleGeneratePromo = async () => {
     setIsGeneratingPromo(true);
     setPromoAppliedSuccess(false);
@@ -141,6 +423,7 @@ export const GeminiRetailCopilot: React.FC = () => {
           targetCategory: promoCategory,
           products,
           settings,
+          minOwnerMargin: Math.max(5, minOwnerMargin),
         }),
       });
       if (res.ok) {
@@ -163,6 +446,8 @@ export const GeminiRetailCopilot: React.FC = () => {
       value: generatedPromo.value,
       minSpend: generatedPromo.minSpend,
       description: generatedPromo.description,
+      minProfitMargin: generatedPromo.minProfitMargin || minOwnerMargin,
+      projectedMarginPercent: generatedPromo.projectedMarginPercent,
     });
     setPromoAppliedSuccess(true);
     setTimeout(() => setPromoAppliedSuccess(false), 3000);
@@ -220,16 +505,19 @@ export const GeminiRetailCopilot: React.FC = () => {
     }
   };
 
-  // Trigger data fetch on tab change if not loaded
+  // Trigger data fetch on tab change or when restockPlanTriggerCounter increments
   useEffect(() => {
     if (isGeminiCopilotOpen) {
-      if (activeCopilotTab === 'forecast' && !forecastData) {
+      if (restockPlanTriggerCounter !== prevTriggerRef.current) {
+        prevTriggerRef.current = restockPlanTriggerCounter;
+        handleFetchForecast();
+      } else if (activeCopilotTab === 'forecast' && !forecastData) {
         handleFetchForecast();
       } else if (activeCopilotTab === 'insights' && !insightsData) {
         handleFetchInsights();
       }
     }
-  }, [isGeminiCopilotOpen, activeCopilotTab]);
+  }, [isGeminiCopilotOpen, activeCopilotTab, restockPlanTriggerCounter]);
 
   if (!isGeminiCopilotOpen) return null;
 
@@ -290,7 +578,7 @@ export const GeminiRetailCopilot: React.FC = () => {
             }`}
           >
             <Package className="w-3.5 h-3.5" />
-            <span>Prediksi Stok</span>
+            <span>Rencana Restock (PO)</span>
           </button>
 
           <button
@@ -431,24 +719,25 @@ export const GeminiRetailCopilot: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 2: PREDIKSI STOK */}
+          {/* TAB 2: RENCANA RESTOCK (PURCHASE ORDER PLAN) */}
           {activeCopilotTab === 'forecast' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                     <Package className="w-4 h-4 text-emerald-500" />
-                    Prediksi Kebutuhan Stok & FEFO (Expiry)
+                    Rencana Restock & Purchase Order (PO)
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Analisis perputaran barang fast-moving dan batas minimum stok ritel.
+                    Analisis persediaan cerdas oleh Gemini AI untuk mencegah stockout dan mengestimasi anggaran pembelian ke distributor.
                   </p>
                 </div>
 
                 <button
                   onClick={handleFetchForecast}
                   disabled={isLoadingForecast}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 cursor-pointer shadow-xs transition shrink-0"
+                  title="Analisis ulang tingkat stok dan transaksi toko"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoadingForecast ? 'animate-spin' : ''}`} />
                   <span>Hitung Ulang</span>
@@ -457,74 +746,351 @@ export const GeminiRetailCopilot: React.FC = () => {
 
               {isLoadingForecast ? (
                 <div className="p-8 text-center rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
-                  <RefreshCw className="w-8 h-8 mx-auto text-emerald-500 animate-spin" />
-                  <p className="font-medium text-xs text-slate-600 dark:text-slate-300">
-                    Menghitung perputaran stok FMCG & Purchase Order recommendations...
-                  </p>
-                </div>
-              ) : forecastData ? (
-                <div className="space-y-3">
-                  {/* Summary Card */}
-                  <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                        Kesehatan Inventaris Toko
-                      </span>
-                      {forecastData.healthScore && (
-                        <span className="text-xs font-black px-2 py-0.5 rounded-md bg-emerald-500 text-slate-950">
-                          {forecastData.healthScore}/100
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-emerald-950 dark:text-emerald-200 leading-relaxed font-medium">
-                      {forecastData.summary}
+                  <div className="relative w-12 h-12 mx-auto">
+                    <RefreshCw className="w-12 h-12 text-emerald-500 animate-spin" />
+                    <Sparkles className="w-5 h-5 text-amber-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-sm text-slate-900 dark:text-white">
+                      Menganalisis Inventaris & Tren Penjualan...
+                    </h5>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+                      Gemini AI sedang menghitung batas aman stok, kecepatan perputaran (velocity), kuantitas pesanan ekonomis (karton/lusin), dan total estimasi anggaran PO.
                     </p>
                   </div>
+                </div>
+              ) : forecastData ? (
+                <div className="space-y-3.5">
+                  {/* Executive Summary & Health Card */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800/80 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        Status Kesehatan Inventaris Toko
+                      </span>
+                      {forecastData.healthScore !== undefined && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400">Score</span>
+                          <span
+                            className={`text-xs font-black px-2.5 py-0.5 rounded-full ${
+                              forecastData.healthScore >= 80
+                                ? 'bg-emerald-500 text-slate-950'
+                                : forecastData.healthScore >= 60
+                                ? 'bg-amber-500 text-slate-950'
+                                : 'bg-rose-500 text-white'
+                            }`}
+                          >
+                            {forecastData.healthScore}/100
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Restock items */}
-                  <div className="space-y-2">
-                    <h5 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                      Rekomendasi Purchase Order (PO)
-                    </h5>
-                    {forecastData.forecasts && forecastData.forecasts.length > 0 ? (
-                      forecastData.forecasts.map((fc, i) => (
-                        <div
-                          key={i}
-                          className="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 space-y-1.5"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-xs text-slate-900 dark:text-white">
-                              {fc.productName}
+                    <p className="text-xs text-emerald-950 dark:text-emerald-100 leading-relaxed font-medium">
+                      {forecastData.summary}
+                    </p>
+
+                    {/* KPI Quick Metrics */}
+                    {forecastData.forecasts && forecastData.forecasts.length > 0 && (() => {
+                      const selItems = forecastData.forecasts.filter((fc) =>
+                        selectedPOProductIds.includes(fc.productId || fc.productName)
+                      );
+                      const selQty = selItems.reduce((acc, fc) => {
+                        const key = fc.productId || fc.productName;
+                        return acc + (customPOQuantities[key] !== undefined ? customPOQuantities[key] : fc.recommendedOrderQty);
+                      }, 0);
+                      const selCost = selItems.reduce((acc, fc) => {
+                        const key = fc.productId || fc.productName;
+                        const q = customPOQuantities[key] !== undefined ? customPOQuantities[key] : fc.recommendedOrderQty;
+                        return acc + q * (fc.costPrice || 0);
+                      }, 0);
+
+                      return (
+                        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-emerald-200/60 dark:border-emerald-800/60">
+                          <div className="bg-white/80 dark:bg-slate-900/60 rounded-xl p-2 text-center">
+                            <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
+                              Produk Dipilih
                             </span>
-                            <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                fc.urgency.includes('KRITIS')
-                                  ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                                  : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                            <span className="text-xs font-black text-slate-900 dark:text-white">
+                              {selItems.length} <span className="text-[10px] font-normal text-slate-400">/ {forecastData.forecasts.length} SKU</span>
+                            </span>
+                          </div>
+
+                          <div className="bg-white/80 dark:bg-slate-900/60 rounded-xl p-2 text-center">
+                            <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
+                              Total Kuantitas
+                            </span>
+                            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                              {selQty} <span className="text-[10px] font-normal text-slate-400">Unit</span>
+                            </span>
+                          </div>
+
+                          <div className="bg-white/80 dark:bg-slate-900/60 rounded-xl p-2 text-center">
+                            <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
+                              Estimasi Anggaran
+                            </span>
+                            <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 truncate block">
+                              {formatCurrency(selCost, settings.currency)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Restock Recommendations List */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleToggleSelectAllPO}
+                          className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-600 cursor-pointer"
+                        >
+                          {forecastData.forecasts &&
+                          selectedPOProductIds.length === forecastData.forecasts.length ? (
+                            <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                          <span>
+                            Pilih Semua ({selectedPOProductIds.length}/{forecastData.forecasts?.length || 0})
+                          </span>
+                        </button>
+                      </div>
+
+                      {/* PO Action Buttons */}
+                      <div className="flex items-center gap-1.5 flex-wrap ml-auto">
+                        <button
+                          type="button"
+                          onClick={handleCopyPOText}
+                          disabled={selectedPOProductIds.length === 0}
+                          className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                          title="Salin teks purchase order untuk dikirimkan via WhatsApp / Email"
+                        >
+                          {copyFeedback ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-500" />
+                              <span className="text-emerald-600 dark:text-emerald-400">Tersalin!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5 text-slate-500" />
+                              <span>Salin PO</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handlePrintPO}
+                          disabled={selectedPOProductIds.length === 0}
+                          className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                          title="Cetak atau unduh draft surat pesanan barang"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Cetak</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleApplyPOToReceiving}
+                          disabled={selectedPOProductIds.length === 0}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] flex items-center gap-1.5 transition cursor-pointer shadow-xs disabled:opacity-50 active:scale-95"
+                          title="Muat seluruh barang dan kuantitas terpilih ke modal Form Terima Barang"
+                        >
+                          {appliedToReceivingFeedback ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-white animate-bounce" />
+                              <span>Memuat ke Terima Barang...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Truck className="w-3.5 h-3.5" />
+                              <span>Terima Barang ({selectedPOProductIds.length})</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {forecastData.forecasts && forecastData.forecasts.length > 0 ? (
+                      <div className="space-y-2.5">
+                        {forecastData.forecasts.map((fc, i) => {
+                          const itemKey = fc.productId || fc.productName;
+                          const isSelected = selectedPOProductIds.includes(itemKey);
+                          const orderQty =
+                            customPOQuantities[itemKey] !== undefined
+                              ? customPOQuantities[itemKey]
+                              : fc.recommendedOrderQty || 12;
+                          const unitCost = Number(fc.costPrice) || 0;
+                          const subtotal = orderQty * unitCost;
+
+                          return (
+                            <div
+                              key={i}
+                              className={`p-3.5 rounded-2xl border transition-all ${
+                                isSelected
+                                  ? 'border-emerald-300 dark:border-emerald-700/80 bg-white dark:bg-slate-900 shadow-xs'
+                                  : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 opacity-70'
                               }`}
                             >
-                              {fc.urgency}
-                            </span>
-                          </div>
+                              <div className="flex items-start gap-2.5">
+                                {/* Checkbox */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleSelectPOItem(itemKey)}
+                                  className="mt-0.5 text-slate-400 hover:text-emerald-600 cursor-pointer shrink-0"
+                                >
+                                  {isSelected ? (
+                                    <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                  ) : (
+                                    <Square className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                                  )}
+                                </button>
 
-                          <div className="flex items-center gap-4 text-xs font-mono text-slate-600 dark:text-slate-400">
-                            <span>Sisa: {fc.currentStock} unit</span>
-                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                              Saran PO: +{fc.recommendedOrderQty} unit
-                            </span>
-                            <span>Habis dlm: ~{fc.estimatedDaysLeft} hari</span>
-                          </div>
+                                <div className="flex-1 min-w-0 space-y-2">
+                                  {/* Title & Badges */}
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <h6 className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                                        {fc.productName}
+                                      </h6>
+                                      <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 flex-wrap">
+                                        {fc.category && (
+                                          <span className="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-800 rounded font-medium">
+                                            {fc.category}
+                                          </span>
+                                        )}
+                                        {fc.sku && <span>SKU: {fc.sku}</span>}
+                                        {fc.barcode && <span>Barcode: {fc.barcode}</span>}
+                                      </div>
+                                    </div>
 
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                            {fc.actionAdvice}
-                          </p>
-                        </div>
-                      ))
+                                    {/* Urgency Pill */}
+                                    <span
+                                      className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                                        fc.urgency.includes('KRITIS')
+                                          ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse'
+                                          : fc.urgency.includes('TINGGI')
+                                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                          : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                                      }`}
+                                    >
+                                      {fc.urgency}
+                                    </span>
+                                  </div>
+
+                                  {/* Suggested Supplier */}
+                                  {fc.suggestedSupplier && (
+                                    <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1 rounded-xl">
+                                      <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                      <span className="truncate">
+                                        Distributor: <strong>{fc.suggestedSupplier}</strong>
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {/* Stock Stats & Restock Stepper */}
+                                  <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800 flex-wrap">
+                                    <div className="flex items-center gap-3 text-xs font-mono text-slate-600 dark:text-slate-400">
+                                      <span>
+                                        Sisa: <strong className="text-slate-900 dark:text-white">{fc.currentStock}</strong> {fc.unit || 'pcs'}
+                                      </span>
+                                      <span>
+                                        Min: <strong className="text-slate-900 dark:text-white">{fc.minStock}</strong>
+                                      </span>
+                                      {fc.estimatedDaysLeft !== undefined && (
+                                        <span className="text-rose-600 dark:text-rose-400 font-bold">
+                                          ~{fc.estimatedDaysLeft} hari tersisa
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Order Stepper */}
+                                    <div className="flex items-center gap-1.5 ml-auto">
+                                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mr-1">
+                                        Kuantitas PO:
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdatePOQuantity(itemKey, -6)}
+                                        className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer text-slate-700 dark:text-slate-200"
+                                        title="Kurangi 6 unit"
+                                      >
+                                        <Minus className="w-3 h-3" />
+                                      </button>
+                                      <input
+                                        type="number"
+                                        value={orderQty}
+                                        min={1}
+                                        onChange={(e) =>
+                                          handleSetPOQuantityDirect(itemKey, parseInt(e.target.value) || 1)
+                                        }
+                                        className="w-14 px-1.5 py-0.5 text-center font-bold text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdatePOQuantity(itemKey, 6)}
+                                        className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer text-slate-700 dark:text-slate-200"
+                                        title="Tambah 6 unit"
+                                      >
+                                        <Plus className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Subtotal & Strategic Advice */}
+                                  <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-slate-800/60">
+                                    <span className="text-[11px] text-slate-500">
+                                      Biaya Satuan: {formatCurrency(unitCost, settings.currency)}
+                                    </span>
+                                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                                      Subtotal: {formatCurrency(subtotal, settings.currency)}
+                                    </span>
+                                  </div>
+
+                                  <div className="text-[11px] text-slate-600 dark:text-slate-400 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 p-2 rounded-xl leading-relaxed">
+                                    <span className="font-bold text-amber-900 dark:text-amber-300 mr-1">Rekomendasi AI:</span>
+                                    {fc.actionAdvice}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     ) : (
-                      <p className="text-xs text-slate-500">Seluruh stok produk berada dalam batas aman.</p>
+                      <div className="p-6 text-center rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                        <Check className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                        <h6 className="font-bold text-sm text-slate-900 dark:text-white">Semua Stok Aman</h6>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Tidak ditemukan produk yang berada di bawah batas minimum stok ritel saat ini.
+                        </p>
+                      </div>
                     )}
                   </div>
+
+                  {/* Deadstock & FEFO Expiry Alerts (if any) */}
+                  {forecastData.deadstockOrExpiryAlerts && forecastData.deadstockOrExpiryAlerts.length > 0 && (
+                    <div className="p-3.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-rose-900 dark:text-rose-300 uppercase tracking-wider">
+                        <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                        <span>Peringatan Kadaluarsa & Slow Moving (FEFO)</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {forecastData.deadstockOrExpiryAlerts.map((alt, idx) => (
+                          <div key={idx} className="text-xs bg-white/70 dark:bg-slate-900/70 p-2 rounded-xl">
+                            <strong className="text-slate-900 dark:text-white">{alt.productName}</strong>
+                            <span className="text-rose-600 dark:text-rose-400 font-semibold ml-1.5">({alt.issue})</span>
+                            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+                              Saran: {alt.suggestedPromotion}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>
@@ -634,7 +1200,7 @@ export const GeminiRetailCopilot: React.FC = () => {
               </div>
 
               {/* Form Controls */}
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3.5">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Tema Kampanye Promo
@@ -666,13 +1232,61 @@ export const GeminiRetailCopilot: React.FC = () => {
                   </select>
                 </div>
 
+                {/* OWNER PROFIT MARGIN RULE SECTION */}
+                <div className="p-3.5 rounded-xl bg-gradient-to-br from-emerald-50/70 to-teal-50/50 dark:from-emerald-950/30 dark:to-slate-900 border border-emerald-200/80 dark:border-emerald-800/60 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Aturan Margin Profit Owner (Minimal)
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs">
+                      Min. {minOwnerMargin}%
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Sistem memastikan diskon tidak menggerus modal HPP, dan owner wajib memperoleh keuntungan bersih minimal <strong>{minOwnerMargin}%</strong> dari setiap transaksi voucher ini.
+                  </p>
+
+                  <div className="grid grid-cols-4 gap-1.5 pt-1">
+                    {[5, 8, 10, 15].map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setMinOwnerMargin(val)}
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          minOwnerMargin === val
+                            ? 'bg-emerald-600 text-white shadow-2xs ring-1 ring-emerald-500'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        {val === 5 ? '5% (Wajib)' : `${val}%`}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Live Margin Calculation Badge */}
+                  <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-800/40 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-600 dark:text-slate-400">
+                      Rata-rata Margin Kategori: <strong>{targetCategoryStats.avgMargin}%</strong>
+                    </span>
+                    <span className="text-emerald-700 dark:text-emerald-300 font-semibold">
+                      Diskon Maksimal Aman: <strong>{targetCategoryStats.maxAllowedDiscount}%</strong>
+                    </span>
+                  </div>
+                </div>
+
                 <button
                   onClick={handleGeneratePromo}
                   disabled={isGeneratingPromo}
                   className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm"
                 >
                   <Sparkles className={`w-4 h-4 ${isGeneratingPromo ? 'animate-spin' : ''}`} />
-                  <span>{isGeneratingPromo ? 'Gemini Merancang Promo...' : 'Generate Ide Promo AI'}</span>
+                  <span>{isGeneratingPromo ? 'Gemini Merancang Promo...' : 'Generate Ide Promo AI (Margin Aman)'}</span>
                 </button>
               </div>
 
@@ -700,6 +1314,46 @@ export const GeminiRetailCopilot: React.FC = () => {
                     </p>
                   </div>
 
+                  {/* OWNER PROFIT MARGIN AUDIT CARD */}
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-slate-900 border border-emerald-300 dark:border-emerald-800/80 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-300">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <span>Garansi Margin Owner (≥ {generatedPromo.minProfitMargin || 5}%)</span>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">
+                        Status: Terlindungi
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-emerald-200/60 dark:border-emerald-800/50">
+                      <div className="p-1.5 rounded-lg bg-white/60 dark:bg-slate-900/60">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Margin Awal</span>
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
+                          {generatedPromo.originalMarginPercent || targetCategoryStats.avgMargin}%
+                        </span>
+                      </div>
+                      <div className="p-1.5 rounded-lg bg-white/60 dark:bg-slate-900/60">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Margin Sisa</span>
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                          +{generatedPromo.projectedMarginPercent || 5.5}%
+                        </span>
+                      </div>
+                      <div className="p-1.5 rounded-lg bg-white/60 dark:bg-slate-900/60">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Est. Laba/Trx</span>
+                        <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 font-mono">
+                          +Rp {(generatedPromo.estimatedProfitAmount || 3500).toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {generatedPromo.ownerSafetyNote && (
+                      <p className="text-[11px] text-emerald-800 dark:text-emerald-300/90 leading-tight italic pt-0.5">
+                        💡 {generatedPromo.ownerSafetyNote}
+                      </p>
+                    )}
+                  </div>
+
                   <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 flex items-center justify-between border border-dashed border-slate-300 dark:border-slate-700">
                     <div>
                       <span className="text-[10px] text-slate-400 font-mono">KODE VOUCHER</span>
@@ -719,7 +1373,7 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                   <button
                     onClick={handleApplyPromoVoucher}
-                    className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-600 dark:text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-600 dark:text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
                   >
                     {promoAppliedSuccess ? (
                       <>

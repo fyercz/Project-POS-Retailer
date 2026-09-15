@@ -21,6 +21,7 @@ import {
   Award,
   AlertTriangle,
   Globe,
+  TrendingUp,
 } from 'lucide-react';
 import { Product, WholesaleUnit } from '../types';
 import { usePOS } from '../context/POSContext';
@@ -32,6 +33,7 @@ interface ProductFormModalProps {
   productToEdit?: Product | null;
   onSuccess?: (product: Product, isEdit: boolean) => void;
   onPrintPriceTag?: (product: Product) => void;
+  onViewPriceHistory?: (product: Product) => void;
 }
 
 const SAMPLE_IMAGES = [
@@ -66,6 +68,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   productToEdit,
   onSuccess,
   onPrintPriceTag,
+  onViewPriceHistory,
 }) => {
   const { categories, addProduct, updateProduct, settings } = usePOS();
 
@@ -616,12 +619,23 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {/* Section 3: Harga & Margin Keuntungan */}
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-3 flex items-center justify-between">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-3 flex items-center justify-between flex-wrap gap-2">
               <span className="flex items-center gap-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Harga Beli (Modal/HPP) & Harga Jual Eceran</span>
+                <span>Harga Beli (Modal/HPP) &amp; Harga Jual Eceran</span>
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {productToEdit && onViewPriceHistory && (
+                  <button
+                    type="button"
+                    onClick={() => onViewPriceHistory(productToEdit)}
+                    className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors cursor-pointer"
+                    title="Lihat riwayat fluktuasi harga modal dan jual produk ini"
+                  >
+                    <TrendingUp className="w-3 h-3 text-indigo-500" />
+                    <span>Riwayat Harga</span>
+                  </button>
+                )}
                 <span className="text-xs normal-case font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
                   Margin: <strong className="font-bold">{(marginPercent ?? 0).toFixed(1)}%</strong> ({formatCurrency(marginNominal)})
                 </span>

@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Package,
   Search,
   AlertTriangle,
+  AlertCircle,
   Plus,
   Minus,
   Edit3,
   Check,
   X,
   TrendingDown,
+  TrendingUp,
   Layers,
   Sparkles,
   RefreshCw,
@@ -36,6 +38,8 @@ import {
   Tag,
   Upload,
   Globe,
+  FileSpreadsheet,
+  Database,
 } from 'lucide-react';
 import { usePOS } from '../../context/POSContext';
 import { INITIAL_PRODUCTS } from '../../data/mockData';
@@ -49,6 +53,15 @@ import { SupplierFormModal } from '../SupplierFormModal';
 import { PriceTagModal } from '../PriceTagModal';
 import { DataImportModal } from '../DataImportModal';
 import { OnlineDatabaseMatcherModal } from '../OnlineDatabaseMatcherModal';
+import { BulkStockAdjustmentModal } from '../BulkStockAdjustmentModal';
+import { StockTakeCSVModal } from '../StockTakeCSVModal';
+import { ProductPriceHistoryView } from '../ProductPriceHistoryView';
+import { ProductPriceHistoryModal } from '../ProductPriceHistoryModal';
+import {
+  InventoryAlertBanner,
+  InventoryAlertFilterType,
+  getProductExpiryDiffDays,
+} from '../InventoryAlertBanner';
 
 interface ReceivingItem {
   productId: string;
@@ -73,26 +86,53 @@ export const InventoryView: React.FC = () => {
     clearImportedProducts,
     resetProductsToDefault,
     clearAllProducts,
+    recordProductPriceChange,
     settings,
     openGeminiCopilot,
+    triggerRestockPlanAnalysis,
+    pendingReceivingFromPO,
+    setPendingReceivingFromPO,
     purchaseReturns,
     processPurchaseReturn,
     supplierPurchases,
     processSupplierPurchase,
     suppliers,
     deleteSupplier,
+    setIsBackupRestoreOpen,
+    createRestorePoint,
   } = usePOS();
 
-  const [activeTab, setActiveTab] = useState<'inventory' | 'suppliers' | 'purchases' | 'returns'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'price_history' | 'suppliers' | 'purchases' | 'returns'>('inventory');
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [productOriginFilter, setProductOriginFilter] = useState<'all' | 'imported' | 'default'>('all');
+  const [alertFilter, setAlertFilter] = useState<InventoryAlertFilterType>('all');
+
+  // Product Price History State
+  const [isPriceHistoryModalOpen, setIsPriceHistoryModalOpen] = useState(false);
+  const [priceHistoryProductId, setPriceHistoryProductId] = useState<string>('');
+
+  const handleOpenPriceHistory = (prod: Product) => {
+    setPriceHistoryProductId(prod.id);
+    setIsPriceHistoryModalOpen(true);
+  };
+
+  const handleSwitchToPriceHistoryTab = (prod?: Product) => {
+    if (prod) {
+      setPriceHistoryProductId(prod.id);
+    }
+    setActiveTab('price_history');
+  };
 
   // Multi-Selection State for Batch Actions
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [isClearImportedModalOpen, setIsClearImportedModalOpen] = useState(false);
   const [isResetCatalogModalOpen, setIsResetCatalogModalOpen] = useState(false);
+
+  // Bulk Stock & Expiry Adjustment Modal State
+  const [isBulkAdjustModalOpen, setIsBulkAdjustModalOpen] = useState(false);
+  const [bulkAdjustInitialProductIds, setBulkAdjustInitialProductIds] = useState<string[]>([]);
 
   // Helper to distinguish imported products from initial seed products
   const initialProductIds = new Set(INITIAL_PRODUCTS.map((p) => p.id));
@@ -116,6 +156,9 @@ export const InventoryView: React.FC = () => {
 
   // Smart Data Import Modal State
   const [isDataImportOpen, setIsDataImportOpen] = useState(false);
+
+  // Quick Stock Take CSV Modal State
+  const [isStockTakeCSVOpen, setIsStockTakeCSVOpen] = useState(false);
 
   // Online Database & Barcode Matcher Modal State
   const [isOnlineMatcherOpen, setIsOnlineMatcherOpen] = useState(false);
@@ -162,9 +205,49 @@ export const InventoryView: React.FC = () => {
     onAction?: () => void;
   } | null>(null);
 
+  // Pre-fill goods receiving modal when purchase order is generated/applied from Gemini Restock Plan
+  useEffect(() => {
+    if (pendingReceivingFromPO && pendingReceivingFromPO.length > 0) {
+      setReceivingItems(
+        pendingReceivingFromPO.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          costPrice: item.costPrice,
+          expiryDate: item.expiryDate || new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
+        }))
+      );
+      setIsReceivingOpen(true);
+      setPendingReceivingFromPO(null);
+    }
+  }, [pendingReceivingFromPO, setPendingReceivingFromPO]);
+
+  const outOfStockCount = products.filter((p) => p.stock === 0).length;
   const lowStockCount = products.filter((p) => p.stock <= p.minStock).length;
   const totalStockUnits = products.reduce((sum, p) => sum + p.stock, 0);
   const totalValuation = products.reduce((sum, p) => sum + p.stock * p.costPrice, 0);
+
+  // Expiration calculations (FEFO)
+  const expiredCount = products.filter((p) => {
+    const diff = getProductExpiryDiffDays(p.expiryDate);
+    return diff !== null && diff < 0;
+  }).length;
+
+  const criticalExpCount = products.filter((p) => {
+    const diff = getProductExpiryDiffDays(p.expiryDate);
+    return diff !== null && diff >= 0 && diff <= 30;
+  }).length;
+
+  const approachingExpCount = products.filter((p) => {
+    const diff = getProductExpiryDiffDays(p.expiryDate);
+    return diff !== null && diff > 30 && diff <= 90;
+  }).length;
+
+  const totalExpAlertsCount = expiredCount + criticalExpCount + approachingExpCount;
+  const totalAlertsCount = products.filter((p) => {
+    if (p.stock <= p.minStock) return true;
+    const diff = getProductExpiryDiffDays(p.expiryDate);
+    return diff !== null && diff <= 90;
+  }).length;
 
   const filteredProducts = products.filter((p) => {
     const query = search.toLowerCase();
@@ -181,7 +264,24 @@ export const InventoryView: React.FC = () => {
         : productOriginFilter === 'imported'
         ? isImportedProduct(p)
         : !isImportedProduct(p);
-    return matchQuery && matchCat && matchOrigin;
+
+    let matchAlert = true;
+    if (alertFilter === 'low-stock') {
+      matchAlert = p.stock <= p.minStock;
+    } else if (alertFilter === 'out-of-stock') {
+      matchAlert = p.stock === 0;
+    } else if (alertFilter === 'critical-exp') {
+      const diff = getProductExpiryDiffDays(p.expiryDate);
+      matchAlert = diff !== null && diff <= 30;
+    } else if (alertFilter === 'approaching-exp') {
+      const diff = getProductExpiryDiffDays(p.expiryDate);
+      matchAlert = diff !== null && diff > 30 && diff <= 90;
+    } else if (alertFilter === 'all-exp') {
+      const diff = getProductExpiryDiffDays(p.expiryDate);
+      matchAlert = diff !== null && diff <= 90;
+    }
+
+    return matchQuery && matchCat && matchOrigin && matchAlert;
   });
 
   const filteredSuppliers = suppliers.filter((s) => {
@@ -274,12 +374,21 @@ export const InventoryView: React.FC = () => {
   };
 
   const handleConfirmResetDefault = () => {
+    try {
+      createRestorePoint(
+        'Otomatis: Pra-Reset Katalog Produk',
+        'Snapshot otomatis yang disimpan sistem sebelum mereset katalog produk ke 40 item ritel bawaan.',
+        'auto_pre_reset'
+      );
+    } catch {
+      // ignore
+    }
     resetProductsToDefault();
     setSelectedProductIds([]);
     setIsResetCatalogModalOpen(false);
     setNotificationMsg({
       type: 'success',
-      text: `Katalog master produk berhasil direset kembali ke 40 produk bawaan ritel.`,
+      text: `Katalog master produk berhasil direset kembali ke 40 produk bawaan ritel. Snapshot pengaman otomatis tersimpan.`,
     });
     setTimeout(() => setNotificationMsg(null), 5000);
   };
@@ -304,6 +413,59 @@ export const InventoryView: React.FC = () => {
   const handleSelectAllImported = () => {
     const importedIds = products.filter(isImportedProduct).map((p) => p.id);
     setSelectedProductIds(importedIds);
+  };
+
+  const handleOpenBulkAdjustSelected = () => {
+    setBulkAdjustInitialProductIds(selectedProductIds);
+    setIsBulkAdjustModalOpen(true);
+  };
+
+  const handleOpenBulkAdjustToolbar = () => {
+    const targetIds =
+      selectedProductIds.length > 0
+        ? selectedProductIds
+        : filteredProducts.slice(0, 15).map((p) => p.id);
+    setBulkAdjustInitialProductIds(targetIds);
+    setIsBulkAdjustModalOpen(true);
+  };
+
+  const handleOpenReceivingForProduct = (prod?: Product) => {
+    if (prod) {
+      setReceivingItems([
+        {
+          productId: prod.id,
+          quantity: Math.max(12, (prod.minStock || 10) * 2),
+          costPrice: prod.costPrice,
+          expiryDate: prod.expiryDate || '2027-06-30',
+        },
+      ]);
+    }
+    setIsReceivingOpen(true);
+  };
+
+  const handleOpenReturnForProduct = (prod?: Product) => {
+    if (prod) {
+      setReturnItems([
+        {
+          productId: prod.id,
+          quantity: Math.max(1, prod.stock > 0 ? Math.min(prod.stock, 5) : 1),
+          costPrice: prod.costPrice,
+          expiryDate: prod.expiryDate,
+        },
+      ]);
+      const diff = getProductExpiryDiffDays(prod.expiryDate);
+      if (diff !== null && diff <= 0) {
+        setReturnReason('Barang Kadaluarsa / Expired Date');
+      } else {
+        setReturnReason('Barang Rusak / Bad Stock');
+      }
+    }
+    setIsReturnOpen(true);
+  };
+
+  const handleOpenBulkAdjustForProducts = (productIds: string[]) => {
+    setBulkAdjustInitialProductIds(productIds);
+    setIsBulkAdjustModalOpen(true);
   };
 
   const handleOpenAddSupplier = () => {
@@ -718,6 +880,27 @@ export const InventoryView: React.FC = () => {
               <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
                 {products.length}
               </span>
+              {totalAlertsCount > 0 && (
+                <span
+                  className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500 text-slate-950 flex items-center gap-0.5 shadow-2xs animate-pulse"
+                  title={`${totalAlertsCount} produk memerlukan perhatian stok atau kadaluarsa`}
+                >
+                  <AlertTriangle className="w-2.5 h-2.5 text-slate-950" />
+                  <span>{totalAlertsCount} Alert</span>
+                </span>
+              )}
+            </button>
+            <button
+              id="tab-btn-price-history"
+              onClick={() => setActiveTab('price_history')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'price_history'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+              }`}
+            >
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Riwayat Harga</span>
             </button>
             <button
               id="tab-btn-purchases"
@@ -794,25 +977,23 @@ export const InventoryView: React.FC = () => {
                 <Upload className="w-4 h-4 text-emerald-300" />
                 <span>Import & Koreksi Data</span>
               </button>
-              {importedCount > 0 && (
-                <button
-                  id="btn-clear-imported-products"
-                  onClick={() => setIsClearImportedModalOpen(true)}
-                  className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-1.5 border border-rose-300 dark:border-rose-800 cursor-pointer transition-all active:scale-95 shadow-2xs"
-                  title="Hapus seluruh master data barang yang telah diimpor"
-                >
-                  <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                  <span>Hapus Data Impor ({importedCount})</span>
-                </button>
-              )}
               <button
-                id="btn-open-online-matcher"
-                onClick={() => setIsOnlineMatcherOpen(true)}
-                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-700 to-cyan-700 hover:from-teal-600 hover:to-cyan-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-teal-700/20 cursor-pointer transition-all active:scale-95"
-                title="Cari & cocokkan barcode/nama produk di Google Search Grounding & Gemini AI"
+                id="btn-inventory-backup-restore"
+                onClick={() => setIsBackupRestoreOpen(true)}
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 cursor-pointer transition-all active:scale-95"
+                title="Pusat Cadangan Data & Titik Pemulihan (Backup & Restore Point)"
               >
-                <Globe className="w-4 h-4 text-teal-300" />
-                <span>Google Grounding</span>
+                <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="hidden sm:inline">Backup &amp; Restore</span>
+              </button>
+              <button
+                id="btn-inventory-price-history"
+                onClick={() => handleSwitchToPriceHistoryTab()}
+                className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-800 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                title="Lihat riwayat fluktuasi harga modal dan perubahan harga jual retail seluruh produk"
+              >
+                <TrendingUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span className="hidden sm:inline">Riwayat Harga</span>
               </button>
             </>
           )}
@@ -838,6 +1019,28 @@ export const InventoryView: React.FC = () => {
             <span>Cek Stok AI</span>
           </button>
 
+          {/* BULK STOCK ADJUSTMENT */}
+          <button
+            id="btn-open-bulk-adjust"
+            onClick={handleOpenBulkAdjustToolbar}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white font-bold text-xs flex items-center gap-1.5 border border-slate-700 cursor-pointer transition-all active:scale-95 shadow-xs"
+            title="Penyesuaian stok fisik dan tanggal kadaluarsa beberapa barang secara serentak"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-emerald-400" />
+            <span>Penyesuaian Massal</span>
+          </button>
+
+          {/* STOCK OPNAME CSV / BATCH STOCK-TAKING */}
+          <button
+            id="btn-open-stocktake-csv"
+            onClick={() => setIsStockTakeCSVOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
+            title="Perbarui stok massal cepat via input teks/file CSV atau copy-paste dari Excel untuk mempercepat stock opname"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+            <span>Stock Opname CSV</span>
+          </button>
+
           {/* INPUT PEMBELIAN */}
           <button
             id="btn-open-receiving"
@@ -858,14 +1061,18 @@ export const InventoryView: React.FC = () => {
             <span>+ Retur Barang</span>
           </button>
 
-          {/* AI RESTOCK FORECAST TRIGGER */}
+          {/* GENERATE RESTOCK PLAN (AI COPILOT) BUTTON */}
           <button
-            onClick={() => openGeminiCopilot('forecast')}
-            className="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition-all active:scale-95"
+            id="btn-generate-restock-plan"
+            onClick={triggerRestockPlanAnalysis}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/25 cursor-pointer transition-all active:scale-95 border border-amber-300"
+            title="Analisis tingkat inventaris saat ini dengan Gemini AI dan buat rekomendasi Purchase Order (PO)"
           >
-            <Sparkles className="w-4 h-4 fill-current animate-pulse" />
-            <span>Prediksi Stok AI</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <Sparkles className="w-4 h-4 fill-current text-slate-950 animate-pulse" />
+            <span>Generate Restock Plan</span>
+            <span className="px-1.5 py-0.5 text-[9px] font-black uppercase bg-slate-950 text-amber-300 rounded-md">
+              AI Copilot
+            </span>
           </button>
         </div>
       </div>
@@ -934,6 +1141,37 @@ export const InventoryView: React.FC = () => {
               <RefreshCw className="w-3 h-3 text-slate-400" />
               <span>Reset Default</span>
             </button>
+
+            {/* Quick Alert Filter Chips */}
+            <div className="flex items-center gap-1.5 ml-auto flex-wrap">
+              <button
+                type="button"
+                onClick={() => setAlertFilter(alertFilter === 'low-stock' ? 'all' : 'low-stock')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-xl flex items-center gap-1 cursor-pointer transition border ${
+                  alertFilter === 'low-stock' || alertFilter === 'out-of-stock'
+                    ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-xs font-black'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:hover:bg-amber-900/80 dark:text-amber-300 dark:border-amber-800'
+                }`}
+                title="Saring tabel hanya menampilkan produk dengan stok menipis / habis"
+              >
+                <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                <span>Stok Menipis ({lowStockCount})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAlertFilter(alertFilter === 'all-exp' ? 'all' : 'all-exp')}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-xl flex items-center gap-1 cursor-pointer transition border ${
+                  alertFilter === 'all-exp' || alertFilter === 'critical-exp' || alertFilter === 'approaching-exp'
+                    ? 'bg-rose-500 text-white border-rose-600 shadow-xs font-black'
+                    : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 dark:text-rose-300 dark:border-rose-800'
+                }`}
+                title="Saring tabel hanya menampilkan produk kadaluarsa atau mendekati kadaluarsa dalam 90 hari"
+              >
+                <Calendar className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+                <span>Kadaluarsa ({totalExpAlertsCount})</span>
+              </button>
+            </div>
           </div>
         ) : activeTab === 'suppliers' ? (
           <div className="flex items-center gap-2">
@@ -962,11 +1200,60 @@ export const InventoryView: React.FC = () => {
             <span className="text-slate-500 dark:text-slate-400">
               Valuasi: <strong className="text-emerald-600 dark:text-emerald-400 font-mono">{formatCurrency(totalValuation, settings.currency)}</strong>
             </span>
+            {outOfStockCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setAlertFilter(alertFilter === 'out-of-stock' ? 'all' : 'out-of-stock')}
+                className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-1 cursor-pointer hover:scale-105 transition"
+                title="Klik untuk menyaring produk habis (0 stok)"
+              >
+                <ShieldAlert className="w-3 h-3 text-rose-600" />
+                {outOfStockCount} Habis (0)
+              </button>
+            )}
             {lowStockCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
+              <button
+                type="button"
+                onClick={() => setAlertFilter(alertFilter === 'low-stock' ? 'all' : 'low-stock')}
+                className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1 cursor-pointer hover:scale-105 transition"
+                title="Klik untuk menyaring produk stok menipis"
+              >
+                <AlertTriangle className="w-3 h-3 text-amber-600" />
                 {lowStockCount} Menipis
-              </span>
+              </button>
+            )}
+            {expiredCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setAlertFilter(alertFilter === 'critical-exp' ? 'all' : 'critical-exp')}
+                className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 border border-rose-300 dark:border-rose-800 flex items-center gap-1 cursor-pointer hover:scale-105 transition"
+                title="Klik untuk menyaring produk kadaluarsa"
+              >
+                <AlertCircle className="w-3 h-3 text-rose-600" />
+                {expiredCount} Expired
+              </button>
+            )}
+            {criticalExpCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setAlertFilter(alertFilter === 'critical-exp' ? 'all' : 'critical-exp')}
+                className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200 border border-red-300 dark:border-red-800 flex items-center gap-1 cursor-pointer hover:scale-105 transition"
+                title="Klik untuk menyaring produk kritis (≤30 hari)"
+              >
+                <Clock className="w-3 h-3 text-red-600 animate-pulse" />
+                {criticalExpCount} Kritis ≤30hr
+              </button>
+            )}
+            {approachingExpCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setAlertFilter(alertFilter === 'approaching-exp' ? 'all' : 'approaching-exp')}
+                className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800 flex items-center gap-1 cursor-pointer hover:scale-105 transition"
+                title="Klik untuk menyaring produk mendekati exp (31-90 hari)"
+              >
+                <Clock className="w-3 h-3 text-amber-600" />
+                {approachingExpCount} Mendekati Exp
+              </button>
             )}
             <div className="flex items-center gap-1.5 ml-auto">
               <button
@@ -1069,6 +1356,15 @@ export const InventoryView: React.FC = () => {
             </button>
             <button
               type="button"
+              onClick={handleOpenBulkAdjustSelected}
+              className="px-3.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
+              title="Perbarui kuantitas stok fisik dan tanggal kadaluarsa produk terpilih secara massal"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-950" />
+              <span>Penyesuaian Stok Massal ({selectedProductIds.length})</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setIsBulkDeleteModalOpen(true)}
               className="px-3.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
             >
@@ -1082,212 +1378,345 @@ export const InventoryView: React.FC = () => {
       {/* Main Content View */}
       <div className="flex-1 overflow-auto">
         {activeTab === 'inventory' ? (
-          /* Master Products Table */
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
-              <tr>
-                <th className="py-3 px-3 w-10 text-center">
-                  <input
-                    type="checkbox"
-                    checked={
-                      filteredProducts.length > 0 &&
-                      filteredProducts.every((p) => selectedProductIds.includes(p.id))
-                    }
-                    onChange={handleToggleSelectAll}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
-                    title="Pilih semua produk pada filter saat ini"
-                  />
-                </th>
-                <th className="py-3 px-4">Produk / Barang</th>
-                <th className="py-3 px-4">Brand</th>
-                <th className="py-3 px-4">SKU / Barcode</th>
-                <th className="py-3 px-4 text-right">Harga Modal</th>
-                <th className="py-3 px-4 text-right">Harga Jual</th>
-                <th className="py-3 px-4 text-center">Stok Fisik</th>
-                <th className="py-3 px-4 text-center">Status / FEFO</th>
-                <th className="py-3 px-4 text-right">Aksi & Kelola</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((prod) => {
-                  const isLow = prod.stock <= prod.minStock;
-                  const isZero = prod.stock === 0;
-                  const isImported = isImportedProduct(prod);
-                  const isSelected = selectedProductIds.includes(prod.id);
+          <div className="flex flex-col min-h-full">
+            {/* Inventory Alerts & Notifications Hub */}
+            <InventoryAlertBanner
+              products={products}
+              currentAlertFilter={alertFilter}
+              onSelectAlertFilter={setAlertFilter}
+              onOpenReceiving={handleOpenReceivingForProduct}
+              onOpenReturn={handleOpenReturnForProduct}
+              onOpenBulkAdjust={handleOpenBulkAdjustForProducts}
+              onOpenPriceTagPromo={(prod) => {
+                setProductForPriceTag(prod || null);
+                setIsPriceTagModalOpen(true);
+              }}
+              onGenerateRestockPlan={triggerRestockPlanAnalysis}
+              currency={settings.currency}
+            />
 
-                  return (
-                    <tr
-                      key={prod.id}
-                      className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group ${
-                        isSelected ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : ''
-                      }`}
-                    >
-                      {/* Checkbox Select */}
-                      <td className="py-3 px-3 text-center">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleToggleSelectProduct(prod.id)}
-                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
-                        />
-                      </td>
+            {/* Master Products Table */}
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
+                <tr>
+                  <th className="py-3 px-3 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredProducts.length > 0 &&
+                        filteredProducts.every((p) => selectedProductIds.includes(p.id))
+                      }
+                      onChange={handleToggleSelectAll}
+                      className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
+                      title="Pilih semua produk pada filter saat ini"
+                    />
+                  </th>
+                  <th className="py-3 px-4">Produk / Barang</th>
+                  <th className="py-3 px-4">Brand</th>
+                  <th className="py-3 px-4">SKU / Barcode</th>
+                  <th className="py-3 px-4 text-right">Harga Modal</th>
+                  <th className="py-3 px-4 text-right">Harga Jual</th>
+                  <th className="py-3 px-4 text-center">Stok Fisik</th>
+                  <th className="py-3 px-4 text-center">Status / FEFO</th>
+                  <th className="py-3 px-4 text-right">Aksi & Kelola</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map((prod) => {
+                    const isLow = prod.stock <= prod.minStock;
+                    const isZero = prod.stock === 0;
+                    const isImported = isImportedProduct(prod);
+                    const isSelected = selectedProductIds.includes(prod.id);
+                    const expiryDiff = getProductExpiryDiffDays(prod.expiryDate);
+                    const isExpired = expiryDiff !== null && expiryDiff < 0;
+                    const isCriticalExp = expiryDiff !== null && expiryDiff >= 0 && expiryDiff <= 30;
+                    const isApproachingExp = expiryDiff !== null && expiryDiff > 30 && expiryDiff <= 90;
 
-                      {/* Product Name & Details */}
-                      <td className="py-3 px-4">
-                        <div>
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <p className="font-bold text-slate-900 dark:text-white leading-tight">
-                              {prod.name}
-                            </p>
-                            {isImported && (
-                              <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-teal-100 text-teal-800 dark:bg-teal-950/80 dark:text-teal-300 border border-teal-300 dark:border-teal-700">
-                                HASIL IMPOR
+                    const rowClass = isSelected
+                      ? 'bg-emerald-50/60 dark:bg-emerald-950/30'
+                      : isExpired || isZero
+                      ? 'bg-rose-50/40 dark:bg-rose-950/20 hover:bg-rose-100/50 dark:hover:bg-rose-900/30'
+                      : isCriticalExp || isLow
+                      ? 'bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-100/50 dark:hover:bg-amber-900/30'
+                      : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/50';
+
+                    return (
+                      <tr
+                        key={prod.id}
+                        className={`transition-colors group ${rowClass}`}
+                      >
+                        {/* Checkbox Select */}
+                        <td className="py-3 px-3 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleSelectProduct(prod.id)}
+                            className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
+                          />
+                        </td>
+
+                        {/* Product Name & Details */}
+                        <td className="py-3 px-4">
+                          <div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="font-bold text-slate-900 dark:text-white leading-tight">
+                                {prod.name}
+                              </p>
+                              {isImported && (
+                                <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-teal-100 text-teal-800 dark:bg-teal-950/80 dark:text-teal-300 border border-teal-300 dark:border-teal-700">
+                                  HASIL IMPOR
+                                </span>
+                              )}
+                              {prod.promoBadge && (
+                                <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                                  {prod.promoBadge}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                              Satuan: {prod.unit}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Brand */}
+                        <td className="py-3 px-4">
+                          <div className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            {prod.brand || '-'}
+                          </div>
+                        </td>
+
+                        {/* SKU / Barcode */}
+                        <td className="py-3 px-4 font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                          <div className="font-bold">{prod.sku}</div>
+                          <div className="text-slate-500 dark:text-slate-400 text-[10px]">{prod.barcode}</div>
+                        </td>
+
+                        {/* Cost */}
+                        <td
+                          className="py-3 px-4 text-right font-mono text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-amber-50/70 dark:hover:bg-amber-950/40 rounded-lg group/cost transition-colors"
+                          onClick={() => handleOpenPriceHistory(prod)}
+                          title="Klik untuk melihat riwayat fluktuasi harga modal (HPP)"
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            <span>{formatCurrency(prod.costPrice, settings.currency)}</span>
+                            <TrendingUp className="w-3 h-3 text-amber-500 opacity-0 group-hover/cost:opacity-100 transition-opacity shrink-0" />
+                          </div>
+                        </td>
+
+                        {/* Selling Price */}
+                        <td
+                          className="py-3 px-4 text-right font-mono font-bold text-slate-900 dark:text-white cursor-pointer hover:bg-emerald-50/70 dark:hover:bg-emerald-950/40 rounded-lg group/price transition-colors"
+                          onClick={() => handleOpenPriceHistory(prod)}
+                          title="Klik untuk melihat riwayat fluktuasi harga jual retail"
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            <span>{formatCurrency(prod.price, settings.currency)}</span>
+                            <TrendingUp className="w-3 h-3 text-emerald-500 opacity-0 group-hover/price:opacity-100 transition-opacity shrink-0" />
+                          </div>
+                        </td>
+
+                        {/* Stock Level */}
+                        <td className="py-3 px-4 text-center">
+                          <span
+                            className={`font-mono font-black text-sm ${
+                              isZero
+                                ? 'text-rose-600 dark:text-rose-400'
+                                : isLow
+                                ? 'text-amber-600 dark:text-amber-400'
+                                : 'text-slate-900 dark:text-white'
+                            }`}
+                          >
+                            {prod.stock}
+                          </span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">
+                            min: {prod.minStock}
+                          </span>
+                        </td>
+
+                        {/* Status / FEFO */}
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            {/* Stock status badge */}
+                            {isZero ? (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-0.5">
+                                <ShieldAlert className="w-2.5 h-2.5 text-rose-600" />
+                                HABIS (0)
+                              </span>
+                            ) : isLow ? (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-0.5">
+                                <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                                MENIPIS
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                AMAN
                               </span>
                             )}
-                            {prod.promoBadge && (
-                              <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
-                                {prod.promoBadge}
-                              </span>
+
+                            {/* Expiry date status badge */}
+                            {prod.expiryDate && (
+                              isExpired ? (
+                                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-1 font-mono">
+                                  <AlertCircle className="w-2.5 h-2.5 text-rose-600" />
+                                  Lewat {Math.abs(expiryDiff!)} hr
+                                </span>
+                              ) : isCriticalExp ? (
+                                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-300 dark:border-red-800 flex items-center gap-1 font-mono">
+                                  <Clock className="w-2.5 h-2.5 text-red-600 animate-pulse" />
+                                  Exp: {expiryDiff} hr lagi!
+                                </span>
+                              ) : isApproachingExp ? (
+                                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1 font-mono">
+                                  <Clock className="w-2.5 h-2.5 text-amber-600" />
+                                  Exp: {expiryDiff} hr
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-slate-400" />
+                                  Exp: {prod.expiryDate}
+                                </span>
+                              )
                             )}
                           </div>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                            Satuan: {prod.unit}
-                          </span>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Brand */}
-                      <td className="py-3 px-4">
-                        <div className="font-semibold text-emerald-600 dark:text-emerald-400">
-                          {prod.brand || '-'}
-                        </div>
-                      </td>
+                        {/* Action */}
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                            {/* Quick Restock button for zero or low stock */}
+                            {(isZero || isLow) && (
+                              <button
+                                onClick={() => handleOpenReceivingForProduct(prod)}
+                                title="Restock / Terima Barang dari Faktur"
+                                className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                              >
+                                <Truck className="w-3 h-3" />
+                                <span>+ Terima</span>
+                              </button>
+                            )}
 
-                      {/* SKU / Barcode */}
-                      <td className="py-3 px-4 font-mono text-[11px] text-slate-700 dark:text-slate-300">
-                        <div className="font-bold">{prod.sku}</div>
-                        <div className="text-slate-500 dark:text-slate-400 text-[10px]">{prod.barcode}</div>
-                      </td>
+                            {/* Quick Return button for expired product */}
+                            {isExpired && (
+                              <button
+                                onClick={() => handleOpenReturnForProduct(prod)}
+                                title="Buat Retur Pengembalian ke Supplier"
+                                className="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                <span>Retur</span>
+                              </button>
+                            )}
 
-                      {/* Cost */}
-                      <td className="py-3 px-4 text-right font-mono text-slate-700 dark:text-slate-300">
-                        {formatCurrency(prod.costPrice, settings.currency)}
-                      </td>
+                            {/* Print Pricetag for this Item */}
+                            <button
+                              onClick={() => {
+                                setProductForPriceTag(prod);
+                                setIsPriceTagModalOpen(true);
+                              }}
+                              title="Cetak Pricetag / Label Rak Item Ini"
+                              className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-amber-500 dark:hover:text-slate-950 text-amber-700 dark:text-amber-300 text-xs font-semibold cursor-pointer transition-colors"
+                            >
+                              <Tag className="w-3.5 h-3.5" />
+                            </button>
 
-                      {/* Selling Price */}
-                      <td className="py-3 px-4 text-right font-mono font-bold text-slate-900 dark:text-white">
-                        {formatCurrency(prod.price, settings.currency)}
-                      </td>
+                            {/* Price History Button */}
+                            <button
+                              id={`btn-price-history-${prod.id}`}
+                              onClick={() => handleOpenPriceHistory(prod)}
+                              title="Riwayat Fluktuasi Harga Modal (HPP) &amp; Harga Jual Retail"
+                              className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 dark:hover:text-white text-indigo-700 dark:text-indigo-300 text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+                            >
+                              <TrendingUp className="w-3.5 h-3.5" />
+                            </button>
 
-                      {/* Stock Level */}
-                      <td className="py-3 px-4 text-center">
-                        <span
-                          className={`font-mono font-black text-sm ${
-                            isZero
-                              ? 'text-rose-600 dark:text-rose-400'
-                              : isLow
-                              ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-slate-900 dark:text-white'
-                          }`}
+                            {/* Edit Item Button */}
+                            <button
+                              onClick={() => handleOpenEditProduct(prod)}
+                              title="Edit Data Item Barang"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer transition-colors"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Quick Adjust Stock Button */}
+                            <button
+                              onClick={() => handleOpenAdjust(prod)}
+                              title="Koreksi Stok Cepat"
+                              className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 dark:hover:bg-emerald-500 dark:hover:text-slate-950 text-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer transition-colors"
+                            >
+                              Koreksi
+                            </button>
+
+                            {/* Delete Item Button */}
+                            <button
+                              onClick={() => setProductToDelete(prod)}
+                              title="Hapus Produk dari Master Data"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-600 text-slate-400 hover:text-white text-xs font-semibold cursor-pointer transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-slate-400">
+                      <Package className="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
+                      <p className="font-semibold text-slate-700 dark:text-slate-300">
+                        {alertFilter !== 'all'
+                          ? 'Tidak ada produk dengan kriteria filter peringatan ini'
+                          : 'Tidak ada produk ditemukan'}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {alertFilter !== 'all'
+                          ? 'Semua produk memenuhi standar atau tidak ada yang sesuai filter alert aktif.'
+                          : 'Coba sesuaikan kata kunci pencarian atau filter asal barang.'}
+                      </p>
+                      <div className="mt-3 flex items-center justify-center gap-2">
+                        {alertFilter !== 'all' && (
+                          <button
+                            type="button"
+                            onClick={() => setAlertFilter('all')}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-600 cursor-pointer"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Tampilkan Semua Produk
+                          </button>
+                        )}
+                        <button
+                          onClick={handleOpenAddProduct}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-500 cursor-pointer"
                         >
-                          {prod.stock}
-                        </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">
-                          min: {prod.minStock}
-                        </span>
-                      </td>
-
-                      {/* Status / FEFO */}
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          {isZero ? (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                              HABIS
-                            </span>
-                          ) : isLow ? (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                              MENIPIS
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                              AMAN
-                            </span>
-                          )}
-
-                          {prod.expiryDate && (
-                            <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-slate-400" />
-                              Exp: {prod.expiryDate}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Action */}
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Print Pricetag for this Item */}
-                          <button
-                            onClick={() => {
-                              setProductForPriceTag(prod);
-                              setIsPriceTagModalOpen(true);
-                            }}
-                            title="Cetak Pricetag / Label Rak Item Ini"
-                            className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-amber-500 dark:hover:text-slate-950 text-amber-700 dark:text-amber-300 text-xs font-semibold cursor-pointer transition-colors"
-                          >
-                            <Tag className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* Edit Item Button */}
-                          <button
-                            onClick={() => handleOpenEditProduct(prod)}
-                            title="Edit Data Item Barang"
-                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer transition-colors"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* Quick Adjust Stock Button */}
-                          <button
-                            onClick={() => handleOpenAdjust(prod)}
-                            title="Koreksi Stok Cepat"
-                            className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 dark:hover:bg-emerald-500 dark:hover:text-slate-950 text-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer transition-colors"
-                          >
-                            Koreksi
-                          </button>
-
-                          {/* Delete Item Button */}
-                          <button
-                            onClick={() => setProductToDelete(prod)}
-                            title="Hapus Produk dari Master Data"
-                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-600 text-slate-400 hover:text-white text-xs font-semibold cursor-pointer transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
-                    <Package className="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
-                    <p className="font-semibold text-slate-700 dark:text-slate-300">Tidak ada produk ditemukan</p>
-                    <p className="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau filter asal barang.</p>
-                    <button
-                      onClick={handleOpenAddProduct}
-                      className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-500 cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Tambah Item Sekarang
-                    </button>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                          <Plus className="w-4 h-4" />
+                          Tambah Item Sekarang
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : activeTab === 'price_history' ? (
+          <div className="p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-950/50">
+            <ProductPriceHistoryView
+              products={products}
+              initialProductId={priceHistoryProductId || products[0]?.id}
+              settings={settings}
+              onUpdateProductPrice={(productId, newCost, newPrice, record) => {
+                recordProductPriceChange(productId, newCost, newPrice, record);
+                setNotificationMsg({
+                  type: 'success',
+                  text: 'Penyesuaian harga produk berhasil disimpan ke riwayat harga.',
+                });
+                setTimeout(() => setNotificationMsg(null), 5000);
+              }}
+            />
+          </div>
         ) : activeTab === 'suppliers' ? (
           /* Master Suppliers Directory Table */
           <div className="p-4 space-y-4">
@@ -2409,6 +2838,10 @@ export const InventoryView: React.FC = () => {
           setProductToEdit(null);
         }}
         productToEdit={productToEdit}
+        onViewPriceHistory={(prod) => {
+          setIsProductModalOpen(false);
+          handleOpenPriceHistory(prod);
+        }}
         onPrintPriceTag={(prod) => {
           setIsProductModalOpen(false);
           setProductForPriceTag(prod);
@@ -2690,6 +3123,51 @@ export const InventoryView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Bulk Stock & Expiry Adjustment Modal */}
+      <BulkStockAdjustmentModal
+        isOpen={isBulkAdjustModalOpen}
+        onClose={() => setIsBulkAdjustModalOpen(false)}
+        initialSelectedProductIds={bulkAdjustInitialProductIds}
+        onSuccess={(count, notes) => {
+          setNotificationMsg({
+            type: 'success',
+            text: `Berhasil memperbarui ${count} produk (stok fisik & tanggal kadaluarsa) secara massal [${notes}].`,
+          });
+          setSelectedProductIds([]);
+          setTimeout(() => setNotificationMsg(null), 6000);
+        }}
+      />
+
+      {/* Stock Opname CSV Batch Modal */}
+      <StockTakeCSVModal
+        isOpen={isStockTakeCSVOpen}
+        onClose={() => setIsStockTakeCSVOpen(false)}
+        onApplied={(_count, summary) => {
+          setNotificationMsg({
+            type: 'success',
+            text: summary,
+          });
+          setTimeout(() => setNotificationMsg(null), 6000);
+        }}
+      />
+
+      {/* Product Price & Cost History Modal */}
+      <ProductPriceHistoryModal
+        isOpen={isPriceHistoryModalOpen}
+        onClose={() => setIsPriceHistoryModalOpen(false)}
+        products={products}
+        selectedProductId={priceHistoryProductId}
+        settings={settings}
+        onUpdateProductPrice={(productId, newCost, newPrice, record) => {
+          recordProductPriceChange(productId, newCost, newPrice, record);
+          setNotificationMsg({
+            type: 'success',
+            text: 'Penyesuaian harga produk berhasil dicatat ke dalam riwayat harga.',
+          });
+          setTimeout(() => setNotificationMsg(null), 5000);
+        }}
+      />
     </div>
   );
 };

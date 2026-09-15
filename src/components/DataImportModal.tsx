@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   X,
   Upload,
@@ -111,7 +111,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
   }, [rawInput, minProfitPoints]);
 
   // Sync state whenever autoParsedItems changes
-  React.useEffect(() => {
+  useEffect(() => {
     setItemsState(autoParsedItems);
   }, [autoParsedItems]);
 
@@ -311,7 +311,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Pembersihan ejaan singkatan/typo FMCG, normalisasi gramasi baku (80g, 2L, 600ml), pembentukan satuan grosir, &amp; verifikasi Google Grounding.
+                Pembersihan ejaan singkatan/typo FMCG, normalisasi gramasi baku (80g, 2L, 600ml), dan pembentukan satuan grosir otomatis.
               </p>
             </div>
           </div>
@@ -338,27 +338,6 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                 className="p-1 hover:opacity-80 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* Existing Imported Items Info Bar */}
-          {currentImportedCount > 0 && (
-            <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 text-xs flex-wrap">
-              <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span className="text-slate-700 dark:text-slate-300">
-                  Saat ini terdapat <strong>{currentImportedCount} produk hasil impor</strong> di dalam master katalog toko.
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleClearPreviousImported}
-                className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
-                title="Hapus semua produk impor yang pernah dimasukkan sebelumnya"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Hapus Data Impor Sebelumnya ({currentImportedCount})</span>
               </button>
             </div>
           )}
@@ -495,21 +474,6 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                     className="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 w-36 sm:w-44"
                   />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleMatchInternetDatabase}
-                  disabled={matchingInternet || itemsState.length === 0}
-                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-teal-600/20 cursor-pointer disabled:opacity-50 transition-all"
-                  title="Cocokkan nama singkatan dengan katalog resmi melalui Google Search Grounding & Gemini AI"
-                >
-                  {matchingInternet ? (
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Globe className="w-3.5 h-3.5" />
-                  )}
-                  <span>{matchingInternet ? 'Menyinkronkan...' : '✨ Koreksi dg Google AI Grounding'}</span>
-                </button>
               </div>
             </div>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Settings as SettingsIcon, Save, Store, Receipt, Percent, DollarSign, Check } from 'lucide-react';
+import { X, Settings as SettingsIcon, Save, Store, Receipt, Percent, DollarSign, Check, Database, HardDriveDownload } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { StoreSettings } from '../types';
 
@@ -9,7 +9,7 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const { settings, updateSettings } = usePOS();
+  const { settings, updateSettings, setIsBackupRestoreOpen, downloadBackupFile } = usePOS();
   const [formData, setFormData] = useState<StoreSettings>({ ...settings });
   const [saved, setSaved] = useState(false);
 
@@ -212,6 +212,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
               />
             </div>
+          </div>
+
+          {/* Backup & Disaster Recovery Center */}
+          <div className="space-y-2 bg-emerald-50/60 dark:bg-emerald-950/20 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-850">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                <Database className="w-4 h-4 text-emerald-500" />
+                <span>Cadangan &amp; Titik Pemulihan (Backup)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => downloadBackupFile()}
+                  className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+                  title="Unduh langsung berkas backup .JSON ke komputer Anda"
+                >
+                  <HardDriveDownload className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Ekspor .JSON</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    setIsBackupRestoreOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
+                >
+                  <span>Pusat Cadangan</span>
+                </button>
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Unduh berkas JSON cadangan utuh toko atau kelola snapshot titik pemulihan sistem secara instan.
+            </p>
           </div>
 
           {/* Submit */}

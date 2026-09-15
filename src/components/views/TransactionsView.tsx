@@ -23,6 +23,7 @@ import {
   Cloud,
   CloudOff,
   RefreshCw,
+  Database,
 } from 'lucide-react';
 import { usePOS } from '../../context/POSContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
@@ -40,6 +41,7 @@ export const TransactionsView: React.FC = () => {
     pendingSyncCount,
     setIsSyncModalOpen,
     isOnline,
+    setIsBackupRestoreOpen,
   } = usePOS();
   const [activeTab, setActiveTab] = useState<'sales' | 'returns'>('sales');
   const [search, setSearch] = useState('');
@@ -301,6 +303,16 @@ export const TransactionsView: React.FC = () => {
           >
             <FileText className="w-3.5 h-3.5 text-emerald-500" />
             <span>Cetak / Ekspor Laporan</span>
+          </button>
+
+          <button
+            id="btn-transactions-backup-restore"
+            onClick={() => setIsBackupRestoreOpen(true)}
+            className="px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors active:scale-95"
+            title="Cadangkan Seluruh Riwayat Transaksi & Database Toko (Backup & Restore - F9)"
+          >
+            <Database className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Backup &amp; Restore</span>
           </button>
         </div>
       </div>

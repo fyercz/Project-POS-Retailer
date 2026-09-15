@@ -19,13 +19,14 @@ import {
   RotateCcw,
   PackageCheck,
   FileSpreadsheet,
+  Database,
 } from 'lucide-react';
 import { usePOS } from '../../context/POSContext';
 import { formatCurrency, formatNumber } from '../../utils/formatters';
 import { ReportPrintModal, ReportType } from '../ReportPrintModal';
 
 export const ReportsView: React.FC = () => {
-  const { transactions, settings, openGeminiCopilot, salesReturns } = usePOS();
+  const { transactions, settings, openGeminiCopilot, salesReturns, setIsBackupRestoreOpen } = usePOS();
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [selectedReportType, setSelectedReportType] = useState<ReportType>('summary');
 
@@ -117,6 +118,16 @@ export const ReportsView: React.FC = () => {
           >
             <Printer className="w-4 h-4 text-emerald-500" />
             <span>Cetak / Unduh Laporan</span>
+          </button>
+
+          <button
+            id="btn-reports-backup-restore"
+            onClick={() => setIsBackupRestoreOpen(true)}
+            className="px-3.5 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors active:scale-95"
+            title="Cadangkan Data Toko & Titik Pemulihan (Backup & Restore - F9)"
+          >
+            <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Backup &amp; Restore</span>
           </button>
         </div>
       </div>

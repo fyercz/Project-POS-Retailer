@@ -17,6 +17,7 @@ import {
   Boxes,
   AlertTriangle,
   HelpCircle,
+  Lock,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
@@ -57,6 +58,8 @@ export const CartPanel: React.FC = () => {
     settings,
     aiUpsellSuggestions,
     openGeminiCopilot,
+    activeEmployee,
+    lockScreen,
   } = usePOS();
 
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
@@ -123,6 +126,37 @@ export const CartPanel: React.FC = () => {
       id="pos-cart-panel"
       className="flex flex-col h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 select-none shadow-sm"
     >
+      {/* Active Cashier & Quick Switch / Authority Bar */}
+      <div className="px-3 py-1.5 bg-slate-100/90 dark:bg-slate-850/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div
+            className={`w-5 h-5 rounded-md ${
+              activeEmployee?.avatarColor || 'bg-emerald-600'
+            } text-white font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs`}
+          >
+            {activeEmployee?.avatar || 'KR'}
+          </div>
+          <div className="truncate flex items-center gap-1.5">
+            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+              {activeEmployee?.name || 'Kasir 01'}
+            </span>
+            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+              {activeEmployee?.roleTitle || (activeEmployee?.role === 'owner' ? 'Owner' : activeEmployee?.role === 'supervisor' ? 'Supervisor' : 'Kasir')}
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          id="btn-cart-switch-employee"
+          onClick={lockScreen}
+          className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-[11px] font-semibold transition cursor-pointer shrink-0 active:scale-95 shadow-2xs"
+          title="Ganti Akun Kasir atau Login Otoritas Supervisor / Owner (Alt+L)"
+        >
+          <Lock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+          <span>Ganti Akun</span>
+        </button>
+      </div>
+
       {/* Top Order Header - Retail direct sale & Customer */}
       <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-2.5 bg-slate-50/70 dark:bg-slate-900/90">
         {/* Direct Sale Header with Quick Reset */}
@@ -400,6 +434,11 @@ export const CartPanel: React.FC = () => {
                   <Tag className="w-3.5 h-3.5 text-emerald-500" />
                   <span className="font-bold">{appliedVoucher.code}</span>
                   <span>(-{formatCurrency(voucherDiscount, settings.currency)})</span>
+                  {appliedVoucher.minProfitMargin && (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-200/70 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-200">
+                      Margin ≥ {appliedVoucher.minProfitMargin}%
+                    </span>
+                  )}
                 </div>
                 <button
                   onClick={removeVoucher}

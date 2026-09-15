@@ -160,6 +160,16 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
       video.preload = 'auto';
       video.muted = true;
       video.playsInline = true;
+      video.crossOrigin = 'anonymous';
+      // Append offscreen to DOM to ensure browser decodes frames properly in sandboxed contexts
+      video.style.position = 'fixed';
+      video.style.left = '-9999px';
+      video.style.top = '-9999px';
+      video.style.width = '320px';
+      video.style.height = '240px';
+      video.style.opacity = '0';
+      video.style.pointerEvents = 'none';
+      document.body.appendChild(video);
 
       let isCleanedUp = false;
       const cleanUp = () => {
@@ -169,33 +179,41 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
           video.pause();
           video.removeAttribute('src');
           video.load();
+          if (video.parentNode) {
+            video.parentNode.removeChild(video);
+          }
         }
       };
 
       const timeoutId = setTimeout(() => {
         cleanUp();
-        reject(new Error('Waktu pemrosesan video habis. Silakan gunakan durasi video yang lebih singkat (3-10 detik) atau gunakan foto.'));
-      }, 30000);
+        reject(new Error('Waktu pemrosesan video habis. Pastikan format file MP4/WebM atau gunakan durasi video singkat (3-15 detik).'));
+      }, 20000);
 
       video.onerror = () => {
         clearTimeout(timeoutId);
         cleanUp();
-        reject(new Error('Format video tidak dapat diputar. Pastikan file berformat MP4, WebM, atau MOV.'));
+        reject(new Error('Format video tidak dapat diputar. Pastikan file berformat MP4, WebM, atau MOV standar.'));
       };
 
-      video.onloadeddata = async () => {
+      let hasStartedExtraction = false;
+
+      const startExtraction = async () => {
+        if (hasStartedExtraction) return;
+        hasStartedExtraction = true;
+
         try {
           let duration = video.duration;
           if (!duration || isNaN(duration) || !isFinite(duration) || duration <= 0) {
-            duration = 3;
+            duration = 4;
           }
 
-          // Sample 4 keyframes evenly across the video duration
-          const sampleCount = Math.min(5, Math.max(3, Math.floor(duration * 1.5) || 4));
+          // Sample 3 to 4 keyframes evenly across the video
+          const sampleCount = Math.min(4, Math.max(3, Math.floor(duration * 1.2) || 3));
           const timestamps: number[] = [];
           for (let i = 0; i < sampleCount; i++) {
             const ratio = (i + 0.5) / sampleCount;
-            const t = Math.max(0.1, Math.min(duration - 0.05, duration * ratio));
+            const t = Math.max(0.1, Math.min(duration - 0.1, duration * ratio));
             timestamps.push(t);
           }
 
@@ -227,9 +245,18 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
               const seekTimer = setTimeout(() => {
                 if (!seekResolved) {
                   seekResolved = true;
+                  // If seek timed out, still try to grab whatever is in the buffer
+                  if (ctx && video.videoWidth > 0) {
+                    try {
+                      ctx.drawImage(video, 0, 0, w, h);
+                      frames.push(canvas.toDataURL('image/jpeg', 0.85));
+                    } catch {
+                      // ignore drawing errors
+                    }
+                  }
                   resSeek();
                 }
-              }, 2500);
+              }, 1800);
 
               const onSeeked = () => {
                 if (!seekResolved) {
@@ -237,8 +264,12 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                   clearTimeout(seekTimer);
                   video.removeEventListener('seeked', onSeeked);
                   if (ctx) {
-                    ctx.drawImage(video, 0, 0, w, h);
-                    frames.push(canvas.toDataURL('image/jpeg', 0.85));
+                    try {
+                      ctx.drawImage(video, 0, 0, w, h);
+                      frames.push(canvas.toDataURL('image/jpeg', 0.85));
+                    } catch (e) {
+                      console.warn('Canvas draw video error:', e);
+                    }
                   }
                   resSeek();
                 }
@@ -258,19 +289,35 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
           }
 
           if (frames.length === 0 && ctx) {
-            ctx.drawImage(video, 0, 0, w, h);
-            frames.push(canvas.toDataURL('image/jpeg', 0.85));
+            try {
+              ctx.drawImage(video, 0, 0, w, h);
+              frames.push(canvas.toDataURL('image/jpeg', 0.85));
+            } catch {
+              // ignore
+            }
           }
 
           clearTimeout(timeoutId);
           cleanUp();
-          resolve(frames);
+
+          if (frames.length > 0) {
+            resolve(frames);
+          } else {
+            reject(new Error('Gagal mengekstrak gambar dari video. Silakan coba unggah foto rak langsung atau gunakan Kamera Live.'));
+          }
         } catch (err) {
           clearTimeout(timeoutId);
           cleanUp();
           reject(err);
         }
       };
+
+      video.addEventListener('loadeddata', startExtraction, { once: true });
+      video.addEventListener('canplay', startExtraction, { once: true });
+      video.addEventListener('loadedmetadata', () => {
+        // Fallback in case loadeddata is delayed
+        setTimeout(startExtraction, 500);
+      }, { once: true });
 
       video.src = url;
       video.load();

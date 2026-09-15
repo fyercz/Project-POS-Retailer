@@ -17,9 +17,16 @@ import {
   Lock,
   UserCheck,
   Briefcase,
+  Check,
+  Minus,
+  ShieldCheck,
+  ShieldAlert,
+  Sliders,
+  Store,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { Employee, EmployeeRole } from '../types';
+import { DEFAULT_ROLE_PERMISSIONS } from '../utils/permissions';
 
 export const EmployeeManagementModal: React.FC = () => {
   const {
@@ -33,7 +40,7 @@ export const EmployeeManagementModal: React.FC = () => {
     quickSwitchEmployee,
   } = usePOS();
 
-  const [activeTab, setActiveTab] = useState<'list' | 'form'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'matrix' | 'form'>('list');
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -203,20 +210,44 @@ export const EmployeeManagementModal: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            {activeTab === 'list' ? (
+            <button
+              id="tab-btn-employee-list"
+              onClick={() => setActiveTab('list')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition ${
+                activeTab === 'list'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              Daftar Karyawan
+            </button>
+            <button
+              id="tab-btn-authority-matrix"
+              onClick={() => setActiveTab('matrix')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 ${
+                activeTab === 'matrix'
+                  ? 'bg-purple-600 text-white shadow-sm'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5" />
+              <span>Matriks Otoritas Menu</span>
+            </button>
+            {activeTab === 'list' && (
               <button
                 id="btn-add-employee-open"
                 onClick={handleOpenAddForm}
-                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition"
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition"
               >
-                <UserPlus className="w-4 h-4" /> Tambah Karyawan
+                <UserPlus className="w-4 h-4" /> Tambah Staf
               </button>
-            ) : (
+            )}
+            {activeTab === 'form' && (
               <button
                 onClick={() => setActiveTab('list')}
                 className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-xl transition"
               >
-                Kembali ke Daftar
+                Batal / Daftar
               </button>
             )}
             <button
@@ -336,6 +367,28 @@ export const EmployeeManagementModal: React.FC = () => {
                             <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                               {emp.roleTitle}
                             </div>
+                            <div className="flex items-center gap-1 mt-1 flex-wrap">
+                              {emp.role === 'cashier' && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-medium">
+                                  Akses: Kasir, Nota
+                                </span>
+                              )}
+                              {emp.role === 'inventory' && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100/70 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-medium">
+                                  Akses: Gudang, Nota
+                                </span>
+                              )}
+                              {emp.role === 'supervisor' && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-100/70 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-medium">
+                                  Akses: Kasir, Nota, Stok, Member, Laporan
+                                </span>
+                              )}
+                              {emp.role === 'owner' && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-100/70 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 font-medium">
+                                  Akses: Penuh (Seluruh Fitur & Setting)
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="p-3.5 text-slate-600 dark:text-slate-300">
                             {emp.assignedShift || 'Shift Normal'}
@@ -404,18 +457,330 @@ export const EmployeeManagementModal: React.FC = () => {
                 </div>
                 <ul className="list-disc list-inside space-y-1 pl-1 text-[11px]">
                   <li>
-                    <strong className="text-slate-700 dark:text-slate-300">Kasir:</strong> Melakukan transaksi kasir, input diskon/voucher, dan rekap shift kasir.
+                    <strong className="text-slate-700 dark:text-slate-300">Kasir:</strong> Melakukan transaksi kasir dan riwayat nota penjualan.
                   </li>
                   <li>
-                    <strong className="text-slate-700 dark:text-slate-300">Admin Gudang:</strong> Mengelola stok, penerimaan barang supplier, dan retur supplier.
+                    <strong className="text-slate-700 dark:text-slate-300">Admin Gudang:</strong> Mengelola katalog stok barang, penerimaan barang, dan opname.
                   </li>
                   <li>
-                    <strong className="text-slate-700 dark:text-slate-300">Supervisor:</strong> Otorisasi void transaksi, retur penjualan pelanggan, dan master produk.
+                    <strong className="text-slate-700 dark:text-slate-300">Supervisor:</strong> Otorisasi void kasir, retur penjualan, dan analisa omzet harian.
                   </li>
                   <li>
                     <strong className="text-slate-700 dark:text-slate-300">Owner:</strong> Akses penuh laporan omzet laba rugi, pengaturan toko, dan kelola karyawan.
                   </li>
                 </ul>
+              </div>
+            </div>
+          ) : activeTab === 'matrix' ? (
+            /* Matriks Otoritas Menu & Jabatan */
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/60 text-xs">
+                <div className="font-bold text-purple-900 dark:text-purple-200 flex items-center gap-2 mb-1">
+                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                  <span>Matriks Otoritas & Pembatasan Menu Sistem</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
+                  Sistem POS membatasi menu dan aksi secara otomatis berdasarkan jabatan karyawan yang sedang aktif. Anda dapat langsung menguji perbedaan tampilan menu dengan menekan tombol <strong>Uji Coba Ganti Akun</strong> pada baris jabatan di bawah.
+                </p>
+              </div>
+
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-700">
+                    <tr>
+                      <th className="p-3.5">Jabatan / Role</th>
+                      <th className="p-2.5 text-center">🛒 Kasir</th>
+                      <th className="p-2.5 text-center">🧾 Nota</th>
+                      <th className="p-2.5 text-center">📦 Stok</th>
+                      <th className="p-2.5 text-center">✨ Member</th>
+                      <th className="p-2.5 text-center">📊 Laporan</th>
+                      <th className="p-2.5 text-center">❌ Void</th>
+                      <th className="p-2.5 text-center">⚙️ Toko</th>
+                      <th className="p-3 text-center">Uji Coba Akun</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {/* Kasir */}
+                    <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
+                      <td className="p-3.5">
+                        <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          Kasir (Frontliner)
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Hanya melayani transaksi penjualan
+                        </div>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Kasir">
+                          <Minus className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Kasir">
+                          <Minus className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Kasir">
+                          <Minus className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+                          PIN SPV
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
+                          <Minus className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        {(() => {
+                          const sampleCashier = employees.find((e) => e.role === 'cashier' && e.isActive);
+                          return sampleCashier ? (
+                            <button
+                              id="btn-test-cashier-role"
+                              onClick={() => {
+                                quickSwitchEmployee(sampleCashier);
+                                setNotification({
+                                  type: 'success',
+                                  message: `Berhasil berganti ke ${sampleCashier.name} (Kasir). Menu sekarang dibatasi!`,
+                                });
+                              }}
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1 mx-auto"
+                            >
+                              <UserCheck className="w-3.5 h-3.5" /> Uji Kasir
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-slate-400">-</span>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+
+                    {/* Gudang */}
+                    <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
+                      <td className="p-3.5">
+                        <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                          Admin Gudang & Stok
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Fokus opname dan penerimaan supplier
+                        </div>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Gudang">
+                          <Minus className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
+                          <Minus className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
+                          <Minus className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
+                          <Minus className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
+                          <Minus className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        {(() => {
+                          const sampleInv = employees.find((e) => e.role === 'inventory' && e.isActive);
+                          return sampleInv ? (
+                            <button
+                              id="btn-test-inventory-role"
+                              onClick={() => {
+                                quickSwitchEmployee(sampleInv);
+                                setNotification({
+                                  type: 'success',
+                                  message: `Berhasil berganti ke ${sampleInv.name} (Gudang). Menu Kasir & Laporan sekarang terkunci!`,
+                                });
+                              }}
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition flex items-center gap-1 mx-auto"
+                            >
+                              <UserCheck className="w-3.5 h-3.5" /> Uji Gudang
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-slate-400">-</span>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+
+                    {/* Supervisor */}
+                    <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
+                      <td className="p-3.5">
+                        <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                          Supervisor / Kepala Toko
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Supervisi operasional & otorisasi kasir
+                        </div>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+                          PIN Owner
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        {(() => {
+                          const sampleSpv = employees.find((e) => e.role === 'supervisor' && e.isActive);
+                          return sampleSpv ? (
+                            <button
+                              id="btn-test-spv-role"
+                              onClick={() => {
+                                quickSwitchEmployee(sampleSpv);
+                                setNotification({
+                                  type: 'success',
+                                  message: `Berhasil berganti ke ${sampleSpv.name} (Supervisor). Memiliki izin supervisi & void!`,
+                                });
+                              }}
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition flex items-center gap-1 mx-auto"
+                            >
+                              <UserCheck className="w-3.5 h-3.5" /> Uji SPV
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-slate-400">-</span>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+
+                    {/* Owner */}
+                    <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
+                      <td className="p-3.5">
+                        <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                          Pemilik Toko (Owner)
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Akses penuh seluruh fitur & konfigurasi toko
+                        </div>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        {(() => {
+                          const sampleOwner = employees.find((e) => e.role === 'owner' && e.isActive);
+                          return sampleOwner ? (
+                            <button
+                              id="btn-test-owner-role"
+                              onClick={() => {
+                                quickSwitchEmployee(sampleOwner);
+                                setNotification({
+                                  type: 'success',
+                                  message: `Berhasil berganti ke ${sampleOwner.name} (Owner). Seluruh menu dan pengaturan dapat diakses!`,
+                                });
+                              }}
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1 mx-auto"
+                            >
+                              <UserCheck className="w-3.5 h-3.5" /> Uji Owner
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-slate-400">-</span>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           ) : (
@@ -479,6 +844,32 @@ export const EmployeeManagementModal: React.FC = () => {
                     placeholder="misal: Kasir Utama Shift Pagi"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
+                </div>
+              </div>
+
+              {/* Dynamic Live Role Permissions Badge Box */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs">
+                <span className="font-bold text-slate-800 dark:text-slate-200 block mb-2 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Cakupan Hak Akses Menu untuk Posisi Ini:</span>
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                  <div className={`p-2 rounded-xl flex items-center gap-1.5 ${role === 'inventory' ? 'bg-rose-50/70 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400' : 'bg-emerald-50/70 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'}`}>
+                    {role === 'inventory' ? <Minus className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+                    <span>Kasir (POS)</span>
+                  </div>
+                  <div className="p-2 rounded-xl flex items-center gap-1.5 bg-emerald-50/70 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Riwayat Nota</span>
+                  </div>
+                  <div className={`p-2 rounded-xl flex items-center gap-1.5 ${role === 'cashier' ? 'bg-rose-50/70 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400' : 'bg-emerald-50/70 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'}`}>
+                    {role === 'cashier' ? <Minus className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+                    <span>Katalog Stok</span>
+                  </div>
+                  <div className={`p-2 rounded-xl flex items-center gap-1.5 ${role === 'cashier' || role === 'inventory' ? 'bg-rose-50/70 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400' : 'bg-emerald-50/70 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'}`}>
+                    {role === 'cashier' || role === 'inventory' ? <Minus className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+                    <span>Laporan Omzet</span>
+                  </div>
                 </div>
               </div>
 

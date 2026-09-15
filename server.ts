@@ -1,17 +1,26 @@
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import os from 'os';
+import fs from 'fs';
 import { GoogleGenAI } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Enable CORS for LAN Multi-Device and Cross-Origin Access
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Lazy initialization of Gemini Client
 let geminiClient: GoogleGenAI | null = null;
@@ -86,7 +95,7 @@ async function callGeminiSafe(
   }
 
   const ai = getGeminiClient();
-  const modelsToTry = ['gemini-3.7-flash', 'gemini-3.1-flash-lite'];
+  const modelsToTry = ['gemini-3.8-flash', 'gemini-3.1-flash-lite'];
 
   for (const model of modelsToTry) {
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -374,32 +383,567 @@ async function callGeminiWithSearch(
   return null;
 }
 
-// ==========================================
-// POS CLOUD BACKEND TRANSACTION SYNC STORAGE
-// ==========================================
-// In-memory Cloud Ledger for transactions pushed from POS terminals & offline queues
-const cloudTransactionsStore = new Map<string, any>();
+// =======================================================
+// POS MULTI-CLIENT LAN SERVER DATABASE & CLOUD SYNC ENGINE
+// =======================================================
 
-// 1. Cloud Sync Status & Heartbeat Endpoint
+// 1. Network IP Discovery for LAN Access
+function getLocalLanIps(): string[] {
+  try {
+    const interfaces = os.networkInterfaces();
+    const results: string[] = [];
+    for (const name of Object.keys(interfaces)) {
+      const netList = interfaces[name];
+      if (!netList) continue;
+      for (const net of netList) {
+        if (net.family === 'IPv4' && !net.internal) {
+          // Exclude link-local IPs (169.254.x.x) which are inaccessible from outside containers
+          if (!net.address.startsWith('169.254.')) {
+            results.push(net.address);
+          }
+        }
+      }
+    }
+    return results.length > 0 ? results : ['127.0.0.1'];
+  } catch {
+    return ['127.0.0.1'];
+  }
+}
+
+// 2. Persistent Storage for Master Database File
+const DATA_DIR = path.join(process.cwd(), 'data');
+const LAN_DB_FILE = path.join(DATA_DIR, 'lan-database.json');
+
+// Memory Stores for High-Speed LAN Multi-Client Access
+const lanProductsStore = new Map<string, any>();
+const lanTransactionsStore = new Map<string, any>();
+const lanCustomersStore = new Map<string, any>();
+const lanSuppliersStore = new Map<string, any>();
+const lanHeldOrdersStore = new Map<string, any>();
+const lanActiveClientsStore = new Map<string, any>();
+const lanServerLogs: Array<{ id: string; timestamp: string; level: 'info' | 'success' | 'warn'; message: string }> = [];
+
+let lanDatabaseVersion = 1;
+let lanLastUpdated = new Date().toISOString();
+
+function addLanLog(level: 'info' | 'success' | 'warn', message: string) {
+  const logItem = {
+    id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    timestamp: new Date().toISOString(),
+    level,
+    message,
+  };
+  lanServerLogs.unshift(logItem);
+  if (lanServerLogs.length > 60) {
+    lanServerLogs.pop();
+  }
+  console.log(`[LAN Server] [${level.toUpperCase()}] ${message}`);
+}
+
+// Helper to save server database snapshot to disk
+let saveTimeout: any = null;
+function scheduleLanDbSave() {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+      lanLastUpdated = new Date().toISOString();
+      lanDatabaseVersion++;
+
+      const payload = {
+        version: lanDatabaseVersion,
+        lastUpdated: lanLastUpdated,
+        products: Array.from(lanProductsStore.values()),
+        transactions: Array.from(lanTransactionsStore.values()),
+        customers: Array.from(lanCustomersStore.values()),
+        suppliers: Array.from(lanSuppliersStore.values()),
+        heldOrders: Array.from(lanHeldOrdersStore.values()),
+      };
+
+      fs.writeFileSync(LAN_DB_FILE, JSON.stringify(payload, null, 2), 'utf-8');
+    } catch (err: any) {
+      console.warn('[LAN Server] Error saving database file:', err?.message || err);
+    }
+  }, 1000);
+}
+
+// Initial Database Bootstrapper
+function initLanDatabase() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+
+    if (fs.existsSync(LAN_DB_FILE)) {
+      const raw = fs.readFileSync(LAN_DB_FILE, 'utf-8');
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.products)) {
+        data.products.forEach((p: any) => lanProductsStore.set(p.id, p));
+      }
+      if (Array.isArray(data.transactions)) {
+        data.transactions.forEach((t: any) => lanTransactionsStore.set(t.id || t.invoiceNumber, t));
+      }
+      if (Array.isArray(data.customers)) {
+        data.customers.forEach((c: any) => lanCustomersStore.set(c.id, c));
+      }
+      if (Array.isArray(data.suppliers)) {
+        data.suppliers.forEach((s: any) => lanSuppliersStore.set(s.id, s));
+      }
+      if (Array.isArray(data.heldOrders)) {
+        data.heldOrders.forEach((h: any) => lanHeldOrdersStore.set(h.id, h));
+      }
+      lanDatabaseVersion = data.version || 1;
+      lanLastUpdated = data.lastUpdated || new Date().toISOString();
+      addLanLog('info', `Database master berhasil dimuat dari disk: ${lanProductsStore.size} produk, ${lanTransactionsStore.size} transaksi.`);
+      return;
+    }
+  } catch (err: any) {
+    console.warn('[LAN Server] Failed loading existing LAN DB, initializing fresh:', err?.message || err);
+  }
+
+  // Fallback initial FMCG catalog if DB file is fresh
+  const initialFmcgCatalog = [
+    {
+      id: 'prod-001',
+      name: 'Indomie Mi Goreng Spesial 85g',
+      brand: 'Indomie',
+      sku: 'IND-MIE-GOR',
+      barcode: '8998866200115',
+      categoryId: 'instant',
+      price: 3500,
+      costPrice: 2800,
+      stock: 120,
+      minStock: 24,
+      unit: 'Bungkus',
+      aisle: 'Lorong 1 - Rak A1',
+      expiryDate: '2026-11-20',
+      batchNumber: 'IND-2026-B1',
+      isPopular: true,
+      promoBadge: 'Best Seller',
+      image: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&auto=format&fit=crop&q=60',
+      description: 'Mi instan goreng legendaris dengan bumbu gurih dan bawang goreng renyah.',
+      wholesaleUnits: [
+        { id: 'wh-ind-dus', name: 'Dus (40 Pcs)', multiplier: 40, price: 130000, costPrice: 110000, barcode: '8998866200115-40' },
+      ],
+    },
+    {
+      id: 'prod-002',
+      name: 'Aqua Air Mineral Botol 600ml',
+      brand: 'Aqua',
+      sku: 'AQU-600ML',
+      barcode: '8992775211114',
+      categoryId: 'beverages',
+      price: 4000,
+      costPrice: 2900,
+      stock: 96,
+      minStock: 24,
+      unit: 'Botol',
+      aisle: 'Lorong 2 - Rak Dingin',
+      expiryDate: '2027-04-15',
+      batchNumber: 'AQU-2026-C4',
+      isPopular: true,
+      image: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=400&auto=format&fit=crop&q=60',
+      description: 'Air mineral pegunungan alami kemasan botol praktis.',
+      wholesaleUnits: [
+        { id: 'wh-aqu-dus', name: 'Dus (24 Botol)', multiplier: 24, price: 88000, costPrice: 68000, barcode: '8992775211114-24' },
+      ],
+    },
+    {
+      id: 'prod-003',
+      name: 'Bimoli Minyak Goreng Pouch 2 Liter',
+      brand: 'Bimoli',
+      sku: 'BIM-2L',
+      barcode: '8992775211018',
+      categoryId: 'groceries',
+      price: 38500,
+      costPrice: 33500,
+      stock: 45,
+      minStock: 12,
+      unit: 'Pouch',
+      aisle: 'Lorong 1 - Rak Sembako',
+      expiryDate: '2027-02-28',
+      isPopular: true,
+      image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop&q=60',
+      description: 'Minyak kelapa sawit murni berkualitas tinggi.',
+      wholesaleUnits: [
+        { id: 'wh-bim-dus', name: 'Dus (6 Pouch)', multiplier: 6, price: 224000, costPrice: 200000, barcode: '8992775211018-6' },
+      ],
+    },
+  ];
+
+  initialFmcgCatalog.forEach((p) => lanProductsStore.set(p.id, p));
+  scheduleLanDbSave();
+  addLanLog('info', 'Server Database LAN Toko diinisialisasi dengan master produk ritel.');
+}
+
+initLanDatabase();
+
+// Clean client IP helper
+function getClientIp(req: express.Request): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  const rawIp = req.socket.remoteAddress || '127.0.0.1';
+  return rawIp.replace(/^::ffff:/, '');
+}
+
+// ----------------------------------------------------
+// LAN SERVER REST ENDPOINTS
+// ----------------------------------------------------
+
+// 1. LAN Status & Connectivity Info
+app.get('/api/lan/status', (req, res) => {
+  const localIps = getLocalLanIps();
+  const primaryIp = localIps[0] || '127.0.0.1';
+  const now = Date.now();
+
+  const hostHeader = (req.headers['x-forwarded-host'] || req.headers.host) as string | undefined;
+  const protoHeader = (req.headers['x-forwarded-proto'] || req.protocol || 'http') as string;
+  const webOrigin = hostHeader ? `${protoHeader}://${hostHeader}` : `http://localhost:${PORT}`;
+
+  const hasRealLanIp = localIps.some(
+    (ip) =>
+      ip.startsWith('192.168.') ||
+      ip.startsWith('10.') ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip)
+  );
+  const recommendedUrl = hasRealLanIp ? `http://${primaryIp}:${PORT}` : webOrigin;
+  const isCloudEnvironment = !hasRealLanIp;
+
+  // Filter clients active in the last 45 seconds
+  const activeClientsList = Array.from(lanActiveClientsStore.values()).map((c) => {
+    const lastSeenTime = new Date(c.lastSeen || 0).getTime();
+    const isOnline = now - lastSeenTime < 45000;
+    return { ...c, isOnline };
+  });
+
+  const dbSizeApprox = Math.round(
+    JSON.stringify({
+      p: Array.from(lanProductsStore.values()),
+      t: Array.from(lanTransactionsStore.values()),
+    }).length / 1024
+  );
+
+  res.json({
+    isServerRunning: true,
+    role: 'HOST',
+    port: PORT,
+    localIps,
+    primaryIp,
+    webOrigin,
+    recommendedUrl,
+    isCloudEnvironment,
+    serverUptime: Math.round(process.uptime()),
+    connectedClients: activeClientsList,
+    stats: {
+      totalProducts: lanProductsStore.size,
+      totalTransactions: lanTransactionsStore.size,
+      totalCustomers: lanCustomersStore.size,
+      totalHeldOrders: lanHeldOrdersStore.size,
+      dbSizeKb: dbSizeApprox,
+      lastUpdated: lanLastUpdated,
+      databaseVersion: lanDatabaseVersion,
+    },
+    recentLogs: lanServerLogs.slice(0, 20),
+  });
+});
+
+// 2. Client Device Registration
+app.post('/api/lan/client/register', (req, res) => {
+  try {
+    const { clientId, clientName, role, deviceType } = req.body;
+    if (!clientId) {
+      return res.status(400).json({ success: false, error: 'clientId wajib diisi' });
+    }
+
+    const ip = getClientIp(req);
+    const clientRecord = {
+      id: clientId,
+      name: clientName || `Kasir Terminal ${lanActiveClientsStore.size + 1}`,
+      role: role || 'CLIENT',
+      ip,
+      deviceType: deviceType || 'desktop',
+      lastSeen: new Date().toISOString(),
+      isOnline: true,
+      transactionsCount: 0,
+      userAgent: req.headers['user-agent']?.slice(0, 80) || '',
+    };
+
+    lanActiveClientsStore.set(clientId, clientRecord);
+    addLanLog('success', `Terminal Kasir "${clientRecord.name}" terhubung dari IP ${ip}.`);
+
+    res.json({
+      success: true,
+      message: 'Perangkat berhasil terdaftar di Server Database LAN.',
+      client: clientRecord,
+      serverTime: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. Client Heartbeat Ping
+app.post('/api/lan/client/heartbeat', (req, res) => {
+  const { clientId, clientName, role, transactionsCount } = req.body;
+  if (clientId) {
+    const existing = lanActiveClientsStore.get(clientId) || {
+      id: clientId,
+      name: clientName || 'Kasir Terminal',
+      role: role || 'CLIENT',
+      ip: getClientIp(req),
+      transactionsCount: 0,
+    };
+
+    existing.lastSeen = new Date().toISOString();
+    if (clientName) existing.name = clientName;
+    if (typeof transactionsCount === 'number') existing.transactionsCount = transactionsCount;
+    lanActiveClientsStore.set(clientId, existing);
+  }
+
+  // Count active devices in the last 45s
+  const now = Date.now();
+  const activeCount = Array.from(lanActiveClientsStore.values()).filter(
+    (c) => now - new Date(c.lastSeen || 0).getTime() < 45000
+  ).length;
+
+  res.json({
+    success: true,
+    serverTime: new Date().toISOString(),
+    activeClientsCount: activeCount,
+    databaseVersion: lanDatabaseVersion,
+    totalProducts: lanProductsStore.size,
+    totalHeldOrders: lanHeldOrdersStore.size,
+  });
+});
+
+// 4. Pull All Master Data (for initial sync or continuous sync)
+app.get('/api/lan/data/pull', (req, res) => {
+  res.json({
+    success: true,
+    version: lanDatabaseVersion,
+    lastUpdated: lanLastUpdated,
+    products: Array.from(lanProductsStore.values()),
+    transactions: Array.from(lanTransactionsStore.values()).sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    ),
+    customers: Array.from(lanCustomersStore.values()),
+    suppliers: Array.from(lanSuppliersStore.values()),
+    heldOrders: Array.from(lanHeldOrdersStore.values()),
+  });
+});
+
+// 5. Push Transaction from any LAN Terminal (Auto Deduct Stock in Master DB)
+app.post('/api/lan/data/push-transaction', (req, res) => {
+  try {
+    const { transaction, clientId, clientName } = req.body;
+    if (!transaction || (!transaction.id && !transaction.invoiceNumber)) {
+      return res.status(400).json({ success: false, error: 'Transaksi tidak valid' });
+    }
+
+    const txKey = transaction.id || transaction.invoiceNumber;
+    const now = new Date().toISOString();
+    const enriched = {
+      ...transaction,
+      id: txKey,
+      syncStatus: 'synced',
+      syncedAt: now,
+      lanProcessedAt: now,
+      processedByTerminal: clientName || clientId || 'Terminal Kasir',
+    };
+
+    lanTransactionsStore.set(txKey, enriched);
+
+    // Update active client transaction count
+    if (clientId && lanActiveClientsStore.has(clientId)) {
+      const client = lanActiveClientsStore.get(clientId);
+      client.transactionsCount = (client.transactionsCount || 0) + 1;
+      client.lastSeen = now;
+    }
+
+    // Automatically deduct product stock on Server Database
+    const updatedStocks: Array<{ productId: string; newStock: number }> = [];
+    if (Array.isArray(transaction.items)) {
+      for (const item of transaction.items) {
+        const pId = item.product?.id || item.productId;
+        if (pId && lanProductsStore.has(pId)) {
+          const prod = lanProductsStore.get(pId);
+          const mult = item.selectedUnit?.multiplier || 1;
+          const qtyDeducted = (item.quantity || 1) * mult;
+          prod.stock = Math.max(0, (prod.stock || 0) - qtyDeducted);
+          lanProductsStore.set(pId, prod);
+          updatedStocks.push({ productId: pId, newStock: prod.stock });
+        }
+      }
+    }
+
+    // Update Customer loyalty points if member was attached
+    if (transaction.customer?.id && lanCustomersStore.has(transaction.customer.id)) {
+      const cust = lanCustomersStore.get(transaction.customer.id);
+      cust.totalSpent = (cust.totalSpent || 0) + (transaction.finalTotal || 0);
+      cust.ordersCount = (cust.ordersCount || 0) + 1;
+      if (transaction.pointsEarned) {
+        cust.points = (cust.points || 0) + transaction.pointsEarned;
+      }
+      if (transaction.pointsRedeemed) {
+        cust.points = Math.max(0, (cust.points || 0) - transaction.pointsRedeemed);
+      }
+      lanCustomersStore.set(cust.id, cust);
+    }
+
+    scheduleLanDbSave();
+    addLanLog(
+      'success',
+      `Transaksi ${transaction.invoiceNumber} (Rp ${(transaction.finalTotal || 0).toLocaleString('id-ID')}) dari ${clientName || 'Kasir'} diproses. Stok ${updatedStocks.length} produk dipotong di Server LAN.`
+    );
+
+    res.json({
+      success: true,
+      message: 'Transaksi tersimpan di Server Database LAN dan stok terpotong.',
+      transaction: enriched,
+      updatedStocks,
+      serverTime: now,
+    });
+  } catch (err: any) {
+    console.error('Error processing LAN transaction push:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 6. Sync / Update Product Catalog on Master LAN Database
+app.post('/api/lan/data/sync-products', (req, res) => {
+  try {
+    const { products, auditNote } = req.body;
+    if (!Array.isArray(products)) {
+      return res.status(400).json({ success: false, error: 'products harus berupa array' });
+    }
+
+    for (const p of products) {
+      if (p && p.id) {
+        lanProductsStore.set(p.id, p);
+      }
+    }
+
+    scheduleLanDbSave();
+    addLanLog('info', `Katalog produk diperbarui di Server LAN: ${products.length} item. ${auditNote || ''}`);
+
+    res.json({
+      success: true,
+      totalProductsInServer: lanProductsStore.size,
+      serverTime: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 7. Seed or Overwrite Master Database from Client State
+app.post('/api/lan/database/seed', (req, res) => {
+  try {
+    const { products, customers, suppliers, transactions } = req.body;
+
+    if (Array.isArray(products) && products.length > 0) {
+      lanProductsStore.clear();
+      products.forEach((p) => lanProductsStore.set(p.id, p));
+    }
+    if (Array.isArray(customers) && customers.length > 0) {
+      lanCustomersStore.clear();
+      customers.forEach((c) => lanCustomersStore.set(c.id, c));
+    }
+    if (Array.isArray(suppliers) && suppliers.length > 0) {
+      lanSuppliersStore.clear();
+      suppliers.forEach((s) => lanSuppliersStore.set(s.id, s));
+    }
+    if (Array.isArray(transactions) && transactions.length > 0) {
+      transactions.forEach((t) => lanTransactionsStore.set(t.id || t.invoiceNumber, t));
+    }
+
+    scheduleLanDbSave();
+    addLanLog('warn', `Master Server Database di-seed ulang: ${lanProductsStore.size} produk, ${lanCustomersStore.size} member, ${lanTransactionsStore.size} transaksi.`);
+
+    res.json({
+      success: true,
+      message: 'Master database server berhasil diperbarui dari data kasir lokal.',
+      stats: {
+        products: lanProductsStore.size,
+        customers: lanCustomersStore.size,
+        suppliers: lanSuppliersStore.size,
+        transactions: lanTransactionsStore.size,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 8. Shared Held Orders (Order Parking across any LAN terminal)
+app.get('/api/lan/orders/held', (req, res) => {
+  res.json({
+    success: true,
+    heldOrders: Array.from(lanHeldOrdersStore.values()),
+  });
+});
+
+app.post('/api/lan/orders/held', (req, res) => {
+  try {
+    const { heldOrder, clientName } = req.body;
+    if (!heldOrder || !heldOrder.id) {
+      return res.status(400).json({ success: false, error: 'heldOrder wajib memiliki id' });
+    }
+
+    const orderWithTerminal = {
+      ...heldOrder,
+      parkedAtTerminal: clientName || 'Kasir',
+      parkedAtTime: new Date().toISOString(),
+    };
+
+    lanHeldOrdersStore.set(heldOrder.id, orderWithTerminal);
+    scheduleLanDbSave();
+    addLanLog('info', `Pesanan #${heldOrder.id.slice(-6)} diparkir oleh ${clientName || 'Kasir'}. Bisa dipanggil di kasir manapun.`);
+
+    res.json({
+      success: true,
+      heldOrder: orderWithTerminal,
+      totalHeldOrders: lanHeldOrdersStore.size,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/lan/orders/held/:id', (req, res) => {
+  const { id } = req.params;
+  const existed = lanHeldOrdersStore.has(id);
+  lanHeldOrdersStore.delete(id);
+  if (existed) {
+    scheduleLanDbSave();
+    addLanLog('info', `Pesanan parkir #${id.slice(-6)} telah diambil & diselesaikan.`);
+  }
+  res.json({ success: true, removed: existed, remaining: lanHeldOrdersStore.size });
+});
+
+// 9. Legacy POS Sync Compatibility Layer
 app.get('/api/pos/sync-status', (req, res) => {
   res.json({
     status: 'online',
     cloudSynced: true,
     serverTime: new Date().toISOString(),
-    totalCloudTransactions: cloudTransactionsStore.size,
+    totalCloudTransactions: lanTransactionsStore.size,
+    lanStatus: {
+      activeClients: lanActiveClientsStore.size,
+      productsCount: lanProductsStore.size,
+    },
   });
 });
 
-// 2. Batch Cloud Push for Offline & Background Sync Transactions
 app.post('/api/pos/transactions/sync', (req, res) => {
   try {
     const { transactions, deviceId, cashierName } = req.body;
-
     if (!Array.isArray(transactions)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Data transaksi tidak valid. Harus berupa array.',
-      });
+      return res.status(400).json({ success: false, error: 'Data transaksi tidak valid' });
     }
 
     const now = new Date().toISOString();
@@ -407,79 +951,50 @@ app.post('/api/pos/transactions/sync', (req, res) => {
 
     for (const tx of transactions) {
       if (!tx || (!tx.id && !tx.invoiceNumber)) continue;
-
-      const recordKey = tx.id || tx.invoiceNumber;
-      const enrichedRecord = {
+      const key = tx.id || tx.invoiceNumber;
+      lanTransactionsStore.set(key, {
         ...tx,
         syncStatus: 'synced',
         syncedAt: now,
-        cloudStoredAt: now,
-        syncedByDevice: deviceId || 'pos-terminal-web',
-        syncedByCashier: cashierName || tx.cashierName || 'Kasir',
-      };
-
-      cloudTransactionsStore.set(recordKey, enrichedRecord);
-      syncedIds.push(recordKey);
+        syncedByDevice: deviceId || 'pos-terminal',
+        syncedByCashier: cashierName || 'Kasir',
+      });
+      syncedIds.push(key);
     }
 
-    console.log(`[Cloud Sync] Synced ${syncedIds.length} transactions to cloud storage at ${now}. Total in cloud: ${cloudTransactionsStore.size}`);
-
+    scheduleLanDbSave();
     res.json({
       success: true,
       syncedCount: syncedIds.length,
       syncedIds,
       serverTime: now,
-      totalCloudTransactions: cloudTransactionsStore.size,
+      totalCloudTransactions: lanTransactionsStore.size,
     });
   } catch (err: any) {
-    console.error('Error in POS transactions sync:', err);
-    res.status(500).json({
-      success: false,
-      error: err.message || 'Gagal menyinkronkan transaksi ke cloud',
-    });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 3. Single Transaction Push to Cloud
 app.post('/api/pos/transactions', (req, res) => {
   try {
     const tx = req.body;
     if (!tx || (!tx.id && !tx.invoiceNumber)) {
       return res.status(400).json({ success: false, error: 'Transaksi tidak valid' });
     }
-
-    const now = new Date().toISOString();
-    const recordKey = tx.id || tx.invoiceNumber;
-    const enriched = {
-      ...tx,
-      syncStatus: 'synced',
-      syncedAt: now,
-      cloudStoredAt: now,
-    };
-
-    cloudTransactionsStore.set(recordKey, enriched);
-
-    res.json({
-      success: true,
-      transaction: enriched,
-      serverTime: now,
-    });
+    const key = tx.id || tx.invoiceNumber;
+    lanTransactionsStore.set(key, tx);
+    scheduleLanDbSave();
+    res.json({ success: true, transaction: tx, serverTime: new Date().toISOString() });
   } catch (err: any) {
-    console.error('Error posting single transaction:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 4. Retrieve All Cloud Transactions
 app.get('/api/pos/transactions', (req, res) => {
-  const list = Array.from(cloudTransactionsStore.values()).sort(
+  const list = Array.from(lanTransactionsStore.values()).sort(
     (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
   );
-  res.json({
-    success: true,
-    count: list.length,
-    transactions: list,
-  });
+  res.json({ success: true, count: list.length, transactions: list });
 });
 
 // 6. AI Supplier Purchase Invoice OCR / Image Scanner
@@ -781,45 +1296,80 @@ Kembalikan format JSON murni dengan format array objek:
   }
 });
 
-// 2. AI Retail Restock & Inventory Demand Forecasting
+// 2. AI Retail Restock & Inventory Demand Forecasting (Purchase Order Plan)
 app.post('/api/ai/inventory-forecast', async (req, res) => {
   const { products, recentTransactions, storeSettings } = req.body;
 
   const generateRuleBasedForecast = () => {
     const lowItems = (products || []).filter((p: any) => p.stock <= p.minStock);
-    const suggestions = (lowItems.length > 0 ? lowItems : (products || []).slice(0, 4)).map((p: any) => ({
-      productId: p.id,
-      productName: p.name,
-      currentStock: p.stock,
-      recommendedOrderQty: Math.max(10, (p.minStock * 3) - p.stock),
-      urgency: p.stock === 0 ? 'KRITIS' : p.stock <= p.minStock ? 'TINGGI' : 'SEDANG',
-      estimatedDaysLeft: p.stock === 0 ? 0 : Math.max(1, Math.floor(p.stock / 2)),
-      actionAdvice: `Segera lakukan Purchase Order (PO) ke distributor untuk menjaga ketersediaan ${p.name}.`,
-    }));
+    const candidateItems = lowItems.length > 0 ? lowItems : (products || []).slice(0, 5);
+
+    let totalBudget = 0;
+    const suggestions = candidateItems.map((p: any) => {
+      const isZero = p.stock === 0;
+      const deficit = Math.max(0, (p.minStock || 10) * 2 - p.stock);
+      // Smart carton / case increment (multiple of 6, 12, or 24 for FMCG)
+      const orderQty = Math.max(12, Math.ceil(deficit / 6) * 6);
+      const cost = Number(p.costPrice) || 0;
+      const subtotal = orderQty * cost;
+      totalBudget += subtotal;
+
+      let urgency = 'SEDANG';
+      if (isZero) urgency = 'KRITIS';
+      else if (p.stock <= (p.minStock || 5)) urgency = 'TINGGI';
+
+      const estimatedDays = isZero ? 0 : Math.max(1, Math.floor(p.stock / 1.8));
+
+      return {
+        productId: p.id,
+        productName: p.name,
+        sku: p.sku || `SKU-${p.id.slice(-4)}`,
+        barcode: p.barcode || '',
+        unit: p.unit || 'pcs',
+        category: p.categoryId || 'General',
+        currentStock: p.stock,
+        minStock: p.minStock || 10,
+        recommendedOrderQty: orderQty,
+        costPrice: cost,
+        estimatedSubtotal: subtotal,
+        suggestedSupplier: p.brand ? `Distributor ${p.brand}` : 'PT Indomarco Adi Prima (Indofood)',
+        urgency,
+        estimatedDaysLeft: estimatedDays,
+        actionAdvice: isZero
+          ? `Stok habis total! Prioritaskan pemesanan segera untuk mencegah kehilangan potensi penjualan ${p.name}.`
+          : `Stok menipis (${p.stock} ${p.unit || 'pcs'}). Pesan ${orderQty} ${p.unit || 'pcs'} untuk mengamankan persediaan 14-21 hari ke depan.`,
+      };
+    });
 
     return {
-      summary: `Terdapat ${lowItems.length} produk yang mendekati batas minimum stok dan memerlukan pesanan pembelian (PO) ke supplier.`,
-      healthScore: lowItems.length === 0 ? 95 : Math.max(50, 100 - (lowItems.length * 10)),
+      summary: `Terdapat ${lowItems.length} produk yang telah mencapai atau di bawah batas minimum stok aman toko. Segera terbitkan Purchase Order (PO) untuk menghindari potensi kehilangan omzet.`,
+      healthScore: lowItems.length === 0 ? 95 : Math.max(45, 100 - (lowItems.length * 9)),
+      totalEstimatedBudget: totalBudget,
+      totalItemsToRestock: suggestions.length,
       forecasts: suggestions,
       deadstockOrExpiryAlerts: (products || [])
-        .filter((p: any) => p.expiryDate && new Date(p.expiryDate).getTime() - Date.now() < 30 * 86400000)
+        .filter((p: any) => p.expiryDate && new Date(p.expiryDate).getTime() - Date.now() < 60 * 86400000)
         .slice(0, 3)
         .map((p: any) => ({
           productName: p.name,
           issue: 'Mendekati Tanggal Kadaluarsa (FEFO)',
-          suggestedPromotion: 'Lakukan penataan di rak depan dan berikan potongan harga tebus murah.',
+          suggestedPromotion: 'Tempatkan di rak bagian depan kasir dan berikan potongan harga tebus murah / bundel diskon.',
         })),
       isAiGenerated: false,
+      generatedAt: new Date().toISOString(),
     };
   };
 
   try {
     const prompt = `Anda adalah AI Supply Chain & Inventory Strategist untuk toko ritel modern "${storeSettings?.storeName || 'Ulilmart'}".
-Data Produk Toko (Stok, Min Stock, Kategori, Harga Beli, Harga Jual, Expired Date, Aisle/Rak):
+Data Produk Toko (Stok, Min Stock, Kategori, Harga Beli, Harga Jual, Expired Date, Aisle/Rak, Brand):
 ${JSON.stringify((products || []).map((p: any) => ({
   id: p.id,
   name: p.name,
+  sku: p.sku,
+  barcode: p.barcode,
   category: p.categoryId,
+  brand: p.brand,
   stock: p.stock,
   minStock: p.minStock,
   unit: p.unit,
@@ -830,7 +1380,7 @@ ${JSON.stringify((products || []).map((p: any) => ({
 })))}
 
 Data Transaksi Terakhir (${recentTransactions?.length || 0} transaksi):
-${JSON.stringify((recentTransactions || []).slice(0, 20).map((t: any) => ({
+${JSON.stringify((recentTransactions || []).slice(0, 25).map((t: any) => ({
   invoice: t.invoiceNumber,
   items: t.items?.map((i: any) => ({ name: i.product.name, qty: i.quantity })),
   total: t.finalTotal,
@@ -838,28 +1388,41 @@ ${JSON.stringify((recentTransactions || []).slice(0, 20).map((t: any) => ({
 })))}
 
 Tugas:
-1. Analisis produk yang menipis (stock <= minStock), produk fast-moving FMCG, dan produk yang mendekati tanggal kadaluarsa (FEFO).
-2. Buat prediksi kebutuhan restock (Purchase Order) serta saran manajemen rak/diskon untuk item yang lambat bergerak.
-3. Kembalikan JSON dengan struktur:
+1. Lakukan analisis mendalam terhadap inventaris toko ritel:
+   - Produk dengan stok habis (stok = 0) atau stok di bawah batas minimum (stock <= minStock).
+   - Produk fast-moving FMCG berdasarkan frekuensi transaksi terakhir.
+   - Produk dengan risiko FEFO (kadaluarsa dalam kurun 30-90 hari).
+2. Buat Rekomendasi Purchase Order (PO) lengkap dengan kuantitas pemesanan ekonomis (kelipatan karton/lusin yang realistis) dan estimasi anggaran total.
+3. Kembalikan JSON valid dengan struktur:
 {
-  "summary": "Ringkasan eksekutif kondisi inventaris toko ritel saat ini dalam 2 kalimat profesional.",
-  "healthScore": 88, // Nilai kesehatan stok 0-100
+  "summary": "Ringkasan eksekutif kondisi inventaris toko saat ini dan alasan utama rencana restock dalam 2 kalimat profesional.",
+  "healthScore": 88, // Nilai kesehatan stok toko 0-100
+  "totalEstimatedBudget": 1850000, // Total estimasi biaya seluruh item yang diusulkan
+  "totalItemsToRestock": 4, // Jumlah varian/SKU produk yang perlu di-restock
   "forecasts": [
     {
       "productId": "id_produk",
       "productName": "Nama Produk",
-      "currentStock": 5,
-      "recommendedOrderQty": 30,
+      "sku": "SKU...",
+      "barcode": "Barcode...",
+      "unit": "pcs",
+      "category": "Kategori",
+      "currentStock": 2,
+      "minStock": 10,
+      "recommendedOrderQty": 24,
+      "costPrice": 15000,
+      "estimatedSubtotal": 360000,
+      "suggestedSupplier": "Nama Distributor atau Supplier",
       "urgency": "KRITIS" | "TINGGI" | "SEDANG" | "OPTIMAL",
       "estimatedDaysLeft": 2,
-      "actionAdvice": "Saran tindakan spesifik (misal: 'Pesan 3 karton sebelum weekend, penjualan tinggi di jam pulang kantor')"
+      "actionAdvice": "Alasan spesifik dan saran pemesanan (misal: 'Stok menipis, barang fast-moving habis dalam 2 hari. Pesan 2 karton (24 pcs) sebelum akhir pekan')"
     }
   ],
   "deadstockOrExpiryAlerts": [
     {
       "productName": "Nama Produk",
-      "issue": "Mendekati Expired / Perputaran Lambat",
-      "suggestedPromotion": "Beri diskon Flash Sale 20% di rak depan (Lorong 1A) untuk mempercepat perputaran."
+      "issue": "Mendekati Tanggal Kadaluarsa / Perputaran Lambat",
+      "suggestedPromotion": "Beri diskon Flash Sale atau Bundling tebus murah di rak depan."
     }
   ]
 }
@@ -870,9 +1433,41 @@ Tugas:
       return res.json(generateRuleBasedForecast());
     }
 
-    const parsed = JSON.parse(rawText);
-    res.json({ ...parsed, isAiGenerated: true });
-  } catch {
+    const parsed = extractJsonFromText(rawText) || JSON.parse(rawText);
+    
+    // Ensure estimatedSubtotal and totals are populated correctly
+    if (parsed && Array.isArray(parsed.forecasts)) {
+      let calculatedTotal = 0;
+      parsed.forecasts = parsed.forecasts.map((fc: any) => {
+        const prod = (products || []).find((p: any) => p.id === fc.productId || p.name === fc.productName);
+        const cost = Number(fc.costPrice) || (prod ? Number(prod.costPrice) : 0);
+        const qty = Number(fc.recommendedOrderQty) || 12;
+        const subtotal = Number(fc.estimatedSubtotal) || (cost * qty);
+        calculatedTotal += subtotal;
+
+        return {
+          ...fc,
+          productId: fc.productId || prod?.id || '',
+          sku: fc.sku || prod?.sku || '',
+          barcode: fc.barcode || prod?.barcode || '',
+          unit: fc.unit || prod?.unit || 'pcs',
+          costPrice: cost,
+          recommendedOrderQty: qty,
+          estimatedSubtotal: subtotal,
+          suggestedSupplier: fc.suggestedSupplier || (prod?.brand ? `Distributor ${prod.brand}` : 'PT Indomarco / Supplier FMCG'),
+        };
+      });
+      parsed.totalEstimatedBudget = parsed.totalEstimatedBudget || calculatedTotal;
+      parsed.totalItemsToRestock = parsed.forecasts.length;
+    }
+
+    res.json({
+      ...parsed,
+      isAiGenerated: true,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('Error generating AI restock forecast:', err);
     res.json(generateRuleBasedForecast());
   }
 });
@@ -942,42 +1537,118 @@ Kembalikan JSON:
   }
 });
 
-// 4. AI Retail Promo & Campaign Creator
+// 4. AI Retail Promo & Campaign Creator with Owner Margin Protection (Min. 5% Profit Margin)
 app.post('/api/ai/generate-promo', async (req, res) => {
-  const { campaignTheme, targetCategory, products, settings } = req.body;
+  const { campaignTheme, targetCategory, products, settings, minOwnerMargin = 5 } = req.body;
+
+  // Owner Profit Margin Rule: Guarantee owner earns at least minOwnerMargin% (default >= 5%)
+  const safeMinMargin = Math.max(5, Number(minOwnerMargin) || 5);
+
+  // Filter products by category if specified, or analyze catalog
+  const validProducts: any[] = Array.isArray(products) && products.length > 0 ? products : [];
+  const targetProds = targetCategory && targetCategory !== 'Semua Kategori'
+    ? validProducts.filter((p: any) => {
+        const catId = (p.categoryId || '').toLowerCase();
+        const target = targetCategory.toLowerCase();
+        return catId.includes(target) || target.includes(catId) || (p.category && p.category.toLowerCase().includes(target));
+      })
+    : validProducts;
+
+  const prodsToAnalyze = targetProds.length > 0 ? targetProds : validProducts;
+
+  // Calculate gross margins of items: ((price - costPrice) / price) * 100
+  const marginStats = prodsToAnalyze
+    .filter((p: any) => p.price > 0 && p.costPrice > 0)
+    .map((p: any) => {
+      const margin = ((p.price - p.costPrice) / p.price) * 100;
+      return {
+        name: p.name,
+        price: p.price,
+        costPrice: p.costPrice,
+        marginPercent: margin,
+      };
+    });
+
+  const avgOriginalMargin = marginStats.length > 0
+    ? marginStats.reduce((acc, curr) => acc + curr.marginPercent, 0) / marginStats.length
+    : 22; // default retail FMCG margin baseline (~22%)
+
+  const avgPrice = marginStats.length > 0
+    ? marginStats.reduce((acc, curr) => acc + curr.price, 0) / marginStats.length
+    : 15000;
+
+  const avgCostPrice = marginStats.length > 0
+    ? marginStats.reduce((acc, curr) => acc + curr.costPrice, 0) / marginStats.length
+    : avgPrice * (1 - avgOriginalMargin / 100);
+
+  // Maximum allowable discount percentage so that (avgOriginalMargin - discount) >= safeMinMargin
+  // e.g. If avgOriginalMargin is 22% and safeMinMargin is 5%, max discount is 17%
+  const maxAllowableDiscountPercent = Math.max(1, Math.floor(avgOriginalMargin - safeMinMargin));
+
+  const defaultMinSpend = 50000;
+  // Maximum allowable fixed discount on default minSpend ensuring profit margin >= safeMinMargin
+  const maxAllowableFixedDiscount = Math.max(
+    1000,
+    Math.floor(defaultMinSpend * ((avgOriginalMargin - safeMinMargin) / 100))
+  );
 
   const generateRuleBasedPromo = () => {
+    // Choose a safe discount that strictly preserves owner profit margin >= safeMinMargin
+    const safeDiscountPercent = Math.min(10, maxAllowableDiscountPercent);
+    const minSpend = 50000;
+    const estDiscountVal = (minSpend * safeDiscountPercent) / 100;
+    const estHPP = minSpend * (1 - avgOriginalMargin / 100);
+    const estNetRevenue = minSpend - estDiscountVal;
+    const estNetProfit = estNetRevenue - estHPP;
+    const projectedMargin = estNetRevenue > 0 ? (estNetProfit / estNetRevenue) * 100 : safeMinMargin;
+
     return {
-      title: campaignTheme ? `Promo Spesial: ${campaignTheme}` : 'Promo Belanja Super Hemat',
-      tagline: 'Belanja Kebutuhan Harian Lebih Hemat & Menguntungkan!',
-      voucherCode: 'HEMAT10',
+      title: campaignTheme ? `Promo Spesial: ${campaignTheme}` : 'Promo Belanja Super Hemat & Berkah',
+      tagline: `Belanja Puas, Tetap Untung & Terjangkau (Margin Owner Aman ≥ ${safeMinMargin}%)`,
+      voucherCode: `PROMO${safeDiscountPercent}`,
       discountType: 'percentage' as const,
-      value: 10,
-      minSpend: 50000,
-      bundleItems: (products || []).slice(0, 2).map((p: any) => p.name),
-      description: 'Potongan diskon 10% untuk pembelanjaan minimal Rp 50.000.',
+      value: safeDiscountPercent,
+      minSpend,
+      bundleItems: (prodsToAnalyze || []).slice(0, 2).map((p: any) => p.name),
+      description: `Diskon spesial ${safeDiscountPercent}% untuk pembelanjaan minimal Rp ${minSpend.toLocaleString('id-ID')}. Aturan margin owner dipatuhi dengan keuntungan bersih toko terjamin di atas ${safeMinMargin}%.`,
       isAiGenerated: false,
+      originalMarginPercent: Math.round(avgOriginalMargin * 10) / 10,
+      projectedMarginPercent: Math.round(projectedMargin * 10) / 10,
+      minProfitMargin: safeMinMargin,
+      estimatedProfitAmount: Math.round(estNetProfit),
+      marginSafetyStatus: 'safe' as const,
+      ownerSafetyNote: `Aturan Proteksi Margin Aktif: Diskon dibatasi maksimal ${maxAllowableDiscountPercent}% agar margin keuntungan bersih owner tetap terjaga di atas ${safeMinMargin}% (Est. Laba Bersih: Rp ${Math.round(estNetProfit).toLocaleString('id-ID')} per voucher).`,
     };
   };
 
   try {
-    const prompt = `Anda adalah AI Marketing Ritel Kreatif untuk supermarket/minimarket "${settings?.storeName || 'Ulilmart'}".
+    const prompt = `Anda adalah AI Financial & Marketing Retail Strategist untuk toko/minimarket "${settings?.storeName || 'Ulilmart'}".
 Tema Kampanye: ${campaignTheme || 'Promo Spesial Ritel Modern'}
 Target Kategori: ${targetCategory || 'Semua Kategori'}
-Daftar Produk: ${JSON.stringify((products || []).slice(0, 15).map((p: any) => ({ name: p.name, category: p.categoryId, price: p.price })))}
+Daftar Produk: ${JSON.stringify(prodsToAnalyze.slice(0, 15).map((p: any) => ({ name: p.name, price: p.price, costPrice: p.costPrice, margin: Math.round(((p.price - p.costPrice)/p.price)*100) + '%' })))}
+
+🚨 ATURAN KETAT OWNER: PROTEKSI MARGIN PROFIT MINIMAL ${safeMinMargin}%:
+1. Rata-rata margin keuntungan kotor saat ini untuk produk terpilih adalah ${avgOriginalMargin.toFixed(1)}% (Rata-rata modal HPP: Rp ${Math.round(avgCostPrice).toLocaleString('id-ID')}, Harga Jual: Rp ${Math.round(avgPrice).toLocaleString('id-ID')}).
+2. Owner toko mensyaratkan bahwa setiap promo atau voucher belanja WAJIB memberikan margin keuntungan bersih MINIMAL ${safeMinMargin}% setelah diskon dipotong.
+3. DILARANG KERAS merugikan toko atau menjual di bawah modal (HPP).
+4. BATAS DISKON MAKSIMAL YANG DIIZINKAN: ${maxAllowableDiscountPercent}% (untuk persentase) atau maksimal Rp ${maxAllowableFixedDiscount.toLocaleString('id-ID')} untuk belanja minimal Rp ${defaultMinSpend.toLocaleString('id-ID')}.
+5. Jika memilih diskon persentase, nilai 'value' TIDAK BOLEH lebih dari ${maxAllowableDiscountPercent}%.
+6. Tentukan nilai 'minSpend' (minimal belanja) yang memadai agar keranjang belanja pelanggan menutupi modal dan memberikan margin keuntungan sehat bagi owner.
 
 Tugas:
-Buat ide promo ritel modern yang sangat menarik bagi konsumen (misal Promo JSM, Beli 2 Gratis 1, Sarapan Cepat, atau Tebus Murah).
-Kembalikan JSON:
+Buat ide promo ritel modern yang sangat menarik bagi konsumen (misal Promo JSM, Sarapan Hemat, Bundling Tebus Murah) yang TERBUKTI AMAN DAN MENGUNTUNGKAN OWNER TOKO.
+
+Kembalikan HANYA format JSON valid tanpa markdown:
 {
   "title": "Nama Promo yang catchy (misal: 'Promo JSM Kilat: Sarapan Sehat')",
   "tagline": "Slogan promosi menarik untuk banner kasir / struk belanja",
   "voucherCode": "KODE_VOUCHER_KAPITAL",
-  "discountType": "percentage" | "fixed",
-  "value": 15, // persentase atau nominal potongan
+  "discountType": "percentage", // atau "fixed"
+  "value": 10, // angka persentase (maksimal ${maxAllowableDiscountPercent}) atau nominal potongan rupiah
   "minSpend": 50000,
   "bundleItems": ["Nama Produk 1", "Nama Produk 2"],
-  "description": "Penjelasan detail mekanisme promo untuk kasir & pembeli"
+  "description": "Penjelasan detail mekanisme promo untuk kasir & pembeli",
+  "ownerSafetyNote": "Alasan finansial mengapa promo ini aman dan menjamin margin owner >= ${safeMinMargin}%"
 }
 `;
 
@@ -987,7 +1658,61 @@ Kembalikan JSON:
     }
 
     const parsed = JSON.parse(rawText);
-    res.json({ ...parsed, isAiGenerated: true });
+
+    // Strict Enforcement of Owner Profit Margin Rules (Defense-in-depth safety guard)
+    let finalDiscountType: 'percentage' | 'fixed' = parsed.discountType === 'fixed' ? 'fixed' : 'percentage';
+    let finalValue = Number(parsed.value) || 5;
+    let finalMinSpend = Math.max(10000, Number(parsed.minSpend) || defaultMinSpend);
+    let marginSafetyStatus: 'safe' | 'capped' | 'warning' = 'safe';
+    let safetyNote = parsed.ownerSafetyNote || '';
+
+    if (finalDiscountType === 'percentage') {
+      if (finalValue > maxAllowableDiscountPercent) {
+        finalValue = maxAllowableDiscountPercent;
+        marginSafetyStatus = 'capped';
+        safetyNote = `Diskon otomatis disesuaikan dari usulan awal menjadi ${maxAllowableDiscountPercent}% agar margin keuntungan owner tetap terjaga aman di atas batas minimal ${safeMinMargin}%.`;
+      }
+    } else {
+      // Fixed discount validation
+      const maxAllowedFixedForThisSpend = Math.floor(
+        finalMinSpend * ((avgOriginalMargin - safeMinMargin) / 100)
+      );
+      if (finalValue > maxAllowedFixedForThisSpend) {
+        if (maxAllowedFixedForThisSpend >= 1000) {
+          finalValue = maxAllowedFixedForThisSpend;
+          marginSafetyStatus = 'capped';
+          safetyNote = `Potongan diskon dibatasi maksimal Rp ${maxAllowedFixedForThisSpend.toLocaleString('id-ID')} pada minimal belanja Rp ${finalMinSpend.toLocaleString('id-ID')} untuk memastikan margin owner tetap ≥ ${safeMinMargin}%.`;
+        } else {
+          // Increase minSpend to accommodate the discount value safely
+          finalMinSpend = Math.ceil((finalValue * 100) / Math.max(1, (avgOriginalMargin - safeMinMargin)));
+          marginSafetyStatus = 'capped';
+          safetyNote = `Minimal belanja dinaikkan menjadi Rp ${finalMinSpend.toLocaleString('id-ID')} agar voucher potongan Rp ${finalValue.toLocaleString('id-ID')} tetap menjamin margin profit owner minimal ${safeMinMargin}%.`;
+        }
+      }
+    }
+
+    // Compute final projected margin & profit for owner transparency
+    const estDiscountVal = finalDiscountType === 'percentage'
+      ? (finalMinSpend * finalValue) / 100
+      : finalValue;
+    const estHPP = finalMinSpend * (1 - avgOriginalMargin / 100);
+    const estNetRevenue = finalMinSpend - estDiscountVal;
+    const estNetProfit = estNetRevenue - estHPP;
+    const projectedMarginPercent = estNetRevenue > 0 ? (estNetProfit / estNetRevenue) * 100 : safeMinMargin;
+
+    res.json({
+      ...parsed,
+      discountType: finalDiscountType,
+      value: finalValue,
+      minSpend: finalMinSpend,
+      originalMarginPercent: Math.round(avgOriginalMargin * 10) / 10,
+      projectedMarginPercent: Math.round(projectedMarginPercent * 10) / 10,
+      minProfitMargin: safeMinMargin,
+      estimatedProfitAmount: Math.round(estNetProfit),
+      marginSafetyStatus,
+      ownerSafetyNote: safetyNote || `Promo diverifikasi aman: Estimasi margin sisa ${Math.round(projectedMarginPercent * 10) / 10}% (di atas target minimal ${safeMinMargin}%).`,
+      isAiGenerated: true,
+    });
   } catch {
     res.json(generateRuleBasedPromo());
   }

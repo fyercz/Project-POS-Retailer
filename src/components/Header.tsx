@@ -23,13 +23,23 @@ import {
   Briefcase,
   UserCheck,
   ScanBarcode,
+  Database,
+  Laptop,
+  BookOpen,
+  Network,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { usePOS } from '../context/POSContext';
 import { HeldOrdersModal } from './HeldOrdersModal';
 import { ShortcutsModal } from './ShortcutsModal';
 import { SettingsModal } from './SettingsModal';
+import { DesktopAppModal } from './DesktopAppModal';
+import { UserManualModal } from './UserManualModal';
+import { LANServerModal } from './LANServerModal';
 import { OfflineSyncBadge } from './OfflineSyncBadge';
+import { AuthorityModal } from './AuthorityModal';
+import { isViewAllowed } from '../utils/permissions';
+import { isDesktopApp } from '../utils/desktopHelper';
 
 export const Header: React.FC = () => {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -49,6 +59,15 @@ export const Header: React.FC = () => {
     setIsShiftModalOpen,
     quickSwitchEmployee,
     setIsBarcodeScannerOpen,
+    setIsBackupRestoreOpen,
+    products,
+    transactions,
+    customers,
+    suppliers,
+    applyMasterLANData,
+    recallHeldOrder,
+    isLANModalOpen,
+    setIsLANModalOpen,
   } = usePOS();
 
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -56,8 +75,75 @@ export const Header: React.FC = () => {
   const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDesktopModalOpen, setIsDesktopModalOpen] = useState(false);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsDesktop(isDesktopApp());
+  }, []);
+
+  // Authority verification prompt for restricted actions
+  const [authorityModalConfig, setAuthorityModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    requiredRole: 'supervisor' | 'owner';
+    onSuccess: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    requiredRole: 'supervisor',
+    onSuccess: () => {},
+  });
+
+  const handleOpenSettings = () => {
+    if (activeEmployee?.role !== 'owner') {
+      setAuthorityModalConfig({
+        isOpen: true,
+        title: 'Pengaturan Toko & Struk',
+        description:
+          'Konfigurasi sistem toko, printer struk, dan persentase pajak dibatasi untuk Pemilik Toko (Owner). Masukkan PIN Owner untuk otorisasi.',
+        requiredRole: 'owner',
+        onSuccess: () => setIsSettingsOpen(true),
+      });
+    } else {
+      setIsSettingsOpen(true);
+    }
+  };
+
+  const handleOpenEmployeeManagement = () => {
+    if (activeEmployee?.role !== 'owner' && activeEmployee?.role !== 'supervisor') {
+      setAuthorityModalConfig({
+        isOpen: true,
+        title: 'Kelola Master Karyawan & PIN',
+        description:
+          'Manajemen akun staf, jabatan, dan hak akses dibatasi untuk Supervisor atau Owner. Masukkan PIN otoritas untuk melanjutkan.',
+        requiredRole: 'supervisor',
+        onSuccess: () => setIsEmployeeManagementOpen(true),
+      });
+    } else {
+      setIsEmployeeManagementOpen(true);
+    }
+  };
+
+  const handleOpenBackupRestore = () => {
+    if (activeEmployee?.role !== 'owner' && activeEmployee?.role !== 'supervisor') {
+      setAuthorityModalConfig({
+        isOpen: true,
+        title: 'Pusat Cadangan & Titik Pemulihan',
+        description:
+          'Akses pencadangan dan pemulihan data (Restore Point) dibatasi untuk Supervisor atau Pemilik Toko (Owner). Masukkan PIN otoritas untuk melanjutkan.',
+        requiredRole: 'supervisor',
+        onSuccess: () => setIsBackupRestoreOpen(true),
+      });
+    } else {
+      setIsBackupRestoreOpen(true);
+    }
+  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -74,17 +160,33 @@ export const Header: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Keyboard shortcut listener: Alt + L to lock screen, Alt + T theme
+  // Keyboard shortcut listener: Alt + L to lock screen, Alt + T theme, F9 or Alt + B for Backup
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.altKey && (e.key === 'l' || e.key === 'L')) {
         e.preventDefault();
         lockScreen();
       }
+      if (e.key === 'F9' || (e.altKey && (e.key === 'b' || e.key === 'B'))) {
+        e.preventDefault();
+        handleOpenBackupRestore();
+      }
+      if (e.altKey && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault();
+        setIsDesktopModalOpen((prev) => !prev);
+      }
+      if (e.key === 'F1' || (e.altKey && (e.key === 'h' || e.key === 'H'))) {
+        e.preventDefault();
+        setIsManualModalOpen((prev) => !prev);
+      }
+      if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+        e.preventDefault();
+        setIsLANModalOpen((prev) => !prev);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lockScreen]);
+  }, [lockScreen, activeEmployee]);
 
   // Click outside to close user menu
   useEffect(() => {
@@ -125,54 +227,65 @@ export const Header: React.FC = () => {
     <>
       <header
         id="pos-main-header"
-        className="h-16 px-4 border-b flex items-center justify-between transition-colors duration-200 select-none
+        className="h-16 px-3 md:px-4 border-b flex items-center justify-between transition-colors duration-200 select-none
           bg-white text-slate-800 border-slate-200 
           dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800"
       >
         {/* Left Branding & Branch */}
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 md:space-x-3 min-w-0 shrink">
+          <div className="flex items-center space-x-2 md:space-x-3 shrink-0">
             <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-lg flex items-center justify-center font-black text-slate-950 shadow-md shadow-emerald-500/20 text-base">
               U
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-bold text-base tracking-tight text-slate-900 dark:text-white">
+                <span className="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white truncate">
                   {settings.storeName || 'Ulilmart Ritel'}
                 </span>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border dark:border-emerald-800/50 flex items-center gap-1">
+                <span className="hidden sm:inline-flex text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border dark:border-emerald-800/50 items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   Ritel Aktif
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal truncate max-w-[200px]">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal truncate max-w-[130px] md:max-w-[180px]">
                 {settings.branchName}
               </p>
             </div>
           </div>
 
-          <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden md:block" />
+          <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden lg:block" />
 
-          {/* Navigation View Pills */}
-          <nav className="hidden lg:flex items-center space-x-1">
+          {/* Navigation View Segmented Tabs (visible on lg and up) */}
+          <nav className="hidden lg:flex items-center p-1 bg-slate-100/90 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/60 gap-1 shrink-0">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeView === item.id;
+              const isAllowed = isViewAllowed(activeEmployee?.role, item.id);
               return (
                 <button
                   key={item.id}
                   id={`nav-btn-${item.id}`}
                   onClick={() => setActiveView(item.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
+                  title={
+                    !isAllowed
+                      ? `Menu dibatasi untuk jabatan ${activeEmployee?.roleTitle || 'ini'} (Klik untuk otorisasi PIN)`
+                      : item.label
+                  }
+                  className={`px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-slate-900 text-emerald-400 dark:bg-slate-800 dark:text-emerald-400 font-semibold shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800/60'
+                      ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs border border-slate-200/60 dark:border-slate-700/60'
+                      : !isAllowed
+                      ? 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-700/50 font-medium'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700/60 font-medium'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4 shrink-0" />
                   <span>{item.label}</span>
+                  {!isAllowed && (
+                    <Lock className="w-3 h-3 text-amber-500/80 shrink-0" />
+                  )}
                   {item.id === 'pos' && cart.length > 0 && (
-                    <span className="ml-1 w-4 h-4 rounded-full bg-emerald-500 text-slate-950 text-[10px] flex items-center justify-center font-bold">
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 text-[10px] flex items-center justify-center font-black leading-none">
                       {cart.reduce((s, i) => s + i.quantity, 0)}
                     </span>
                   )}
@@ -180,61 +293,68 @@ export const Header: React.FC = () => {
               );
             })}
           </nav>
+
+          {/* Navigation Dropdown on medium / smaller screens */}
+          <div className="lg:hidden shrink-0">
+            <select
+              id="mobile-nav-select"
+              value={activeView}
+              onChange={(e) => setActiveView(e.target.value as any)}
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 cursor-pointer shadow-xs focus:ring-1 focus:ring-emerald-500 outline-none"
+            >
+              <option value="pos">
+                🛒 Kasir {!isViewAllowed(activeEmployee?.role, 'pos') ? '🔒 (Perlu SPV/Owner)' : ''}
+              </option>
+              <option value="transactions">
+                🧾 Riwayat Nota {!isViewAllowed(activeEmployee?.role, 'transactions') ? '🔒 (Perlu SPV/Owner)' : ''}
+              </option>
+              <option value="inventory">
+                📦 Katalog & Stok {!isViewAllowed(activeEmployee?.role, 'inventory') ? '🔒 (Perlu Gudang/SPV)' : ''}
+              </option>
+              <option value="customers">
+                ✨ Member & Poin {!isViewAllowed(activeEmployee?.role, 'customers') ? '🔒 (Perlu SPV/Owner)' : ''}
+              </option>
+              <option value="reports">
+                📊 Laporan & Omzet {!isViewAllowed(activeEmployee?.role, 'reports') ? '🔒 (Perlu SPV/Owner)' : ''}
+              </option>
+            </select>
+          </div>
         </div>
 
         {/* Right Tools, Shortcuts, Theme Switcher & User Profile */}
-        <div className="flex items-center space-x-2.5">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0 ml-auto">
           {/* GEMINI AI COPILOT HERO BUTTON */}
           <button
             id="btn-open-gemini-copilot"
             onClick={() => openGeminiCopilot('upsell')}
-            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+            className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
             title="Buka Asisten AI Gemini Ritel Copilot"
           >
-            <Sparkles className="w-4 h-4 fill-current animate-pulse" />
-            <span className="tracking-tight">Gemini AI</span>
-            <span className="hidden sm:inline text-[10px] font-extrabold bg-slate-950/20 px-1.5 py-0.2 rounded-md">
-              Copilot
-            </span>
+            <Sparkles className="w-3.5 h-3.5 fill-current animate-pulse" />
+            <span className="tracking-tight hidden xs:inline">Gemini AI</span>
           </button>
 
-          {/* Mobile view switch dropdown */}
-          <div className="lg:hidden">
-            <select
-              value={activeView}
-              onChange={(e) => setActiveView(e.target.value as any)}
-              className="text-xs font-semibold px-2 py-1 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-800"
-            >
-              <option value="pos">🛒 Kasir</option>
-              <option value="transactions">🧾 Riwayat Nota</option>
-              <option value="inventory">📦 Katalog & Stok</option>
-              <option value="customers">✨ Member & Poin</option>
-              <option value="reports">📊 Laporan & Omzet</option>
-            </select>
-          </div>
-
           {/* Cloud & Offline Background Sync Badge */}
-          <OfflineSyncBadge />
+          <div className="hidden sm:block shrink-0">
+            <OfflineSyncBadge />
+          </div>
 
           {/* Barcode Camera Scanner */}
           <button
             id="btn-header-open-scanner"
             onClick={() => setIsBarcodeScannerOpen(true)}
-            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-700/50 dark:text-emerald-300 dark:hover:bg-emerald-900/50 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="p-1.5 sm:px-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
             title="Scan Barcode Kamera (F3)"
           >
             <ScanBarcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span className="hidden md:inline">Scan</span>
-            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-emerald-200/50 dark:bg-emerald-900/70 text-emerald-900 dark:text-emerald-300">
-              F3
-            </span>
           </button>
 
           {/* Held Orders Quick Access */}
           <button
             id="btn-open-held-orders"
             onClick={() => setIsHeldModalOpen(true)}
-            className={`relative px-2.5 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+            className={`relative p-1.5 sm:px-2 rounded-xl border text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0 ${
               heldOrders.length > 0
                 ? 'border-amber-400/80 bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:border-amber-700/70 dark:text-amber-300'
                 : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -242,128 +362,184 @@ export const Header: React.FC = () => {
             title="Lihat Pesanan Tertunda / Parkir (F4)"
           >
             <PauseCircle className="w-4 h-4 text-amber-500" />
-            <span className="hidden sm:inline">Parkir</span>
+            <span className="hidden md:inline">Parkir</span>
             {heldOrders.length > 0 && (
-              <span className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px] flex items-center justify-center animate-pulse">
+              <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-bold text-[9px] flex items-center justify-center animate-pulse">
                 {heldOrders.length}
               </span>
             )}
           </button>
 
+          {/* System & Utilities Unified Toolbar Strip */}
+          <div className="flex items-center bg-slate-100/90 dark:bg-slate-800/80 p-0.5 rounded-xl border border-slate-200/80 dark:border-slate-700/60 gap-0.5 shrink-0">
+            {/* LAN Multi-Client Server Database Center */}
+            <button
+              id="btn-open-lan-server"
+              onClick={() => setIsLANModalOpen(true)}
+              className="px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950/60 transition-all cursor-pointer shrink-0"
+              title="Pusat Server Database Multi-Client LAN (Alt+N) - Jaringan Kasir Terintegrasi"
+            >
+              <Network className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span className="hidden 2xl:inline">LAN</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="LAN Server Aktif"></span>
+            </button>
 
-          {/* Shortcuts Cheat Sheet */}
-          <button
-            id="btn-open-shortcuts"
-            onClick={() => setIsShortcutsOpen(true)}
-            className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Tombol Pintas Keyboard"
-          >
-            <Keyboard className="w-4 h-4" />
-          </button>
+            {/* Backup & Restore Disaster Recovery Center */}
+            <button
+              id="btn-open-backup-restore"
+              onClick={handleOpenBackupRestore}
+              className="px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/60 transition-all cursor-pointer shrink-0"
+              title="Pusat Cadangan & Titik Pemulihan Data (Backup & Restore - F9)"
+            >
+              <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="hidden 2xl:inline">Backup</span>
+            </button>
 
-          {/* Settings Modal Trigger */}
-          <button
-            id="btn-open-settings"
-            onClick={() => setIsSettingsOpen(true)}
-            className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Pengaturan Toko Ritel & Struk"
-          >
-            <SettingsIcon className="w-4 h-4" />
-          </button>
+            {/* Desktop App Hub & Kiosk Controller */}
+            <button
+              id="btn-open-desktop-hub"
+              onClick={() => setIsDesktopModalOpen(true)}
+              className={`px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+                isDesktop
+                  ? 'text-blue-700 bg-blue-50 dark:text-blue-300 dark:bg-blue-950/60'
+                  : 'text-slate-600 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:bg-slate-700/50'
+              }`}
+              title="Pusat Aplikasi Kasir Desktop & Layar Penuh Kiosk (Alt+D / F11)"
+            >
+              <Laptop className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span className="hidden 2xl:inline">Desktop</span>
+              {isDesktop && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Mode Desktop Aktif"></span>
+              )}
+            </button>
 
-          {/* THEME TOGGLE: Styled matching Professional Polish pattern */}
-          <div className="flex items-center pl-1 border-l border-slate-200 dark:border-slate-800">
-            <div className="flex items-center bg-slate-100 dark:bg-slate-950 p-1 rounded-full border border-slate-300 dark:border-slate-800">
-              <button
-                type="button"
-                id="theme-light-btn"
-                onClick={() => isDark && toggleTheme()}
-                className={`p-1.5 rounded-full transition-all cursor-pointer ${
-                  !isDark
-                    ? 'bg-white text-amber-500 shadow-md ring-1 ring-slate-200'
-                    : 'text-slate-500 hover:text-slate-300'
-                }`}
-                title="Light Mode (Alt+T)"
-              >
-                <Sun className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                id="theme-dark-btn"
-                onClick={() => !isDark && toggleTheme()}
-                className={`p-1.5 rounded-full transition-all cursor-pointer ${
-                  isDark
-                    ? 'bg-slate-800 text-emerald-400 shadow-lg'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-                title="Dark Mode (Alt+T)"
-              >
-                <Moon className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {/* Buku Panduan & Changelog Versi */}
+            <button
+              id="btn-open-user-manual"
+              onClick={() => setIsManualModalOpen(true)}
+              className="px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-amber-800 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/60 transition-all cursor-pointer shrink-0"
+              title="Buku Panduan Pengguna, Fitur & Riwayat Pembaruan (F1 / Alt+H)"
+            >
+              <BookOpen className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="hidden 2xl:inline">Panduan</span>
+            </button>
+
+            <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-0.5 hidden sm:block" />
+
+            {/* Settings Modal Trigger */}
+            <button
+              id="btn-open-settings"
+              onClick={handleOpenSettings}
+              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:bg-slate-700/50 transition-colors cursor-pointer shrink-0"
+              title={activeEmployee?.role === 'owner' ? "Pengaturan Toko Ritel & Struk" : "Pengaturan Toko (Perlu Otoritas Owner)"}
+            >
+              <SettingsIcon className="w-4 h-4" />
+            </button>
+
+            {/* Shortcuts Cheat Sheet */}
+            <button
+              id="btn-open-shortcuts"
+              onClick={() => setIsShortcutsOpen(true)}
+              className="hidden sm:flex p-1.5 rounded-lg text-slate-600 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:bg-slate-700/50 transition-colors cursor-pointer shrink-0"
+              title="Pintasan Keyboard (Hotkeys)"
+            >
+              <Keyboard className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* Live Digital Clock */}
-          <div className="hidden xl:flex items-center pl-2 border-l border-slate-200 dark:border-slate-800 text-right">
-            <div className="text-xs">
-              <div className="font-mono font-medium text-slate-900 dark:text-slate-300 flex items-center justify-end gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-emerald-500" />
-                {currentTime}
-              </div>
-              <div className="text-[11px] text-slate-500">
-                {currentDate}
-              </div>
-            </div>
+          {/* Theme Switcher */}
+          <div className="flex items-center bg-slate-100 dark:bg-slate-950 p-0.5 rounded-full border border-slate-300 dark:border-slate-800 shrink-0">
+            <button
+              type="button"
+              id="theme-light-btn"
+              onClick={() => isDark && toggleTheme()}
+              className={`p-1 rounded-full transition-all cursor-pointer ${
+                !isDark
+                  ? 'bg-white text-amber-500 shadow-sm ring-1 ring-slate-200'
+                  : 'text-slate-500 hover:text-slate-300'
+              }`}
+              title="Light Mode"
+            >
+              <Sun className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              id="theme-dark-btn"
+              onClick={() => !isDark && toggleTheme()}
+              className={`p-1 rounded-full transition-all cursor-pointer ${
+                isDark
+                  ? 'bg-slate-800 text-emerald-400 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+              title="Dark Mode"
+            >
+              <Moon className="w-3.5 h-3.5" />
+            </button>
           </div>
+
+          <div className="h-5 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
+
+          {/* DIRECT LOGIN / GANTI AKUN BUTTON - ALWAYS VISIBLE */}
+          <button
+            id="btn-header-quick-lock"
+            onClick={lockScreen}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-bold transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs"
+            title="Ganti Akun Kasir atau Login Otoritas Supervisor / Owner (Alt+L)"
+          >
+            <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span className="inline">Ganti Akun</span>
+          </button>
 
           {/* Active Employee Profile & Quick Menu Dropdown */}
-          <div className="relative pl-1 md:pl-2" ref={userMenuRef}>
+          <div className="relative shrink-0" ref={userMenuRef}>
             <button
               id="btn-employee-menu"
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700/80 rounded-xl px-2.5 py-1 transition cursor-pointer"
-              title="Menu Karyawan & Ganti Kasir"
+              className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700/80 rounded-xl px-2 py-1 transition cursor-pointer shrink-0"
+              title="Menu Karyawan & Ganti Otoritas"
             >
               <div
                 className={`w-7 h-7 rounded-lg ${
                   activeEmployee?.avatarColor || 'bg-emerald-600'
-                } text-white font-bold text-xs flex items-center justify-center shadow-xs flex-shrink-0`}
+                } text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0`}
               >
                 {activeEmployee?.avatar || 'KR'}
               </div>
               <div className="text-left text-xs hidden sm:block">
-                <p className="font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate max-w-[110px]">
+                <p className="font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate max-w-[85px] md:max-w-[110px]">
                   {activeEmployee?.name || 'Kasir'}
                 </p>
                 <div className="flex items-center gap-1">
                   <span className={`text-[9px] font-bold px-1 rounded ${badge.bg}`}>
                     {badge.label}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    {activeEmployee?.employeeCode || 'EMP-01'}
-                  </span>
                 </div>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-0.5" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
 
             {/* User Dropdown Menu */}
             {isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-50 overflow-hidden text-xs">
+              <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-50 overflow-hidden text-xs">
                 {/* Active user header */}
-                <div className="p-3.5 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800">
+                <div className="p-3 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
                     <div
                       className={`w-9 h-9 rounded-xl ${
                         activeEmployee?.avatarColor || 'bg-emerald-600'
-                      } text-white font-bold text-sm flex items-center justify-center shadow-sm`}
+                      } text-white font-bold text-sm flex items-center justify-center shadow-sm shrink-0`}
                     >
                       {activeEmployee?.avatar || 'KR'}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-slate-900 dark:text-white truncate">
-                        {activeEmployee?.name}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-bold text-slate-900 dark:text-white truncate">
+                          {activeEmployee?.name}
+                        </p>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${badge.bg}`}>
+                          {badge.label}
+                        </span>
+                      </div>
                       <p className="text-[11px] text-slate-500 truncate">
                         {activeEmployee?.roleTitle || activeEmployee?.role} • {activeEmployee?.assignedShift}
                       </p>
@@ -371,21 +547,21 @@ export const Header: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Menu items */}
-                <div className="p-1.5 space-y-0.5">
+                {/* Primary login & lock actions */}
+                <div className="p-1.5 space-y-1">
                   <button
                     id="menu-item-lock-screen"
                     onClick={() => {
                       setIsUserMenuOpen(false);
                       lockScreen();
                     }}
-                    className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                    className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-amber-900 dark:text-amber-200 bg-amber-50/80 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 transition border border-amber-200 dark:border-amber-800"
                   >
-                    <div className="flex items-center gap-2 font-medium">
-                      <Lock className="w-4 h-4 text-amber-500" />
+                    <div className="flex items-center gap-2 font-bold">
+                      <Lock className="w-4 h-4 text-amber-600" />
                       <span>Ganti Kasir / Kunci Layar</span>
                     </div>
-                    <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-500 font-mono">
+                    <kbd className="px-1.5 py-0.5 rounded bg-amber-200/60 dark:bg-amber-900/60 text-[10px] text-amber-900 dark:text-amber-200 font-mono">
                       Alt+L
                     </kbd>
                   </button>
@@ -406,40 +582,76 @@ export const Header: React.FC = () => {
                     id="menu-item-manage-employees"
                     onClick={() => {
                       setIsUserMenuOpen(false);
-                      setIsEmployeeManagementOpen(true);
+                      handleOpenEmployeeManagement();
                     }}
                     className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition font-medium"
                   >
                     <Users className="w-4 h-4 text-blue-500" />
-                    <span>Kelola Master Karyawan</span>
+                    <span>Kelola Master Karyawan & PIN</span>
+                  </button>
+
+                  <button
+                    id="menu-item-settings"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      handleOpenSettings();
+                    }}
+                    className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition font-medium"
+                  >
+                    <SettingsIcon className="w-4 h-4 text-slate-500" />
+                    <span>Pengaturan Toko & Struk</span>
+                  </button>
+
+                  <button
+                    id="menu-item-backup-restore"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      handleOpenBackupRestore();
+                    }}
+                    className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition font-medium"
+                  >
+                    <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Cadangan & Titik Pemulihan (Backup)</span>
                   </button>
                 </div>
 
-                {/* Fast Switch List */}
-                <div className="p-2 bg-slate-50/50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1 px-1">
-                    Ganti Karyawan Cepat:
+                {/* Fast Switch List to Other Roles (Supervisor, Owner, Cashiers) */}
+                <div className="p-2 bg-slate-50/70 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5 px-1 flex items-center justify-between">
+                    <span>Ganti Akun Cepat:</span>
+                    <span className="text-[9px] font-normal text-slate-400 font-mono">PIN / Otoritas</span>
                   </span>
                   <div className="space-y-1">
                     {employees
                       .filter((e) => e.isActive && e.id !== activeEmployee?.id)
-                      .slice(0, 3)
-                      .map((emp) => (
-                        <button
-                          key={emp.id}
-                          onClick={() => {
-                            quickSwitchEmployee(emp);
-                            setIsUserMenuOpen(false);
-                          }}
-                          className="w-full px-2 py-1 rounded-lg flex items-center justify-between text-left text-[11px] text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition"
-                        >
-                          <div className="flex items-center gap-1.5 truncate">
-                            <span className={`w-2 h-2 rounded-full ${emp.avatarColor}`} />
-                            <span className="truncate">{emp.name}</span>
-                          </div>
-                          <span className="text-[9px] text-slate-400 font-mono">{emp.employeeCode}</span>
-                        </button>
-                      ))}
+                      .map((emp) => {
+                        const isAuthority = emp.role === 'supervisor' || emp.role === 'owner';
+                        return (
+                          <button
+                            key={emp.id}
+                            onClick={() => {
+                              quickSwitchEmployee(emp);
+                              setIsUserMenuOpen(false);
+                            }}
+                            className={`w-full px-2.5 py-1.5 rounded-xl flex items-center justify-between text-left text-xs transition border cursor-pointer ${
+                              isAuthority
+                                ? 'bg-purple-50/60 dark:bg-purple-950/30 text-purple-950 dark:text-purple-200 hover:bg-purple-100 dark:hover:bg-purple-900/50 border-purple-200 dark:border-purple-800/70'
+                                : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <span className={`w-2.5 h-2.5 rounded-full ${emp.avatarColor} shrink-0`} />
+                              <span className="font-semibold truncate">{emp.name}</span>
+                              <span className="text-[9px] px-1 py-0.2 rounded bg-slate-200/70 dark:bg-slate-700 font-bold shrink-0">
+                                {emp.role === 'owner' ? 'Owner' : emp.role === 'supervisor' ? 'SPV' : 'Kasir'}
+                              </span>
+                            </div>
+                            <span className="text-[9px] text-slate-400 font-mono shrink-0">
+                              PIN: {emp.pin}
+                            </span>
+                          </button>
+                        );
+                      })}
                   </div>
                 </div>
 
@@ -451,10 +663,10 @@ export const Header: React.FC = () => {
                       setIsUserMenuOpen(false);
                       lockScreen();
                     }}
-                    className="w-full px-3 py-1.5 rounded-xl flex items-center gap-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-semibold transition"
+                    className="w-full px-3 py-1.5 rounded-xl flex items-center gap-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-semibold transition cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Kunci / Logout Akun</span>
+                    <span>Kunci / Keluar Akun</span>
                   </button>
                 </div>
               </div>
@@ -467,6 +679,32 @@ export const Header: React.FC = () => {
       {isHeldModalOpen && <HeldOrdersModal isOpen={isHeldModalOpen} onClose={() => setIsHeldModalOpen(false)} />}
       {isShortcutsOpen && <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />}
       {isSettingsOpen && <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />}
+      <DesktopAppModal isOpen={isDesktopModalOpen} onClose={() => setIsDesktopModalOpen(false)} />
+      <UserManualModal isOpen={isManualModalOpen} onClose={() => setIsManualModalOpen(false)} />
+      <LANServerModal
+        isOpen={isLANModalOpen}
+        onClose={() => setIsLANModalOpen(false)}
+        products={products}
+        transactions={transactions}
+        customers={customers}
+        suppliers={suppliers}
+        onApplyMasterData={(data) => {
+          applyMasterLANData(data);
+        }}
+        onRecallSharedHeldOrder={(order) => {
+          recallHeldOrder(order);
+        }}
+      />
+      <AuthorityModal
+        isOpen={authorityModalConfig.isOpen}
+        onClose={() => setAuthorityModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        title={authorityModalConfig.title}
+        description={authorityModalConfig.description}
+        requiredRole={authorityModalConfig.requiredRole}
+        onSuccess={() => {
+          authorityModalConfig.onSuccess();
+        }}
+      />
     </>
   );
 };
