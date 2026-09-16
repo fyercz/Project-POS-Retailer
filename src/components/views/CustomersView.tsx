@@ -187,7 +187,7 @@ export const CustomersView: React.FC = () => {
 
         {/* Action Button & Stats */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+          <div className="hidden sm:block px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
             <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 block">
               Total Member
             </span>
@@ -196,7 +196,7 @@ export const CustomersView: React.FC = () => {
             </span>
           </div>
 
-          <div className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-300">
+          <div className="hidden sm:block px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-300">
             <span className="text-[10px] font-medium block">Poin Beredar</span>
             <span className="font-bold font-mono flex items-center gap-1">
               <Award className="w-3.5 h-3.5 text-amber-500" />
@@ -204,7 +204,7 @@ export const CustomersView: React.FC = () => {
             </span>
           </div>
 
-          <div className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-300">
+          <div className="hidden sm:block px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-300">
             <span className="text-[10px] font-medium block">Potensi Diskon Aktif</span>
             <span className="font-bold font-mono">
               {formatCurrency(totalRupiahValue, settings.currency)}
@@ -222,7 +222,7 @@ export const CustomersView: React.FC = () => {
           <button
             id="btn-customers-backup-restore"
             onClick={() => setIsBackupRestoreOpen(true)}
-            className="px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors active:scale-95"
+            className="hidden md:flex px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-xs transition-colors active:scale-95"
             title="Cadangkan Data Member, Poin & Seluruh Database (Backup & Restore - F9)"
           >
             <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -232,11 +232,11 @@ export const CustomersView: React.FC = () => {
       </div>
 
       {/* Sub-Navigation Tabs Bar */}
-      <div className="px-4 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 overflow-x-auto">
+      <div className="px-4 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 overflow-x-auto whitespace-nowrap">
         <button
           type="button"
           onClick={() => setActiveCustomersTab('members')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${
             activeCustomersTab === 'members'
               ? 'bg-emerald-500 text-slate-950 shadow-xs'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -250,14 +250,14 @@ export const CustomersView: React.FC = () => {
           type="button"
           id="tab-loyalty-calculator"
           onClick={() => setActiveCustomersTab('calculator')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${
             activeCustomersTab === 'calculator'
               ? 'bg-emerald-500 text-slate-950 shadow-xs'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <Calculator className="w-4 h-4" />
-          <span>Kalkulator &amp; Pelacak Poin Otomatis</span>
+          <span>Kalkulator Poin</span>
           <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-amber-400 text-slate-950">
             Auto Diskon
           </span>
@@ -267,28 +267,28 @@ export const CustomersView: React.FC = () => {
           type="button"
           id="tab-loyalty-ledger"
           onClick={() => setActiveCustomersTab('ledger')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${
             activeCustomersTab === 'ledger'
               ? 'bg-emerald-500 text-slate-950 shadow-xs'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <History className="w-4 h-4" />
-          <span>Buku Besar Riwayat Poin</span>
+          <span>Riwayat Poin</span>
         </button>
 
         <button
           type="button"
           id="tab-loyalty-rules"
           onClick={() => setActiveCustomersTab('rules')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${
             activeCustomersTab === 'rules'
               ? 'bg-emerald-500 text-slate-950 shadow-xs'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <Sliders className="w-4 h-4" />
-          <span>Aturan &amp; Rasio Loyalitas</span>
+          <span>Aturan Loyalitas</span>
         </button>
       </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Package,
   Search,
@@ -40,6 +40,7 @@ import {
   Globe,
   FileSpreadsheet,
   Database,
+  ChevronDown,
 } from 'lucide-react';
 import { usePOS } from '../../context/POSContext';
 import { INITIAL_PRODUCTS } from '../../data/mockData';
@@ -220,6 +221,30 @@ export const InventoryView: React.FC = () => {
       setPendingReceivingFromPO(null);
     }
   }, [pendingReceivingFromPO, setPendingReceivingFromPO]);
+
+  // Grouped Menu Dropdown States
+  const [isAuditDropdownOpen, setIsAuditDropdownOpen] = useState(false);
+  const [isLogisticsDropdownOpen, setIsLogisticsDropdownOpen] = useState(false);
+  const [isMoreToolsDropdownOpen, setIsMoreToolsDropdownOpen] = useState(false);
+  const auditDropdownRef = useRef<HTMLDivElement>(null);
+  const logisticsDropdownRef = useRef<HTMLDivElement>(null);
+  const moreToolsDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (auditDropdownRef.current && !auditDropdownRef.current.contains(e.target as Node)) {
+        setIsAuditDropdownOpen(false);
+      }
+      if (logisticsDropdownRef.current && !logisticsDropdownRef.current.contains(e.target as Node)) {
+        setIsLogisticsDropdownOpen(false);
+      }
+      if (moreToolsDropdownRef.current && !moreToolsDropdownRef.current.contains(e.target as Node)) {
+        setIsMoreToolsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const outOfStockCount = products.filter((p) => p.stock === 0).length;
   const lowStockCount = products.filter((p) => p.stock <= p.minStock).length;
@@ -865,11 +890,11 @@ export const InventoryView: React.FC = () => {
           </div>
 
           {/* Ergonomic Tab Switcher */}
-          <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs gap-0.5">
+          <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs gap-0.5 overflow-x-auto max-w-full">
             <button
               id="tab-btn-inventory"
               onClick={() => setActiveTab('inventory')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                 activeTab === 'inventory'
                   ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -886,14 +911,14 @@ export const InventoryView: React.FC = () => {
                   title={`${totalAlertsCount} produk memerlukan perhatian stok atau kadaluarsa`}
                 >
                   <AlertTriangle className="w-2.5 h-2.5 text-slate-950" />
-                  <span>{totalAlertsCount} Alert</span>
+                  <span>{totalAlertsCount}</span>
                 </span>
               )}
             </button>
             <button
               id="tab-btn-price-history"
               onClick={() => setActiveTab('price_history')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                 activeTab === 'price_history'
                   ? 'bg-indigo-600 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400'
@@ -905,7 +930,7 @@ export const InventoryView: React.FC = () => {
             <button
               id="tab-btn-purchases"
               onClick={() => setActiveTab('purchases')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                 activeTab === 'purchases'
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
@@ -922,7 +947,7 @@ export const InventoryView: React.FC = () => {
             <button
               id="tab-btn-suppliers"
               onClick={() => setActiveTab('suppliers')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                 activeTab === 'suppliers'
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-400'
@@ -939,7 +964,7 @@ export const InventoryView: React.FC = () => {
             <button
               id="tab-btn-returns"
               onClick={() => setActiveTab('returns')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                 activeTab === 'returns'
                   ? 'bg-rose-500 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400'
@@ -956,46 +981,18 @@ export const InventoryView: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons: Grouped & Aesthetic */}
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Primary Action Button (Contextual per tab) */}
           {activeTab === 'inventory' && (
-            <>
-              <button
-                id="btn-add-product"
-                onClick={handleOpenAddProduct}
-                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ Tambah Produk</span>
-              </button>
-              <button
-                id="btn-open-data-import"
-                onClick={() => setIsDataImportOpen(true)}
-                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-700/20 cursor-pointer transition-all active:scale-95"
-                title="Import data produk massal & auto-koreksi gramasi / ejaan"
-              >
-                <Upload className="w-4 h-4 text-emerald-300" />
-                <span>Import & Koreksi Data</span>
-              </button>
-              <button
-                id="btn-inventory-backup-restore"
-                onClick={() => setIsBackupRestoreOpen(true)}
-                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 cursor-pointer transition-all active:scale-95"
-                title="Pusat Cadangan Data & Titik Pemulihan (Backup & Restore Point)"
-              >
-                <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span className="hidden sm:inline">Backup &amp; Restore</span>
-              </button>
-              <button
-                id="btn-inventory-price-history"
-                onClick={() => handleSwitchToPriceHistoryTab()}
-                className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-800 cursor-pointer transition-all active:scale-95 shadow-2xs"
-                title="Lihat riwayat fluktuasi harga modal dan perubahan harga jual retail seluruh produk"
-              >
-                <TrendingUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <span className="hidden sm:inline">Riwayat Harga</span>
-              </button>
-            </>
+            <button
+              id="btn-add-product"
+              onClick={handleOpenAddProduct}
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Tambah Produk</span>
+            </button>
           )}
 
           {activeTab === 'suppliers' && (
@@ -1009,71 +1006,230 @@ export const InventoryView: React.FC = () => {
             </button>
           )}
 
-          {/* AI VISUAL STOCK OPNAME */}
-          <button
-            id="btn-open-ai-stock-opname"
-            onClick={() => setIsAiStockOpnameOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-teal-600/20 cursor-pointer transition-all active:scale-95"
-          >
-            <Video className="w-4 h-4" />
-            <span>Cek Stok AI</span>
-          </button>
+          {activeTab === 'purchases' && (
+            <button
+              id="btn-open-receiving-tab"
+              onClick={() => setIsReceivingOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-slate-900/20 cursor-pointer transition-all active:scale-95 border border-slate-700"
+            >
+              <Truck className="w-4 h-4 text-emerald-400" />
+              <span>+ Terima Barang (Faktur)</span>
+            </button>
+          )}
 
-          {/* BULK STOCK ADJUSTMENT */}
-          <button
-            id="btn-open-bulk-adjust"
-            onClick={handleOpenBulkAdjustToolbar}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white font-bold text-xs flex items-center gap-1.5 border border-slate-700 cursor-pointer transition-all active:scale-95 shadow-xs"
-            title="Penyesuaian stok fisik dan tanggal kadaluarsa beberapa barang secara serentak"
-          >
-            <SlidersHorizontal className="w-4 h-4 text-emerald-400" />
-            <span>Penyesuaian Massal</span>
-          </button>
+          {activeTab === 'returns' && (
+            <button
+              id="btn-open-return-tab"
+              onClick={() => setIsReturnOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer transition-all active:scale-95"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>+ Retur ke Supplier</span>
+            </button>
+          )}
 
-          {/* STOCK OPNAME CSV / BATCH STOCK-TAKING */}
-          <button
-            id="btn-open-stocktake-csv"
-            onClick={() => setIsStockTakeCSVOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
-            title="Perbarui stok massal cepat via input teks/file CSV atau copy-paste dari Excel untuk mempercepat stock opname"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
-            <span>Stock Opname CSV</span>
-          </button>
-
-          {/* INPUT PEMBELIAN */}
-          <button
-            id="btn-open-receiving"
-            onClick={() => setIsReceivingOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 border border-slate-700 cursor-pointer transition-all active:scale-95"
-          >
-            <Truck className="w-4 h-4 text-emerald-400" />
-            <span>+ Terima Barang</span>
-          </button>
-
-          {/* INPUT RETUR PEMBELIAN */}
-          <button
-            id="btn-open-return"
-            onClick={() => setIsReturnOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer transition-all active:scale-95"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>+ Retur Barang</span>
-          </button>
-
-          {/* GENERATE RESTOCK PLAN (AI COPILOT) BUTTON */}
+          {/* AI RESTOCK INTELLIGENCE - Hidden on mobile for simplicity, prominent on desktop */}
           <button
             id="btn-generate-restock-plan"
             onClick={triggerRestockPlanAnalysis}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/25 cursor-pointer transition-all active:scale-95 border border-amber-300"
-            title="Analisis tingkat inventaris saat ini dengan Gemini AI dan buat rekomendasi Purchase Order (PO)"
+            className="hidden sm:flex px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-bold text-xs items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition-all active:scale-95 border border-amber-300"
+            title="Analisis tingkat inventaris dengan Gemini AI & buat rekomendasi Purchase Order"
           >
-            <Sparkles className="w-4 h-4 fill-current text-slate-950 animate-pulse" />
-            <span>Generate Restock Plan</span>
-            <span className="px-1.5 py-0.5 text-[9px] font-black uppercase bg-slate-950 text-amber-300 rounded-md">
-              AI Copilot
-            </span>
+            <Sparkles className="w-3.5 h-3.5 fill-current text-slate-950" />
+            <span>AI Restock Plan</span>
           </button>
+
+          {/* GROUP 1: Opname & Audit Stok (Dropdown) */}
+          <div className="relative hidden md:block" ref={auditDropdownRef}>
+            <button
+              id="btn-dropdown-audit"
+              onClick={() => {
+                setIsAuditDropdownOpen(!isAuditDropdownOpen);
+                setIsLogisticsDropdownOpen(false);
+                setIsMoreToolsDropdownOpen(false);
+              }}
+              className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 cursor-pointer transition-all shadow-2xs"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Opname &amp; Audit</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isAuditDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isAuditDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-2">
+                <div className="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  Audit Fisik &amp; Penyesuaian
+                </div>
+                <button
+                  onClick={() => {
+                    setIsAuditDropdownOpen(false);
+                    setIsAiStockOpnameOpen(true);
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <Video className="w-4 h-4 text-teal-500 shrink-0" />
+                  <div>
+                    <div>Cek Stok AI (Kamera)</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Identifikasi visual rak otomatis</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAuditDropdownOpen(false);
+                    setIsStockTakeCSVOpen(true);
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div>
+                    <div>Stock Opname CSV / Excel</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Update massal cepat via tabel</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAuditDropdownOpen(false);
+                    handleOpenBulkAdjustToolbar();
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <SlidersHorizontal className="w-4 h-4 text-blue-500 shrink-0" />
+                  <div>
+                    <div>Penyesuaian Stok Massal</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Ubah stok &amp; expired serentak</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAuditDropdownOpen(false);
+                    setIsDataImportOpen(true);
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <Upload className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <div>
+                    <div>Import &amp; Koreksi Produk</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Import file &amp; auto-koreksi ejaan</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* GROUP 2: Logistik & Faktur (Dropdown) */}
+          <div className="relative hidden md:block" ref={logisticsDropdownRef}>
+            <button
+              id="btn-dropdown-logistics"
+              onClick={() => {
+                setIsLogisticsDropdownOpen(!isLogisticsDropdownOpen);
+                setIsAuditDropdownOpen(false);
+                setIsMoreToolsDropdownOpen(false);
+              }}
+              className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 cursor-pointer transition-all shadow-2xs"
+            >
+              <Truck className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Logistik &amp; Faktur</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isLogisticsDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isLogisticsDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-2">
+                <div className="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  Pengadaan &amp; Supplier
+                </div>
+                <button
+                  onClick={() => {
+                    setIsLogisticsDropdownOpen(false);
+                    setIsReceivingOpen(true);
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <Truck className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div>
+                    <div>+ Terima Barang / PO</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Input faktur &amp; tambah stok baru</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsLogisticsDropdownOpen(false);
+                    setIsReturnOpen(true);
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4 text-rose-500 shrink-0" />
+                  <div>
+                    <div>+ Retur ke Supplier</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Pengembalian barang rusak / exp</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsLogisticsDropdownOpen(false);
+                    handleOpenAddSupplier();
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <Building2 className="w-4 h-4 text-blue-500 shrink-0" />
+                  <div>
+                    <div>+ Tambah Mitra Supplier</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Kelola kontak vendor &amp; tempo</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* GROUP 3: Data & Utilitas (Dropdown) */}
+          <div className="relative hidden md:block" ref={moreToolsDropdownRef}>
+            <button
+              id="btn-dropdown-more-tools"
+              onClick={() => {
+                setIsMoreToolsDropdownOpen(!isMoreToolsDropdownOpen);
+                setIsAuditDropdownOpen(false);
+                setIsLogisticsDropdownOpen(false);
+              }}
+              className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 cursor-pointer transition-all shadow-2xs"
+            >
+              <Database className="w-3.5 h-3.5 text-amber-500" />
+              <span>Data &amp; Cadangan</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isMoreToolsDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isMoreToolsDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-2">
+                <div className="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  Analisis &amp; Pemulihan
+                </div>
+                <button
+                  onClick={() => {
+                    setIsMoreToolsDropdownOpen(false);
+                    handleSwitchToPriceHistoryTab();
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <TrendingUp className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <div>
+                    <div>Riwayat Fluktuasi Harga</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Pantau riwayat modal &amp; harga jual</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsMoreToolsDropdownOpen(false);
+                    setIsBackupRestoreOpen(true);
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <Database className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div>
+                    <div>Backup &amp; Restore Database</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Buat titik pemulihan data (F9)</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

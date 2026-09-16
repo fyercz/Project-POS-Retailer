@@ -123,7 +123,7 @@ export const ReportsView: React.FC = () => {
           <button
             id="btn-reports-backup-restore"
             onClick={() => setIsBackupRestoreOpen(true)}
-            className="px-3.5 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors active:scale-95"
+            className="hidden md:flex px-3.5 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-xs transition-colors active:scale-95"
             title="Cadangkan Data Toko & Titik Pemulihan (Backup & Restore - F9)"
           >
             <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />

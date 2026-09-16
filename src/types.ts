@@ -4,6 +4,8 @@ export type CurrencyType = 'IDR';
 
 export type OrderType = 'sale' | 'takeaway' | 'delivery' | 'dine_in';
 
+export type ViewType = 'pos' | 'transactions' | 'inventory' | 'reports' | 'customers';
+
 export interface ProductCategory {
   id: string;
   name: string;

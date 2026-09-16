@@ -80,6 +80,8 @@ export const Header: React.FC = () => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
+  const toolsMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsDesktop(isDesktopApp());
@@ -188,11 +190,14 @@ export const Header: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lockScreen, activeEmployee]);
 
-  // Click outside to close user menu
+  // Click outside to close menus
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setIsUserMenuOpen(false);
+      }
+      if (toolsMenuRef.current && !toolsMenuRef.current.contains(e.target as Node)) {
+        setIsToolsMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -294,8 +299,8 @@ export const Header: React.FC = () => {
             })}
           </nav>
 
-          {/* Navigation Dropdown on medium / smaller screens */}
-          <div className="lg:hidden shrink-0">
+          {/* Navigation Dropdown on medium / tablet screens */}
+          <div className="hidden md:block lg:hidden shrink-0">
             <select
               id="mobile-nav-select"
               value={activeView}
@@ -323,11 +328,11 @@ export const Header: React.FC = () => {
 
         {/* Right Tools, Shortcuts, Theme Switcher & User Profile */}
         <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0 ml-auto">
-          {/* GEMINI AI COPILOT HERO BUTTON */}
+          {/* GEMINI AI COPILOT HERO BUTTON - Desktop/Tablet */}
           <button
             id="btn-open-gemini-copilot"
             onClick={() => openGeminiCopilot('upsell')}
-            className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
+            className="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs items-center gap-1.5 shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
             title="Buka Asisten AI Gemini Ritel Copilot"
           >
             <Sparkles className="w-3.5 h-3.5 fill-current animate-pulse" />
@@ -339,7 +344,7 @@ export const Header: React.FC = () => {
             <OfflineSyncBadge />
           </div>
 
-          {/* Barcode Camera Scanner */}
+          {/* Barcode Camera Scanner - Useful on both Mobile & Desktop */}
           <button
             id="btn-header-open-scanner"
             onClick={() => setIsBarcodeScannerOpen(true)}
@@ -350,11 +355,13 @@ export const Header: React.FC = () => {
             <span className="hidden md:inline">Scan</span>
           </button>
 
-          {/* Held Orders Quick Access */}
+          {/* Held Orders Quick Access - Only show if has orders or on desktop */}
           <button
             id="btn-open-held-orders"
             onClick={() => setIsHeldModalOpen(true)}
-            className={`relative p-1.5 sm:px-2 rounded-xl border text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0 ${
+            className={`relative p-1.5 sm:px-2 rounded-xl border text-xs font-semibold items-center gap-1 transition-colors cursor-pointer shrink-0 ${
+              heldOrders.length === 0 ? 'hidden sm:flex' : 'flex'
+            } ${
               heldOrders.length > 0
                 ? 'border-amber-400/80 bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:border-amber-700/70 dark:text-amber-300'
                 : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -370,120 +377,172 @@ export const Header: React.FC = () => {
             )}
           </button>
 
-          {/* System & Utilities Unified Toolbar Strip */}
-          <div className="flex items-center bg-slate-100/90 dark:bg-slate-800/80 p-0.5 rounded-xl border border-slate-200/80 dark:border-slate-700/60 gap-0.5 shrink-0">
-            {/* LAN Multi-Client Server Database Center */}
+          {/* Buku Panduan Langsung Akses */}
+          <button
+            id="btn-open-user-manual"
+            onClick={() => setIsManualModalOpen(true)}
+            className="hidden sm:flex px-2.5 py-1.5 rounded-xl text-xs font-semibold items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300/60 dark:border-amber-700/60 transition-all cursor-pointer shrink-0 shadow-2xs"
+            title="Buku Panduan Pengguna & Bantuan (F1 / Alt+H)"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="hidden lg:inline">Panduan</span>
+          </button>
+
+          {/* Grouped Pusat Alat & Sistem Dropdown */}
+          <div className="relative hidden md:block shrink-0" ref={toolsMenuRef}>
             <button
-              id="btn-open-lan-server"
-              onClick={() => setIsLANModalOpen(true)}
-              className="px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950/60 transition-all cursor-pointer shrink-0"
-              title="Pusat Server Database Multi-Client LAN (Alt+N) - Jaringan Kasir Terintegrasi"
+              id="btn-tools-menu"
+              onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)}
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs"
+              title="Pusat Alat, LAN, Backup, Pengaturan &amp; Hotkeys"
             >
-              <Network className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-              <span className="hidden 2xl:inline">LAN</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="LAN Server Aktif"></span>
+              <SettingsIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden xl:inline">Pusat Alat</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-150 ${isToolsMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Backup & Restore Disaster Recovery Center */}
-            <button
-              id="btn-open-backup-restore"
-              onClick={handleOpenBackupRestore}
-              className="px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/60 transition-all cursor-pointer shrink-0"
-              title="Pusat Cadangan & Titik Pemulihan Data (Backup & Restore - F9)"
-            >
-              <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span className="hidden 2xl:inline">Backup</span>
-            </button>
+            {isToolsMenuOpen && (
+              <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <SettingsIcon className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">Pusat Alat &amp; Sistem</h4>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">Konfigurasi jaringan &amp; utilitas</p>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Desktop App Hub & Kiosk Controller */}
-            <button
-              id="btn-open-desktop-hub"
-              onClick={() => setIsDesktopModalOpen(true)}
-              className={`px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
-                isDesktop
-                  ? 'text-blue-700 bg-blue-50 dark:text-blue-300 dark:bg-blue-950/60'
-                  : 'text-slate-600 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:bg-slate-700/50'
-              }`}
-              title="Pusat Aplikasi Kasir Desktop & Layar Penuh Kiosk (Alt+D / F11)"
-            >
-              <Laptop className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span className="hidden 2xl:inline">Desktop</span>
-              {isDesktop && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Mode Desktop Aktif"></span>
-              )}
-            </button>
+                <div className="p-1.5 space-y-0.5">
+                  {/* LAN Multi-Client Server */}
+                  <button
+                    onClick={() => {
+                      setIsToolsMenuOpen(false);
+                      setIsLANModalOpen(true);
+                    }}
+                    className="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Network className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">Server LAN Multi-Kasir</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Jaringan kasir terintegrasi (Alt+N)</div>
+                      </div>
+                    </div>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  </button>
 
-            {/* Buku Panduan & Changelog Versi */}
-            <button
-              id="btn-open-user-manual"
-              onClick={() => setIsManualModalOpen(true)}
-              className="px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-amber-800 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/60 transition-all cursor-pointer shrink-0"
-              title="Buku Panduan Pengguna, Fitur & Riwayat Pembaruan (F1 / Alt+H)"
-            >
-              <BookOpen className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span className="hidden 2xl:inline">Panduan</span>
-            </button>
+                  {/* Backup & Restore */}
+                  <button
+                    onClick={() => {
+                      setIsToolsMenuOpen(false);
+                      handleOpenBackupRestore();
+                    }}
+                    className="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Database className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">Backup &amp; Restore Data</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Cadangan titik pemulihan (F9)</div>
+                      </div>
+                    </div>
+                  </button>
 
-            <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-0.5 hidden sm:block" />
+                  {/* Desktop App Hub */}
+                  <button
+                    onClick={() => {
+                      setIsToolsMenuOpen(false);
+                      setIsDesktopModalOpen(true);
+                    }}
+                    className="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Laptop className="w-4 h-4 text-blue-500 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">Mode Desktop &amp; Kiosk</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Layar penuh POS (Alt+D / F11)</div>
+                      </div>
+                    </div>
+                    {isDesktop && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-bold">Aktif</span>
+                    )}
+                  </button>
 
-            {/* Settings Modal Trigger */}
-            <button
-              id="btn-open-settings"
-              onClick={handleOpenSettings}
-              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:bg-slate-700/50 transition-colors cursor-pointer shrink-0"
-              title={activeEmployee?.role === 'owner' ? "Pengaturan Toko Ritel & Struk" : "Pengaturan Toko (Perlu Otoritas Owner)"}
-            >
-              <SettingsIcon className="w-4 h-4" />
-            </button>
+                  {/* Settings Modal */}
+                  <button
+                    onClick={() => {
+                      setIsToolsMenuOpen(false);
+                      handleOpenSettings();
+                    }}
+                    className="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <SettingsIcon className="w-4 h-4 text-slate-500 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">Pengaturan Toko &amp; Struk</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Printer, pajak, logo struk</div>
+                      </div>
+                    </div>
+                  </button>
 
-            {/* Shortcuts Cheat Sheet */}
-            <button
-              id="btn-open-shortcuts"
-              onClick={() => setIsShortcutsOpen(true)}
-              className="hidden sm:flex p-1.5 rounded-lg text-slate-600 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:bg-slate-700/50 transition-colors cursor-pointer shrink-0"
-              title="Pintasan Keyboard (Hotkeys)"
-            >
-              <Keyboard className="w-4 h-4" />
-            </button>
+                  {/* Keyboard Shortcuts */}
+                  <button
+                    onClick={() => {
+                      setIsToolsMenuOpen(false);
+                      setIsShortcutsOpen(true);
+                    }}
+                    className="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Keyboard className="w-4 h-4 text-slate-500 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">Pintasan Keyboard (Hotkeys)</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Daftar tombol cepat F1 - F10</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Theme Switcher inside tools dropdown */}
+                <div className="p-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Tema Tampilan</span>
+                  <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => isDark && toggleTheme()}
+                      className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 cursor-pointer transition ${
+                        !isDark ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 shadow-2xs' : 'text-slate-500'
+                      }`}
+                    >
+                      <Sun className="w-3 h-3 text-amber-500" />
+                      <span>Terang</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => !isDark && toggleTheme()}
+                      className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 cursor-pointer transition ${
+                        isDark ? 'bg-slate-800 text-emerald-400 shadow-2xs' : 'text-slate-500'
+                      }`}
+                    >
+                      <Moon className="w-3 h-3 text-emerald-400" />
+                      <span>Gelap</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Theme Switcher */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-950 p-0.5 rounded-full border border-slate-300 dark:border-slate-800 shrink-0">
-            <button
-              type="button"
-              id="theme-light-btn"
-              onClick={() => isDark && toggleTheme()}
-              className={`p-1 rounded-full transition-all cursor-pointer ${
-                !isDark
-                  ? 'bg-white text-amber-500 shadow-sm ring-1 ring-slate-200'
-                  : 'text-slate-500 hover:text-slate-300'
-              }`}
-              title="Light Mode"
-            >
-              <Sun className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              id="theme-dark-btn"
-              onClick={() => !isDark && toggleTheme()}
-              className={`p-1 rounded-full transition-all cursor-pointer ${
-                isDark
-                  ? 'bg-slate-800 text-emerald-400 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-              title="Dark Mode"
-            >
-              <Moon className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <div className="hidden sm:block h-5 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
-          <div className="h-5 w-px bg-slate-200 dark:bg-slate-800 mx-0.5" />
-
-          {/* DIRECT LOGIN / GANTI AKUN BUTTON - ALWAYS VISIBLE */}
+          {/* DIRECT LOGIN / GANTI AKUN BUTTON - Desktop/Tablet */}
           <button
             id="btn-header-quick-lock"
             onClick={lockScreen}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-bold transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-bold transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs"
             title="Ganti Akun Kasir atau Login Otoritas Supervisor / Owner (Alt+L)"
           >
             <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
@@ -613,6 +672,78 @@ export const Header: React.FC = () => {
                     <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>Cadangan & Titik Pemulihan (Backup)</span>
                   </button>
+
+                  <button
+                    id="menu-item-user-manual"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setIsManualModalOpen(true);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition font-medium"
+                  >
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      <span>Buku Panduan & Dokumentasi</span>
+                    </div>
+                    <kbd className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-[10px] font-mono">
+                      F1 / Alt+H
+                    </kbd>
+                  </button>
+
+                  <button
+                    id="menu-item-gemini-ai"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      openGeminiCopilot('upsell');
+                    }}
+                    className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition font-medium"
+                  >
+                    <Sparkles className="w-4 h-4 text-teal-500 animate-pulse" />
+                    <span>Gemini AI Retail Copilot</span>
+                  </button>
+
+                  <button
+                    id="menu-item-toggle-theme"
+                    onClick={() => {
+                      toggleTheme();
+                    }}
+                    className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition font-medium"
+                  >
+                    <div className="flex items-center gap-2">
+                      {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+                      <span>Tema: {isDark ? 'Mode Gelap (Aktif)' : 'Mode Terang (Aktif)'}</span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                      Ganti
+                    </span>
+                  </button>
+
+                  {/* LAN & Desktop in menu for mobile/tablet */}
+                  <div className="md:hidden border-t border-slate-200 dark:border-slate-800 pt-1 mt-1 space-y-1">
+                    <button
+                      id="menu-item-lan-server"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        setIsLANModalOpen(true);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition font-medium"
+                    >
+                      <Network className="w-4 h-4 text-indigo-500" />
+                      <span>Jaringan Multi-Client LAN</span>
+                    </button>
+
+                    <button
+                      id="menu-item-desktop-hub"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        setIsDesktopModalOpen(true);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition font-medium"
+                    >
+                      <Laptop className="w-4 h-4 text-blue-500" />
+                      <span>Mode Layar Penuh Kiosk / Desktop</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Fast Switch List to Other Roles (Supervisor, Owner, Cashiers) */}
@@ -679,8 +810,8 @@ export const Header: React.FC = () => {
       {isHeldModalOpen && <HeldOrdersModal isOpen={isHeldModalOpen} onClose={() => setIsHeldModalOpen(false)} />}
       {isShortcutsOpen && <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />}
       {isSettingsOpen && <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />}
-      <DesktopAppModal isOpen={isDesktopModalOpen} onClose={() => setIsDesktopModalOpen(false)} />
-      <UserManualModal isOpen={isManualModalOpen} onClose={() => setIsManualModalOpen(false)} />
+      {isDesktopModalOpen && <DesktopAppModal isOpen={isDesktopModalOpen} onClose={() => setIsDesktopModalOpen(false)} />}
+      {isManualModalOpen && <UserManualModal isOpen={isManualModalOpen} onClose={() => setIsManualModalOpen(false)} />}
       <LANServerModal
         isOpen={isLANModalOpen}
         onClose={() => setIsLANModalOpen(false)}

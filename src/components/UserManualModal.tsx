@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   X,
   BookOpen,
@@ -22,6 +22,12 @@ import {
   Database,
   Laptop,
   Network,
+  Settings,
+  Award,
+  BarChart3,
+  ShieldCheck,
+  FileSpreadsheet,
+  Filter,
 } from 'lucide-react';
 import {
   APP_VERSION,
@@ -45,38 +51,72 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'manual' | 'changelog' | 'faq' | 'shortcuts'>(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'Semua' | 'Kasir' | 'Supervisor' | 'Owner'>('Semua');
   const [selectedSectionId, setSelectedSectionId] = useState<string>(USER_MANUAL_SECTIONS[0]?.id || 'kasir-penjualan');
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(0);
 
-  if (!isOpen) return null;
+  // Sync tab if initialTab changes or modal opens
+  useEffect(() => {
+    if (isOpen && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Icon mapper
   const renderSectionIcon = (iconName: string) => {
     switch (iconName) {
       case 'ShoppingCart':
         return <ShoppingCart className="w-4 h-4 text-emerald-500" />;
+      case 'Settings':
+        return <Settings className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
       case 'Package':
         return <Package className="w-4 h-4 text-blue-500" />;
       case 'Truck':
         return <Truck className="w-4 h-4 text-amber-500" />;
+      case 'Sparkles':
+        return <Sparkles className="w-4 h-4 text-amber-500" />;
+      case 'Award':
+        return <Award className="w-4 h-4 text-rose-500" />;
       case 'Coins':
         return <Coins className="w-4 h-4 text-indigo-500" />;
+      case 'BarChart3':
+        return <BarChart3 className="w-4 h-4 text-teal-500" />;
       case 'Database':
         return <Database className="w-4 h-4 text-purple-500" />;
       case 'Laptop':
         return <Laptop className="w-4 h-4 text-cyan-500" />;
       case 'Network':
         return <Network className="w-4 h-4 text-indigo-500" />;
+      case 'ShieldCheck':
+        return <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
+      case 'FileSpreadsheet':
+        return <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
       default:
         return <BookOpen className="w-4 h-4 text-emerald-500" />;
     }
   };
 
-  // Filter sections by search query
+  // Filter sections by search query and role
   const filteredSections = useMemo(() => {
-    if (!searchQuery.trim()) return USER_MANUAL_SECTIONS;
-    const query = searchQuery.toLowerCase();
     return USER_MANUAL_SECTIONS.filter((sec) => {
+      if (selectedRole !== 'Semua' && !sec.roles.includes(selectedRole as any)) {
+        return false;
+      }
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
       const matchTitle = sec.title.toLowerCase().includes(query);
       const matchDesc = sec.description.toLowerCase().includes(query);
       const matchTopics = sec.topics.some(
@@ -87,13 +127,24 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
       );
       return matchTitle || matchDesc || matchTopics;
     });
-  }, [searchQuery]);
+  }, [searchQuery, selectedRole]);
+
+  // Keep selected section valid if filter changes
+  useEffect(() => {
+    if (filteredSections.length > 0) {
+      const exists = filteredSections.some((s) => s.id === selectedSectionId);
+      if (!exists) {
+        setSelectedSectionId(filteredSections[0].id);
+      }
+    }
+  }, [filteredSections, selectedSectionId]);
 
   const activeSection = useMemo(() => {
+    if (filteredSections.length === 0) return null;
     return (
       filteredSections.find((s) => s.id === selectedSectionId) ||
       filteredSections[0] ||
-      USER_MANUAL_SECTIONS[0]
+      null
     );
   }, [filteredSections, selectedSectionId]);
 
@@ -101,14 +152,20 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
     window.print();
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto"
+      onClick={onClose}
+    >
       <div
         id="user-manual-modal"
-        className="w-full max-w-5xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-5xl h-[90vh] max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden min-h-0"
       >
         {/* Modal Header */}
-        <div className="p-4 sm:px-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-wrap items-center justify-between gap-3">
+        <div className="shrink-0 p-4 sm:px-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
               <BookOpen className="w-5 h-5" />
@@ -148,7 +205,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
         </div>
 
         {/* Navigation Tabs & Search */}
-        <div className="px-4 sm:px-6 py-2.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="shrink-0 px-4 sm:px-6 py-2.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Main Navigation Tabs */}
           <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
             <button
@@ -230,14 +287,66 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
         </div>
 
         {/* Tab Content Body */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           {/* TAB 1: USER MANUAL CHAPTERS */}
           {activeTab === 'manual' && (
-            <div className="h-full flex flex-col md:flex-row overflow-hidden">
-              {/* Left Column: Chapters / Sections List */}
-              <div className="w-full md:w-72 lg:w-80 border-r border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 overflow-y-auto p-3 space-y-1 shrink-0">
-                <div className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  Daftar Bab Panduan
+            <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+              {/* Mobile Chapter Selector (Dropdown) */}
+              <div className="md:hidden shrink-0 px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 space-y-2">
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+                  {(['Semua', 'Kasir', 'Supervisor', 'Owner'] as const).map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => setSelectedRole(role)}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                        selectedRole === role
+                          ? 'bg-emerald-500 text-white shadow-2xs'
+                          : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {role === 'Supervisor' ? '⭐ Supervisor' : role}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">Pilih Bab:</span>
+                  <select
+                    id="select-mobile-manual-chapter"
+                    value={selectedSectionId}
+                    onChange={(e) => setSelectedSectionId(e.target.value)}
+                    className="flex-1 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-emerald-500 truncate"
+                  >
+                    {filteredSections.map((sec) => (
+                      <option key={sec.id} value={sec.id}>
+                        {sec.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Left Column: Chapters / Sections List (Desktop) */}
+              <div className="hidden md:block w-72 lg:w-80 border-r border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 overflow-y-auto p-3 space-y-1 shrink-0">
+                <div className="px-2 pt-1 pb-2 space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    <span>Daftar Bab Panduan</span>
+                    <span className="text-[10px] text-slate-400 font-normal">({filteredSections.length} Bab)</span>
+                  </div>
+                  <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+                    {(['Semua', 'Kasir', 'Supervisor', 'Owner'] as const).map((role) => (
+                      <button
+                        key={role}
+                        onClick={() => setSelectedRole(role)}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                          selectedRole === role
+                            ? 'bg-emerald-500 text-white shadow-2xs'
+                            : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        {role === 'Supervisor' ? '⭐ Supervisor' : role}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 {filteredSections.map((sec) => {
                   const isSelected = sec.id === activeSection?.id;
@@ -278,7 +387,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
               </div>
 
               {/* Right Column: Active Chapter Content */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-900 space-y-6">
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 bg-white dark:bg-slate-900 space-y-6">
                 {activeSection ? (
                   <div>
                     {/* Chapter Header */}
@@ -377,8 +486,20 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-slate-500">
-                    Tidak ada hasil bab manual yang cocok dengan "{searchQuery}".
+                  <div className="text-center py-16 px-4">
+                    <Search className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      Bab Tidak Ditemukan
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                      Tidak ada hasil bab panduan yang cocok dengan kata kunci "{searchQuery}".
+                    </p>
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="mt-4 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+                    >
+                      Tampilkan Semua Bab Panduan
+                    </button>
                   </div>
                 )}
               </div>
@@ -387,7 +508,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
 
           {/* TAB 2: CHANGELOG & RELEASE NOTES */}
           {activeTab === 'changelog' && (
-            <div className="h-full overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-900 space-y-6">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 bg-white dark:bg-slate-900 space-y-6">
               <div className="max-w-3xl mx-auto space-y-6">
                 <div className="p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-start gap-3">
                   <Sparkles className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
@@ -461,7 +582,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
 
           {/* TAB 3: FAQ */}
           {activeTab === 'faq' && (
-            <div className="h-full overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-900">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 bg-white dark:bg-slate-900">
               <div className="max-w-3xl mx-auto space-y-4">
                 <div className="text-center pb-4">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">
@@ -514,7 +635,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
 
           {/* TAB 4: SHORTCUTS CHEAT SHEET */}
           {activeTab === 'shortcuts' && (
-            <div className="h-full overflow-y-auto p-4 sm:p-6 bg-white dark:bg-slate-900">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 bg-white dark:bg-slate-900">
               <div className="max-w-3xl mx-auto space-y-4">
                 <div className="text-center pb-2">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">
@@ -527,10 +648,12 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
+                    { key: 'F1 / Alt + H', action: 'Buka Buku Panduan & Dokumentasi', desc: 'Membuka manual interaktif dan petunjuk operasional kasir' },
                     { key: 'Ctrl + F / F2', action: 'Fokus Pencarian Produk & Filter SKU', desc: 'Arahkan kursor langsung ke kolom pencarian produk untuk filter nama atau SKU' },
                     { key: 'F3', action: 'Buka Barcode Scanner Kamera', desc: 'Scan barcode produk menggunakan kamera komputer / HP' },
                     { key: 'F4', action: 'Parkir Pesanan (Hold Order)', desc: 'Simpan keranjang sementara dan layani pembeli berikutnya' },
                     { key: 'F9', action: 'Pusat Backup & Restore Data', desc: 'Buka pusat cadangan data, titik pemulihan, dan ekspor database' },
+                    { key: 'Alt + N', action: 'Server Database Multi-Client LAN', desc: 'Buka manajemen jaringan kasir bersama antar-komputer dan HP' },
                     { key: 'F11', action: 'Mode Kiosk Layar Penuh (Fullscreen)', desc: 'Kunci layar kasir penuh untuk fokus pelayanan tanpa gangguan' },
                     { key: 'Alt + L', action: 'Kunci Layar Kasir (Lock PIN)', desc: 'Kunci kasir saat ditinggal istirahat / ganti shift' },
                     { key: 'Alt + D', action: 'Pusat Aplikasi Desktop & Kiosk', desc: 'Menu kontrol aplikasi desktop, cetak senyap, dan laci uang' },
@@ -562,7 +685,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3 sm:px-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+        <div className="shrink-0 p-3 sm:px-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <span>Versi Aktif: <strong className="text-slate-700 dark:text-slate-300">{APP_VERSION}</strong></span>
             <span>•</span>

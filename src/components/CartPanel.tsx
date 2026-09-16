@@ -18,13 +18,18 @@ import {
   AlertTriangle,
   HelpCircle,
   Lock,
+  ArrowLeft,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { CustomerModal } from './CustomerModal';
 import { WholesaleUnit } from '../types';
 
-export const CartPanel: React.FC = () => {
+interface CartPanelProps {
+  onBackToCatalog?: () => void;
+}
+
+export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
   const {
     cart,
     addToCart,
@@ -126,6 +131,23 @@ export const CartPanel: React.FC = () => {
       id="pos-cart-panel"
       className="flex flex-col h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 select-none shadow-sm"
     >
+      {/* Mobile Back to Catalog Bar */}
+      {onBackToCatalog && (
+        <div className="md:hidden px-3 py-2 bg-emerald-50 dark:bg-emerald-950/60 border-b border-emerald-200 dark:border-emerald-800/80 flex items-center justify-between shrink-0">
+          <button
+            type="button"
+            onClick={onBackToCatalog}
+            className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 hover:text-emerald-950 dark:hover:text-white cursor-pointer active:scale-95 transition-transform"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>&larr; Kembali ke Katalog</span>
+          </button>
+          <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-bold">
+            {cart.reduce((s, i) => s + i.quantity, 0)} Item
+          </span>
+        </div>
+      )}
+
       {/* Active Cashier & Quick Switch / Authority Bar */}
       <div className="px-3 py-1.5 bg-slate-100/90 dark:bg-slate-850/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs shrink-0">
         <div className="flex items-center gap-2 min-w-0">
@@ -372,9 +394,9 @@ export const CartPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Gemini AI Smart Upsell strip (if suggestions exist) */}
+      {/* Gemini AI Smart Upsell strip (Desktop/Tablet only) */}
       {cart.length > 0 && aiUpsellSuggestions.length > 0 && (
-        <div className="p-2.5 bg-gradient-to-r from-emerald-950/90 via-slate-900 to-slate-950 border-t border-emerald-500/30 text-white space-y-2 shrink-0 animate-in fade-in">
+        <div className="hidden sm:block p-2.5 bg-gradient-to-r from-emerald-950/90 via-slate-900 to-slate-950 border-t border-emerald-500/30 text-white space-y-2 shrink-0 animate-in fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
               <Sparkles className="w-3.5 h-3.5 fill-current animate-pulse" />
@@ -623,7 +645,7 @@ export const CartPanel: React.FC = () => {
               </div>
 
               {nonEligibleSpend > 0 && (
-                <p className="text-[9px] text-amber-700 dark:text-amber-400/90 leading-tight pt-0.5 flex items-start gap-1">
+                <p className="hidden sm:flex text-[9px] text-amber-700 dark:text-amber-400/90 leading-tight pt-0.5 items-start gap-1">
                   <AlertTriangle className="w-2.5 h-2.5 text-amber-500 shrink-0 mt-0.5" />
                   <span>
                     Item senilai {formatCurrency(nonEligibleSpend)} memiliki margin &lt;15% (rokok/promo margin tipis) sehingga tidak dihitung dalam akumulasi poin member.
@@ -679,7 +701,7 @@ export const CartPanel: React.FC = () => {
           >
             <CreditCard className="w-4 h-4" />
             <span>Bayar Sekarang</span>
-            <span className="text-[10px] px-1 py-0.2 rounded bg-slate-950/20 text-slate-950 font-mono ml-1 font-bold">F9</span>
+            <span className="hidden sm:inline text-[10px] px-1 py-0.2 rounded bg-slate-950/20 text-slate-950 font-mono ml-1 font-bold">F9</span>
           </button>
         </div>
       </div>
