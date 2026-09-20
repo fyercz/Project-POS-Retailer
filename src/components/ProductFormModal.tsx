@@ -10,7 +10,6 @@ import {
   Tag,
   Calendar,
   Layers,
-  Image as ImageIcon,
   Sparkles,
   Percent,
   Check,
@@ -35,17 +34,6 @@ interface ProductFormModalProps {
   onPrintPriceTag?: (product: Product) => void;
   onViewPriceHistory?: (product: Product) => void;
 }
-
-const SAMPLE_IMAGES = [
-  { label: 'Beras / Gula', url: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80' },
-  { label: 'Minyak / Botol', url: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80' },
-  { label: 'Minuman / Susu', url: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80' },
-  { label: 'Kopi / Teh', url: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=600&q=80' },
-  { label: 'Snack / Biskuit', url: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=600&q=80' },
-  { label: 'Mie / Instan', url: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80' },
-  { label: 'Perawatan / Sabun', url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80' },
-  { label: 'Pembersih Rumah', url: 'https://images.unsplash.com/photo-1585837575652-267c041d77d4?auto=format&fit=crop&w=600&q=80' },
-];
 
 const PRESET_UNITS = [
   { name: 'Dus (40 Pcs)', multiplier: 40, label: 'Dus Mie (40 pcs)' },
@@ -84,10 +72,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [costPrice, setCostPrice] = useState<number>(0);
   const [stock, setStock] = useState<number>(10);
   const [minStock, setMinStock] = useState<number>(5);
+  const [lastOrderQuantity, setLastOrderQuantity] = useState<number>(0);
   const [unit, setUnit] = useState('pcs');
   const [expiryDate, setExpiryDate] = useState('2027-12-31');
   const [batchNumber, setBatchNumber] = useState('');
-  const [image, setImage] = useState('');
   const [promoBadge, setPromoBadge] = useState('');
   const [isPopular, setIsPopular] = useState(false);
   const [description, setDescription] = useState('');
@@ -106,11 +94,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setPrice(productToEdit.price || 0);
       setCostPrice(productToEdit.costPrice || 0);
       setStock(productToEdit.stock || 0);
-      setMinStock(productToEdit.minStock || 5);
+      const initialLastOrder = productToEdit.lastOrderQuantity || (productToEdit.minStock ? productToEdit.minStock * 2 : 0);
+      setLastOrderQuantity(initialLastOrder);
+      setMinStock(productToEdit.minStock || (initialLastOrder > 0 ? Math.max(1, Math.ceil(initialLastOrder * 0.5)) : 5));
       setUnit(productToEdit.unit || 'pcs');
       setExpiryDate(productToEdit.expiryDate || '2027-12-31');
       setBatchNumber(productToEdit.batchNumber || '');
-      setImage(productToEdit.image || SAMPLE_IMAGES[0].url);
       setPromoBadge(productToEdit.promoBadge || '');
       setIsPopular(Boolean(productToEdit.isPopular));
       setDescription(productToEdit.description || '');
@@ -126,11 +115,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setPrice(15000);
       setCostPrice(12000);
       setStock(24);
-      setMinStock(6);
+      setLastOrderQuantity(20);
+      setMinStock(10); // Aturan 50% dari order 20
       setUnit('pcs');
       setExpiryDate('2027-12-31');
       setBatchNumber(`BCH-${randNum}`);
-      setImage(SAMPLE_IMAGES[0].url);
       setPromoBadge('');
       setIsPopular(false);
       setDescription('');
@@ -182,7 +171,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         if (item.unit) setUnit(item.unit);
         if (item.price > 0) setPrice(item.price);
         if (item.costPrice > 0) setCostPrice(item.costPrice);
-        if (item.image && !item.image.includes('placeholder')) setImage(item.image);
         if (item.description) setDescription(item.description);
 
         if (Array.isArray(item.wholesaleUnits) && item.wholesaleUnits.length > 0) {
@@ -246,7 +234,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         if (item.unit) setUnit(item.unit);
         if (item.price > 0) setPrice(item.price);
         if (item.costPrice > 0) setCostPrice(item.costPrice);
-        if (item.image) setImage(item.image);
         if (item.description) setDescription(item.description);
 
         if (Array.isArray(item.wholesaleUnits) && item.wholesaleUnits.length > 0) {
@@ -346,11 +333,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       price: Number(price),
       costPrice: Number(costPrice),
       stock: Number(stock),
-      minStock: Number(minStock),
+      minStock: Number(minStock) > 0 ? Number(minStock) : Math.max(1, Math.ceil((Number(lastOrderQuantity) || 10) * 0.5)),
+      lastOrderQuantity: Number(lastOrderQuantity) > 0 ? Number(lastOrderQuantity) : undefined,
+      lastOrderDate: productToEdit?.lastOrderDate || undefined,
       unit: unit.trim() || 'pcs',
       expiryDate: expiryDate || undefined,
       batchNumber: batchNumber.trim() || undefined,
-      image: image.trim() || SAMPLE_IMAGES[0].url,
+      image: productToEdit?.image || undefined,
       promoBadge: promoBadge.trim() || undefined,
       isPopular,
       description: description.trim() || undefined,
@@ -852,11 +841,26 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {/* Section 4: Stok & Batch FEFO */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-amber-500" />
-              <span>Inventaris, Stok & Batch FEFO</span>
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-amber-500" />
+                <span>Inventaris, Stok & Aturan Safety Stock</span>
+              </h4>
+              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                Rule: Min. Stok 50% Order
+              </span>
+            </div>
+
+            {/* Banner Aturan 50% */}
+            <div className="mb-3 p-2.5 rounded-xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200/70 dark:border-blue-800/50 flex items-start gap-2 text-xs text-blue-900 dark:text-blue-200">
+              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+              <div className="leading-relaxed">
+                <span className="font-bold">Aturan Operasional Toko:</span> Batas minimal stok (safety stock) ditetapkan sebesar{' '}
+                <span className="font-bold text-blue-700 dark:text-blue-300">50% dari jumlah order terakhir (PO Supplier)</span>. Saat penerimaan faktur pembelian masuk, sistem akan otomatis menghitung dan memperbarui batas minimal stok ini.
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Stok Saat Ini
@@ -871,16 +875,57 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Batas Min. Stok (Alert)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Order Terakhir (PO)
+                  </label>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Dasar 50%</span>
+                </div>
                 <input
                   type="number"
                   min={0}
-                  value={minStock}
-                  onChange={(e) => setMinStock(Number(e.target.value))}
-                  className="w-full px-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  value={lastOrderQuantity}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setLastOrderQuantity(val);
+                    if (val > 0) {
+                      setMinStock(Math.max(1, Math.ceil(val * 0.5)));
+                    }
+                  }}
+                  placeholder="e.g. 24"
+                  className="w-full px-3 py-2 text-sm font-mono rounded-xl border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Batas Min. Stok (Alert)
+                  </label>
+                  {lastOrderQuantity > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setMinStock(Math.max(1, Math.ceil(lastOrderQuantity * 0.5)))}
+                      className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Sync 50% ({Math.max(1, Math.ceil(lastOrderQuantity * 0.5))})
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    value={minStock}
+                    onChange={(e) => setMinStock(Number(e.target.value))}
+                    className="w-full px-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                  {lastOrderQuantity > 0 && minStock === Math.max(1, Math.ceil(lastOrderQuantity * 0.5)) && (
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded">
+                      ✓ 50%
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -900,50 +945,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
           </div>
 
-          {/* Section 5: Gambar & Promosi */}
+          {/* Section 5: Promosi & Atribut Tambahan */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
-              <ImageIcon className="w-3.5 h-3.5 text-purple-500" />
-              <span>Gambar & Atribut Tambahan</span>
+              <Tag className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Promosi & Atribut Tambahan</span>
             </h4>
             <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  URL Foto Produk
-                </label>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
-                    {image ? (
-                      <img src={image} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <Package className="w-6 h-6 text-slate-400" />
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
-                {/* Preset Thumbnails */}
-                <div className="flex items-center gap-1.5 flex-wrap mt-2">
-                  <span className="text-[10px] text-slate-400">Pilihan cepat:</span>
-                  {SAMPLE_IMAGES.map((s, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setImage(s.url)}
-                      className="px-2 py-0.5 text-[10px] rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 cursor-pointer"
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Label Promo (Opsional)

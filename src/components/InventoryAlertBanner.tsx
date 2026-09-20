@@ -271,13 +271,16 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Stok fisik berada pada atau di bawah batas minimum pemesanan toko
+                    Batas minimal stok ditetapkan 50% dari order terakhir (safety stock)
                   </p>
                 </div>
               </div>
 
               {/* Status Badges */}
               <div className="flex items-center gap-1.5">
+                <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                  Rule 50% PO
+                </span>
                 {outOfStockItems.length > 0 && (
                   <button
                     onClick={() => onSelectAlertFilter('out-of-stock')}
@@ -326,6 +329,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                         </div>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                           SKU: {p.sku} • Min: {p.minStock} {p.unit}
+                          {p.lastOrderQuantity ? ` (50% PO: ${p.lastOrderQuantity})` : ''}
                         </span>
                       </div>
 

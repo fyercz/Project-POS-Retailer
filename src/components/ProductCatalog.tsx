@@ -19,8 +19,14 @@ import {
   Home,
   Briefcase,
 } from 'lucide-react';
-import { usePOS } from '../context/POSContext';
+import {
+  usePOSCatalog,
+  usePOSCart,
+  usePOSCartActions,
+  usePOSUI,
+} from '../context/POSContext';
 import { ProductCard } from './ProductCard';
+import { searchProductsFuzzy, ScoredProduct } from '../utils/fuzzySearch';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   LayoutGrid,
@@ -46,13 +52,16 @@ export const ProductCatalog: React.FC = () => {
     setSearchQuery,
     filterLowStock,
     setFilterLowStock,
+  } = usePOSCatalog();
+
+  const { cart } = usePOSCart();
+  const { addToCart } = usePOSCartActions();
+  const {
     setActiveView,
     settings,
-    cart,
     setIsBarcodeScannerOpen,
     setIsBackupRestoreOpen,
-    addToCart,
-  } = usePOS();
+  } = usePOSUI();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
@@ -140,65 +149,18 @@ export const ProductCatalog: React.FC = () => {
     return products.filter((p) => p.stock <= p.minStock).length;
   }, [products]);
 
-  // Memoized Filtered products by Name, SKU, Barcode, or Brand
-  const filteredProducts = useMemo(() => {
-    const rawQuery = searchQuery.trim();
-    if (!rawQuery) {
-      return products.filter((product) => {
-        const categoryMatch = selectedCategory === 'all' || product.categoryId === selectedCategory;
-        const stockMatch = !filterLowStock || product.stock <= product.minStock;
-        return categoryMatch && stockMatch;
-      });
-    }
-
-    const query = rawQuery.toLowerCase();
-    // Normalized query stripping non-alphanumeric chars (e.g. dashes, spaces, underscores)
-    const normalizedQuery = query.replace(/[^a-z0-9]/gi, '');
-
-    // Allow explicit 'sku:...' prefix search if desired
-    const isExplicitSku = query.startsWith('sku:');
-    const skuSearchTerm = isExplicitSku ? query.replace(/^sku:\s*/, '') : query;
-    const normalizedSkuTerm = skuSearchTerm.replace(/[^a-z0-9]/gi, '');
-
-    return products.filter((product) => {
-      // Category match
-      const categoryMatch = selectedCategory === 'all' || product.categoryId === selectedCategory;
-
-      // Low stock filter
-      const stockMatch = !filterLowStock || product.stock <= product.minStock;
-      if (!categoryMatch || !stockMatch) return false;
-
-      const prodSku = (product.sku || '').toLowerCase();
-      const prodNormSku = prodSku.replace(/[^a-z0-9]/gi, '');
-      const prodName = (product.name || '').toLowerCase();
-      const prodBarcode = (product.barcode || '').toLowerCase();
-      const prodNormBarcode = prodBarcode.replace(/[^a-z0-9]/gi, '');
-      const prodBrand = (product.brand || '').toLowerCase();
-
-      // If explicit sku: prefix
-      if (isExplicitSku) {
-        return (
-          prodSku.includes(skuSearchTerm) ||
-          (normalizedSkuTerm.length > 0 && prodNormSku.includes(normalizedSkuTerm))
-        );
-      }
-
-      // Filter products by Name or SKU (with Barcode and Brand support)
-      const skuMatch =
-        prodSku.includes(query) ||
-        (normalizedQuery.length >= 2 && prodNormSku.includes(normalizedQuery));
-
-      const nameMatch = prodName.includes(query);
-
-      const barcodeMatch =
-        prodBarcode.includes(query) ||
-        (normalizedQuery.length >= 3 && prodNormBarcode.includes(normalizedQuery));
-
-      const brandMatch = prodBrand.includes(query);
-
-      return skuMatch || nameMatch || barcodeMatch || brandMatch;
-    });
+  // Scored typo-tolerant fuzzy search results
+  const scoredProducts: ScoredProduct[] = useMemo(() => {
+    return searchProductsFuzzy(products, searchQuery, selectedCategory, filterLowStock);
   }, [products, selectedCategory, searchQuery, filterLowStock]);
+
+  const filteredProducts = useMemo(() => {
+    return scoredProducts.map((sp) => sp.product);
+  }, [scoredProducts]);
+
+  const hasFuzzyMatch = useMemo(() => {
+    return Boolean(searchQuery.trim()) && scoredProducts.some((sp) => sp.matchType === 'fuzzy');
+  }, [searchQuery, scoredProducts]);
 
   // Handle keyboard interaction inside search input (Enter to quick-add, Esc to clear/blur)
   const handleSearchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -344,6 +306,15 @@ export const ProductCatalog: React.FC = () => {
             />
             {searchQuery ? (
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                {hasFuzzyMatch && (
+                  <span
+                    title="Pencarian toleran salah ketik aktif (Fuzzy Typo-Tolerant Match)"
+                    className="hidden sm:inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-800 px-1.5 py-0.5 rounded"
+                  >
+                    <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                    Typo-Tolerant
+                  </span>
+                )}
                 <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.5 rounded">
                   {filteredProducts.length} hasil
                 </span>

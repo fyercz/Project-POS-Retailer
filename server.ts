@@ -1718,6 +1718,190 @@ Kembalikan HANYA format JSON valid tanpa markdown:
   }
 });
 
+// 4b. AI Segment-Based Branded Promo & Discount Generator
+app.post('/api/ai/generate-segment-promo', async (req, res) => {
+  const {
+    segmentKey,
+    segmentLabel,
+    segmentStats,
+    specificCustomer,
+    campaignObjective = 'reengagement',
+    brandTone = 'warm_friendly',
+    discountTypePreference = 'percentage',
+    storeSettings,
+    customInstructions,
+  } = req.body;
+
+  const storeName = storeSettings?.storeName || 'Ulilmart';
+  const branchName = storeSettings?.branchName || 'Cabang Utama';
+
+  const defaultTopProducts = segmentStats?.topProducts?.length
+    ? segmentStats.topProducts.map((p: any) => (typeof p === 'string' ? p : p.name)).slice(0, 5)
+    : ['Beras Pandan Wangi', 'Minyak Goreng', 'Kopi Kapal Api', 'Gula Pasir', 'Indomie Goreng'];
+
+  const avgSpend = Number(segmentStats?.averageSpend) || 60000;
+  const suggestedMinSpend = Math.max(30000, Math.round((avgSpend * 0.9) / 5000) * 5000);
+
+  const generateRuleBasedSegmentPromo = () => {
+    let title = `Promo Spesial ${segmentLabel || 'Member Setia'}`;
+    let hook = `Belanja hemat produk kebutuhan favoritmu di ${storeName}!`;
+    let code = `PROMO${Math.floor(10 + Math.random() * 89)}`;
+    const discountType: 'percentage' | 'fixed' = discountTypePreference === 'fixed' ? 'fixed' : 'percentage';
+    let value = discountType === 'percentage' ? 12 : 10000;
+    let minSpend = suggestedMinSpend;
+    let expiryDays = 7;
+
+    const topProdStr = defaultTopProducts.slice(0, 3).join(', ');
+
+    if (segmentKey === 'vip') {
+      title = `Apresiasi Eksklusif VIP & Sultan ${storeName} 👑`;
+      hook = `Terima kasih atas kesetiaan Anda! Nikmati potongan diskon khusus belanja bulan ini.`;
+      code = `VIP${storeName.replace(/\s+/g, '').toUpperCase().slice(0, 6)}15`;
+      value = discountType === 'percentage' ? 15 : 25000;
+      minSpend = Math.max(100000, Math.round(avgSpend * 0.8));
+    } else if (segmentKey === 'dormant') {
+      title = `Kami Kangen Kamu di ${storeName}! 💖`;
+      hook = `Sudah lama tidak jumpa! Ada voucher spesial menyambut kepulanganmu belanja.`;
+      code = `KANGEN${storeName.replace(/\s+/g, '').toUpperCase().slice(0, 6)}10`;
+      value = discountType === 'percentage' ? 12 : 15000;
+      minSpend = Math.max(40000, Math.round(avgSpend * 0.7));
+      expiryDays = 5;
+    } else if (segmentKey === 'new_members') {
+      title = `Selamat Datang Sahabat Baru ${storeName}! 🎉`;
+      hook = `Nikmati diskon belanja berikutnya untuk stok kebutuhan harian rumah tangga.`;
+      code = `WELCOME${storeName.replace(/\s+/g, '').toUpperCase().slice(0, 6)}`;
+      value = discountType === 'percentage' ? 10 : 10000;
+      minSpend = 50000;
+    } else if (segmentKey === 'frequent') {
+      title = `Gebyaran Belanja Rutin Sembako ${storeName} 🛒`;
+      hook = `Belanja makin sering makin untung dengan kupon belanja bertingkat.`;
+      code = `RUTINHEMAT`;
+      value = discountType === 'percentage' ? 10 : 12000;
+      minSpend = Math.max(50000, avgSpend);
+    } else if (segmentKey === 'individual' && specificCustomer) {
+      title = `Kejutan Spesial untuk Kak ${specificCustomer.name} ✨`;
+      hook = `Restock ${topProdStr} favoritmu minggu ini lebih hemat di ${storeName}!`;
+      code = `${specificCustomer.name.replace(/[^a-zA-Z]/g, '').slice(0, 5).toUpperCase()}HEMAT`;
+      value = discountType === 'percentage' ? 12 : 15000;
+      minSpend = Math.max(35000, Math.round((specificCustomer.totalSpent / Math.max(1, specificCustomer.ordersCount)) * 0.85));
+    }
+
+    const valueStr = discountType === 'percentage' ? `${value}%` : `Rp ${value.toLocaleString('id-ID')}`;
+    const minSpendStr = `Rp ${minSpend.toLocaleString('id-ID')}`;
+
+    const brandMessageWhatsApp = `Halo Kak *{{nama}}*! 👋\n\n${hook}\n\nKabar gembira dari *${storeName}* (${branchName})! Khusus untuk Kakak hari ini, kami siapkan kupon diskon spesial:\n\n🎟️ Kode Voucher: *${code}*\n💰 Potongan: *${valueStr}*\n🛒 Minimal Belanja: *${minSpendStr}*\n📦 Produk Rekomendasi: ${topProdStr}\n⏳ Berlaku hingga: *${expiryDays} hari ke depan*\n\nTunjukkan pesan ini atau sebutkan kode voucher saat pembayaran di kasir kami ya. Sampai jumpa di toko! 🛒✨`;
+
+    const brandMessageSMS = `Halo {{nama}}! Kangen belanja di ${storeName}? Pakai kupon ${code} dpt diskon ${valueStr} (Min. ${minSpendStr}). Berlaku ${expiryDays} hr. S&K berlaku.`;
+
+    const brandMessageSocial = `Promo Spesial untuk Pelanggan Setia ${storeName}! Dapatkan diskon ${valueStr} untuk produk favorit pilihanmu dengan kode voucher *${code}*. Minimal belanja ${minSpendStr}. Berlaku terbatas, yuk merapat ke kasir sekarang! #PromoRitel #${storeName.replace(/\s+/g, '')} #DiskonBelanja`;
+
+    return {
+      id: `promo-seg-${Date.now()}`,
+      title,
+      hook,
+      voucherCode: code,
+      discountType,
+      value,
+      minSpend,
+      targetSegment: segmentLabel || 'Semua Member',
+      targetSegmentKey: segmentKey,
+      targetCustomerName: specificCustomer?.name,
+      targetCustomerPhone: specificCustomer?.phone,
+      recommendedProducts: defaultTopProducts.slice(0, 4),
+      brandMessageWhatsApp,
+      brandMessageSMS,
+      brandMessageSocial,
+      copyExplanation: `Draft pesan dirancang dengan gaya ${brandTone || 'ramah'} menonjolkan produk ${topProdStr} dari riwayat belanja segmen ${segmentLabel}.`,
+      expiryDays,
+      isAiGenerated: false,
+      createdAt: new Date().toISOString(),
+    };
+  };
+
+  try {
+    const prompt = `Anda adalah Brand Marketing & Retail Copywriter profesional untuk minimarket/supermarket "${storeName}".
+
+TUGAS:
+Rancang pesan promosi dan penawaran diskon (Voucher) yang SANGAT CATCHY, BRANDED, dan PERSUASIF untuk segmen pelanggan berdasarkan riwayat belanja mereka (Purchase History).
+
+DATA SEGMEN PELANGGAN:
+- Segmen: ${segmentLabel || 'Pelanggan Setia'} (${segmentKey || 'frequent'})
+${specificCustomer ? `- Pelanggan Spesifik: ${specificCustomer.name} (No. HP/WA: ${specificCustomer.phone || '-'}, Tier: ${specificCustomer.tier || 'Gold'}, Total Belanja: Rp ${specificCustomer.totalSpent?.toLocaleString('id-ID')}, Transaksi: ${specificCustomer.ordersCount}x)` : `- Jumlah Pelanggan Terdaftar di Segmen: ${segmentStats?.customerCount || 10} member`}
+- Rata-rata Nilai Belanja per Transaksi: Rp ${avgSpend.toLocaleString('id-ID')}
+- Produk yang Sering Dibeli Berdasarkan Riwayat Belanja: ${JSON.stringify(defaultTopProducts)}
+- Kategori Favorit: ${JSON.stringify(segmentStats?.favoriteCategories || ['Sembako', 'Minuman'])}
+${segmentStats?.daysSinceLastVisitAvg ? `- Rata-rata Hari Sejak Kunjungan Terakhir: ~${segmentStats.daysSinceLastVisitAvg} hari` : ''}
+
+KONFIGURASI PROMO:
+- Tujuan Kampanye: ${campaignObjective} (misal: Win-back / Kangen Belanja, Reward Loyalitas VIP, Peningkatan Keranjang Belanja, Flash Sale Akhir Pekan)
+- Nada Bahasa & Karakter Brand: ${brandTone} (misal: Ramah Hangat & Akrab, Eksklusif VIP, Enerjik & Ceria)
+- Preferensi Diskon: ${discountTypePreference} (percentage atau fixed)
+- Nama Toko: ${storeName}
+- Cabang: ${branchName}
+${customInstructions ? `- Permintaan Tambahan Owner: ${customInstructions}` : ''}
+
+PANDUAN COPYWRITING KETAT:
+1. Pesan WAJIB menyebutkan / menyinggung 1-2 produk spesifik dari riwayat belanja mereka (${defaultTopProducts.slice(0, 3).join(', ')}) agar terasa personal dan relevan.
+2. Buat KODE VOUCHER yang unik, branded, kapital, dan mudah diingat (misal: KANGENULIL, VIPSETIA15, SULTANHEMAT, BELANJAHEMAT).
+3. Nilai diskon ('value') harus proporsional (misal 10-18% untuk persentase atau Rp 10.000 - Rp 25.000 untuk fixed) dengan minimal belanja 'minSpend' yang realistis (sekitar Rp ${suggestedMinSpend.toLocaleString('id-ID')}).
+4. Siapkan 3 format pesan siap broadcast:
+   - "brandMessageWhatsApp": Pesan WA lengkap, hangat, persuasif dengan emoji, format bold (*teks*), placeholder "{{nama}}", rincian kode voucher, syarat minimal belanja, masa berlaku, dan ajakan mampir ke toko (Call to Action).
+   - "brandMessageSMS": Pesan pendek padat (maksimal 160 karakter) untuk SMS atau Push Notif.
+   - "brandMessageSocial": Caption menarik untuk Instagram Story / WhatsApp Status toko.
+5. "copyExplanation": Jelaskan dalam 1-2 kalimat mengapa pesan ini efektif untuk segmen tersebut berdasarkan purchase history mereka.
+
+KEMBALIKAN HANYA FORMAT JSON VALID BERIKUT (TANPA MARKDOWN CODEBLOCK):
+{
+  "title": "Judul promo catchy",
+  "hook": "Kalimat pemikat utama satu baris",
+  "voucherCode": "KODE_KAPITAL",
+  "discountType": "${discountTypePreference === 'fixed' ? 'fixed' : 'percentage'}",
+  "value": ${discountTypePreference === 'fixed' ? 15000 : 12},
+  "minSpend": ${suggestedMinSpend},
+  "targetSegment": "${segmentLabel || 'Member Setia'}",
+  "recommendedProducts": ${JSON.stringify(defaultTopProducts.slice(0, 3))},
+  "brandMessageWhatsApp": "Teks pesan WhatsApp...",
+  "brandMessageSMS": "Teks SMS...",
+  "brandMessageSocial": "Teks Social Media...",
+  "copyExplanation": "Penjelasan strategi copy...",
+  "expiryDays": 7
+}
+`;
+
+    const rawText = await callGeminiSafe(prompt, 0.4);
+    if (!rawText) {
+      return res.json(generateRuleBasedSegmentPromo());
+    }
+
+    const cleanJson = extractJsonFromText(rawText) || JSON.parse(rawText);
+
+    res.json({
+      id: `promo-seg-${Date.now()}`,
+      title: cleanJson.title || `Promo Spesial ${segmentLabel}`,
+      hook: cleanJson.hook || `Belanja hemat di ${storeName}!`,
+      voucherCode: (cleanJson.voucherCode || `PROMO${Date.now().toString().slice(-4)}`).toUpperCase().replace(/\s+/g, ''),
+      discountType: cleanJson.discountType === 'fixed' ? 'fixed' : 'percentage',
+      value: Number(cleanJson.value) || (discountTypePreference === 'fixed' ? 10000 : 10),
+      minSpend: Number(cleanJson.minSpend) || suggestedMinSpend,
+      targetSegment: cleanJson.targetSegment || segmentLabel || 'Semua Member',
+      targetSegmentKey: segmentKey,
+      targetCustomerName: specificCustomer?.name,
+      targetCustomerPhone: specificCustomer?.phone,
+      recommendedProducts: Array.isArray(cleanJson.recommendedProducts) ? cleanJson.recommendedProducts : defaultTopProducts.slice(0, 3),
+      brandMessageWhatsApp: cleanJson.brandMessageWhatsApp || '',
+      brandMessageSMS: cleanJson.brandMessageSMS || '',
+      brandMessageSocial: cleanJson.brandMessageSocial || '',
+      copyExplanation: cleanJson.copyExplanation || 'Dibuat secara otomatis oleh Gemini AI berbasis riwayat belanja segmen.',
+      expiryDays: Number(cleanJson.expiryDays) || 7,
+      isAiGenerated: true,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error('Error generating segment promo:', err);
+    res.json(generateRuleBasedSegmentPromo());
+  }
+});
+
 // 5. AI Smart Natural Language Query / Retail Assistant Chat
 app.post('/api/ai/smart-chat', async (req, res) => {
   const { query, products, transactions, customers } = req.body;

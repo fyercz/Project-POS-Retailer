@@ -26,31 +26,32 @@ import {
   ArrowRight,
   TrendingUp,
 } from 'lucide-react';
-import { usePOS } from '../../context/POSContext';
+import {
+  usePOSTransactions,
+  usePOSCart,
+  usePOSAuthShift,
+  usePOSUI,
+} from '../../context/POSContext';
 import { formatCurrency } from '../../utils/formatters';
 import { CustomerModal } from '../CustomerModal';
 import { Customer, MemberTier } from '../../types';
 import { LoyaltyCalculator } from './loyalty/LoyaltyCalculator';
 import { LoyaltyLedger } from './loyalty/LoyaltyLedger';
 import { LoyaltyRulesConfig } from './loyalty/LoyaltyRulesConfig';
+import { MarketingPromoSection } from './loyalty/MarketingPromoSection';
 
 export const CustomersView: React.FC = () => {
+  const { customers, transactions, adjustCustomerPoints, updateCustomer } = usePOSTransactions();
+  const { setSelectedCustomer } = usePOSCart();
+  const { activeEmployee } = usePOSAuthShift();
   const {
-    customers,
     settings,
-    transactions,
-    setSelectedCustomer,
-    adjustCustomerPoints,
-    updateCustomer,
-    activeEmployee,
     setIsBackupRestoreOpen,
     setActiveView,
-  } = usePOS();
-
-  // Navigation Sub-Tab in Customers View
-  const [activeCustomersTab, setActiveCustomersTab] = useState<
-    'members' | 'calculator' | 'ledger' | 'rules'
-  >('members');
+    activeCustomersTab,
+    setActiveCustomersTab,
+    setSelectedMarketingCustomer,
+  } = usePOSUI();
 
   const [search, setSearch] = useState('');
   const [selectedTierFilter, setSelectedTierFilter] = useState<'All' | MemberTier>('All');
@@ -212,6 +213,16 @@ export const CustomersView: React.FC = () => {
           </div>
 
           <button
+            id="btn-open-marketing-promo"
+            onClick={() => setActiveCustomersTab('marketing')}
+            className="hidden sm:flex px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95"
+            title="Buka Pusat Pemasaran & Generate Promo AI"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
+            <span>Generate Promo AI</span>
+          </button>
+
+          <button
             onClick={() => setIsNewCustomerModalOpen(true)}
             className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95"
           >
@@ -244,6 +255,23 @@ export const CustomersView: React.FC = () => {
         >
           <Users className="w-4 h-4" />
           <span>Direktori Member ({customers.length})</span>
+        </button>
+
+        <button
+          type="button"
+          id="tab-marketing-promo"
+          onClick={() => setActiveCustomersTab('marketing')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${
+            activeCustomersTab === 'marketing'
+              ? 'bg-emerald-500 text-slate-950 shadow-xs'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-amber-500" />
+          <span>Marketing &amp; Promo AI</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-amber-400 text-slate-950">
+            Gemini
+          </span>
         </button>
 
         <button
@@ -442,6 +470,19 @@ export const CustomersView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
+                            setSelectedMarketingCustomer(cust);
+                            setActiveCustomersTab('marketing');
+                          }}
+                          className="px-2 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-semibold flex items-center gap-1 cursor-pointer transition text-[11px] hover:bg-emerald-100"
+                          title="Rancang promo WhatsApp & diskon personal dengan Gemini AI"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span>Promo AI</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
                             setSelectedCustomer(cust);
                             setActiveView('pos');
                           }}
@@ -460,7 +501,10 @@ export const CustomersView: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 2: LOYALTY CALCULATOR & AUTOMATED DISCOUNT TRACKING */}
+        {/* TAB 2: MARKETING & AI SEGMENT PROMO */}
+        {activeCustomersTab === 'marketing' && <MarketingPromoSection />}
+
+        {/* TAB 3: LOYALTY CALCULATOR & AUTOMATED DISCOUNT TRACKING */}
         {activeCustomersTab === 'calculator' && (
           <LoyaltyCalculator
             initialCustomer={calculatorTargetCustomer}
@@ -560,6 +604,19 @@ export const CustomersView: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedMarketingCustomer(detailCustomer);
+                      setDetailCustomer(null);
+                      setActiveCustomersTab('marketing');
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-bold transition cursor-pointer shadow-xs flex items-center justify-center gap-1"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Draft Promo AI</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => {

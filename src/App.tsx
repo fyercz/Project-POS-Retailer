@@ -40,6 +40,11 @@ const POSMainApp: React.FC = () => {
     setActiveReceipt,
     isBackupRestoreOpen,
     setIsBackupRestoreOpen,
+    isEmployeeManagementOpen,
+    isShiftModalOpen,
+    setIsShiftModalOpen,
+    isSyncModalOpen,
+    isBarcodeScannerOpen,
     cart,
     finalTotal,
     settings,
@@ -163,16 +168,21 @@ const POSMainApp: React.FC = () => {
       <EmployeeLockScreen />
 
       {/* Employee Management Modal */}
-      <EmployeeManagementModal />
+      {isEmployeeManagementOpen && <EmployeeManagementModal />}
 
       {/* Shift Summary & Drawer Reconciliation Modal */}
-      <ShiftModal />
+      {isShiftModalOpen && (
+        <ShiftModal
+          isOpen={isShiftModalOpen}
+          onClose={() => setIsShiftModalOpen(false)}
+        />
+      )}
 
       {/* Offline Caching & Cloud Background Sync Modal */}
-      <OfflineSyncModal />
+      {isSyncModalOpen && <OfflineSyncModal />}
 
       {/* Camera Barcode Scanner Modal with Auto-Add */}
-      <BarcodeScannerModal />
+      {isBarcodeScannerOpen && <BarcodeScannerModal />}
 
       {/* Backup & Restore Points Disaster Recovery Center */}
       <BackupRestoreModal

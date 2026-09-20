@@ -39,6 +39,11 @@ import {
   RefreshCw,
   Layers,
   ArrowLeftRight,
+  HardDrive,
+  Zap,
+  Gauge,
+  Activity,
+  Server,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { BackupPayload, RestorePoint } from '../types';
@@ -64,9 +69,22 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
     restoreFromPayload,
     generateBackupPayload,
     downloadBackupFile,
+    storageDiagnostics,
+    refreshStorageDiagnostics,
+    runStorageBenchmark,
   } = usePOS();
 
-  const [activeTab, setActiveTab] = useState<'points' | 'files' | 'guide'>('points');
+  const [activeTab, setActiveTab] = useState<'points' | 'files' | 'storage' | 'guide'>('points');
+  const [isBenchmarking, setIsBenchmarking] = useState(false);
+  const [benchmarkResult, setBenchmarkResult] = useState<{
+    recordCount: number;
+    idbWriteMs: number;
+    idbReadMs: number;
+    lsWriteMs: number;
+    lsReadMs: number;
+    speedComparison: string;
+  } | null>(null);
+  const [isRefreshingStorage, setIsRefreshingStorage] = useState(false);
 
   // Export Customization State
   const [exportCustomName, setExportCustomName] = useState('');
@@ -563,6 +581,25 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
           >
             <HardDriveDownload className="w-4 h-4" />
             <span>Ekspor &amp; Impor Berkas (.JSON)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('storage');
+              refreshStorageDiagnostics().catch(() => {});
+            }}
+            className={`pb-2.5 px-3 font-bold text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+              activeTab === 'storage'
+                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <Gauge className="w-4 h-4" />
+            <span>Kapasitas &amp; IndexedDB</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold">
+              GB+
+            </span>
           </button>
 
           <button
@@ -1475,6 +1512,235 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                     Setiap kali Anda menekan "Pulihkan (Restore)", sistem akan <strong>secara otomatis membuat snapshot pengaman</strong> beberapa detik sebelum data ditimpa. Anda selalu bisa membatalkan / revert!
                   </p>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: STORAGE & DATABASE ENGINE (INDEXEDDB) */}
+          {activeTab === 'storage' && (
+            <div className="space-y-4 text-xs">
+              {/* Storage Architecture Overview Banner */}
+              <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-teal-950/30 p-4 sm:p-5 rounded-2xl border border-emerald-500/30 text-white space-y-3 shadow-sm">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold shadow-inner">
+                      <Server className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-sm text-white">
+                          Arsitektur Basis Data: IndexedDB Ultra-Capacity
+                        </h4>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold border border-emerald-500/30">
+                          Aktif &amp; Non-Blocking
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        Penyimpanan transaksi, stok, dan titik pemulihan berjalan di background thread tanpa mengunci UI kasir.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isRefreshingStorage}
+                    onClick={async () => {
+                      setIsRefreshingStorage(true);
+                      try {
+                        await refreshStorageDiagnostics();
+                        showToast('success', 'Diagnostik basis data IndexedDB berhasil diperbarui.');
+                      } catch {
+                        showToast('error', 'Gagal memindai penyimpanan browser.');
+                      } finally {
+                        setIsRefreshingStorage(false);
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 border border-slate-700 cursor-pointer transition active:scale-95 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingStorage ? 'animate-spin text-emerald-400' : ''}`} />
+                    <span>{isRefreshingStorage ? 'Memindai...' : 'Perbarui Status'}</span>
+                  </button>
+                </div>
+
+                {/* Quota Progress Bar */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between text-[11px] text-slate-300 font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <Gauge className="w-3.5 h-3.5 text-emerald-400" />
+                      Estimasi Penggunaan Kuota Browser:
+                    </span>
+                    <span className="font-mono text-emerald-300 font-bold">
+                      {storageDiagnostics?.formattedUsed || 'Memuat...'} / {storageDiagnostics?.formattedQuota || 'Puluhan GB'} ({storageDiagnostics ? storageDiagnostics.percentUsed.toFixed(2) : '0.00'}% terpakai)
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-800/80 overflow-hidden border border-slate-700/50">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(1, Math.min(100, storageDiagnostics?.percentUsed || 1))}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-400">
+                    <span>Database: <strong className="text-slate-200 font-mono">ulilmart_pos_main_db</strong></span>
+                    <span>Object Store: <strong className="text-slate-200 font-mono">pos_state_store</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3 Core Architecture Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                    <Zap className="w-4 h-4" />
+                    <span>Bebas Batas 5MB</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+                    Beralih dari kuota sempit <strong>5MB LocalStorage</strong> ke <strong>IndexedDB puluhan GB</strong>, mampu menampung puluhan ribu nota kasir tanpa error kuota penuh.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-xs">
+                    <Activity className="w-4 h-4" />
+                    <span>Non-Blocking 60 FPS</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+                    Operasi tulis dan pembacaan berjalan asinkronus di background thread browser dengan mekanisme <em>debounced batching</em>, kasir tetap lancar responsif.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-bold text-xs">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Migrasi Otomatis &amp; Failover</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+                    Data lama dari LocalStorage otomatis terdeteksi dan dimigrasikan ke IndexedDB saat aplikasi dinyalakan. Data tetap aman dan terlindungi.
+                  </p>
+                </div>
+              </div>
+
+              {/* Data Collections Matrix */}
+              <div className="bg-white dark:bg-slate-850 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                    <Layers className="w-4 h-4 text-emerald-500" />
+                    <span>Rincian Koleksi Data Toko Tersimpan</span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 font-mono">
+                    Total Ukuran State: ~{storageDiagnostics?.totalDataSizeKb || 0} KB
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-850 border border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">Produk &amp; Stok</span>
+                      <strong className="text-slate-800 dark:text-white text-xs">{products.length} item</strong>
+                    </div>
+                    <Package className="w-4 h-4 text-emerald-500 opacity-80" />
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-850 border border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">Riwayat Nota</span>
+                      <strong className="text-slate-800 dark:text-white text-xs">{transactions.length} nota</strong>
+                    </div>
+                    <Receipt className="w-4 h-4 text-blue-500 opacity-80" />
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-850 border border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">Pelanggan CRM</span>
+                      <strong className="text-slate-800 dark:text-white text-xs">{customers.length} member</strong>
+                    </div>
+                    <Users className="w-4 h-4 text-purple-500 opacity-80" />
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-850 border border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">Titik Pulih Snapshot</span>
+                      <strong className="text-slate-800 dark:text-white text-xs">{restorePoints.length} titik</strong>
+                    </div>
+                    <History className="w-4 h-4 text-amber-500 opacity-80" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Storage Benchmark Tool */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h5 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-amber-500" />
+                      <span>Uji Kecepatan &amp; Kapasitas (Benchmark)</span>
+                    </h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Uji coba penulisan dan pembacaan 200 record serentak untuk membuktikan keandalan IndexedDB.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isBenchmarking}
+                    onClick={async () => {
+                      setIsBenchmarking(true);
+                      try {
+                        const result = await runStorageBenchmark(200);
+                        setBenchmarkResult(result);
+                        showToast('success', `Benchmark tuntas! IndexedDB selesai menulis dalam ${result.idbWriteMs}ms.`);
+                      } catch {
+                        showToast('error', 'Gagal menjalankan pengujian benchmark.');
+                      } finally {
+                        setIsBenchmarking(false);
+                      }
+                    }}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition active:scale-95 disabled:opacity-50"
+                  >
+                    <Zap className={`w-3.5 h-3.5 ${isBenchmarking ? 'animate-bounce' : ''}`} />
+                    <span>{isBenchmarking ? 'Menguji Kecepatan...' : 'Jalankan Benchmark Sekarang'}</span>
+                  </button>
+                </div>
+
+                {benchmarkResult && (
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60 space-y-2 animate-in fade-in slide-in-from-top-1">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <span>Hasil Pengujian ({benchmarkResult.recordCount} records ritel)</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" /> Berhasil Diuji
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[11px]">
+                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40">
+                        <div className="text-[10px] text-emerald-700 dark:text-emerald-400">IndexedDB Write:</div>
+                        <div className="font-bold text-emerald-900 dark:text-emerald-200 text-sm">{benchmarkResult.idbWriteMs} ms</div>
+                      </div>
+
+                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40">
+                        <div className="text-[10px] text-emerald-700 dark:text-emerald-400">IndexedDB Read:</div>
+                        <div className="font-bold text-emerald-900 dark:text-emerald-200 text-sm">{benchmarkResult.idbReadMs} ms</div>
+                      </div>
+
+                      <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <div className="text-[10px] text-slate-500">LocalStorage Write:</div>
+                        <div className="font-bold text-slate-700 dark:text-slate-300 text-sm">
+                          {benchmarkResult.lsWriteMs > 0 ? `${benchmarkResult.lsWriteMs} ms` : 'Blocked (Quota)'}
+                        </div>
+                      </div>
+
+                      <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <div className="text-[10px] text-slate-500">LocalStorage Read:</div>
+                        <div className="font-bold text-slate-700 dark:text-slate-300 text-sm">
+                          {benchmarkResult.lsReadMs > 0 ? `${benchmarkResult.lsReadMs} ms` : 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-850 p-2 rounded-lg">
+                      {benchmarkResult.speedComparison}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

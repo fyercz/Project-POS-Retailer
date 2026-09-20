@@ -26,6 +26,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 2800,
     stock: 120,
     minStock: 24,
+    lastOrderQuantity: 48, // Aturan: Batas min stock adalah 50% dari order terakhir (24 = 50% x 48)
     unit: 'Bungkus',
     aisle: 'Lorong 1 - Rak A1',
     expiryDate: '2026-11-20',
@@ -49,6 +50,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 2900,
     stock: 96,
     minStock: 24,
+    lastOrderQuantity: 48, // 50% dari order terakhir 48 = 24
     unit: 'Botol',
     aisle: 'Lorong 2 - Rak Dingin',
     expiryDate: '2027-04-15',
@@ -71,6 +73,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 5400,
     stock: 64,
     minStock: 16,
+    lastOrderQuantity: 32, // 50% dari order 32 = 16
     unit: 'Kotak',
     aisle: 'Lorong 2 - Rak B2',
     expiryDate: '2026-10-30',
@@ -90,6 +93,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 9200,
     stock: 45,
     minStock: 12,
+    lastOrderQuantity: 24, // 50% dari order 24 = 12
     unit: 'Bungkus',
     aisle: 'Lorong 3 - Rak C1',
     expiryDate: '2026-09-15',
@@ -110,6 +114,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 13200,
     stock: 38,
     minStock: 10,
+    lastOrderQuantity: 20, // 50% dari order 20 = 10
     unit: 'Batang',
     aisle: 'Kasir Front Display',
     expiryDate: '2027-01-10',
@@ -129,6 +134,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 32500,
     stock: 50,
     minStock: 12,
+    lastOrderQuantity: 24, // 50% dari order 24 = 12
     unit: 'Pouch',
     aisle: 'Lorong 1 - Rak Sembako',
     expiryDate: '2027-06-01',
@@ -150,6 +156,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 63000,
     stock: 35,
     minStock: 10,
+    lastOrderQuantity: 20, // 50% dari order 20 = 10
     unit: 'Karung',
     aisle: 'Lorong 1 - Palet Beras',
     expiryDate: '2027-08-01',
@@ -168,6 +175,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 3400,
     stock: 75,
     minStock: 18,
+    lastOrderQuantity: 36, // 50% dari order 36 = 18
     unit: 'Batang',
     aisle: 'Lorong 4 - Rak Sabun',
     expiryDate: '2027-12-01',
@@ -186,6 +194,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 6800,
     stock: 40,
     minStock: 12,
+    lastOrderQuantity: 24, // 50% dari order 24 = 12
     unit: 'Tube',
     aisle: 'Lorong 4 - Rak Pasta Gigi',
     expiryDate: '2028-02-15',
@@ -204,6 +213,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 19800,
     stock: 30,
     minStock: 8,
+    lastOrderQuantity: 16, // 50% dari order 16 = 8
     unit: 'Bungkus',
     aisle: 'Lorong 4 - Rak Deterjen',
     expiryDate: '2028-01-01',
@@ -222,6 +232,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 3300,
     stock: 80,
     minStock: 20,
+    lastOrderQuantity: 40, // 50% dari order 40 = 20
     unit: 'Kotak',
     aisle: 'Lorong 2 - Rak Dingin',
     expiryDate: '2026-11-10',
@@ -241,6 +252,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     costPrice: 11800,
     stock: 55,
     minStock: 15,
+    lastOrderQuantity: 30, // 50% dari order 30 = 15
     unit: 'Renceng',
     aisle: 'Lorong 2 - Rak Kopi',
     expiryDate: '2027-03-20',
@@ -479,6 +491,8 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   pointRedemptionRate: 100, // 1 poin = Rp 100 diskon kasir
   minRedeemPoints: 10, // Minimal 10 poin untuk tukar diskon kasir
   minProfitPercentForPoints: 15, // Minimal profit margin per barang 15% untuk mendapatkan poin
+  minStockRulePercentage: 50, // Aturan batas minimal stock adalah 50% dari jumlah order terakhir
+  autoUpdateMinStockFromOrder: true, // Otomatis perbarui batas min stock saat penerimaan faktur masuk
 };
 
 export const INITIAL_RECENT_TRANSACTIONS: Transaction[] = [];

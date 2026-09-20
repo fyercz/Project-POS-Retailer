@@ -19,9 +19,14 @@ import { usePOS } from '../context/POSContext';
 import { formatRupiah, formatDate } from '../utils/formatters';
 import { printViaIframe } from '../utils/printHelper';
 
-export const ShiftModal: React.FC = () => {
+export interface ShiftModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
   const {
-    isShiftModalOpen,
+    isShiftModalOpen: contextIsOpen,
     setIsShiftModalOpen,
     activeEmployee,
     currentShift,
@@ -30,11 +35,14 @@ export const ShiftModal: React.FC = () => {
     settings,
   } = usePOS();
 
+  const isModalVisible = isOpen !== undefined ? isOpen : contextIsOpen;
+  const handleCloseModal = onClose || (() => setIsShiftModalOpen(false));
+
   const [actualCash, setActualCash] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [shiftClosedResult, setShiftClosedResult] = useState<any>(null);
 
-  if (!isShiftModalOpen) return null;
+  if (!isModalVisible) return null;
 
   const expectedCash = (currentShift?.startingCash || 0) + (currentShift?.cashSales || 0);
   const enteredCashNum = parseFloat(actualCash.replace(/\D/g, '')) || 0;
@@ -52,7 +60,7 @@ export const ShiftModal: React.FC = () => {
     setShiftClosedResult(null);
     setActualCash('');
     setNotes('');
-    setIsShiftModalOpen(false);
+    handleCloseModal();
   };
 
   const handlePrintShiftReceipt = () => {
@@ -160,7 +168,7 @@ export const ShiftModal: React.FC = () => {
 
           <button
             id="btn-close-shift-modal"
-            onClick={() => setIsShiftModalOpen(false)}
+            onClick={handleCloseModal}
             className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
           >
             <X className="w-5 h-5" />
@@ -399,7 +407,7 @@ export const ShiftModal: React.FC = () => {
                 <div className="flex items-center justify-end gap-3 pt-3">
                   <button
                     type="button"
-                    onClick={() => setIsShiftModalOpen(false)}
+                    onClick={handleCloseModal}
                     className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
                   >
                     Batal

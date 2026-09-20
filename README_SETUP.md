@@ -4,6 +4,41 @@ Aplikasi **Point of Sales** dilengkapi dengan script otomatis untuk mempermudah 
 
 ---
 
+## 🚀 Fitur Autorun & Auto-Start (1-Klik Tanpa Setup Rumit)
+
+Aplikasi telah dilengkapi suite **Autorun** lengkap untuk mempermudah operasional kasir harian dan media installer (USB Flashdisk / CD):
+
+### 1. `autorun.bat` (Universal Auto-Runner Windows)
+Cukup klik ganda **`autorun.bat`**:
+- Otomatis mendeteksi Node.js (memberi panduan unduh jika belum ada).
+- Otomatis membuat `.env` jika belum tersedia.
+- Otomatis menginstal package jika `node_modules` belum ada (`npm install`).
+- Otomatis melakukan build produksi jika `dist` belum ada (`npm run build`).
+- Langsung membuka jendela aplikasi kasir (*Desktop App Window*) siap pakai.
+
+### 2. `autorun.inf` (Untuk Flashdisk / Media Penyimpanan Eksternal)
+- Berkas autorun standar Windows saat flashdisk atau installer dicolokkan ke PC.
+- Mengarahkan aksi *Open* langsung ke `autorun.bat`.
+
+### 3. `setup-autorun-startup.bat` (Otomatis Buka Kasir Saat Komputer Dinyalakan)
+Ingin agar PC kasir langsung membuka aplikasi kasir setiap kali komputer dinyalakan di pagi hari?
+- Klik ganda **`setup-autorun-startup.bat`**.
+- Tekan **`1`** untuk mendaftarkan Ulilmart POS ke folder **Windows Startup**.
+- Tekan **`3`** untuk membuat shortcut ikon kasir langsung di layar Desktop kasir.
+- Tekan **`2`** jika sewaktu-waktu ingin menonaktifkan auto-start.
+
+### 4. `autorun.sh` (Auto-Runner Linux / Raspberry Pi / macOS)
+Jalankan di terminal:
+```bash
+./autorun.sh
+```
+Atau untuk mendaftarkan auto-start saat login di Linux desktop (GNOME/XFCE/Raspberry Pi OS):
+```bash
+./autorun.sh --autostart
+```
+
+---
+
 ## 💻 Pengguna Windows
 
 ### 1. Instalasi Pertama Kali (Auto-Install)

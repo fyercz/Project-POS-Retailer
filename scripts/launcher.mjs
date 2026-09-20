@@ -143,6 +143,7 @@ switch (command) {
     break;
   case 'desktop':
   case 'app':
+  case 'autorun':
     run('production', true);
     break;
   case 'run':

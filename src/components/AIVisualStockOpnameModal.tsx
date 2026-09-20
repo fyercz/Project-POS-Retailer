@@ -24,6 +24,7 @@ import {
 import { usePOS } from '../context/POSContext';
 import { AIStockOpnameDetectedItem, AIStockOpnameResult } from '../types';
 import { formatCurrency } from '../utils/formatters';
+import { compressImageForAI, formatBytes, CompressedImageResult } from '../utils/imageCompressor';
 
 interface AIVisualStockOpnameModalProps {
   isOpen: boolean;
@@ -367,64 +368,36 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
     }
 
     setIsExtractingVideo(true);
-    setExtractProgress('Mengompresi foto rak display...');
-    const loadedFrames: string[] = [];
-    let processed = 0;
+    setExtractProgress('Mengompresi foto rak display dengan AI image compressor...');
 
-    imageFiles.forEach((file: File) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const rawDataUrl = reader.result as string;
-        const img = new Image();
-        img.onload = () => {
-          const maxDim = 960;
-          let width = img.width;
-          let height = img.height;
+    try {
+      const compressionPromises = imageFiles.map((file: File) =>
+        compressImageForAI(file, {
+          maxWidth: 1280,
+          maxHeight: 1280,
+          quality: 0.85,
+        })
+      );
 
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
+      const results = await Promise.all(compressionPromises);
+      const loadedFrames = results.map((r) => r.dataUrl);
 
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            loadedFrames.push(canvas.toDataURL('image/jpeg', 0.85));
-          } else {
-            loadedFrames.push(rawDataUrl);
-          }
+      const totalOrig = results.reduce((acc, r) => acc + r.originalSizeBytes, 0);
+      const totalComp = results.reduce((acc, r) => acc + r.compressedSizeBytes, 0);
+      const savedPct = Math.round((1 - totalComp / Math.max(1, totalOrig)) * 100);
 
-          processed++;
-          if (processed === imageFiles.length) {
-            setCapturedFrames(loadedFrames);
-            setScanResult(null);
-            setIsExtractingVideo(false);
-            setExtractProgress('');
-            setNotification(`${loadedFrames.length} foto rak berhasil dimuat.`);
-          }
-        };
-        img.onerror = () => {
-          loadedFrames.push(rawDataUrl);
-          processed++;
-          if (processed === imageFiles.length) {
-            setCapturedFrames(loadedFrames);
-            setScanResult(null);
-            setIsExtractingVideo(false);
-            setExtractProgress('');
-          }
-        };
-        img.src = rawDataUrl;
-      };
-      reader.readAsDataURL(file);
-    });
+      setCapturedFrames(loadedFrames);
+      setScanResult(null);
+      setNotification(
+        `${loadedFrames.length} foto rak berhasil dikompresi & dimuat (${formatBytes(totalOrig)} → ${formatBytes(totalComp)}, hemat ${savedPct}% payload).`
+      );
+    } catch (err: any) {
+      console.error('Image compression error:', err);
+      setNotification('Gagal mengompresi gambar. Silakan coba lagi.');
+    } finally {
+      setIsExtractingVideo(false);
+      setExtractProgress('');
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

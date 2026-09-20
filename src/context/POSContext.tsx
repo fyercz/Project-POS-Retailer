@@ -48,13 +48,11 @@ import {
   deleteLANSharedHeldOrder,
   fetchLANSharedHeldOrders,
 } from '../utils/lanSyncManager';
+import { posStorage, StorageDiagnostics } from '../utils/posStorage';
 
-interface POSContextType {
-  // Navigation
-  activeView: 'pos' | 'transactions' | 'inventory' | 'reports' | 'customers';
-  setActiveView: (view: 'pos' | 'transactions' | 'inventory' | 'reports' | 'customers') => void;
+// --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
-  // Catalog
+export interface POSCatalogContextType {
   products: Product[];
   categories: typeof INITIAL_CATEGORIES;
   selectedCategory: string;
@@ -87,9 +85,9 @@ interface POSContextType {
   ) => void;
   deleteProduct: (id: string) => void;
   resetToRetailDefaults: () => void;
+}
 
-  // Cart
-  cart: CartItem[];
+export interface POSCartActionsContextType {
   addToCart: (
     product: Product,
     selectedOptions?: SelectedOption[],
@@ -103,8 +101,11 @@ interface POSContextType {
   removeFromCart: (cartItemId: string) => void;
   clearCart: () => void;
   updateCartItemNote: (cartItemId: string, notes: string) => void;
+}
 
-  // Order Details
+export interface POSCartContextType extends POSCartActionsContextType {
+  cart: CartItem[];
+  cartItemCount: number;
   orderType: OrderType;
   setOrderType: (type: OrderType) => void;
   tableNumber: string;
@@ -120,8 +121,6 @@ interface POSContextType {
   setPointsToRedeem: (points: number) => void;
   maxRedeemablePoints: number;
   pointRedemptionRate: number;
-
-  // Pricing & Profit Margin Point calculations
   subtotal: number;
   taxAmount: number;
   serviceChargeAmount: number;
@@ -132,14 +131,13 @@ interface POSContextType {
   pointsEarned: number;
   pointsEligibleSpend: number;
   minProfitPercentForPoints: number;
-
-  // Held Orders (Order Parking)
   heldOrders: HeldOrder[];
   holdCurrentOrder: (note?: string) => boolean;
   recallHeldOrder: (heldOrder: HeldOrder) => void;
   deleteHeldOrder: (heldOrderId: string) => void;
+}
 
-  // Checkout & Transactions
+export interface POSTransactionsContextType {
   isPaymentModalOpen: boolean;
   setIsPaymentModalOpen: (isOpen: boolean) => void;
   processPayment: (payment: PaymentDetails) => Transaction;
@@ -147,48 +145,25 @@ interface POSContextType {
   activeReceipt: Transaction | null;
   setActiveReceipt: (tx: Transaction | null) => void;
   voidTransaction: (txId: string) => void;
-
-  // Returns Feature (Sales & Purchase Returns)
   salesReturns: SalesReturn[];
   processSalesReturn: (returnData: Omit<SalesReturn, 'id' | 'createdAt'>) => SalesReturn;
   purchaseReturns: PurchaseReturn[];
   processPurchaseReturn: (returnData: Omit<PurchaseReturn, 'id' | 'createdAt'>) => PurchaseReturn;
   supplierPurchases: SupplierPurchase[];
   processSupplierPurchase: (purchaseData: Omit<SupplierPurchase, 'id' | 'createdAt'>) => SupplierPurchase;
-
-  // Suppliers Management
   suppliers: Supplier[];
   addSupplier: (supplier: Omit<Supplier, 'id' | 'createdAt'>) => Supplier;
   updateSupplier: (id: string, updated: Partial<Supplier>) => void;
   deleteSupplier: (id: string) => void;
-
-  // Customers CRM
   customers: Customer[];
   addCustomer: (customer: Omit<Customer, 'id' | 'points' | 'totalSpent' | 'ordersCount' | 'pointsHistory'> & { initialPoints?: number }) => Customer;
   adjustCustomerPoints: (customerId: string, pointsDelta: number, reason: string, type?: 'adjusted' | 'bonus') => void;
   updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
-
-  // Settings & Helpers
-  settings: StoreSettings;
-  updateSettings: (newSettings: Partial<StoreSettings>) => void;
   vouchers: Voucher[];
   addVoucher: (v: Voucher) => void;
+}
 
-  // Gemini AI Retail Copilot State & Helpers
-  isGeminiCopilotOpen: boolean;
-  setIsGeminiCopilotOpen: (open: boolean) => void;
-  activeCopilotTab: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat';
-  setActiveCopilotTab: (tab: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat') => void;
-  openGeminiCopilot: (tab?: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat') => void;
-  triggerRestockPlanAnalysis: () => void;
-  restockPlanTriggerCounter: number;
-  pendingReceivingFromPO: Array<{ productId: string; quantity: number; costPrice: number; expiryDate?: string }> | null;
-  setPendingReceivingFromPO: (items: Array<{ productId: string; quantity: number; costPrice: number; expiryDate?: string }> | null) => void;
-  aiUpsellSuggestions: AIUpsellSuggestion[];
-  isFetchingUpsell: boolean;
-  fetchUpsellSuggestions: () => Promise<void>;
-
-  // Multi-Employee & Shift Management
+export interface POSAuthShiftContextType {
   employees: Employee[];
   activeEmployee: Employee | null;
   isLocked: boolean;
@@ -208,8 +183,30 @@ interface POSContextType {
   deleteEmployee: (id: string) => { success: boolean; message: string };
   startNewShift: (startingCash: number) => ShiftSummary;
   closeCurrentShift: (actualCashEnding: number, notes?: string) => ShiftSummary;
+}
 
-  // Offline PWA & Cloud Background Sync
+export interface POSUIContextType {
+  activeView: 'pos' | 'transactions' | 'inventory' | 'reports' | 'customers';
+  setActiveView: (view: 'pos' | 'transactions' | 'inventory' | 'reports' | 'customers') => void;
+  activeCustomersTab: 'members' | 'marketing' | 'calculator' | 'ledger' | 'rules';
+  setActiveCustomersTab: (tab: 'members' | 'marketing' | 'calculator' | 'ledger' | 'rules') => void;
+  selectedMarketingCustomer: Customer | null;
+  setSelectedMarketingCustomer: (customer: Customer | null) => void;
+  settings: StoreSettings;
+  updateSettings: (newSettings: Partial<StoreSettings>) => void;
+  applyMinStockRuleToAllProducts: (customPercent?: number) => number;
+  isGeminiCopilotOpen: boolean;
+  setIsGeminiCopilotOpen: (open: boolean) => void;
+  activeCopilotTab: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat';
+  setActiveCopilotTab: (tab: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat') => void;
+  openGeminiCopilot: (tab?: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat') => void;
+  triggerRestockPlanAnalysis: () => void;
+  restockPlanTriggerCounter: number;
+  pendingReceivingFromPO: Array<{ productId: string; quantity: number; costPrice: number; expiryDate?: string }> | null;
+  setPendingReceivingFromPO: (items: Array<{ productId: string; quantity: number; costPrice: number; expiryDate?: string }> | null) => void;
+  aiUpsellSuggestions: AIUpsellSuggestion[];
+  isFetchingUpsell: boolean;
+  fetchUpsellSuggestions: () => Promise<void>;
   isOnline: boolean;
   isOfflineSimulated: boolean;
   toggleOfflineSimulation: (enable?: boolean) => void;
@@ -223,8 +220,6 @@ interface POSContextType {
   setIsSyncModalOpen: (open: boolean) => void;
   syncNotification: string | null;
   clearSyncNotification: () => void;
-
-  // Barcode Scanner Camera & Auto-Add
   isBarcodeScannerOpen: boolean;
   setIsBarcodeScannerOpen: (open: boolean) => void;
   scanBarcodeAndAddToCart: (code: string) => {
@@ -233,8 +228,6 @@ interface POSContextType {
     message: string;
     unit?: WholesaleUnit;
   };
-
-  // Backup & Restore Points
   restorePoints: RestorePoint[];
   createRestorePoint: (title: string, note?: string, type?: 'manual' | 'auto_pre_restore' | 'auto_pre_reset' | 'scheduled') => RestorePoint;
   deleteRestorePoint: (id: string) => void;
@@ -248,7 +241,16 @@ interface POSContextType {
   }) => { success: boolean; fileName: string; sizeKb: string };
   isBackupRestoreOpen: boolean;
   setIsBackupRestoreOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  // Multi-Client LAN Server Database Hub
+  storageDiagnostics: StorageDiagnostics | null;
+  refreshStorageDiagnostics: () => Promise<StorageDiagnostics>;
+  runStorageBenchmark: (recordCount?: number) => Promise<{
+    recordCount: number;
+    idbWriteMs: number;
+    idbReadMs: number;
+    lsWriteMs: number;
+    lsReadMs: number;
+    speedComparison: string;
+  }>;
   isLANModalOpen: boolean;
   setIsLANModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   applyMasterLANData: (data: {
@@ -259,11 +261,26 @@ interface POSContextType {
   }) => void;
 }
 
-const POSContext = createContext<POSContextType | undefined>(undefined);
+// Composite interface for complete backwards compatibility
+export type POSContextType = POSCatalogContextType &
+  POSCartContextType &
+  POSTransactionsContextType &
+  POSAuthShiftContextType &
+  POSUIContextType;
+
+export const POSCatalogContext = createContext<POSCatalogContextType | undefined>(undefined);
+export const POSCartActionsContext = createContext<POSCartActionsContextType | undefined>(undefined);
+export const POSCartContext = createContext<POSCartContextType | undefined>(undefined);
+export const POSTransactionsContext = createContext<POSTransactionsContextType | undefined>(undefined);
+export const POSAuthShiftContext = createContext<POSAuthShiftContextType | undefined>(undefined);
+export const POSUIContext = createContext<POSUIContextType | undefined>(undefined);
+export const POSContext = createContext<POSContextType | undefined>(undefined);
 
 export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation view
   const [activeView, setActiveView] = useState<'pos' | 'transactions' | 'inventory' | 'reports' | 'customers'>('pos');
+  const [activeCustomersTab, setActiveCustomersTab] = useState<'members' | 'marketing' | 'calculator' | 'ledger' | 'rules'>('members');
+  const [selectedMarketingCustomer, setSelectedMarketingCustomer] = useState<Customer | null>(null);
 
   // Catalog State
   const [products, setProducts] = useState<Product[]>(() => {
@@ -602,14 +619,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return [];
   });
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('pos_restore_points_v1', JSON.stringify(restorePoints));
-    } catch (err) {
-      console.warn('Gagal menyimpan restore point ke local storage:', err);
-    }
-  }, [restorePoints]);
-
   // Global F3 Shortcut to toggle Barcode Scanner
   useEffect(() => {
     const handleBarcodeShortcut = (e: KeyboardEvent) => {
@@ -747,28 +756,61 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, [transactions.length]);
 
-  // Debounced Sync to local storage to prevent main-thread UI lag during rapid operations
+  // Debounced Sync to High-Capacity IndexedDB & LocalStorage Fallback
   const pendingStorageSaves = useRef<Record<string, any>>({});
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scheduleSave = useCallback((key: string, data: any) => {
     pendingStorageSaves.current[key] = data;
     if (!saveTimeoutRef.current) {
-      saveTimeoutRef.current = setTimeout(() => {
+      saveTimeoutRef.current = setTimeout(async () => {
         try {
-          const saves = pendingStorageSaves.current;
+          const saves = { ...pendingStorageSaves.current };
           pendingStorageSaves.current = {};
           for (const [k, v] of Object.entries(saves)) {
-            localStorage.setItem(k, JSON.stringify(v));
+            await posStorage.setItem(k, v);
           }
-        } catch {
-          // Ignore quota errors gracefully
+        } catch (err) {
+          console.warn('[posStorage] Background persistence error:', err);
         } finally {
           saveTimeoutRef.current = null;
         }
-      }, 300);
+      }, 250);
     }
   }, []);
+
+  // High-Capacity Storage Diagnostics & Benchmark
+  const [storageDiagnostics, setStorageDiagnostics] = useState<StorageDiagnostics | null>(null);
+
+  const refreshStorageDiagnostics = useCallback(async () => {
+    const diag = await posStorage.getStorageDiagnostics();
+    setStorageDiagnostics(diag);
+    return diag;
+  }, []);
+
+  const runStorageBenchmark = useCallback(async (recordCount: number = 200) => {
+    const res = await posStorage.runBenchmark(recordCount);
+    await refreshStorageDiagnostics();
+    return res;
+  }, [refreshStorageDiagnostics]);
+
+  // Auto-migration from LocalStorage to IndexedDB on boot
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        await posStorage.autoMigrateFromLocalStorage();
+        if (isMounted) {
+          await refreshStorageDiagnostics();
+        }
+      } catch (err) {
+        console.warn('[posStorage] Boot migration error:', err);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshStorageDiagnostics]);
 
   useEffect(() => {
     scheduleSave('pos_retail_products_v3', products);
@@ -817,6 +859,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     scheduleSave('pos_employees_v2', employees);
   }, [employees, scheduleSave]);
+
+  useEffect(() => {
+    scheduleSave('pos_restore_points_v1', restorePoints);
+  }, [restorePoints, scheduleSave]);
 
   useEffect(() => {
     if (activeEmployee) {
@@ -1821,7 +1867,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // 1. Save supplier purchase record
     setSupplierPurchases((prev) => [newPurchase, ...prev]);
 
-    // 2. Increase stock and update product HPP costPrice & price history
+    // 2. Increase stock and update product HPP costPrice, minStock (50% dari order terakhir), & price history
     purchaseData.items.forEach((item) => {
       setProducts((prev) =>
         prev.map((p) => {
@@ -1845,11 +1891,22 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               };
               updatedHistory.push(rec);
             }
+
+            // Aturan Batas Minimal Stok: 50% dari jumlah order terakhir
+            const autoUpdateMinStock = settings.autoUpdateMinStockFromOrder !== false;
+            const rulePercent = (settings.minStockRulePercentage ?? 50) / 100;
+            const newMinStock = autoUpdateMinStock
+              ? Math.max(1, Math.ceil(item.quantity * rulePercent))
+              : p.minStock;
+
             return {
               ...p,
               stock: p.stock + item.quantity,
               costPrice: item.costPrice > 0 ? item.costPrice : p.costPrice,
               expiryDate: item.expiryDate || p.expiryDate,
+              lastOrderQuantity: item.quantity,
+              lastOrderDate: newPurchase.createdAt,
+              minStock: newMinStock,
               priceHistory: updatedHistory.length > 0 ? updatedHistory : p.priceHistory,
             };
           }
@@ -1859,6 +1916,44 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     return newPurchase;
+  };
+
+  const applyMinStockRuleToAllProducts = (customPercent?: number): number => {
+    const percent = (customPercent ?? settings.minStockRulePercentage ?? 50) / 100;
+    let count = 0;
+
+    setProducts((prev) =>
+      prev.map((p) => {
+        // Cari kuantitas order terakhir dari p.lastOrderQuantity atau dari riwayat faktur pembelian
+        let lastQty = p.lastOrderQuantity;
+        if (!lastQty || lastQty <= 0) {
+          for (const sp of supplierPurchases) {
+            const foundItem = sp.items.find((it) => it.productId === p.id);
+            if (foundItem && foundItem.quantity > 0) {
+              lastQty = foundItem.quantity;
+              break;
+            }
+          }
+        }
+        // Jika belum ada riwayat faktur, estimasi kuantitas order terakhir dari minStock * 2 atau stok
+        if (!lastQty || lastQty <= 0) {
+          lastQty = p.minStock > 0 ? p.minStock * 2 : (p.stock > 0 ? p.stock : 20);
+        }
+
+        const newMin = Math.max(1, Math.ceil(lastQty * percent));
+        if (p.minStock !== newMin || p.lastOrderQuantity !== lastQty) {
+          count++;
+          return {
+            ...p,
+            lastOrderQuantity: lastQty,
+            minStock: newMin,
+          };
+        }
+        return p;
+      })
+    );
+
+    return count;
   };
 
   const updateProductStock = (productId: string, newStock: number) => {
@@ -2020,6 +2115,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetToRetailDefaults = () => {
+    posStorage.clear().catch(console.warn);
     localStorage.removeItem('pos_retail_products_v2');
     localStorage.removeItem('pos_retail_products_v3');
     localStorage.removeItem('pos_retail_suppliers_v2');
@@ -2503,10 +2599,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [generateBackupPayload, products, restorePoints.length]);
 
-  const contextValue = useMemo(
+  // --- Domain Split 1: Catalog Value ---
+  const catalogValue = useMemo<POSCatalogContextType>(
     () => ({
-      activeView,
-      setActiveView,
       products,
       categories: INITIAL_CATEGORIES,
       selectedCategory,
@@ -2527,7 +2622,30 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       recordProductPriceChange,
       deleteProduct,
       resetToRetailDefaults,
-      cart,
+    }),
+    [
+      products,
+      selectedCategory,
+      searchQuery,
+      filterLowStock,
+      updateProductStock,
+      bulkAdjustProducts,
+      addProduct,
+      addProductsBatch,
+      deleteProductsBatch,
+      clearImportedProducts,
+      resetProductsToDefault,
+      clearAllProducts,
+      updateProduct,
+      recordProductPriceChange,
+      deleteProduct,
+      resetToRetailDefaults,
+    ]
+  );
+
+  // --- Domain Split 2: Cart Actions (Stable References) ---
+  const cartActionsValue = useMemo<POSCartActionsContextType>(
+    () => ({
       addToCart,
       updateCartItemQuantity,
       setCartItemQuantity,
@@ -2536,6 +2654,27 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       removeFromCart,
       clearCart,
       updateCartItemNote,
+    }),
+    [
+      addToCart,
+      updateCartItemQuantity,
+      setCartItemQuantity,
+      updateCartItemUnit,
+      updateCartItemDiscount,
+      removeFromCart,
+      clearCart,
+      updateCartItemNote,
+    ]
+  );
+
+  // --- Domain Split 3: Cart & Checkout Calculations ---
+  const cartItemCount = useMemo(() => cart.reduce((s, i) => s + i.quantity, 0), [cart]);
+
+  const cartValue = useMemo<POSCartContextType>(
+    () => ({
+      ...cartActionsValue,
+      cart,
+      cartItemCount,
       orderType,
       setOrderType,
       tableNumber,
@@ -2565,6 +2704,34 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       holdCurrentOrder,
       recallHeldOrder,
       deleteHeldOrder,
+    }),
+    [
+      cartActionsValue,
+      cart,
+      cartItemCount,
+      orderType,
+      tableNumber,
+      selectedCustomer,
+      appliedVoucher,
+      usePoints,
+      pointsToRedeem,
+      maxRedeemablePoints,
+      pointRedemptionRate,
+      subtotal,
+      voucherDiscount,
+      pointsDiscount,
+      totalDiscount,
+      finalTotal,
+      pointsEarned,
+      pointsEligibleSpend,
+      minProfitPercentForPoints,
+      heldOrders,
+    ]
+  );
+
+  // --- Domain Split 4: Transactions, CRM, Returns, Suppliers ---
+  const transactionsValue = useMemo<POSTransactionsContextType>(
+    () => ({
       isPaymentModalOpen,
       setIsPaymentModalOpen,
       processPayment,
@@ -2586,23 +2753,25 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addCustomer,
       adjustCustomerPoints,
       updateCustomer,
-      settings,
-      updateSettings,
       vouchers,
       addVoucher,
-      isGeminiCopilotOpen,
-      setIsGeminiCopilotOpen,
-      activeCopilotTab,
-      setActiveCopilotTab,
-      openGeminiCopilot,
-      triggerRestockPlanAnalysis,
-      restockPlanTriggerCounter,
-      pendingReceivingFromPO,
-      setPendingReceivingFromPO,
-      aiUpsellSuggestions,
-      isFetchingUpsell,
-      fetchUpsellSuggestions,
-      // Multi-Employee & Shift
+    }),
+    [
+      isPaymentModalOpen,
+      transactions,
+      activeReceipt,
+      salesReturns,
+      purchaseReturns,
+      supplierPurchases,
+      suppliers,
+      customers,
+      vouchers,
+    ]
+  );
+
+  // --- Domain Split 5: Auth, Shift & Multi-Employee ---
+  const authShiftValue = useMemo<POSAuthShiftContextType>(
+    () => ({
       employees,
       activeEmployee,
       isLocked,
@@ -2622,7 +2791,41 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteEmployee,
       startNewShift,
       closeCurrentShift,
-      // Offline PWA & Cloud Background Sync
+    }),
+    [
+      employees,
+      activeEmployee,
+      isLocked,
+      isEmployeeManagementOpen,
+      isShiftModalOpen,
+      currentShift,
+    ]
+  );
+
+  // --- Domain Split 6: UI, Modals, Offline Sync, Settings, AI Copilot, Diagnostics ---
+  const uiValue = useMemo<POSUIContextType>(
+    () => ({
+      activeView,
+      setActiveView,
+      activeCustomersTab,
+      setActiveCustomersTab,
+      selectedMarketingCustomer,
+      setSelectedMarketingCustomer,
+      settings,
+      updateSettings,
+      applyMinStockRuleToAllProducts,
+      isGeminiCopilotOpen,
+      setIsGeminiCopilotOpen,
+      activeCopilotTab,
+      setActiveCopilotTab,
+      openGeminiCopilot,
+      triggerRestockPlanAnalysis,
+      restockPlanTriggerCounter,
+      pendingReceivingFromPO,
+      setPendingReceivingFromPO,
+      aiUpsellSuggestions,
+      isFetchingUpsell,
+      fetchUpsellSuggestions,
       isOnline: syncState.isOnline,
       isOfflineSimulated: syncState.isOfflineSimulated,
       toggleOfflineSimulation: (enable?: boolean) => offlineSyncManager.toggleOfflineSimulation(enable),
@@ -2636,11 +2839,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsSyncModalOpen,
       syncNotification,
       clearSyncNotification,
-      // Barcode Scanner Camera & Auto-Add
       isBarcodeScannerOpen,
       setIsBarcodeScannerOpen,
       scanBarcodeAndAddToCart,
-      // Backup & Restore Points
       restorePoints,
       createRestorePoint,
       deleteRestorePoint,
@@ -2650,56 +2851,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       downloadBackupFile,
       isBackupRestoreOpen,
       setIsBackupRestoreOpen,
-      // Multi-Client LAN Server Database Hub
+      storageDiagnostics,
+      refreshStorageDiagnostics,
+      runStorageBenchmark,
       isLANModalOpen,
       setIsLANModalOpen,
       applyMasterLANData,
     }),
     [
       activeView,
-      products,
-      selectedCategory,
-      searchQuery,
-      filterLowStock,
-      cart,
-      orderType,
-      tableNumber,
-      selectedCustomer,
-      appliedVoucher,
-      usePoints,
-      pointsToRedeem,
-      maxRedeemablePoints,
-      pointRedemptionRate,
-      subtotal,
-      voucherDiscount,
-      pointsDiscount,
-      totalDiscount,
-      finalTotal,
-      pointsEarned,
-      pointsEligibleSpend,
-      minProfitPercentForPoints,
-      heldOrders,
-      isPaymentModalOpen,
-      transactions,
-      activeReceipt,
-      salesReturns,
-      purchaseReturns,
-      supplierPurchases,
-      suppliers,
-      customers,
+      activeCustomersTab,
+      selectedMarketingCustomer,
       settings,
-      vouchers,
       isGeminiCopilotOpen,
       activeCopilotTab,
       aiUpsellSuggestions,
       isFetchingUpsell,
       fetchUpsellSuggestions,
-      employees,
-      activeEmployee,
-      isLocked,
-      isEmployeeManagementOpen,
-      isShiftModalOpen,
-      currentShift,
       syncState,
       syncPendingTransactions,
       isSyncModalOpen,
@@ -2708,22 +2876,49 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isBarcodeScannerOpen,
       scanBarcodeAndAddToCart,
       restorePoints,
-      createRestorePoint,
-      deleteRestorePoint,
-      restoreFromPoint,
-      restoreFromPayload,
-      generateBackupPayload,
-      downloadBackupFile,
       isBackupRestoreOpen,
+      storageDiagnostics,
+      refreshStorageDiagnostics,
+      runStorageBenchmark,
       isLANModalOpen,
       applyMasterLANData,
     ]
   );
 
+  // --- Composite Value for complete 100% backwards compatibility ---
+  const contextValue = useMemo<POSContextType>(
+    () => ({
+      ...catalogValue,
+      ...cartValue,
+      ...transactionsValue,
+      ...authShiftValue,
+      ...uiValue,
+    }),
+    [
+      catalogValue,
+      cartValue,
+      transactionsValue,
+      authShiftValue,
+      uiValue,
+    ]
+  );
+
   return (
-    <POSContext.Provider value={contextValue}>
-      {children}
-    </POSContext.Provider>
+    <POSCatalogContext.Provider value={catalogValue}>
+      <POSCartActionsContext.Provider value={cartActionsValue}>
+        <POSCartContext.Provider value={cartValue}>
+          <POSTransactionsContext.Provider value={transactionsValue}>
+            <POSAuthShiftContext.Provider value={authShiftValue}>
+              <POSUIContext.Provider value={uiValue}>
+                <POSContext.Provider value={contextValue}>
+                  {children}
+                </POSContext.Provider>
+              </POSUIContext.Provider>
+            </POSAuthShiftContext.Provider>
+          </POSTransactionsContext.Provider>
+        </POSCartContext.Provider>
+      </POSCartActionsContext.Provider>
+    </POSCatalogContext.Provider>
   );
 };
 
@@ -2731,6 +2926,54 @@ export const usePOS = (): POSContextType => {
   const context = useContext(POSContext);
   if (!context) {
     throw new Error('usePOS must be used within a POSProvider');
+  }
+  return context;
+};
+
+export const usePOSCatalog = (): POSCatalogContextType => {
+  const context = useContext(POSCatalogContext);
+  if (!context) {
+    throw new Error('usePOSCatalog must be used within a POSProvider');
+  }
+  return context;
+};
+
+export const usePOSCart = (): POSCartContextType => {
+  const context = useContext(POSCartContext);
+  if (!context) {
+    throw new Error('usePOSCart must be used within a POSProvider');
+  }
+  return context;
+};
+
+export const usePOSCartActions = (): POSCartActionsContextType => {
+  const context = useContext(POSCartActionsContext);
+  if (!context) {
+    throw new Error('usePOSCartActions must be used within a POSProvider');
+  }
+  return context;
+};
+
+export const usePOSTransactions = (): POSTransactionsContextType => {
+  const context = useContext(POSTransactionsContext);
+  if (!context) {
+    throw new Error('usePOSTransactions must be used within a POSProvider');
+  }
+  return context;
+};
+
+export const usePOSAuthShift = (): POSAuthShiftContextType => {
+  const context = useContext(POSAuthShiftContext);
+  if (!context) {
+    throw new Error('usePOSAuthShift must be used within a POSProvider');
+  }
+  return context;
+};
+
+export const usePOSUI = (): POSUIContextType => {
+  const context = useContext(POSUIContext);
+  if (!context) {
+    throw new Error('usePOSUI must be used within a POSProvider');
   }
   return context;
 };

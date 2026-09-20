@@ -1,0 +1,11 @@
+[AutoRun]
+open=autorun.bat
+icon=public/icon.svg
+label=Ulilmart POS Kasir
+action=Jalankan Aplikasi Kasir Ulilmart
+shell\open=Buka Ulilmart POS Kasir
+shell\open\command=autorun.bat
+shell\desktop=Jalankan Mode Desktop Kasir
+shell\desktop\command=desktop.bat
+shell\install=Instalasi Lengkap (Auto-Install)
+shell\install\command=install.bat

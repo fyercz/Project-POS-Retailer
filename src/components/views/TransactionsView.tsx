@@ -25,7 +25,7 @@ import {
   RefreshCw,
   Database,
 } from 'lucide-react';
-import { usePOS } from '../../context/POSContext';
+import { usePOSTransactions, usePOSUI } from '../../context/POSContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { Transaction, SalesReturn, SalesReturnItem } from '../../types';
 import { ReportPrintModal } from '../ReportPrintModal';
@@ -35,14 +35,17 @@ export const TransactionsView: React.FC = () => {
     transactions,
     setActiveReceipt,
     voidTransaction,
-    settings,
     salesReturns,
     processSalesReturn,
+  } = usePOSTransactions();
+
+  const {
+    settings,
     pendingSyncCount,
     setIsSyncModalOpen,
     isOnline,
     setIsBackupRestoreOpen,
-  } = usePOS();
+  } = usePOSUI();
   const [activeTab, setActiveTab] = useState<'sales' | 'returns'>('sales');
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState<string>('all');

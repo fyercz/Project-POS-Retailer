@@ -13,6 +13,7 @@
     "app:install": "node scripts/launcher.mjs install",
     "app:update": "node scripts/launcher.mjs update",
     "app:run": "node scripts/launcher.mjs run",
+    "autorun": "node scripts/launcher.mjs autorun",
     "desktop": "node scripts/launcher.mjs desktop",
     "desktop:electron": "electron electron/main.cjs"
   },

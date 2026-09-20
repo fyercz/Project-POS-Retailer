@@ -20,7 +20,13 @@ import {
   Lock,
   ArrowLeft,
 } from 'lucide-react';
-import { usePOS } from '../context/POSContext';
+import {
+  usePOSCart,
+  usePOSCartActions,
+  usePOSTransactions,
+  usePOSUI,
+  usePOSAuthShift,
+} from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { CustomerModal } from './CustomerModal';
 import { WholesaleUnit } from '../types';
@@ -32,13 +38,6 @@ interface CartPanelProps {
 export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
   const {
     cart,
-    addToCart,
-    updateCartItemQuantity,
-    updateCartItemUnit,
-    updateCartItemDiscount,
-    removeFromCart,
-    clearCart,
-    updateCartItemNote,
     selectedCustomer,
     appliedVoucher,
     applyVoucher,
@@ -59,13 +58,21 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
     pointsEligibleSpend,
     minProfitPercentForPoints,
     holdCurrentOrder,
-    setIsPaymentModalOpen,
-    settings,
-    aiUpsellSuggestions,
-    openGeminiCopilot,
-    activeEmployee,
-    lockScreen,
-  } = usePOS();
+  } = usePOSCart();
+
+  const {
+    addToCart,
+    updateCartItemQuantity,
+    updateCartItemUnit,
+    updateCartItemDiscount,
+    removeFromCart,
+    clearCart,
+    updateCartItemNote,
+  } = usePOSCartActions();
+
+  const { setIsPaymentModalOpen } = usePOSTransactions();
+  const { settings, aiUpsellSuggestions, openGeminiCopilot } = usePOSUI();
+  const { activeEmployee, lockScreen } = usePOSAuthShift();
 
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [voucherInput, setVoucherInput] = useState('');

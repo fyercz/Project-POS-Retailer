@@ -50,6 +50,8 @@ export interface Product {
   costPrice: number;
   stock: number;
   minStock: number;
+  lastOrderQuantity?: number; // Jumlah kuantitas order/pembelian terakhir (Supplier PO)
+  lastOrderDate?: string; // Tanggal order terakhir
   unit: string;
   wholesaleUnits?: WholesaleUnit[];
   image?: string;
@@ -287,6 +289,8 @@ export interface StoreSettings {
   pointRedemptionRate?: number; // Nilai 1 poin = Rp X diskon kasir (default 100)
   minRedeemPoints?: number; // Minimal poin untuk dapat ditukarkan di kasir (default 10)
   minProfitPercentForPoints: number; // e.g. 15% minimal profit margin barang untuk menghasilkan poin
+  minStockRulePercentage?: number; // Aturan batas minimal stok (default 50 = 50% dari order terakhir)
+  autoUpdateMinStockFromOrder?: boolean; // Otomatis perbarui minStock saat terima barang PO (default: true)
 }
 
 // Gemini AI Retail Interfaces
@@ -351,6 +355,37 @@ export interface AIPromoResult {
   estimatedProfitAmount?: number;
   marginSafetyStatus?: 'safe' | 'capped' | 'warning';
   ownerSafetyNote?: string;
+}
+
+export type CustomerSegmentKey =
+  | 'vip'
+  | 'dormant'
+  | 'frequent'
+  | 'new_members'
+  | 'deal_seekers'
+  | 'staple_fmcg'
+  | 'individual';
+
+export interface AISegmentPromoResult {
+  id: string;
+  title: string;
+  hook: string;
+  voucherCode: string;
+  discountType: 'percentage' | 'fixed';
+  value: number;
+  minSpend: number;
+  targetSegment: string;
+  targetSegmentKey?: CustomerSegmentKey;
+  targetCustomerName?: string;
+  targetCustomerPhone?: string;
+  recommendedProducts: string[];
+  brandMessageWhatsApp: string;
+  brandMessageSMS: string;
+  brandMessageSocial: string;
+  copyExplanation: string;
+  expiryDays: number;
+  isAiGenerated: boolean;
+  createdAt: string;
 }
 
 // Multi-Employee & Shift Management Interfaces

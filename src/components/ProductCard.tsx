@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, SlidersHorizontal, AlertTriangle, Check, Flame, Boxes } from 'lucide-react';
 import { Product, WholesaleUnit, CurrencyType } from '../types';
-import { usePOS } from '../context/POSContext';
+import { usePOSCartActions } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { ProductCustomizerModal } from './ProductCustomizerModal';
 
@@ -16,7 +16,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   cartQuantity: propCartQuantity,
   currency = 'IDR',
 }) => {
-  const { addToCart } = usePOS();
+  const { addToCart } = usePOSCartActions();
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
   const [showWholesaleDropdown, setShowWholesaleDropdown] = useState(false);
   const [justAdded, setJustAdded] = useState(false);

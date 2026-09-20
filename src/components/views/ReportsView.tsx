@@ -21,12 +21,13 @@ import {
   FileSpreadsheet,
   Database,
 } from 'lucide-react';
-import { usePOS } from '../../context/POSContext';
+import { usePOSTransactions, usePOSUI } from '../../context/POSContext';
 import { formatCurrency, formatNumber } from '../../utils/formatters';
 import { ReportPrintModal, ReportType } from '../ReportPrintModal';
 
 export const ReportsView: React.FC = () => {
-  const { transactions, settings, openGeminiCopilot, salesReturns, setIsBackupRestoreOpen } = usePOS();
+  const { transactions, salesReturns } = usePOSTransactions();
+  const { settings, openGeminiCopilot, setIsBackupRestoreOpen } = usePOSUI();
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [selectedReportType, setSelectedReportType] = useState<ReportType>('summary');
 

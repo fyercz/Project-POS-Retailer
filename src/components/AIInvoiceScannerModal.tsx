@@ -21,6 +21,7 @@ import {
 import { usePOS } from '../context/POSContext';
 import { AIInvoiceScanResult, SupplierPurchaseItem } from '../types';
 import { formatCurrency } from '../utils/formatters';
+import { compressImageForAI, formatBytes } from '../utils/imageCompressor';
 
 interface AIInvoiceScannerModalProps {
   isOpen: boolean;
@@ -42,6 +43,11 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
 }) => {
   const { products, settings } = usePOS();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [compressionInfo, setCompressionInfo] = useState<{
+    originalBytes: number;
+    compressedBytes: number;
+    ratio: number;
+  } | null>(null);
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanResult, setScanResult] = useState<AIInvoiceScanResult | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -53,17 +59,36 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setSelectedImage(reader.result as string);
+    try {
+      const comp = await compressImageForAI(file, {
+        maxWidth: 1600,
+        maxHeight: 1600,
+        quality: 0.85,
+      });
+
+      setSelectedImage(comp.dataUrl);
+      setCompressionInfo({
+        originalBytes: comp.originalSizeBytes,
+        compressedBytes: comp.compressedSizeBytes,
+        ratio: comp.compressionRatio,
+      });
       setScanResult(null);
       setScanError(null);
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.warn('Compression error fallback:', err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSelectedImage(reader.result as string);
+        setCompressionInfo(null);
+        setScanResult(null);
+        setScanError(null);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleStartCamera = async () => {
@@ -83,7 +108,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
     }
   };
 
-  const handleCaptureCamera = () => {
+  const handleCaptureCamera = async () => {
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -93,8 +118,24 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-      setSelectedImage(dataUrl);
+      const rawDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+      try {
+        const comp = await compressImageForAI(rawDataUrl, {
+          maxWidth: 1600,
+          maxHeight: 1600,
+          quality: 0.85,
+        });
+        setSelectedImage(comp.dataUrl);
+        setCompressionInfo({
+          originalBytes: comp.originalSizeBytes,
+          compressedBytes: comp.compressedSizeBytes,
+          ratio: comp.compressionRatio,
+        });
+      } catch {
+        setSelectedImage(rawDataUrl);
+        setCompressionInfo(null);
+      }
       setScanResult(null);
       setScanError(null);
     }
@@ -329,19 +370,36 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                   }`}
                 >
                   {selectedImage ? (
-                    <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-                      <img
-                        src={selectedImage}
-                        alt="Faktur Nota"
-                        className="w-full h-full object-contain"
-                      />
-                      <button
-                        onClick={() => setSelectedImage(null)}
-                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-slate-900/80 text-white hover:bg-rose-600 transition"
-                        title="Hapus foto"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                    <div className="space-y-2 w-full">
+                      <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                        <img
+                          src={selectedImage}
+                          alt="Faktur Nota"
+                          className="w-full h-full object-contain"
+                        />
+                        <button
+                          onClick={() => {
+                            setSelectedImage(null);
+                            setCompressionInfo(null);
+                          }}
+                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-slate-900/80 text-white hover:bg-rose-600 transition"
+                          title="Hapus foto"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {compressionInfo && (
+                        <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-[11px] text-emerald-800 dark:text-emerald-300">
+                          <span className="font-semibold flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-emerald-500" />
+                            Ukuran Teroptimasi:
+                          </span>
+                          <span className="font-mono font-bold">
+                            {formatBytes(compressionInfo.originalBytes)} → {formatBytes(compressionInfo.compressedBytes)} ({Math.round(compressionInfo.ratio * 100)}%)
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="py-6 space-y-3">

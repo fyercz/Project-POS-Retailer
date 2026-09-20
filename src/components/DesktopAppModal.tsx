@@ -22,6 +22,7 @@ import {
   Play,
   Settings,
   HardDrive,
+  Zap,
 } from 'lucide-react';
 import {
   isDesktopApp,
@@ -34,6 +35,9 @@ import {
   triggerCashDrawerKick,
   downloadWindowsDesktopLauncher,
   downloadUnixDesktopLauncher,
+  downloadAutorunBat,
+  downloadSetupStartupBat,
+  downloadAutorunInf,
 } from '../utils/desktopHelper';
 
 interface DesktopAppModalProps {
@@ -309,6 +313,48 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({ isOpen, onClos
                     >
                       <Terminal className="w-3.5 h-3.5 text-emerald-500" />
                       <span>Unduh Linux / Mac (.sh)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Option 3: Autorun & Auto-Start Kasir */}
+                <div className="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
+                      <span className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-xs">
+                        3
+                      </span>
+                      <span>Autorun &amp; Auto-Start Kasir (Saat Komputer Dinyalakan)</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-amber-600" />
+                      <span>Auto-Boot</span>
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Sistem <strong>Autorun</strong> lengkap untuk toko fisik. Cukup klik ganda <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 font-mono text-[11px]">autorun.bat</code>, sistem akan memeriksa Node.js, auto-install, auto-build, dan langsung membuka kasir. Gunakan wizard startup untuk membuka kasir otomatis setiap pagi saat PC dinyalakan!
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      onClick={() => downloadAutorunBat()}
+                      className="px-3.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition active:scale-95"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Unduh autorun.bat (Universal)</span>
+                    </button>
+                    <button
+                      onClick={() => downloadSetupStartupBat()}
+                      className="px-3.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+                    >
+                      <Settings className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Unduh setup-autorun-startup.bat</span>
+                    </button>
+                    <button
+                      onClick={() => downloadAutorunInf()}
+                      className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Unduh autorun.inf (Media USB)</span>
                     </button>
                   </div>
                 </div>

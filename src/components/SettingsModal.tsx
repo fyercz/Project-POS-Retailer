@@ -1,7 +1,36 @@
-import React, { useState } from 'react';
-import { X, Settings as SettingsIcon, Save, Store, Receipt, Percent, DollarSign, Check, Database, HardDriveDownload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  X,
+  Settings as SettingsIcon,
+  Save,
+  Store,
+  Receipt,
+  Percent,
+  DollarSign,
+  Check,
+  Database,
+  HardDriveDownload,
+  ShieldAlert,
+  Sparkles,
+  Printer,
+  Usb,
+  Radio,
+  Coins,
+  Play,
+  AlertCircle,
+} from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { StoreSettings } from '../types';
+import {
+  getSavedPrinterConfig,
+  savePrinterConfig,
+  checkPrinterHardwareSupport,
+  buildTestReceiptEscPos,
+  printViaWebSerial,
+  printViaWebBluetooth,
+  kickCashDrawerOnly,
+  PrinterConfig,
+} from '../utils/escposPrinter';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -9,15 +38,63 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const { settings, updateSettings, setIsBackupRestoreOpen, downloadBackupFile } = usePOS();
+  const { settings, updateSettings, setIsBackupRestoreOpen, downloadBackupFile, applyMinStockRuleToAllProducts } = usePOS();
   const [formData, setFormData] = useState<StoreSettings>({ ...settings });
   const [saved, setSaved] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  // Hardware Printer state
+  const [printerConfig, setPrinterConfig] = useState<PrinterConfig>(getSavedPrinterConfig());
+  const [hardwareSupport, setHardwareSupport] = useState({ hasSerial: false, hasBluetooth: false });
+  const [testStatus, setTestStatus] = useState<string | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
+
+  useEffect(() => {
+    setHardwareSupport(checkPrinterHardwareSupport());
+    setPrinterConfig(getSavedPrinterConfig());
+  }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleTestPrint = async () => {
+    setIsTesting(true);
+    setTestStatus('Mengirim perintah cetak...');
+    try {
+      const bytes = buildTestReceiptEscPos(printerConfig.paperWidth, printerConfig.kickCashDrawer);
+      let res;
+      if (printerConfig.connectionType === 'bluetooth') {
+        res = await printViaWebBluetooth(bytes);
+      } else {
+        res = await printViaWebSerial(bytes, printerConfig.baudRate);
+      }
+      setTestStatus(res.message);
+    } catch (err: any) {
+      setTestStatus('Gagal tes cetak: ' + (err.message || String(err)));
+    } finally {
+      setIsTesting(false);
+      setTimeout(() => setTestStatus(null), 5000);
+    }
+  };
+
+  const handleTestDrawer = async () => {
+    setIsTesting(true);
+    setTestStatus('Mengirim sinyal pulse RJ11 ke laci kas...');
+    try {
+      const mode = printerConfig.connectionType === 'bluetooth' ? 'bluetooth' : 'serial';
+      const res = await kickCashDrawerOnly(mode, printerConfig.baudRate);
+      setTestStatus(res.message);
+    } catch (err: any) {
+      setTestStatus('Gagal tes buka laci: ' + (err.message || String(err)));
+    } finally {
+      setIsTesting(false);
+      setTimeout(() => setTestStatus(null), 5000);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings(formData);
+    savePrinterConfig(printerConfig);
     setSaved(true);
     setTimeout(() => {
       setSaved(false);
@@ -214,12 +291,206 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             </div>
           </div>
 
+          {/* Hardware Direct Thermal Printer & Cash Drawer (ESC/POS) */}
+          <div className="space-y-3 bg-slate-50 dark:bg-slate-950/50 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                <Printer className="w-4 h-4 text-emerald-500" />
+                <span>Hardware Thermal Printer &amp; Laci Kas (ESC/POS)</span>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                Direct RAW Hardware
+              </span>
+            </div>
+
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+              Dukungan cetak thermal langsung tanpa dialog browser melalui <strong>Web Serial API (USB)</strong> dan <strong>Web Bluetooth</strong>, dilengkapi pemotong kertas otomatis (auto-cut) dan pemicu pulse laci kas (RJ11 Cash Drawer).
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
+                  Koneksi Default
+                </label>
+                <select
+                  value={printerConfig.connectionType}
+                  onChange={(e) => setPrinterConfig({ ...printerConfig, connectionType: e.target.value as any })}
+                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                >
+                  <option value="system">Browser / Jendela Dialog Cetak</option>
+                  <option value="serial">USB / Serial Port (ESC/POS)</option>
+                  <option value="bluetooth">Bluetooth Thermal Printer</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
+                  Lebar Kertas Thermal
+                </label>
+                <select
+                  value={printerConfig.paperWidth}
+                  onChange={(e) => setPrinterConfig({ ...printerConfig, paperWidth: e.target.value as any })}
+                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                >
+                  <option value="58mm">58 mm (Standar Mini / 32 Kolom)</option>
+                  <option value="80mm">80 mm (Lebar Kasir / 48 Kolom)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
+                  Baud Rate (Port Serial)
+                </label>
+                <select
+                  value={printerConfig.baudRate}
+                  onChange={(e) => setPrinterConfig({ ...printerConfig, baudRate: Number(e.target.value) })}
+                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                >
+                  <option value={9600}>9600 bps (Standar Xprinter/Epson)</option>
+                  <option value={19200}>19200 bps</option>
+                  <option value={38400}>38400 bps</option>
+                  <option value={115200}>115200 bps</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <input
+                  type="checkbox"
+                  checked={printerConfig.kickCashDrawer}
+                  onChange={(e) => setPrinterConfig({ ...printerConfig, kickCashDrawer: e.target.checked })}
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                />
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Buka Laci Kas Otomatis (RJ11 Pulse)
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <input
+                  type="checkbox"
+                  checked={printerConfig.autoCut}
+                  onChange={(e) => setPrinterConfig({ ...printerConfig, autoCut: e.target.checked })}
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                />
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Auto-Cut Kertas Struk Selesai Cetak
+                </span>
+              </label>
+            </div>
+
+            {/* Test Hardware Buttons */}
+            <div className="pt-2 flex items-center justify-between flex-wrap gap-2 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleTestPrint}
+                  disabled={isTesting}
+                  className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition disabled:opacity-50"
+                >
+                  <Play className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Tes Cetak Struk ESC/POS</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleTestDrawer}
+                  disabled={isTesting}
+                  className="px-3 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition disabled:opacity-50"
+                >
+                  <Coins className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Tes Buka Laci (RJ11)</span>
+                </button>
+              </div>
+
+              {testStatus && (
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {testStatus}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Aturan Batas Minimal Stok (Safety Stock) */}
+          <div className="space-y-3 bg-slate-50 dark:bg-slate-950/50 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                <ShieldAlert className="w-4 h-4 text-blue-500" />
+                <span>Aturan Batas Minimal Stok (Safety Stock)</span>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                Aturan 50% PO
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/60 text-[11px] text-blue-900 dark:text-blue-200 leading-relaxed">
+              Sistem menetapkan <strong>batas minimal stok adalah 50% dari jumlah order terakhir</strong> (PO Faktur). Ketika stok barang di rak mencapai atau di bawah batas ini, sistem akan memunculkan peringatan stok menipis agar toko tidak mengalami kekosongan barang (stockout).
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
+                  Persentase Batas Minimal (% Order)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={10}
+                    max={100}
+                    step={5}
+                    value={formData.minStockRulePercentage ?? 50}
+                    onChange={(e) => setFormData({ ...formData, minStockRulePercentage: Number(e.target.value) })}
+                    className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs pr-8"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">%</span>
+                </div>
+                <span className="text-[10px] text-slate-400">Default: 50% dari kuantitas order PO</span>
+              </div>
+
+              <div className="flex flex-col justify-end">
+                <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                  <input
+                    type="checkbox"
+                    checked={formData.autoUpdateMinStockFromOrder !== false}
+                    onChange={(e) => setFormData({ ...formData, autoUpdateMinStockFromOrder: e.target.checked })}
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Auto-Update saat Terima PO
+                  </span>
+                </label>
+                <span className="text-[10px] text-slate-400 mt-1">Otomatis update min stock saat faktur masuk</span>
+              </div>
+            </div>
+
+            <div className="pt-1 flex items-center justify-between flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const count = applyMinStockRuleToAllProducts(formData.minStockRulePercentage ?? 50);
+                  setSyncMessage(`Berhasil diterapkan ke ${count} produk!`);
+                  setTimeout(() => setSyncMessage(null), 3500);
+                }}
+                className="px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span>Terapkan Aturan 50% ke Semua Produk Sekarang</span>
+              </button>
+              {syncMessage && (
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 animate-in fade-in">
+                  ✓ {syncMessage}
+                </span>
+              )}
+            </div>
+          </div>
+
           {/* Backup & Disaster Recovery Center */}
           <div className="space-y-2 bg-emerald-50/60 dark:bg-emerald-950/20 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-850">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
                 <Database className="w-4 h-4 text-emerald-500" />
-                <span>Cadangan &amp; Titik Pemulihan (Backup)</span>
+                <span>Basis Data &amp; Cadangan (IndexedDB)</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -243,9 +514,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 </button>
               </div>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Unduh berkas JSON cadangan utuh toko atau kelola snapshot titik pemulihan sistem secara instan.
-            </p>
+            <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-[10px]">
+                IndexedDB Ultra-Capacity
+              </span>
+              <span>Kapasitas penyimpanan puluhan GB tanpa batas 5MB LocalStorage.</span>
+            </div>
           </div>
 
           {/* Submit */}

@@ -13,7 +13,11 @@ import {
   ShieldCheck,
   CloudOff,
 } from 'lucide-react';
-import { usePOS } from '../context/POSContext';
+import {
+  usePOSCart,
+  usePOSTransactions,
+  usePOSUI,
+} from '../context/POSContext';
 import { PaymentMethod, PaymentDetails } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
@@ -23,15 +27,9 @@ interface PaymentModalProps {
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) => {
-  const {
-    finalTotal,
-    cart,
-    selectedCustomer,
-    pointsEarned,
-    processPayment,
-    settings,
-    isOnline,
-  } = usePOS();
+  const { finalTotal, cart, selectedCustomer, pointsEarned } = usePOSCart();
+  const { processPayment } = usePOSTransactions();
+  const { settings, isOnline } = usePOSUI();
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [cashTendered, setCashTendered] = useState<number>(finalTotal);
