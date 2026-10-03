@@ -34,9 +34,9 @@ export const LoyaltyRulesConfig: React.FC = () => {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettings({
-      pointsRatio: Math.max(1000, pointsRatio),
+      pointsRatio: Math.max(100, pointsRatio),
       pointRedemptionRate: Math.max(1, pointRedemptionRate),
-      minRedeemPoints: Math.max(1, minRedeemPoints),
+      minRedeemPoints: Math.max(0, minRedeemPoints),
       minProfitPercentForPoints: Math.max(0, minProfitMargin),
     });
     setSavedSuccess(true);
@@ -135,15 +135,33 @@ export const LoyaltyRulesConfig: React.FC = () => {
               <input
                 type="number"
                 min={1}
-                step={10}
+                step={1}
                 required
-                value={pointRedemptionRate}
-                onChange={(e) => setPointRedemptionRate(Number(e.target.value))}
+                value={pointRedemptionRate || ''}
+                onChange={(e) => setPointRedemptionRate(e.target.value === '' ? 0 : Number(e.target.value))}
                 className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
+            {/* Quick round chips */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-1">
+              <span className="text-[10px] text-slate-400">Pilihan Cepat:</span>
+              {[10, 50, 100, 200, 500, 1000].map((rate) => (
+                <button
+                  key={rate}
+                  type="button"
+                  onClick={() => setPointRedemptionRate(rate)}
+                  className={`px-2 py-0.5 text-[11px] font-mono font-bold rounded-lg border transition cursor-pointer ${
+                    pointRedemptionRate === rate
+                      ? 'bg-amber-500 text-slate-950 border-amber-600'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-400'
+                  }`}
+                >
+                  Rp {rate.toLocaleString('id-ID')}
+                </button>
+              ))}
+            </div>
             <p className="text-[11px] text-slate-500">
-              Potongan langsung pada total tagihan belanja kasir saat pelanggan menukarkan poinnya.
+              Potongan langsung pada total tagihan belanja kasir saat pelanggan menukarkan poinnya. Bebas diisi angka bulat berapa saja (cth: Rp 10, Rp 50, atau Rp 100).
             </p>
           </div>
 
@@ -161,16 +179,34 @@ export const LoyaltyRulesConfig: React.FC = () => {
             <div className="relative">
               <input
                 type="number"
-                min={1}
+                min={0}
                 step={1}
                 required
-                value={minRedeemPoints}
-                onChange={(e) => setMinRedeemPoints(Number(e.target.value))}
+                value={minRedeemPoints !== undefined ? minRedeemPoints : ''}
+                onChange={(e) => setMinRedeemPoints(e.target.value === '' ? 0 : Number(e.target.value))}
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
+            {/* Quick round chips */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-1">
+              <span className="text-[10px] text-slate-400">Pilihan Cepat:</span>
+              {[1, 5, 10, 20, 50, 100].map((pts) => (
+                <button
+                  key={pts}
+                  type="button"
+                  onClick={() => setMinRedeemPoints(pts)}
+                  className={`px-2 py-0.5 text-[11px] font-mono font-bold rounded-lg border transition cursor-pointer ${
+                    minRedeemPoints === pts
+                      ? 'bg-purple-600 text-white border-purple-700'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-400'
+                  }`}
+                >
+                  {pts} Pts
+                </button>
+              ))}
+            </div>
             <p className="text-[11px] text-slate-500">
-              Batas minimum saldo poin yang harus dimiliki pelanggan sebelum dapat ditukar menjadi diskon belanja.
+              Batas minimum saldo poin yang harus dimiliki pelanggan sebelum dapat ditukar menjadi diskon belanja (cth: 1, 5, 10, atau 100 Pts).
             </p>
           </div>
 

@@ -1,79 +1,32 @@
-// Ulilmart POS Service Worker - Offline Caching & Background Sync
-const CACHE_NAME = 'ulilmart-pos-v1';
-const DB_NAME = 'pos_retail_offline_db';
-const DB_STORE = 'pending_transactions';
-
-const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-];
-
-// 1. Install Event: Cache app shell
+// Ulilmart POS Service Worker - Self-cleaning & Auto-Unregister
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('[SW] Precache asset warning:', err);
-      });
-    }).then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
-// 2. Activate Event: Cleanup outdated caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
-            console.log('[SW] Clearing old cache:', name);
-            return caches.delete(name);
+    caches.keys().then((names) => {
+      return Promise.all(names.map((name) => caches.delete(name)));
+    })
+    .then(() => self.registration.unregister())
+    .then(() => self.clients.claim())
+    .then(() => {
+      return self.clients.matchAll({ type: 'window' }).then((clients) => {
+        for (const client of clients) {
+          if (client.url && 'navigate' in client) {
+            client.navigate(client.url).catch(() => {});
           }
-        })
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// 3. Fetch Event: Stale-While-Revalidate for app assets, Network-First for API
-self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
-
-  // Bypass non-GET and chrome-extension schemes
-  if (event.request.method !== 'GET' || !requestUrl.protocol.startsWith('http')) {
-    return;
-  }
-
-  // API endpoints: network-first, do not cache API errors
-  if (requestUrl.pathname.startsWith('/api/')) {
-    return;
-  }
-
-  // Static assets and navigation: Stale-While-Revalidate
-  event.respondWith(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      const cachedResponse = await cache.match(event.request);
-
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            cache.put(event.request, networkResponse.clone()).catch(() => {});
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          // If offline and requesting navigation, return cached index.html
-          if (event.request.mode === 'navigate') {
-            return cache.match('/') || cache.match('/index.html');
-          }
-          return cachedResponse || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-        });
-
-      return cachedResponse || fetchPromise;
+        }
+      });
     })
   );
 });
+
+// Do not intercept any fetch requests to ensure Vite/browser always fetches live files
+self.addEventListener('fetch', () => {
+  // Pass-through to network
+});
+
 
 // 4. Background Sync API: Automatically triggered by browser when connection restores
 self.addEventListener('sync', (event) => {

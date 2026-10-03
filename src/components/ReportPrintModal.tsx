@@ -144,6 +144,10 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
     card: filteredTransactions.filter((t) => t.payment.method === 'card').reduce((s, t) => s + t.finalTotal, 0),
     transfer: filteredTransactions.filter((t) => t.payment.method === 'transfer').reduce((s, t) => s + t.finalTotal, 0),
   };
+  const totalEdcSettlement = paymentBreakdown.qris + paymentBreakdown.card;
+  const qrisTxCount = filteredTransactions.filter((t) => t.payment.method === 'qris').length;
+  const cardTxCount = filteredTransactions.filter((t) => t.payment.method === 'card').length;
+  const totalEdcTxCount = qrisTxCount + cardTxCount;
 
   // Product stats
   const productStatsMap: Record<
@@ -182,7 +186,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
       summary: 'LAPORAN IKHTISAR PENJUALAN & LABA KOTOR',
       transactions: 'LAPORAN RINCIAN TRANSAKSI PENJUALAN KASIR',
       products: 'LAPORAN PENJUALAN & KINERJA PRODUK',
-      payments: 'LAPORAN REKONSILIASI METODE PEMBAYARAN',
+      payments: 'LAPORAN REKONSILIASI PEMBAYARAN & SETTLEMENT EDC BRI',
       returns: 'LAPORAN RETUR PENJUALAN & DISKON',
       purchases: 'LAPORAN PEMBELIAN & PENERIMAAN SUPPLIER',
       shifts: 'LAPORAN REKAPITULASI SHIFT KASIR',
@@ -199,7 +203,11 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
       return `
         <div style="font-family: monospace; font-size: 11px; line-height: 1.3; color: #000;">
           <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
+            <div style="margin-bottom: 4px;">
+              <img src="/ulilmart-logo.svg" style="height: 28px; max-width: 160px; filter: grayscale(100%) contrast(200%);" alt="ULIL Mart" />
+            </div>
             <div style="font-size: 13px; font-weight: bold; text-transform: uppercase;">${settings.storeName}</div>
+            <div style="font-size: 10px; font-weight: 600;">${settings.storeTagline || 'Lengkap & Hemat'}</div>
             <div>${settings.branchName}</div>
             <div style="font-size: 9px;">${settings.address}</div>
             <div style="font-size: 9px;">Telp: ${settings.phone}</div>
@@ -255,21 +263,31 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
           <div style="border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
             <div style="font-weight: bold; margin-bottom: 4px;">Metode Pembayaran:</div>
             <div style="display: flex; justify-content: space-between;">
-              <span>Tunai (Cash):</span>
+              <span>Tunai (Laci Fisik):</span>
               <span>${formatCurrency(paymentBreakdown.cash, settings.currency)}</span>
             </div>
             <div style="display: flex; justify-content: space-between;">
-              <span>QRIS / E-Wallet:</span>
+              <span>QRIS EDC BRI:</span>
               <span>${formatCurrency(paymentBreakdown.qris, settings.currency)}</span>
             </div>
             <div style="display: flex; justify-content: space-between;">
-              <span>Mesin EDC:</span>
+              <span>Kartu EDC BRI:</span>
               <span>${formatCurrency(paymentBreakdown.card, settings.currency)}</span>
             </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span>Transfer Bank:</span>
+            ${
+              paymentBreakdown.transfer > 0
+                ? `
+            <div style="display: flex; justify-content: space-between; color: #666;">
+              <span>Transfer Bank (Lama):</span>
               <span>${formatCurrency(paymentBreakdown.transfer, settings.currency)}</span>
+            </div>`
+                : ''
+            }
+            <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px dotted #000; margin-top: 4px; padding-top: 2px;">
+              <span>SETTLEMENT EDC BRI:</span>
+              <span>${formatCurrency(totalEdcSettlement, settings.currency)}</span>
             </div>
+            <div style="font-size: 9px; color: #555; text-align: right;">(${totalEdcTxCount} Struk: QRIS ${qrisTxCount} | Kartu ${cardTxCount})</div>
           </div>
 
           <!-- Top Products in Thermal -->
@@ -308,16 +326,17 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
     return `
       <div style="max-width: 900px; margin: 0 auto; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <!-- Official Header & Store Logo -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
-          <div>
-            <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin: 0;">
-              ${settings.storeName}
-            </h1>
-            <div style="font-size: 12px; color: #475569; margin-top: 2px;">
-              ${settings.branchName} • ${settings.address}
-            </div>
-            <div style="font-size: 11px; color: #64748b;">
-              Telp: ${settings.phone} | Email: info@${settings.storeName.toLowerCase().replace(/\s+/g, '')}.com
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <img src="/ulilmart-logo.svg" style="height: 48px; width: auto;" alt="ULIL Mart" />
+            <div>
+              <div style="font-size: 13px; font-weight: 700; color: #0284c7; letter-spacing: 0.5px;">${settings.storeTagline || 'Lengkap & Hemat'}</div>
+              <div style="font-size: 12px; color: #475569; margin-top: 2px;">
+                ${settings.branchName} • ${settings.address}
+              </div>
+              <div style="font-size: 11px; color: #64748b;">
+                Telp: ${settings.phone} | Email: info@${settings.storeName.toLowerCase().replace(/\s+/g, '')}.com
+              </div>
             </div>
           </div>
 
@@ -492,6 +511,49 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
           reportType === 'payments' || reportType === 'summary'
             ? `
           <div style="margin-bottom: 24px;">
+            ${
+              reportType === 'payments'
+                ? `
+            <!-- Box Rekonsiliasi Settlement Mesin EDC BRI -->
+            <div style="background: #eff6ff; border: 1.5px solid #2563eb; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #bfdbfe; padding-bottom: 6px;">
+                <div style="font-size: 13px; font-weight: 800; color: #1e3a8a;">
+                  REKONSILIASI SETTLEMENT MESIN EDC BRI
+                </div>
+                <span style="font-size: 10px; font-weight: bold; background: #2563eb; color: #ffffff; padding: 2px 8px; border-radius: 4px;">
+                  TERMINAL EDC BRI
+                </span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 11px;">
+                <div style="background: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px;">
+                  <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">QRIS Mesin EDC BRI</div>
+                  <div style="font-size: 15px; font-weight: 800; color: #1d4ed8; font-family: monospace; margin-top: 2px;">
+                    ${formatCurrency(paymentBreakdown.qris, settings.currency)}
+                  </div>
+                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">${qrisTxCount} Transaksi Selesai</div>
+                </div>
+
+                <div style="background: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px;">
+                  <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">Kartu EDC BRI (Debit/Kredit)</div>
+                  <div style="font-size: 15px; font-weight: 800; color: #1d4ed8; font-family: monospace; margin-top: 2px;">
+                    ${formatCurrency(paymentBreakdown.card, settings.currency)}
+                  </div>
+                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">${cardTxCount} Transaksi Selesai</div>
+                </div>
+
+                <div style="background: #1e3a8a; border-radius: 6px; padding: 8px; color: #ffffff;">
+                  <div style="color: #bfdbfe; font-size: 10px; font-weight: bold; text-transform: uppercase;">TOTAL SETTLEMENT EDC BRI</div>
+                  <div style="font-size: 16px; font-weight: 900; color: #93c5fd; font-family: monospace; margin-top: 2px;">
+                    ${formatCurrency(totalEdcSettlement, settings.currency)}
+                  </div>
+                  <div style="font-size: 9px; color: #dbeafe; margin-top: 2px;">Total: ${totalEdcTxCount} Struk • Cocokkan dengan struk fisik EDC</div>
+                </div>
+              </div>
+            </div>
+            `
+                : ''
+            }
+
             <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">
               Rekapitulasi Arus Kas & Metode Pembayaran
             </div>
@@ -499,18 +561,18 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               <thead>
                 <tr style="background: #f8fafc; border-bottom: 1px solid #cbd5e1;">
                   <th style="padding: 6px 8px; text-align: left;">Metode Pembayaran</th>
-                  <th style="padding: 6px 8px; text-align: left;">Tipe Kanal</th>
+                  <th style="padding: 6px 8px; text-align: left;">Tipe Kanal / Perangkat</th>
                   <th style="padding: 6px 8px; text-align: right;">Total Transaksi</th>
                   <th style="padding: 6px 8px; text-align: right;">Nominal Diterima</th>
-                  <th style="padding: 6px 8px; text-align: right;">Pangsa Pangsa (%)</th>
+                  <th style="padding: 6px 8px; text-align: right;">Pangsa (%)</th>
                 </tr>
               </thead>
               <tbody>
                 ${[
                   { name: 'Uang Tunai (Cash)', type: 'Laci Kasir Fisik', amount: paymentBreakdown.cash, count: filteredTransactions.filter(t => t.payment.method === 'cash').length },
-                  { name: 'QRIS & E-Wallet (GoPay, OVO, ShopeePay)', type: 'Digital Settlement', amount: paymentBreakdown.qris, count: filteredTransactions.filter(t => t.payment.method === 'qris').length },
-                  { name: 'Mesin EDC (Debit & Kartu Kredit)', type: 'Merchant Card EDC', amount: paymentBreakdown.card, count: filteredTransactions.filter(t => t.payment.method === 'card').length },
-                  { name: 'Transfer Bank / Virtual Account', type: 'Bank Direct Transfer', amount: paymentBreakdown.transfer, count: filteredTransactions.filter(t => t.payment.method === 'transfer').length },
+                  { name: 'QRIS EDC BRI', type: 'Settlement Mesin EDC BRI', amount: paymentBreakdown.qris, count: qrisTxCount },
+                  { name: 'Kartu EDC BRI (Debit & Kredit)', type: 'Settlement Mesin EDC BRI', amount: paymentBreakdown.card, count: cardTxCount },
+                  ...(paymentBreakdown.transfer > 0 ? [{ name: 'Transfer Bank (Lama)', type: 'Bank Direct Transfer', amount: paymentBreakdown.transfer, count: filteredTransactions.filter(t => t.payment.method === 'transfer').length }] : []),
                 ].map((m) => {
                   const share = grossSales > 0 ? ((m.amount / grossSales) * 100).toFixed(1) : '0';
                   return `
@@ -524,7 +586,75 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                   `;
                 }).join('')}
               </tbody>
+              <tfoot>
+                <tr style="background: #f8fafc; border-top: 2px solid #cbd5e1; font-weight: bold;">
+                  <td colspan="2" style="padding: 8px;">TOTAL PENERIMAAN:</td>
+                  <td style="padding: 8px; text-align: right; font-family: monospace;">${filteredTransactions.length} Struk</td>
+                  <td style="padding: 8px; text-align: right; font-family: monospace; color: #059669;">${formatCurrency(grossSales, settings.currency)}</td>
+                  <td style="padding: 8px; text-align: right; font-family: monospace;">100%</td>
+                </tr>
+              </tfoot>
             </table>
+
+            ${
+              reportType === 'payments'
+                ? `
+            <!-- Log Detail Transaksi Pembayaran & RRN EDC -->
+            <div style="margin-top: 24px;">
+              <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 6px; display: flex; justify-content: space-between;">
+                <span>Daftar Transaksi Pembayaran & Rincian Ref/RRN EDC (${filteredTransactions.length} Struk)</span>
+                <span style="font-size: 11px; color: #64748b; font-weight: normal;">Urut Waktu Terbaru</span>
+              </div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <thead>
+                  <tr style="background: #f8fafc; border-bottom: 1px solid #cbd5e1;">
+                    <th style="padding: 6px 8px; text-align: left;">No. Faktur</th>
+                    <th style="padding: 6px 8px; text-align: left;">Waktu</th>
+                    <th style="padding: 6px 8px; text-align: left;">Metode & Kanal</th>
+                    <th style="padding: 6px 8px; text-align: left;">No. Ref / RRN EDC</th>
+                    <th style="padding: 6px 8px; text-align: left;">Kasir</th>
+                    <th style="padding: 6px 8px; text-align: right;">Nominal Tagihan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    filteredTransactions.length > 0
+                      ? filteredTransactions
+                          .map((t) => {
+                            const isEdc = t.payment.method === 'qris' || t.payment.method === 'card';
+                            const methodBadge = t.payment.method === 'qris'
+                              ? 'QRIS EDC BRI'
+                              : t.payment.method === 'card'
+                              ? (t.payment.bankName || 'KARTU EDC BRI')
+                              : t.payment.method.toUpperCase();
+                            return `
+                              <tr style="border-bottom: 1px solid #f1f5f9; ${isEdc ? 'background: #fafcff;' : ''}">
+                                <td style="padding: 6px 8px; font-family: monospace; font-weight: bold; color: #0f172a;">${t.invoiceNumber}</td>
+                                <td style="padding: 6px 8px; color: #475569;">${new Date(t.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</td>
+                                <td style="padding: 6px 8px;">
+                                  <span style="font-weight: 600; color: ${isEdc ? '#1d4ed8' : '#0f172a'};">
+                                    ${methodBadge}
+                                  </span>
+                                </td>
+                                <td style="padding: 6px 8px; font-family: monospace; color: #475569;">
+                                  ${t.payment.referenceCode || '-'}
+                                </td>
+                                <td style="padding: 6px 8px; color: #475569;">${t.cashierName}</td>
+                                <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold; color: #059669;">
+                                  ${formatCurrency(t.finalTotal, settings.currency)}
+                                </td>
+                              </tr>
+                            `;
+                          })
+                          .join('')
+                      : `<tr><td colspan="6" style="padding: 16px; text-align: center; color: #94a3b8;">Tidak ada data transaksi pembayaran.</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
+            `
+                : ''
+            }
           </div>
         `
             : ''
@@ -586,6 +716,26 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
         Math.round(p.revenue),
         Math.round(p.cogs),
         Math.round(p.profit),
+      ]);
+      exportToCSV(filename, headers, rows);
+    } else if (reportType === 'payments') {
+      const headers = ['No Faktur', 'Waktu', 'Metode Bayar', 'Kanal / Bank', 'No Ref / RRN EDC BRI', 'Kasir', 'Pelanggan', 'Nominal (Rp)', 'Status'];
+      const rows = filteredTransactions.map((t) => [
+        t.invoiceNumber,
+        new Date(t.createdAt).toLocaleString('id-ID'),
+        t.payment.method === 'qris'
+          ? 'QRIS EDC BRI'
+          : t.payment.method === 'card'
+          ? (t.payment.bankName || 'KARTU EDC BRI')
+          : t.payment.method === 'cash'
+          ? 'TUNAI'
+          : 'TRANSFER',
+        t.payment.bankName || (t.payment.method === 'cash' ? 'Laci Fisik Kasir' : 'Mesin EDC BRI'),
+        t.payment.referenceCode || '-',
+        t.cashierName,
+        t.customer?.name || 'Umum',
+        Math.round(t.finalTotal),
+        t.status.toUpperCase(),
       ]);
       exportToCSV(filename, headers, rows);
     } else {
@@ -676,7 +826,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               <option value="summary">📊 Ringkasan Penjualan & Laba Kotor</option>
               <option value="transactions">🧾 Rincian Transaksi Selesai</option>
               <option value="products">🏆 Produk Terlaris & Margin</option>
-              <option value="payments">💳 Rekonsiliasi Metode Pembayaran</option>
+              <option value="payments">💳 Laporan Pembayaran &amp; Settlement EDC BRI</option>
             </select>
           </div>
 

@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   FileSpreadsheet,
   Filter,
+  Cloud,
 } from 'lucide-react';
 import {
   APP_VERSION,
@@ -104,6 +105,8 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
         return <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
       case 'FileSpreadsheet':
         return <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+      case 'Cloud':
+        return <Cloud className="w-4 h-4 text-sky-500" />;
       default:
         return <BookOpen className="w-4 h-4 text-emerald-500" />;
     }

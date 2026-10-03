@@ -1,4 +1,14 @@
-import { ProductCategory, Product, Customer, Voucher, StoreSettings, Transaction, Employee, Supplier } from '../types';
+import {
+  ProductCategory,
+  Product,
+  Customer,
+  Voucher,
+  StoreSettings,
+  Transaction,
+  Employee,
+  Supplier,
+  OperationalExpense,
+} from '../types';
 
 export const INITIAL_CATEGORIES: ProductCategory[] = [
   { id: 'all', name: 'Semua Produk', iconName: 'LayoutGrid', description: 'Seluruh katalog toko ritel' },
@@ -6,7 +16,7 @@ export const INITIAL_CATEGORIES: ProductCategory[] = [
   { id: 'beverages', name: 'Minuman & Susu', iconName: 'Coffee', description: 'Susu UHT, jus, teh, kopi botol, air mineral', color: 'blue' },
   { id: 'snacks', name: 'Snack & Biskuit', iconName: 'Cookie', description: 'Keripik, wafer, cokelat, biskuit gandum', color: 'amber' },
   { id: 'instant', name: 'Makanan Instan', iconName: 'Utensils', description: 'Mie instan, kornet, sarden, bumbu masak', color: 'rose' },
-  { id: 'fresh', name: 'Segar & Dingin', iconName: 'Apple', description: 'Buah segar, yoghurt, keju, mentega', color: 'green' },
+  { id: 'fresh', name: 'Frozen Food', iconName: 'Snowflake', description: 'Nugget, sosis, daging beku, bakso, dimsum, kentang beku', color: 'cyan' },
   { id: 'personal_care', name: 'Perawatan Tubuh', iconName: 'Sparkles', description: 'Sabun, sampo, pasta gigi, skincare', color: 'purple' },
   { id: 'home_care', name: 'Kebutuhan Rumah', iconName: 'Home', description: 'Deterjen, pembersih lantai, tisu, sabun cuci', color: 'cyan' },
   { id: 'atk_meds', name: 'ATK, Obat & Lainnya', iconName: 'Briefcase', description: 'Alat tulis kantor, obat-obatan, baterai, perlengkapan kasir', color: 'indigo' },
@@ -260,6 +270,51 @@ export const INITIAL_PRODUCTS: Product[] = [
     image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&auto=format&fit=crop&q=60',
     description: 'Kopi bubuk hitam mantap berpadu gula murni dalam sachet praktis.',
   },
+  {
+    id: 'prod-013',
+    name: 'Fiesta Chicken Nugget Crispy 500g',
+    brand: 'Fiesta',
+    sku: 'FST-NUG-500G',
+    barcode: '8992779140014',
+    categoryId: 'fresh',
+    price: 46500,
+    costPrice: 38000,
+    stock: 24,
+    minStock: 8,
+    lastOrderQuantity: 16,
+    unit: 'Bungkus',
+    aisle: 'Freezer 1 - Rak Nugget',
+    expiryDate: '2027-04-15',
+    batchNumber: 'FST-2026-N1',
+    isPopular: true,
+    promoBadge: 'Frozen Favorit',
+    image: 'https://images.unsplash.com/photo-1562967914-608f82629710?w=400&auto=format&fit=crop&q=60',
+    description: 'Nugget ayam renyah olahan daging ayam pilihan, disimpan beku higienis.',
+    wholesaleUnits: [
+      { id: 'wh-fst-dus', name: 'Dus (12 Bungkus)', multiplier: 12, price: 540000, costPrice: 456000, barcode: '8992779140014-12' },
+    ],
+  },
+  {
+    id: 'prod-014',
+    name: 'Kanzler Singles Keju Sosis Bakar 65g',
+    brand: 'Kanzler',
+    sku: 'KNZ-SGL-KJ65',
+    barcode: '8993077110055',
+    categoryId: 'fresh',
+    price: 9000,
+    costPrice: 7200,
+    stock: 35,
+    minStock: 10,
+    lastOrderQuantity: 20,
+    unit: 'Pcs',
+    aisle: 'Chiller / Kasir Depan',
+    expiryDate: '2026-12-10',
+    batchNumber: 'KNZ-2026-K1',
+    isPopular: true,
+    promoBadge: 'Best Seller',
+    image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=400&auto=format&fit=crop&q=60',
+    description: 'Sosis siap santap dengan potongan keju lumer khas Jerman.',
+  },
 ];
 
 export const INITIAL_CUSTOMERS: Customer[] = [
@@ -478,21 +533,26 @@ export const INITIAL_VOUCHERS: Voucher[] = [
 ];
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
-  storeName: 'Ulilmart Superstore',
-  branchName: 'Grand Orchard Mega Branch #04',
-  address: 'Jl. Orchard Boulevard No. 88, Jakarta Selatan',
-  phone: '(021) 7890-5544',
-  receiptFooterMessage: 'Terima kasih telah berbelanja di Ulilmart! Info promo: www.ulilmart.id',
+  storeName: 'ULIL Mart',
+  storeTagline: 'Lengkap & Hemat',
+  branchName: 'Cabang Parang, Magetan',
+  address: 'Jaten, Krajan, Kec. Parang, Kabupaten Magetan, Jawa Timur 63371',
+  phone: '0851-7671-9187',
+  googleMapsUrl: 'https://maps.app.goo.gl/vdPYeh4Ncp7Hotzg8',
+  operatingHours: '06.00 – 21.00 WIB (Buka Setiap Hari)',
+  receiptFooterMessage: 'Terima kasih telah berbelanja di ULIL Mart! Lengkap & Hemat.',
   taxRatePercent: 0, // Tanpa Pajak Penjualan
   serviceChargePercent: 0, // Tanpa Surcharge
   currency: 'IDR',
   enableThermal58mm: true,
+  showLogoOnReceipt: true, // Cetak logo ULIL Mart di struk kasir
   pointsRatio: 10000, // 1 poin tiap Rp 10.000 belanja berpoin
   pointRedemptionRate: 100, // 1 poin = Rp 100 diskon kasir
   minRedeemPoints: 10, // Minimal 10 poin untuk tukar diskon kasir
   minProfitPercentForPoints: 15, // Minimal profit margin per barang 15% untuk mendapatkan poin
   minStockRulePercentage: 50, // Aturan batas minimal stock adalah 50% dari jumlah order terakhir
   autoUpdateMinStockFromOrder: true, // Otomatis perbarui batas min stock saat penerimaan faktur masuk
+  initialCapital: 50000000, // Modal awal usaha toko Rp 50.000.000
 };
 
 export const INITIAL_RECENT_TRANSACTIONS: Transaction[] = [];
@@ -661,3 +721,37 @@ export const INITIAL_SUPPLIERS: Supplier[] = [
     createdAt: '2025-04-05',
   },
 ];
+
+export const INITIAL_EXPENSES: OperationalExpense[] = [
+  {
+    id: 'exp-001',
+    date: '2026-09-28T09:30:00.000Z',
+    category: 'listrik_air_internet',
+    description: 'Pembelian Token Listrik PLN Toko 6600VA',
+    amount: 350000,
+    paymentSource: 'cash_drawer',
+    recordedBy: 'Hendro Wijaya (Owner)',
+    notes: 'Token listrik operasional toko',
+  },
+  {
+    id: 'exp-002',
+    date: '2026-09-29T11:15:00.000Z',
+    category: 'perlengkapan_kantor',
+    description: 'Pembelian Kantong Plastik Sablon & Lakban Kasir',
+    amount: 125000,
+    paymentSource: 'cash_drawer',
+    recordedBy: 'Siti Rahmawati (Kasir)',
+    notes: 'Plastik HD plong 5 pack',
+  },
+  {
+    id: 'exp-003',
+    date: '2026-09-30T14:00:00.000Z',
+    category: 'konsumsi_operasional',
+    description: 'Galon Air Minum & Konsumsi Staf Toko',
+    amount: 55000,
+    paymentSource: 'cash_drawer',
+    recordedBy: 'Siti Rahmawati (Kasir)',
+    notes: 'Air mineral 3 galon',
+  },
+];
+

@@ -12,6 +12,11 @@ import {
   Award,
   Sparkles,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  Percent,
+  Heart,
   MessageSquare,
   Zap,
   Boxes,
@@ -29,7 +34,7 @@ import {
 } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { CustomerModal } from './CustomerModal';
-import { WholesaleUnit } from '../types';
+import { WholesaleUnit, CustomerDiscount } from '../types';
 
 interface CartPanelProps {
   onBackToCatalog?: () => void;
@@ -42,6 +47,11 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
     appliedVoucher,
     applyVoucher,
     removeVoucher,
+    customerDiscount,
+    applyCustomerDiscount,
+    removeCustomerDiscount,
+    customerDiscountAmount,
+    customerDiscountSuggestions,
     usePoints,
     setUsePoints,
     pointsToRedeem,
@@ -79,6 +89,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
   const [voucherError, setVoucherError] = useState('');
   const [activeEditingNoteId, setActiveEditingNoteId] = useState<string | null>(null);
   const [itemNoteText, setItemNoteText] = useState('');
+  const [isDiscountSuggestionsOpen, setIsDiscountSuggestionsOpen] = useState(true);
 
   // Keyboard shortcuts (F4: Hold, F9: Checkout)
   useEffect(() => {
@@ -232,6 +243,51 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
           </div>
           <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
         </button>
+
+        {/* Customer Discount Quick Highlight */}
+        {selectedCustomer && (
+          customerDiscount ? (
+            <div className="flex items-center justify-between p-2 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/30 border border-indigo-200 dark:border-indigo-800 text-[11px] shadow-2xs animate-in fade-in duration-150">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                <span className="font-bold text-indigo-950 dark:text-indigo-200 truncate">
+                  {customerDiscount.title}
+                </span>
+                <span className="font-mono font-bold text-indigo-700 dark:text-indigo-300 shrink-0">
+                  (-{formatCurrency(customerDiscountAmount, settings.currency)})
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={removeCustomerDiscount}
+                className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 font-semibold ml-2 cursor-pointer shrink-0"
+                title="Hapus diskon khusus member ini"
+              >
+                Hapus
+              </button>
+            </div>
+          ) : customerDiscountSuggestions.filter((s) => s.isApplicable).length > 0 ? (
+            <div className="flex items-center justify-between p-2 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 dark:from-amber-950/30 dark:to-emerald-950/20 border border-amber-200 dark:border-emerald-800/60 text-[11px] shadow-2xs animate-in fade-in duration-150">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0 animate-bounce" />
+                <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
+                  Tersedia <strong>{customerDiscountSuggestions.filter((s) => s.isApplicable).length}</strong> saran diskon untuk {selectedCustomer.name}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const top = customerDiscountSuggestions.find((s) => s.isApplicable);
+                  if (top) applyCustomerDiscount(top);
+                }}
+                className="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] cursor-pointer shrink-0 transition-transform active:scale-95 shadow-2xs"
+                title="Klaim diskon rekomendasi terbaik"
+              >
+                Klaim Cepat
+              </button>
+            </div>
+          ) : null
+        )}
       </div>
 
       {/* Cart Items List */}
@@ -499,6 +555,181 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
 
             {voucherError && <p className="text-[11px] text-rose-500">{voucherError}</p>}
 
+            {/* Customer Loyalty & History-Based Discount Suggestions Accordion */}
+            {selectedCustomer ? (
+              <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/50 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 text-xs overflow-hidden shadow-2xs">
+                {/* Header */}
+                <div
+                  onClick={() => setIsDiscountSuggestionsOpen(!isDiscountSuggestionsOpen)}
+                  className="p-2.5 flex items-center justify-between cursor-pointer select-none hover:bg-indigo-100/40 dark:hover:bg-indigo-950/40 transition-colors"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="p-1.5 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
+                      <Sparkles className="w-4 h-4" />
+                    </span>
+                    <div className="truncate">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-slate-900 dark:text-slate-100">
+                          Diskon Loyalitas & Riwayat Belanja
+                        </span>
+                        {customerDiscount && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                            Aktif
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        {customerDiscount
+                          ? `Terpasang: ${customerDiscount.title} (-${formatCurrency(customerDiscountAmount, settings.currency)})`
+                          : `${customerDiscountSuggestions.filter((s) => s.isApplicable).length} saran promo siap klaim untuk ${selectedCustomer.name}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {customerDiscount && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeCustomerDiscount();
+                        }}
+                        className="px-2 py-0.5 rounded text-[10px] font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                        title="Batalkan diskon ini"
+                      >
+                        Hapus
+                      </button>
+                    )}
+                    {isDiscountSuggestionsOpen ? (
+                      <ChevronUp className="w-4 h-4 text-slate-400" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Suggestions List Body */}
+                {isDiscountSuggestionsOpen && (
+                  <div className="p-2.5 pt-0 border-t border-indigo-100 dark:border-indigo-900/40 space-y-2">
+                    {/* Active Discount Banner if applied */}
+                    {customerDiscount && (
+                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-[11px] flex items-start justify-between gap-2">
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-emerald-900 dark:text-emerald-200">
+                              {customerDiscount.title}
+                            </span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-200/80 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300">
+                              {customerDiscount.badge}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-emerald-700 dark:text-emerald-400 leading-tight">
+                            {customerDiscount.reason}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="font-bold font-mono text-emerald-700 dark:text-emerald-300">
+                            -{formatCurrency(customerDiscountAmount, settings.currency)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Suggestions list */}
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
+                      {customerDiscountSuggestions.length > 0 ? (
+                        customerDiscountSuggestions.map((suggestion) => {
+                          const isCurrentlyApplied = customerDiscount?.id === suggestion.id;
+
+                          return (
+                            <div
+                              key={suggestion.id}
+                              className={`p-2 rounded-lg border transition-all text-[11px] ${
+                                isCurrentlyApplied
+                                  ? 'bg-indigo-50/80 dark:bg-indigo-950/60 border-indigo-400 dark:border-indigo-600 shadow-2xs'
+                                  : suggestion.isApplicable
+                                  ? 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700'
+                                  : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/60 opacity-60'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="space-y-0.5 min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-bold text-slate-900 dark:text-slate-100">
+                                      {suggestion.title}
+                                    </span>
+                                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                      {suggestion.badge}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                                    {suggestion.reason}
+                                  </p>
+                                  {!suggestion.isApplicable && suggestion.unmetSpendAmount && suggestion.unmetSpendAmount > 0 && (
+                                    <p className="text-[9px] text-amber-600 dark:text-amber-400 font-semibold pt-0.5">
+                                      Belanja kurang {formatCurrency(suggestion.unmetSpendAmount, settings.currency)} untuk dapat menggunakan promo ini.
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="flex flex-col items-end gap-1 shrink-0">
+                                  <span className="font-bold font-mono text-indigo-600 dark:text-indigo-400 text-xs">
+                                    -{formatCurrency(suggestion.amount, settings.currency)}
+                                  </span>
+
+                                  {isCurrentlyApplied ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => removeCustomerDiscount()}
+                                      className="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <Check className="w-3 h-3" />
+                                      <span>Terpasang</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      disabled={!suggestion.isApplicable}
+                                      onClick={() => applyCustomerDiscount(suggestion)}
+                                      className={`px-2 py-0.5 rounded-md font-bold text-[10px] transition-all cursor-pointer ${
+                                        suggestion.isApplicable
+                                          ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xs active:scale-95'
+                                          : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                                      }`}
+                                    >
+                                      Terapkan
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-[10px] text-slate-400 italic text-center py-2">
+                          Belum ada diskon riwayat yang cocok untuk produk di keranjang saat ini.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsCustomerModalOpen(true)}
+                className="w-full p-2.5 rounded-xl border border-dashed border-indigo-200 dark:border-indigo-900/80 bg-indigo-50/40 dark:bg-indigo-950/20 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-left flex items-center justify-between text-[11px] text-indigo-900 dark:text-indigo-300 transition-colors cursor-pointer group"
+              >
+                <span className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-indigo-500 group-hover:scale-110 transition-transform" />
+                  <span>Pilih Member untuk klaim <strong>Diskon Loyalitas Tier & Riwayat Belanja</strong></span>
+                </span>
+                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
+                  Pilih Member &rarr;
+                </span>
+              </button>
+            )}
+
             {/* Interactive Loyalty Points Redemption Card */}
             {selectedCustomer && selectedCustomer.points > 0 ? (
               <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/30 dark:to-slate-900 border border-amber-200 dark:border-amber-900/60 text-xs space-y-2">
@@ -537,26 +768,39 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                 {usePoints && (
                   <div className="pt-2 border-t border-amber-200/70 dark:border-amber-900/50 space-y-2 animate-in fade-in duration-150">
                     {/* Presets */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium shrink-0">Preset:</span>
-                      <button
-                        type="button"
-                        onClick={() => setPointsToRedeem(Math.floor(maxRedeemablePoints * 0.25))}
-                        className="flex-1 py-1 text-[10px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-500 cursor-pointer"
-                      >
-                        25%
-                      </button>
+                      {[10, 50, 100].map((roundPts) => (
+                        maxRedeemablePoints >= roundPts ? (
+                          <button
+                            key={roundPts}
+                            type="button"
+                            onClick={() => setPointsToRedeem(roundPts)}
+                            className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-md border transition cursor-pointer ${
+                              pointsToRedeem === roundPts
+                                ? 'bg-amber-500 text-slate-950 border-amber-600'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-500'
+                            }`}
+                          >
+                            {roundPts} Pts
+                          </button>
+                        ) : null
+                      ))}
                       <button
                         type="button"
                         onClick={() => setPointsToRedeem(Math.floor(maxRedeemablePoints * 0.5))}
-                        className="flex-1 py-1 text-[10px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-500 cursor-pointer"
+                        className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-500 cursor-pointer"
                       >
                         50%
                       </button>
                       <button
                         type="button"
                         onClick={() => setPointsToRedeem(maxRedeemablePoints)}
-                        className="flex-1 py-1 text-[10px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-500 cursor-pointer"
+                        className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition cursor-pointer ${
+                          pointsToRedeem === maxRedeemablePoints
+                            ? 'bg-amber-500 text-slate-950 border-amber-600'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-500'
+                        }`}
                       >
                         Semua ({maxRedeemablePoints} Pts)
                       </button>
@@ -570,9 +814,14 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                           type="number"
                           min={0}
                           max={maxRedeemablePoints}
-                          value={pointsToRedeem}
-                          onChange={(e) => setPointsToRedeem(Number(e.target.value))}
+                          step={1}
+                          value={pointsToRedeem || ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
+                            setPointsToRedeem(Math.min(maxRedeemablePoints, Math.max(0, Math.floor(val))));
+                          }}
                           className="w-20 px-2 py-0.5 text-xs font-mono font-bold rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          placeholder="0"
                         />
                         <span className="text-[10px] text-slate-500">Pts</span>
                       </div>
@@ -626,9 +875,39 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             </span>
           </div>
 
-          {totalDiscount > 0 && (
+          {customerDiscountAmount > 0 && customerDiscount && (
+            <div className="flex justify-between text-indigo-600 dark:text-indigo-400 font-medium">
+              <span className="flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Diskon Member ({customerDiscount.title})</span>
+              </span>
+              <span className="font-mono">-{formatCurrency(customerDiscountAmount, settings.currency)}</span>
+            </div>
+          )}
+
+          {voucherDiscount > 0 && appliedVoucher && (
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
-              <span>Diskon</span>
+              <span className="flex items-center gap-1">
+                <Tag className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Voucher Promo ({appliedVoucher.code})</span>
+              </span>
+              <span className="font-mono">-{formatCurrency(voucherDiscount, settings.currency)}</span>
+            </div>
+          )}
+
+          {pointsDiscount > 0 && (
+            <div className="flex justify-between text-amber-600 dark:text-amber-400 font-medium">
+              <span className="flex items-center gap-1">
+                <Award className="w-3.5 h-3.5 text-amber-500" />
+                <span>Poin Loyalitas ({pointsToRedeem} Pts)</span>
+              </span>
+              <span className="font-mono">-{formatCurrency(pointsDiscount, settings.currency)}</span>
+            </div>
+          )}
+
+          {totalDiscount > 0 && (
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold border-t border-dashed border-slate-200 dark:border-slate-800 pt-1">
+              <span>Total Diskon</span>
               <span className="font-mono">-{formatCurrency(totalDiscount, settings.currency)}</span>
             </div>
           )}

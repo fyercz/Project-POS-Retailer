@@ -15,9 +15,11 @@ import {
   ChevronDown,
   Database,
   Apple,
+  Snowflake,
   Sparkles,
   Home,
   Briefcase,
+  Plus,
 } from 'lucide-react';
 import {
   usePOSCatalog,
@@ -36,6 +38,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   Cookie,
   Package,
   Apple,
+  Snowflake,
   Sparkles,
   Home,
   Briefcase,
@@ -61,6 +64,7 @@ export const ProductCatalog: React.FC = () => {
     settings,
     setIsBarcodeScannerOpen,
     setIsBackupRestoreOpen,
+    openUnregisteredBarcodePrompt,
   } = usePOSUI();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -107,12 +111,16 @@ export const ProductCatalog: React.FC = () => {
       const activeChip = categoryScrollRef.current.querySelector(
         `[data-category-id="${selectedCategory}"]`
       ) as HTMLElement | null;
-      if (activeChip) {
-        activeChip.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center',
-        });
+      if (activeChip && typeof activeChip.scrollIntoView === 'function') {
+        try {
+          activeChip.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center',
+          });
+        } catch {
+          // Ignore unsupported scroll options in older or restricted viewports
+        }
       }
     }
   }, [selectedCategory]);
@@ -195,6 +203,9 @@ export const ProductCatalog: React.FC = () => {
         e.preventDefault();
         addToCart(filteredProducts[0]);
         setSearchQuery('');
+      } else if (filteredProducts.length === 0 && searchQuery.trim()) {
+        e.preventDefault();
+        openUnregisteredBarcodePrompt(searchQuery.trim());
       }
     }
   };
@@ -427,22 +438,39 @@ export const ProductCatalog: React.FC = () => {
         ) : (
           <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-slate-400 dark:text-slate-500">
             <Package className="w-12 h-12 stroke-[1.5] mb-2 opacity-50" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tidak ada produk yang cocok</p>
-            <p className="text-xs text-slate-400 max-w-xs mt-1">
-              Coba sesuaikan kata kunci pencarian atau ganti filter kategori produk.
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              {searchQuery ? `Tidak ada produk yang cocok dengan "${searchQuery}"` : 'Tidak ada produk yang cocok'}
             </p>
-            {(searchQuery || selectedCategory !== 'all' || filterLowStock) && (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('all');
-                  setFilterLowStock(false);
-                }}
-                className="mt-3 px-3 py-1.5 text-xs rounded-lg bg-emerald-500 text-slate-950 font-bold cursor-pointer"
-              >
-                Reset Filter Pencarian
-              </button>
-            )}
+            <p className="text-xs text-slate-400 max-w-xs mt-1">
+              {searchQuery
+                ? 'Barcode atau nama produk belum terdaftar di database master toko.'
+                : 'Coba sesuaikan kata kunci pencarian atau ganti filter kategori produk.'}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => openUnregisteredBarcodePrompt(searchQuery.trim())}
+                  className="px-3 py-1.5 text-xs rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold cursor-pointer flex items-center gap-1.5 shadow-md shadow-purple-600/20 transition-all"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Daftarkan Produk (Otoritas Supervisor)</span>
+                </button>
+              )}
+              {(searchQuery || selectedCategory !== 'all' || filterLowStock) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('all');
+                    setFilterLowStock(false);
+                  }}
+                  className="px-3 py-1.5 text-xs rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold cursor-pointer transition-colors"
+                >
+                  Reset Filter Pencarian
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

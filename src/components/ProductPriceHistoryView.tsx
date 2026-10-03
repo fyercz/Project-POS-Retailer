@@ -339,17 +339,9 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
               className="flex-1 flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 text-left transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                {currentProduct.image ? (
-                  <img
-                    src={currentProduct.image}
-                    alt={currentProduct.name}
-                    className="w-9 h-9 rounded-lg object-cover shrink-0 border border-slate-200 dark:border-slate-700 bg-white"
-                  />
-                ) : (
-                  <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0">
-                    <Package className="w-5 h-5" />
-                  </div>
-                )}
+                <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0">
+                  <Package className="w-5 h-5" />
+                </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 truncate">

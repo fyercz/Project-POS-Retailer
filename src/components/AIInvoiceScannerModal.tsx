@@ -17,11 +17,13 @@ import {
   RefreshCw,
   Eye,
   Check,
+  Video,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { AIInvoiceScanResult, SupplierPurchaseItem } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { compressImageForAI, formatBytes } from '../utils/imageCompressor';
+import { getResilientCameraStream, getCameraErrorMessage } from '../utils/cameraHelper';
 
 interface AIInvoiceScannerModalProps {
   isOpen: boolean;
@@ -54,6 +56,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const nativeCameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -88,23 +91,30 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
         setScanError(null);
       };
       reader.readAsDataURL(file);
+    } finally {
+      if (e.target) e.target.value = '';
     }
   };
 
   const handleStartCamera = async () => {
+    setScanError(null);
     try {
       setIsCameraActive(true);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      const stream = await getResilientCameraStream({
+        facingMode: 'environment',
+        idealWidth: 1280,
+        idealHeight: 720,
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.muted = true;
+        videoRef.current.play().catch(console.warn);
       }
     } catch (err) {
-      console.error('Camera access error:', err);
+      console.error('Camera access error on Android/browser:', err);
       setIsCameraActive(false);
-      setScanError('Tidak dapat mengakses kamera perangkat. Silakan unggah foto faktur dari galeri/file.');
+      const errInfo = getCameraErrorMessage(err);
+      setScanError(`${errInfo.title}: ${errInfo.message}`);
     }
   };
 
@@ -188,8 +198,8 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
     }
   };
 
-  // Demo sample loader for easy testing without needing physical paper
-  const handleLoadDemoInvoice = () => {
+  // Sample loader for testing without needing physical paper
+  const handleLoadSampleInvoice = () => {
     // Canvas dummy sample invoice generator
     const canvas = document.createElement('canvas');
     canvas.width = 600;
@@ -253,8 +263,8 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
       ctx.fillStyle = '#059669';
       ctx.fillText('TOTAL FAKTUR: Rp 2.073.480', 320, 470);
 
-      const demoUrl = canvas.toDataURL('image/jpeg');
-      setSelectedImage(demoUrl);
+      const sampleUrl = canvas.toDataURL('image/jpeg');
+      setSelectedImage(sampleUrl);
       setScanResult(null);
       setScanError(null);
     }
@@ -336,6 +346,23 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* Error Notice Banner */}
+          {scanError && (
+            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="flex-1 leading-relaxed">
+                <span className="font-semibold">{scanError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setScanError(null)}
+                className="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 text-xs"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* Camera Streaming Mode */}
           {isCameraActive ? (
             <div className="relative rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center shadow-inner">
@@ -371,19 +398,27 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                 >
                   {selectedImage ? (
                     <div className="space-y-2 w-full">
-                      <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-                        <img
-                          src={selectedImage}
-                          alt="Faktur Nota"
-                          className="w-full h-full object-contain"
-                        />
+                      <div className="relative w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-emerald-500/40 flex items-center justify-between">
+                        <div className="flex items-center gap-3 text-left min-w-0">
+                          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                              Berkas Dokumen Faktur Siap Pindai
+                            </p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              Foto faktur berhasil dimuat (Preview dinonaktifkan)
+                            </p>
+                          </div>
+                        </div>
                         <button
                           onClick={() => {
                             setSelectedImage(null);
                             setCompressionInfo(null);
                           }}
-                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-slate-900/80 text-white hover:bg-rose-600 transition"
-                          title="Hapus foto"
+                          className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-500 hover:text-white transition shrink-0 ml-2"
+                          title="Hapus berkas"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -424,29 +459,45 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                     accept="image/*"
                     className="hidden"
                   />
+                  <input
+                    type="file"
+                    ref={nativeCameraInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                  />
 
                   {/* Actions */}
                   <div className="flex flex-wrap items-center justify-center gap-2 mt-3 w-full">
                     <button
                       type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5"
+                      onClick={() => nativeCameraInputRef.current?.click()}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      title="Gunakan aplikasi kamera bawaan HP (paling stabil di Android)"
                     >
-                      <Upload className="w-3.5 h-3.5" /> Pilih File
+                      <Camera className="w-3.5 h-3.5" /> Foto Kamera HP
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Upload className="w-3.5 h-3.5" /> Galeri / File
                     </button>
                     <button
                       type="button"
                       onClick={handleStartCamera}
-                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5"
+                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Camera className="w-3.5 h-3.5" /> Buka Kamera
+                      <Video className="w-3.5 h-3.5 text-slate-500" /> Live Stream
                     </button>
                     <button
                       type="button"
-                      onClick={handleLoadDemoInvoice}
-                      className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold rounded-xl hover:bg-emerald-100 flex items-center gap-1"
+                      onClick={handleLoadSampleInvoice}
+                      className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold rounded-xl hover:bg-emerald-100 flex items-center gap-1 cursor-pointer"
                     >
-                      <Sparkles className="w-3.5 h-3.5" /> Contoh Faktur Demo
+                      <Sparkles className="w-3.5 h-3.5" /> Sampel Faktur
                     </button>
                   </div>
                 </div>

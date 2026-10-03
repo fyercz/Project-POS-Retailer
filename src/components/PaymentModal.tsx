@@ -4,7 +4,6 @@ import {
   Banknote,
   QrCode,
   CreditCard,
-  Building2,
   CheckCircle2,
   Receipt,
   ArrowRight,
@@ -34,14 +33,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [cashTendered, setCashTendered] = useState<number>(finalTotal);
   const [cardLast4, setCardLast4] = useState<string>('');
-  const [cardBank, setCardBank] = useState<string>('BCA');
-  const [qrisStatus, setQrisStatus] = useState<'pending' | 'success'>('pending');
+  const [cardBank, setCardBank] = useState<string>('Debit BRI');
+  const [cardRefCode, setCardRefCode] = useState<string>('');
+  const [cardBatch, setCardBatch] = useState<string>('');
+  const [qrisRefCode, setQrisRefCode] = useState<string>('');
+  const [qrisBatch, setQrisBatch] = useState<string>('');
 
   // Reset cash tendered to exact total when opened
   useEffect(() => {
     if (isOpen) {
       setCashTendered(finalTotal);
-      setQrisStatus('pending');
+      setQrisRefCode('');
+      setQrisBatch('');
+      setCardRefCode('');
+      setCardBatch('');
+      setCardLast4('');
     }
   }, [isOpen, finalTotal]);
 
@@ -95,24 +101,25 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
         method: 'qris',
         amountTendered: finalTotal,
         change: 0,
-        referenceCode: `QRIS-${Math.floor(100000 + Math.random() * 900000)}`,
+        bankName: 'EDC BRI (QRIS)',
+        referenceCode: qrisRefCode.trim() || `BRI-Q-${Math.floor(100000 + Math.random() * 900000)}`,
+        edcBatchNumber: qrisBatch.trim() || undefined,
       };
     } else if (paymentMethod === 'card') {
       paymentDetails = {
         method: 'card',
         amountTendered: finalTotal,
         change: 0,
-        cardLast4: cardLast4.slice(-4) || '8899',
-        bankName: cardBank,
-        referenceCode: `EDC-${Math.floor(100000 + Math.random() * 900000)}`,
+        cardLast4: cardLast4.slice(-4) || undefined,
+        bankName: cardBank ? `EDC BRI (${cardBank})` : 'EDC BRI (KARTU)',
+        referenceCode: cardRefCode.trim() || `BRI-C-${Math.floor(100000 + Math.random() * 900000)}`,
+        edcBatchNumber: cardBatch.trim() || undefined,
       };
     } else {
       paymentDetails = {
-        method: 'transfer',
+        method: 'cash',
         amountTendered: finalTotal,
         change: 0,
-        bankName: 'BCA Virtual Account',
-        referenceCode: `VA-${Math.floor(10000000 + Math.random() * 90000000)}`,
       };
     }
 
@@ -147,13 +154,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
         <div className="p-5 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-5">
           {/* Left Column: Payment Method Selection & Method Details */}
           <div className="md:col-span-7 space-y-4">
-            {/* Method Tabs */}
-            <div className="grid grid-cols-4 gap-2">
+            {/* Method Tabs - 3 Main Methods: Tunai, QRIS EDC BRI, Kartu EDC BRI */}
+            <div className="grid grid-cols-3 gap-2">
               {[
-                { method: 'cash' as PaymentMethod, label: 'Tunai', icon: Banknote },
-                { method: 'qris' as PaymentMethod, label: 'QRIS', icon: QrCode },
-                { method: 'card' as PaymentMethod, label: 'Kartu EDC', icon: CreditCard },
-                { method: 'transfer' as PaymentMethod, label: 'Transfer', icon: Building2 },
+                { method: 'cash' as PaymentMethod, label: 'Tunai (Cash)', icon: Banknote },
+                { method: 'qris' as PaymentMethod, label: 'QRIS EDC BRI', icon: QrCode },
+                { method: 'card' as PaymentMethod, label: 'Kartu EDC BRI', icon: CreditCard },
               ].map((item) => {
                 const Icon = item.icon;
                 const isSelected = paymentMethod === item.method;
@@ -162,14 +168,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     key={item.method}
                     type="button"
                     onClick={() => setPaymentMethod(item.method)}
-                    className={`p-2.5 rounded-xl border text-center flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                    className={`p-3 rounded-xl border text-center flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/50 dark:border-emerald-500 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20'
+                        ? 'border-blue-500 bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:border-blue-500 dark:text-blue-300 font-bold ring-2 ring-blue-500/20 shadow-xs'
                         : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 hover:bg-slate-100 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
-                    <span className="text-[11px] font-medium">{item.label}</span>
+                    <span className="text-[11px] font-semibold leading-tight">{item.label}</span>
                   </button>
                 );
               })}
@@ -245,54 +251,177 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
             )}
 
             {paymentMethod === 'qris' && (
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-center space-y-3">
-                <div className="inline-block p-3 rounded-2xl bg-white shadow-md">
-                  {/* Authentic looking dynamic QR pattern */}
-                  <div className="w-36 h-36 border-4 border-black p-1 flex flex-col justify-between bg-white">
-                    <div className="flex justify-between">
-                      <div className="w-8 h-8 bg-black"></div>
-                      <div className="w-8 h-8 bg-black"></div>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50/70 to-slate-50 dark:from-blue-950/30 dark:to-slate-950/60 border border-blue-200 dark:border-blue-900/60 space-y-3.5">
+                {/* EDC BRI Header Badge */}
+                <div className="flex items-center justify-between border-b border-blue-200/80 dark:border-blue-900/60 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                      BRI
                     </div>
-                    <div className="flex items-center justify-center py-2">
-                      <div className="text-[9px] font-black tracking-widest text-black uppercase border border-black px-1">
-                        QRIS STANDAR
-                      </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-blue-950 dark:text-blue-100 leading-tight">
+                        QRIS Mesin EDC BRI
+                      </h4>
+                      <p className="text-[10px] text-blue-700 dark:text-blue-300">
+                        Proses pada mesin EDC BRI & dicatat ke Laporan Pembayaran
+                      </p>
                     </div>
-                    <div className="flex justify-between">
-                      <div className="w-8 h-8 bg-black"></div>
-                      <div className="w-6 h-6 bg-slate-800"></div>
-                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700">
+                    EDC Terminal
+                  </span>
+                </div>
+
+                {/* SOP Kasir Langkah demi langkah */}
+                <div className="p-2.5 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-blue-100 dark:border-blue-900/40 text-xs space-y-1.5">
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      1
+                    </span>
+                    <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                      Pilih menu <strong>QRIS</strong> pada mesin EDC BRI.
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      2
+                    </span>
+                    <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                      Input nominal tagihan:{' '}
+                      <strong className="text-blue-700 dark:text-blue-300 font-mono text-xs">
+                        {formatCurrency(finalTotal, settings.currency)}
+                      </strong>
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      3
+                    </span>
+                    <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                      Arahkan pembeli scan QRIS di layar EDC (BRImo, BCA, GoPay, OVO, Dana, dll).
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      ✓
+                    </span>
+                    <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                      Setelah struk EDC keluar <strong>APPROVED</strong>, catat No. Ref / RRN jika perlu.
+                    </span>
                   </div>
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                    <Smartphone className="w-4 h-4 text-emerald-500" />
-                    <span>Scan dengan GoPay, OVO, Dana, BCA, ShopeePay</span>
+                {/* Input No Referensi / RRN Struk EDC BRI */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      No. Ref / RRN EDC BRI (Opsional)
+                    </label>
+                    <input
+                      type="text"
+                      value={qrisRefCode}
+                      onChange={(e) => setQrisRefCode(e.target.value)}
+                      placeholder="Contoh: 002819 / 82910"
+                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                    />
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    QRIS Dinamis siap di-scan pembeli
-                  </p>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Batch EDC (Opsional)
+                    </label>
+                    <input
+                      type="text"
+                      value={qrisBatch}
+                      onChange={(e) => setQrisBatch(e.target.value)}
+                      placeholder="Contoh: 0001"
+                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-[10px] text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                  <span>Otomatis masuk Laporan Pembayaran & Rekonsiliasi Settlement EDC BRI.</span>
                 </div>
               </div>
             )}
 
             {paymentMethod === 'card' && (
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50/70 to-slate-50 dark:from-blue-950/30 dark:to-slate-950/60 border border-blue-200 dark:border-blue-900/60 space-y-3.5">
+                {/* EDC BRI Header Badge */}
+                <div className="flex items-center justify-between border-b border-blue-200/80 dark:border-blue-900/60 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                      BRI
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-blue-950 dark:text-blue-100 leading-tight">
+                        Kartu Debit / Kredit Mesin EDC BRI
+                      </h4>
+                      <p className="text-[10px] text-blue-700 dark:text-blue-300">
+                        Proses pada mesin EDC BRI &amp; dicatat ke Laporan Pembayaran
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700">
+                    EDC Terminal
+                  </span>
+                </div>
+
+                {/* SOP Kasir Langkah demi langkah */}
+                <div className="p-2.5 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-blue-100 dark:border-blue-900/40 text-xs space-y-1.5">
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      1
+                    </span>
+                    <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                      Masukkan (Dip Chip), Gesek (Swipe), atau Tap Contactless kartu pada mesin EDC BRI.
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      2
+                    </span>
+                    <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                      Input nominal tagihan:{' '}
+                      <strong className="text-blue-700 dark:text-blue-300 font-mono text-xs">
+                        {formatCurrency(finalTotal, settings.currency)}
+                      </strong>
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      3
+                    </span>
+                    <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                      Minta nasabah memasukkan 6 digit PIN kartu pada tombol pinpad mesin EDC BRI.
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      ✓
+                    </span>
+                    <span className="text-slate-700 dark:text-slate-300 text-[11px]">
+                      Setelah struk EDC keluar <strong>APPROVED</strong>, catat No. Ref / Approval / Batch jika perlu.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bank / Jaringan Kartu */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Mesin EDC / Bank Penerbit Kartu
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Jenis Kartu / Bank Penerbit (Opsional)
                   </label>
                   <div className="grid grid-cols-3 gap-1.5">
-                    {['BCA EDC', 'Mandiri EDC', 'BRI EDC', 'BNI EDC', 'Visa', 'Mastercard'].map((b) => (
+                    {['Debit BRI', 'Kredit BRI', 'Debit GPN', 'BCA / Mandiri / BNI', 'Visa', 'Mastercard'].map((b) => (
                       <button
                         key={b}
                         type="button"
                         onClick={() => setCardBank(b)}
-                        className={`p-2 text-xs font-semibold rounded-lg border transition-colors cursor-pointer ${
+                        className={`p-1.5 text-xs font-semibold rounded-lg border transition-colors cursor-pointer text-center ${
                           cardBank === b
-                            ? 'bg-emerald-500 text-slate-950 font-bold border-emerald-500'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                            ? 'bg-blue-600 text-white font-bold border-blue-600 shadow-xs'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
                         }`}
                       >
                         {b}
@@ -301,34 +430,51 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    4 Digit Terakhir Kartu (Opsional)
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={4}
-                    value={cardLast4}
-                    onChange={(e) => setCardLast4(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Contoh: 4242"
-                    className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-                  />
+                {/* Input No Ref, Batch, 4 Digit Terakhir */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      No. Ref / RRN EDC
+                    </label>
+                    <input
+                      type="text"
+                      value={cardRefCode}
+                      onChange={(e) => setCardRefCode(e.target.value)}
+                      placeholder="Contoh: 009214"
+                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Batch EDC (Opsional)
+                    </label>
+                    <input
+                      type="text"
+                      value={cardBatch}
+                      onChange={(e) => setCardBatch(e.target.value)}
+                      placeholder="Contoh: 0001"
+                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      4 Digit Terakhir
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={4}
+                      value={cardLast4}
+                      onChange={(e) => setCardLast4(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Contoh: 4242"
+                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
 
-            {paymentMethod === 'transfer' && (
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2 text-xs text-slate-700 dark:text-slate-300">
-                <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                  <p className="text-[11px] text-slate-400">BCA Virtual Account</p>
-                  <p className="text-base font-black font-mono text-slate-900 dark:text-white">
-                    8801 9283 0192 3881
-                  </p>
-                  <p className="text-[11px] text-slate-500">Atas Nama: {settings.storeName || 'Ulilmart'} POS</p>
+                <div className="text-[10px] text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                  <span>Otomatis masuk Laporan Pembayaran &amp; Rekonsiliasi Settlement EDC BRI.</span>
                 </div>
-                <p className="text-[11px] text-slate-400">
-                  Verifikasi otomatis aktif mendengarkan konfirmasi pembayaran.
-                </p>
               </div>
             )}
           </div>

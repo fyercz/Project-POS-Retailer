@@ -645,6 +645,22 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                         >
                           0 Pts
                         </button>
+                        {[10, 50, 100].map((roundPts) => (
+                          maxPossibleRedeem >= roundPts ? (
+                            <button
+                              key={roundPts}
+                              type="button"
+                              onClick={() => setRedeemPointsInput(roundPts)}
+                              className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-md border transition cursor-pointer ${
+                                effectivePointsToRedeem === roundPts
+                                  ? 'bg-amber-500 text-slate-950 border-amber-600'
+                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-400'
+                              }`}
+                            >
+                              {roundPts} Pts
+                            </button>
+                          ) : null
+                        ))}
                         {maxPossibleRedeem >= 20 && (
                           <button
                             type="button"

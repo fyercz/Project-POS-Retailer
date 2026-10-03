@@ -666,17 +666,9 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                       {/* Product details */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2.5">
-                          {p.image ? (
-                            <img
-                              src={p.image}
-                              alt={p.name}
-                              className="w-9 h-9 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0"
-                            />
-                          ) : (
-                            <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
-                              <Package className="w-4 h-4" />
-                            </div>
-                          )}
+                          <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
+                            <Package className="w-4 h-4" />
+                          </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <h4 className="font-bold text-slate-900 dark:text-white truncate">

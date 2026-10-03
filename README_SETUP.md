@@ -1,6 +1,59 @@
-# Panduan Instalasi, Pembaruan & Menjalankan Aplikasi POS
+# Panduan Instalasi, Pembaruan & Pemeliharaan Aplikasi POS
 
-Aplikasi **Point of Sales** dilengkapi dengan script otomatis untuk mempermudah pemasangan (*auto-install*), pembaruan versi (*auto-update*), dan menjalankan kasir (*run*) di berbagai sistem operasi (Windows, Linux, dan macOS).
+Repositori Resmi GitHub: **[https://github.com/fyercz/Project-POS-Retailer.git](https://github.com/fyercz/Project-POS-Retailer.git)**
+
+Aplikasi **Ulilmart Point of Sales** dilengkapi dengan suite otomatisasi lengkap untuk pemasangan (*auto-install*), pembaruan versi resmi dari GitHub (*auto-update*), verifikasi integritas file (*file integrity verification*), dan pembersihan berkas yang tidak perlu (*system cleanup*) di Windows, Linux, dan macOS.
+
+---
+
+## 🔄 Pembaruan Kode Otomatis & Pemeliharaan Sistem (GitHub Auto-Update)
+
+### Repositori Kode Sumber Resmi:
+```text
+https://github.com/fyercz/Project-POS-Retailer.git
+Branch: main
+```
+
+### Cara Melakukan Auto-Update:
+1. **Via Antarmuka Aplikasi (1-Klik via Server Kasir)**:
+   - Buka menu kasir (klik profil di pojok kanan atas) &rarr; pilih **"Auto-Update GitHub Resmi"**.
+   - Sistem akan menampilkan status commit lokal dan commit terbaru di GitHub.
+   - Klik tombol **"Tarik Update Sekarang"**. Sistem akan otomatis membersihkan file sementara, menarik pembaruan kode (`git pull origin main`), dan mengompilasi ulang aplikasi (`npm run build`).
+   - Seluruh data transaksi, pelanggan, dan katalog produk tersimpan aman 100% di basis data lokal browser (IndexedDB).
+
+2. **Via Script Windows (`update.bat`)**:
+   - Cukup klik ganda file **`update.bat`**.
+   - Script akan otomatis membersihkan file temporary/log, menghubungkan ke repositori `https://github.com/fyercz/Project-POS-Retailer.git`, menarik kode terbaru, memperbarui dependensi, dan mengompilasi ulang.
+
+3. **Via Script Linux / macOS (`update.sh`)**:
+   ```bash
+   ./update.sh
+   ```
+
+---
+
+## 🛡️ Verifikasi File Sistem & Pemeriksaan Integritas
+
+Aplikasi menyediakan modul diagnostik file untuk memverifikasi keutuhan sistem kasir:
+- **Di Aplikasi**: Buka menu pengguna &rarr; **"Verifikasi File & Pembersihan Sistem"** &rarr; tab **"Verifikasi File Sistem"**.
+- **Fitur Pemeriksaan**:
+  - Memeriksa keberadaan 28 berkas penting (Core Runtime, Source Code UI, Skrip Desktop, PWA, dan Basis Data).
+  - Memverifikasi status modifikasi lokal dan mendeteksi berkas yang hilang.
+  - Memeriksa kesiapan lingkungan (Node.js runtime, Git CLI, ketersediaan `node_modules`, dan bundle produksi).
+  - Memberikan indikator kesehatan sistem (*100% Lengkap & Sehat*).
+
+---
+
+## 🧹 Pembersihan File yang Tidak Perlu pada Sistem (System Cleanup)
+
+Untuk menjaga performa dan kebersihan penyimpanan komputer kasir:
+- **Di Aplikasi**: Masuk ke menu **"Verifikasi File & Pembersihan Sistem"** &rarr; tab **"Bersihkan File Sampah"**.
+- **Berkas yang Dibersihkan**:
+  - File sementara & editor backup (`*.tmp`, `*.temp`, `*.bak`, `*.swp`)
+  - Log debugging package manager (`*.log`, `npm-debug.log`)
+  - Metadata sampah sistem operasi (`.DS_Store`, `Thumbs.db`, `desktop.ini`)
+  - Cache kompilasi pre-bundle usang (`node_modules/.vite`)
+- **Keamanan**: Pembersihan beroperasi secara aman dan dilindungi — tidak pernah menyentuh file kode sumber (`src/`), folder Git (`.git`), atau basis data toko (`IndexedDB` / `data/`).
 
 ---
 

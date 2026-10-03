@@ -597,25 +597,12 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-start">
-                    {/* Image / Thumbnail */}
-                    <div className="md:col-span-1 flex flex-col items-center justify-center p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
-                      {barcodeResult.image ? (
-                        <img
-                          src={barcodeResult.image}
-                          alt={barcodeResult.name}
-                          referrerPolicy="no-referrer"
-                          className="w-32 h-32 object-contain rounded-lg shadow-xs"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div className="w-32 h-32 rounded-lg bg-slate-200 dark:bg-slate-800 flex flex-col items-center justify-center text-slate-400">
-                          <Package className="w-10 h-10 mb-1" />
-                          <span className="text-[10px]">Tanpa Foto</span>
-                        </div>
-                      )}
-                      <span className="mt-2 text-[10px] font-mono text-slate-500 font-bold">
+                    {/* Product Icon & Barcode Badge */}
+                    <div className="md:col-span-1 flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <div className="w-20 h-20 rounded-xl bg-slate-200/80 dark:bg-slate-800 flex flex-col items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-inner">
+                        <Package className="w-10 h-10" />
+                      </div>
+                      <span className="mt-3 text-[11px] font-mono text-slate-600 dark:text-slate-300 font-bold">
                         EAN: {barcodeResult.barcode}
                       </span>
                     </div>
@@ -816,21 +803,9 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                           }`}
                         >
                           <div className="flex items-start gap-3">
-                            {item.image ? (
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                referrerPolicy="no-referrer"
-                                className="w-16 h-16 object-contain rounded-lg bg-slate-50 dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-700 shrink-0"
-                                onError={(e) => {
-                                  (e.target as HTMLElement).style.display = 'none';
-                                }}
-                              />
-                            ) : (
-                              <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 shrink-0">
-                                <Package className="w-6 h-6" />
-                              </div>
-                            )}
+                            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 border border-slate-200 dark:border-slate-600">
+                              <Package className="w-6 h-6" />
+                            </div>
 
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap mb-1">

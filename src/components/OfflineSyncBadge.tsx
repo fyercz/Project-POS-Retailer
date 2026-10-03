@@ -8,6 +8,9 @@ export const OfflineSyncBadge: React.FC = () => {
     isOfflineSimulated,
     pendingSyncCount,
     isSyncing,
+    autoSyncEnabled,
+    autoSyncIntervalSeconds,
+    databaseEngine,
     setIsSyncModalOpen,
   } = usePOS();
 
@@ -28,10 +31,10 @@ export const OfflineSyncBadge: React.FC = () => {
         isOfflineSimulated
           ? 'Mode Simulasi Offline Aktif (Klik untuk Pengaturan Sync)'
           : !isOnline
-          ? 'Internet Terputus - Transaksi Tersimpan Lokal (Klik untuk Sync)'
+          ? 'Internet Terputus - Transaksi Tersimpan Lokal di Antrean (Klik untuk Buka Pusat Sinkronisasi)'
           : pendingSyncCount > 0
-          ? `${pendingSyncCount} transaksi menunggu sinkronisasi cloud`
-          : 'Cloud Aktif & Tersinkronkan'
+          ? `${pendingSyncCount} transaksi menunggu sinkronisasi otomatis ke server pusat`
+          : `Auto-Sync Aktif (Tiap ${autoSyncIntervalSeconds}s) • ${databaseEngine} • Klik untuk Buka Pengaturan`
       }
     >
       {isSyncing ? (
@@ -51,7 +54,9 @@ export const OfflineSyncBadge: React.FC = () => {
           ? 'Uji Offline'
           : !isOnline
           ? 'Mode Offline'
-          : 'Cloud Sync'}
+          : autoSyncEnabled
+          ? `Auto-Sync (${autoSyncIntervalSeconds}s)`
+          : 'Sync Pusat'}
       </span>
 
       {pendingSyncCount > 0 ? (

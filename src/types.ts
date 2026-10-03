@@ -116,6 +116,26 @@ export interface Customer {
   pointsHistory?: PointHistoryEntry[];
 }
 
+export interface CustomerDiscount {
+  id: string;
+  title: string;
+  type: 'percentage' | 'fixed';
+  value: number; // percentage (e.g. 10 for 10%) or fixed amount (e.g. 15000 for Rp 15.000)
+  amount: number; // calculated discount in currency
+  badge: string; // e.g. "👑 Platinum VIP", "❤️ Produk Langganan", "🏆 Milestone 10x"
+  reason: string; // descriptive justification based on history and loyalty
+  targetType?: 'cart' | 'item';
+  targetProductId?: string;
+  targetProductName?: string;
+  minSpend?: number;
+  appliedAt?: string;
+}
+
+export interface CustomerDiscountSuggestion extends CustomerDiscount {
+  isApplicable: boolean;
+  unmetSpendAmount?: number;
+}
+
 export interface Voucher {
   code: string;
   discountType: 'percentage' | 'fixed';
@@ -137,6 +157,7 @@ export interface HeldOrder {
   createdAt: string;
   subtotal: number;
   note?: string;
+  customerDiscount?: CustomerDiscount;
 }
 
 export type PaymentMethod = 'cash' | 'qris' | 'card' | 'transfer';
@@ -148,6 +169,8 @@ export interface PaymentDetails {
   cardLast4?: string;
   bankName?: string;
   referenceCode?: string;
+  edcBatchNumber?: string;
+  approvalCode?: string;
 }
 
 export interface Transaction {
@@ -162,6 +185,8 @@ export interface Transaction {
   serviceChargeAmount: number;
   discountAmount: number;
   voucherCode?: string;
+  customerDiscount?: CustomerDiscount;
+  customerDiscountAmount?: number;
   pointsUsed?: number;
   pointsDiscount?: number;
   pointsEarned: number;
@@ -277,6 +302,7 @@ export interface SupplierPurchase {
 
 export interface StoreSettings {
   storeName: string;
+  storeTagline?: string; // e.g. 'Lengkap & Hemat'
   branchName: string;
   address: string;
   phone: string;
@@ -285,12 +311,16 @@ export interface StoreSettings {
   serviceChargePercent: number; // e.g. 0% for retail
   currency: CurrencyType;
   enableThermal58mm: boolean;
+  showLogoOnReceipt?: boolean; // Tampilkan logo ULIL Mart di header struk kasir
+  googleMapsUrl?: string; // Tautan Google Maps lokasi toko fisik
+  operatingHours?: string; // Jam operasional toko (misal: '06.00 – 21.00 WIB')
   pointsRatio: number; // 1 point per 10,000 IDR belanja
   pointRedemptionRate?: number; // Nilai 1 poin = Rp X diskon kasir (default 100)
   minRedeemPoints?: number; // Minimal poin untuk dapat ditukarkan di kasir (default 10)
   minProfitPercentForPoints: number; // e.g. 15% minimal profit margin barang untuk menghasilkan poin
   minStockRulePercentage?: number; // Aturan batas minimal stok (default 50 = 50% dari order terakhir)
   autoUpdateMinStockFromOrder?: boolean; // Otomatis perbarui minStock saat terima barang PO (default: true)
+  initialCapital?: number; // Modal awal usaha toko untuk Neraca Keuangan (default: 50.000.000)
 }
 
 // Gemini AI Retail Interfaces
@@ -307,6 +337,15 @@ export interface AIForecastItem {
   currentStock: number;
   minStock?: number;
   recommendedOrderQty: number;
+  originalOrderQty?: number;
+  quotaAdjustment?: 'eliminated' | 'reduced' | 'normal';
+  quotaAdjustmentReason?: string;
+  returnCount?: number;
+  returnRate?: number;
+  isDeadstock?: boolean;
+  totalSoldPeriod?: number;
+  dailySalesVelocity?: number;
+  salesHistoryByDate?: { date: string; soldQty: number; returnQty: number }[];
   urgency: 'KRITIS' | 'TINGGI' | 'SEDANG' | 'OPTIMAL' | string;
   estimatedDaysLeft: number;
   actionAdvice: string;
@@ -328,6 +367,12 @@ export interface AIPurchaseOrderPlan {
   deadstockOrExpiryAlerts?: { productName: string; issue: string; suggestedPromotion: string }[];
   isAiGenerated?: boolean;
   generatedAt?: string;
+  targetDate?: string;
+  projectionDays?: number;
+  deadstockRule?: 'eliminate' | 'reduce' | 'none';
+  returnRule?: 'eliminate' | 'reduce' | 'none';
+  deadstockCount?: number;
+  returnedItemsCount?: number;
 }
 
 export interface AIDailyInsights {
@@ -515,6 +560,9 @@ export interface OfflineSyncState {
   lastSyncTime: string | null;
   serviceWorkerActive: boolean;
   backgroundSyncSupported: boolean;
+  autoSyncEnabled?: boolean;
+  autoSyncIntervalSeconds?: number;
+  databaseEngine?: string;
 }
 
 export interface CloudSyncResult {
@@ -629,4 +677,106 @@ export interface LANConfig {
   syncInterval: number; // in seconds
   customHostIp?: string; // Optional user-defined local IP (e.g. 192.168.1.15)
 }
+
+// ============================================================================
+// ACCOUNTING & FINANCIAL STATEMENTS (DOUBLE-ENTRY & BALANCE SHEET)
+// ============================================================================
+
+export type AccountCategory = 'asset' | 'liability' | 'equity' | 'revenue' | 'cogs' | 'expense';
+
+export interface ChartOfAccount {
+  code: string;
+  name: string;
+  category: AccountCategory;
+  normalBalance: 'debit' | 'credit';
+  description: string;
+}
+
+export interface JournalLineItem {
+  accountCode: string;
+  accountName: string;
+  debit: number;
+  credit: number;
+  memo?: string;
+}
+
+export interface JournalEntry {
+  id: string;
+  date: string;
+  referenceNumber: string; // e.g. INV-..., RET-..., PO-..., EXP-...
+  sourceType: 'sale' | 'sales_return' | 'purchase_order' | 'shift_adjustment' | 'expense' | 'initial_balance';
+  description: string;
+  lines: JournalLineItem[];
+  totalDebit: number;
+  totalCredit: number;
+  isBalanced: boolean;
+}
+
+export type ExpenseCategory =
+  | 'listrik_air_internet'
+  | 'gaji_karyawan'
+  | 'sewa_ruko'
+  | 'perlengkapan_kantor'
+  | 'pemeliharaan_toko'
+  | 'konsumsi_operasional'
+  | 'lainnya';
+
+export interface OperationalExpense {
+  id: string;
+  date: string;
+  category: ExpenseCategory;
+  description: string;
+  amount: number;
+  paymentSource: 'cash_drawer' | 'bank_transfer';
+  recordedBy: string;
+  notes?: string;
+  receiptNumber?: string;
+}
+
+export interface BalanceSheet {
+  asOfDate: string;
+  assets: {
+    cashOnHand: number; // Kas kasir di laci
+    bankAndQris: number; // Saldo QRIS & Transfer
+    edcCardReceivables: number; // Piutang Kliring EDC Kartu
+    merchandiseInventory: number; // Valuasi persediaan stok fisik
+    totalCurrentAssets: number;
+    totalAssets: number;
+  };
+  liabilities: {
+    accountsPayable: number; // Utang tempo supplier
+    pointsLiability: number; // Beban titipan poin member
+    totalCurrentLiabilities: number;
+    totalLiabilities: number;
+  };
+  equity: {
+    ownerInitialCapital: number; // Modal awal pemilik
+    currentPeriodNetIncome: number; // Laba bersih periode berjalan
+    retainedEarnings: number; // Akumulasi laba ditahan
+    totalEquity: number;
+  };
+  totalLiabilitiesAndEquity: number;
+  isBalanced: boolean;
+  difference: number;
+}
+
+export interface IncomeStatement {
+  startDate: string;
+  endDate: string;
+  grossSales: number;
+  salesDiscounts: number;
+  salesReturns: number;
+  netSales: number;
+  costOfGoodsSold: number; // Total HPP barang terjual
+  grossProfit: number;
+  grossProfitMarginPercent: number;
+  operatingExpenses: {
+    byCategory: Record<ExpenseCategory, number>;
+    cashShortExpense: number; // Beban selisih kas minus saat tutup shift
+    totalOperatingExpenses: number;
+  };
+  netOperatingProfit: number;
+  netProfitMarginPercent: number;
+}
+
 

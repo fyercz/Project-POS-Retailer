@@ -31,7 +31,7 @@ import { usePOS } from '../context/POSContext';
 import { INITIAL_PRODUCTS } from '../data/mockData';
 import { formatCurrency } from '../utils/formatters';
 import { getImageForCategory } from '../data/importHelpers';
-import { parseRetailLine, ParsedItem } from '../utils/retailNormalizer';
+import { parseRetailLine, parseRetailLineRaw, ParsedItem } from '../utils/retailNormalizer';
 
 interface DataImportModalProps {
   isOpen: boolean;
@@ -84,6 +84,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [rawInput, setRawInput] = useState(PRESETS[0].data);
+  const [importMode, setImportMode] = useState<'direct' | 'auto_correct'>('direct');
   const [itemsState, setItemsState] = useState<ParsedItem[]>([]);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [filterQuery, setFilterQuery] = useState('');
@@ -99,16 +100,20 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
     [products, initialProductIds]
   );
 
-  // Parse raw text into corrected items
+  // Parse raw text into items (supports direct AS-IS or auto-correction mode)
   const autoParsedItems: ParsedItem[] = useMemo(() => {
     if (!rawInput.trim()) return [];
     return rawInput
       .split('\n')
       .map((l) => l.trim())
       .filter((l) => l.length > 0)
-      .map((l, idx) => parseRetailLine(l, idx, minProfitPoints))
+      .map((l, idx) =>
+        importMode === 'direct'
+          ? parseRetailLineRaw(l, idx, minProfitPoints)
+          : parseRetailLine(l, idx, minProfitPoints)
+      )
       .filter((it): it is ParsedItem => it !== null);
-  }, [rawInput, minProfitPoints]);
+  }, [rawInput, minProfitPoints, importMode]);
 
   // Sync state whenever autoParsedItems changes
   useEffect(() => {
@@ -299,19 +304,27 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-emerald-900/30 via-teal-900/20 to-slate-900">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20">
-              <Sparkles className="w-5 h-5 animate-pulse" />
+              <Upload className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Smart Data Import &amp; Auto-Koreksi Retail Cerdas
+                  {importMode === 'direct'
+                    ? 'Import File Produk Langsung (As-Is / Tanpa Koreksi)'
+                    : 'Smart Data Import & Auto-Koreksi Retail Cerdas'}
                 </h3>
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-500 text-slate-950">
-                  AI Retail Engine Active
+                <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${
+                  importMode === 'direct'
+                    ? 'bg-emerald-500 text-slate-950'
+                    : 'bg-teal-500 text-slate-950'
+                }`}>
+                  {importMode === 'direct' ? 'Tanpa Auto-Koreksi' : 'AI Normalizer Active'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Pembersihan ejaan singkatan/typo FMCG, normalisasi gramasi baku (80g, 2L, 600ml), dan pembentukan satuan grosir otomatis.
+                {importMode === 'direct'
+                  ? 'Pertahankan nama produk dan data asli dari file Anda tanpa perubahan ejaan atau auto-koreksi.'
+                  : 'Pembersihan ejaan singkatan/typo FMCG, normalisasi gramasi baku (80g, 2L, 600ml), dan pembentukan satuan grosir otomatis.'}
               </p>
             </div>
           </div>
@@ -325,6 +338,33 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+          {/* Mode Selector Tabs */}
+          <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => setImportMode('direct')}
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                importMode === 'direct'
+                  ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-500/30'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Upload className="w-4 h-4" />
+              <span>Impor Langsung (As-Is / Tanpa Koreksi)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setImportMode('auto_correct')}
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                importMode === 'auto_correct'
+                  ? 'bg-white dark:bg-slate-900 text-teal-600 dark:text-teal-400 shadow-sm border border-teal-500/30'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Auto-Koreksi Ejaan &amp; Gramasi (Opsional)</span>
+            </button>
+          </div>
           {/* Notification when cleared */}
           {clearMessage && (
             <div className="p-3 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold flex items-center justify-between animate-in fade-in">
@@ -446,7 +486,9 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
               <div className="flex items-center gap-3">
                 <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Hasil Analisis &amp; Auto-Koreksi ({itemsState.length} Item Terdeteksi)</span>
+                  <span>
+                    {importMode === 'direct' ? 'Daftar Produk File Asli (Tanpa Koreksi)' : 'Hasil Analisis & Auto-Koreksi'} ({itemsState.length} Item Terdeteksi)
+                  </span>
                 </h4>
                 <button
                   type="button"

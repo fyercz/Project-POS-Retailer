@@ -1,17 +1,22 @@
 @echo off
 REM ==============================================================================
-REM Point of Sales - Auto-Install Script (Windows)
+REM Ulilmart POS - Auto-Install & Repository Setup Script (Windows)
 REM ==============================================================================
-title Point of Sales - Installer
+title Ulilmart POS - Installer & Setup Wizard
+color 0A
+
+cd /d "%~dp0"
+set REPO_URL=https://github.com/fyercz/Project-POS-Retailer.git
 
 echo.
 echo ==========================================================
-echo    Point of Sales - Windows Installation Wizard           
+echo    🏪 Ulilmart POS - Windows Installation Wizard           
 echo ==========================================================
+echo  Repositori Resmi : %REPO_URL%
 echo.
 
 REM 1. Check Node.js
-echo [1/4] Memeriksa instalasi Node.js dan npm...
+echo [1/5] Memeriksa instalasi Node.js dan npm...
 where node >nul 2>nul
 if %errorlevel% neq 0 (
     echo [ERROR] Node.js belum terpasang di komputer ini!
@@ -24,9 +29,31 @@ if %errorlevel% neq 0 (
 for /f "tokens=*" %%i in ('node -v') do set NODE_VER=%%i
 echo [OK] Node.js terdeteksi: %NODE_VER%
 
-REM 2. Check .env
+REM 2. Check Git & Configure Official Repository
 echo.
-echo [2/4] Memeriksa file konfigurasi environment (.env)...
+echo [2/5] Memeriksa instalasi Git & konfigurasi repositori...
+set GIT_CMD=git
+where git >nul 2>nul
+if %errorlevel% neq 0 (
+    if exist "C:\Program Files\Git\cmd\git.exe" set "GIT_CMD=C:\Program Files\Git\cmd\git.exe"
+)
+where %GIT_CMD% >nul 2>nul
+if %errorlevel% equ 0 (
+    if not exist .git (
+        echo [INFO] Menginisialisasi repositori Git lokal...
+        "%GIT_CMD%" init
+        "%GIT_CMD%" remote add origin %REPO_URL%
+    ) else (
+        "%GIT_CMD%" remote set-url origin %REPO_URL% 2>nul || "%GIT_CMD%" remote add origin %REPO_URL% 2>nul
+    )
+    echo [OK] Repositori terhubung ke %REPO_URL%
+) else (
+    echo [INFO] Git belum terpasang. Anda tetap dapat menjalankan aplikasi secara lokal.
+)
+
+REM 3. Check .env
+echo.
+echo [3/5] Memeriksa file konfigurasi environment (.env)...
 if not exist .env (
     if exist .env.example (
         copy .env.example .env >nul
@@ -39,9 +66,9 @@ if not exist .env (
     echo [OK] File .env sudah ada
 )
 
-REM 3. Install packages
+REM 4. Install packages
 echo.
-echo [3/4] Menginstal package dependencies (npm install)...
+echo [4/5] Menginstal package dependencies (npm install)...
 call npm install
 if %errorlevel% neq 0 (
     echo [ERROR] Gagal menginstal dependencies.
@@ -49,9 +76,9 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
-REM 4. Build application
+REM 5. Build application
 echo.
-echo [4/4] Mengompilasi aplikasi untuk produksi (npm run build)...
+echo [5/5] Mengompilasi aplikasi untuk produksi (npm run build)...
 call npm run build
 if %errorlevel% neq 0 (
     echo [ERROR] Gagal melakukan build aplikasi.
@@ -65,8 +92,9 @@ echo [SUKSES] Instalasi Selesai!
 echo ==========================================================
 echo.
 echo Untuk menjalankan aplikasi:
-echo   - Klik ganda file: run.bat
-echo   - Atau ketik di Command Prompt: run.bat
+echo   - Mode Desktop Kasir : desktop.bat
+echo   - Mode Server Kasir  : run.bat
+echo   - Auto-Update GitHub : update.bat
 echo.
 echo URL Akses Kasir: http://localhost:3000
 echo.

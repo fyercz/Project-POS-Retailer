@@ -19,22 +19,38 @@ class OfflineSyncManager {
   private swRegistration: ServiceWorkerRegistration | null = null;
   private bgSyncSupported: boolean = false;
   private pingIntervalId: any = null;
+  private autoSyncTimerId: any = null;
+  private isAutoSyncEnabled: boolean = true;
+  private autoSyncIntervalMs: number = 15000; // 15 seconds periodic auto-sync
+  private databaseEngine: string = 'SQLite Relational (WAL Mode)';
 
   constructor() {
     if (typeof window !== 'undefined') {
       // Check saved simulation state
       this.isSimulatedOffline = localStorage.getItem('pos_offline_simulation') === 'true';
       this.lastSyncTime = localStorage.getItem('pos_last_cloud_sync_time');
+      const savedAutoSync = localStorage.getItem('pos_auto_sync_enabled');
+      this.isAutoSyncEnabled = savedAutoSync !== null ? savedAutoSync === 'true' : true;
+      const savedInterval = localStorage.getItem('pos_auto_sync_interval');
+      if (savedInterval) {
+        const parsed = parseInt(savedInterval, 10);
+        if (!isNaN(parsed) && parsed >= 5 && parsed <= 300) {
+          this.autoSyncIntervalMs = parsed * 1000;
+        }
+      }
       this.init();
     }
   }
 
-  // 1. Initialize DB, SW & Network Listeners
+  // 1. Initialize DB, SW, Network Listeners & Auto-Sync Loop
   private async init() {
     this.initIndexedDB();
     this.setupNetworkListeners();
     this.registerServiceWorker();
     await this.refreshPendingCount();
+
+    // Start continuous background auto-sync loop to central server
+    this.startAutoSyncLoop();
 
     // If online at boot and has pending items, attempt initial sync
     if (this.isOnline()) {
@@ -140,6 +156,26 @@ class OfflineSyncManager {
   // Register Service Worker and inspect Background Sync support
   private async registerServiceWorker() {
     if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
+      return;
+    }
+
+    // Never register or keep service worker inside AI Studio preview iframes to prevent stale module caching
+    let isIframe = false;
+    try {
+      isIframe = typeof window !== 'undefined' && window.self !== window.top;
+    } catch {
+      isIframe = true;
+    }
+    const isDev = typeof import.meta !== 'undefined' && Boolean((import.meta as any).env?.DEV);
+    if (isIframe || isDev) {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          await reg.unregister().catch(() => {});
+        }
+      } catch {
+        // ignore
+      }
       return;
     }
 
@@ -415,6 +451,81 @@ class OfflineSyncManager {
     return this.pendingCountCached;
   }
 
+  // 5. Periodic Auto-Sync Engine
+  private startAutoSyncLoop() {
+    if (this.autoSyncTimerId) {
+      clearInterval(this.autoSyncTimerId);
+      this.autoSyncTimerId = null;
+    }
+
+    if (!this.isAutoSyncEnabled) return;
+
+    this.autoSyncTimerId = setInterval(() => {
+      this.triggerAutoPeriodicSync().catch((err) => {
+        console.warn('[OfflineManager] Auto-sync tick failed:', err);
+      });
+    }, this.autoSyncIntervalMs);
+
+    console.log(`[OfflineManager] Background periodic auto-sync active (Every ${this.autoSyncIntervalMs / 1000}s)`);
+  }
+
+  public async triggerAutoPeriodicSync(): Promise<void> {
+    if (!this.isAutoSyncEnabled || this.isSimulatedOffline || this.isSyncingNow) return;
+
+    // Check connectivity first
+    if (!this.isOnline()) {
+      const isConnected = await this.checkRealConnectivity();
+      if (!isConnected) return;
+    }
+
+    // Check pending transactions queue
+    const pending = await this.getPendingTransactions();
+    if (pending.length > 0) {
+      console.log(`[OfflineManager] Auto-sync interval fired: pushing ${pending.length} pending transactions...`);
+      await this.syncPendingTransactions();
+      return;
+    }
+
+    // If no pending transactions, send heartbeat and poll server database status
+    try {
+      const res = await fetch('/api/pos/sync-status', { method: 'GET', cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        this.lastSyncTime = data.serverTime || new Date().toISOString();
+        if (data.database) {
+          this.databaseEngine = data.database;
+        }
+        localStorage.setItem('pos_last_cloud_sync_time', this.lastSyncTime);
+        this.notifyListeners();
+      }
+    } catch {
+      // transient network blip
+    }
+  }
+
+  public setAutoSyncEnabled(enabled: boolean): void {
+    this.isAutoSyncEnabled = enabled;
+    localStorage.setItem('pos_auto_sync_enabled', enabled ? 'true' : 'false');
+    if (enabled) {
+      this.startAutoSyncLoop();
+      this.triggerAutoPeriodicSync().catch(() => {});
+    } else if (this.autoSyncTimerId) {
+      clearInterval(this.autoSyncTimerId);
+      this.autoSyncTimerId = null;
+    }
+    this.notifyListeners();
+  }
+
+  public setAutoSyncInterval(seconds: number): void {
+    const clamped = Math.max(5, Math.min(300, seconds));
+    this.autoSyncIntervalMs = clamped * 1000;
+    localStorage.setItem('pos_auto_sync_interval', clamped.toString());
+    if (this.isAutoSyncEnabled) {
+      this.startAutoSyncLoop();
+    }
+    this.notifyListeners();
+  }
+
   public getState(): OfflineSyncState {
     return {
       isOnline: this.isOnline(),
@@ -424,10 +535,13 @@ class OfflineSyncManager {
       lastSyncTime: this.lastSyncTime,
       serviceWorkerActive: !!this.swRegistration?.active,
       backgroundSyncSupported: this.bgSyncSupported,
+      autoSyncEnabled: this.isAutoSyncEnabled,
+      autoSyncIntervalSeconds: Math.round(this.autoSyncIntervalMs / 1000),
+      databaseEngine: this.databaseEngine,
     };
   }
 
-  // 5. Subscription for React components
+  // 6. Subscription for React components
   public subscribe(listener: StateListener): () => void {
     this.listeners.add(listener);
     listener(this.getState());

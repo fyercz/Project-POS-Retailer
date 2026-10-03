@@ -20,13 +20,18 @@ export const generateInvoiceNumber = (): string => {
 };
 
 export const formatDate = (dateString?: string): string => {
-  const d = dateString ? new Date(dateString) : new Date();
-  return d.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
+  if (!dateString) return '-';
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    return d.toLocaleString('id-ID', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return dateString || '-';
+  }
 };

@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Globe,
   TrendingUp,
+  ShieldCheck,
 } from 'lucide-react';
 import { Product, WholesaleUnit } from '../types';
 import { usePOS } from '../context/POSContext';
@@ -30,6 +31,11 @@ interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   productToEdit?: Product | null;
+  initialBarcode?: string;
+  authorizationInfo?: {
+    authorizedBy: string;
+    authorizerRole: string;
+  } | null;
   onSuccess?: (product: Product, isEdit: boolean) => void;
   onPrintPriceTag?: (product: Product) => void;
   onViewPriceHistory?: (product: Product) => void;
@@ -54,6 +60,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   isOpen,
   onClose,
   productToEdit,
+  initialBarcode,
+  authorizationInfo,
   onSuccess,
   onPrintPriceTag,
   onViewPriceHistory,
@@ -109,8 +117,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setName('');
       setBrand('');
       const randNum = Math.floor(1000 + Math.random() * 9000);
-      setSku(`SKU-${randNum}`);
-      setBarcode(`899${Math.floor(100000000 + Math.random() * 900000000)}`);
+      const barcodeToUse = (initialBarcode || '').trim() || `899${Math.floor(100000000 + Math.random() * 900000000)}`;
+      const cleanSkuSuffix = initialBarcode ? initialBarcode.replace(/\D/g, '').slice(-4) || randNum : randNum;
+      setSku(`SKU-${cleanSkuSuffix}`);
+      setBarcode(barcodeToUse);
       setCategoryId('groceries');
       setPrice(15000);
       setCostPrice(12000);
@@ -126,7 +136,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setWholesaleUnits([]);
     }
     setErrors({});
-  }, [productToEdit, isOpen]);
+  }, [productToEdit, isOpen, initialBarcode]);
 
   if (!isOpen) return null;
 
@@ -390,6 +400,27 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-5">
+          {/* Supervisor / Authority Authorization Banner */}
+          {authorizationInfo && (
+            <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-200 flex items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-purple-600 text-white shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold">Otorisasi Supervisor / Owner Aktif:</span> Disetujui oleh{' '}
+                  <span className="font-black text-purple-700 dark:text-purple-300 underline decoration-purple-400">
+                    {authorizationInfo.authorizedBy}
+                  </span>{' '}
+                  ({authorizationInfo.authorizerRole})
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded-md bg-purple-200 dark:bg-purple-900/60 text-[10px] font-mono font-black text-purple-800 dark:text-purple-300 shrink-0">
+                OTORITAS TERVERIFIKASI
+              </span>
+            </div>
+          )}
+
           {/* Online Match Feedback Banner */}
           {onlineFeedback && (
             <div

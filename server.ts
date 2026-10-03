@@ -2,8 +2,30 @@ import express from 'express';
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
+import { exec } from 'child_process';
+import util from 'util';
 import { GoogleGenAI } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
+import {
+  initSqliteMasterDatabase,
+  getAllProducts as getSqliteProducts,
+  upsertProducts as upsertSqliteProducts,
+  deductProductStock as deductSqliteStock,
+  getAllTransactions as getSqliteTransactions,
+  upsertTransactions as upsertSqliteTransactions,
+  queryTransactionsPaginated as querySqliteTransactionsPaginated,
+  getAllCustomers as getSqliteCustomers,
+  upsertCustomers as upsertSqliteCustomers,
+  getAllSuppliers as getSqliteSuppliers,
+  upsertSuppliers as upsertSqliteSuppliers,
+  getAllHeldOrders as getSqliteHeldOrders,
+  saveHeldOrder as saveSqliteHeldOrder,
+  deleteHeldOrder as deleteSqliteHeldOrder,
+  getDatabaseStatus as getSqliteDatabaseStatus,
+  checkDatabaseIntegrity as checkSqliteIntegrity,
+} from './src/server/sqliteMasterDb.ts';
+
+const execPromise = util.promisify(exec);
 
 const app = express();
 const PORT = 3000;
@@ -470,12 +492,52 @@ function scheduleLanDbSave() {
 }
 
 // Initial Database Bootstrapper
-function initLanDatabase() {
+async function initLanDatabase() {
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
 
+    // 1. Initialize SQLite Relational Database in WAL Mode
+    await initSqliteMasterDatabase();
+
+    // 2. Load latest records directly from SQLite Master DB
+    const [dbProducts, dbTransactions, dbCustomers, dbSuppliers, dbHeld] = await Promise.all([
+      getSqliteProducts(),
+      getSqliteTransactions(1000),
+      getSqliteCustomers(),
+      getSqliteSuppliers(),
+      getSqliteHeldOrders(),
+    ]);
+
+    lanProductsStore.clear();
+    dbProducts.forEach((p: any) => lanProductsStore.set(p.id, p));
+
+    lanTransactionsStore.clear();
+    dbTransactions.forEach((t: any) => lanTransactionsStore.set(t.id || t.invoiceNumber, t));
+
+    lanCustomersStore.clear();
+    dbCustomers.forEach((c: any) => lanCustomersStore.set(c.id, c));
+
+    lanSuppliersStore.clear();
+    dbSuppliers.forEach((s: any) => lanSuppliersStore.set(s.id, s));
+
+    lanHeldOrdersStore.clear();
+    dbHeld.forEach((h: any) => lanHeldOrdersStore.set(h.id, h));
+
+    lanDatabaseVersion = 1;
+    lanLastUpdated = new Date().toISOString();
+    addLanLog(
+      'success',
+      `Basis Data Relasional SQLite (WAL Mode) aktif: ${lanProductsStore.size} produk, ${lanTransactionsStore.size} transaksi, ${lanCustomersStore.size} member.`
+    );
+    return;
+  } catch (err: any) {
+    console.warn('[LAN Server] Error initializing SQLite DB, checking fallback JSON:', err?.message || err);
+  }
+
+  // Fallback to legacy JSON if SQLite initialization fails
+  try {
     if (fs.existsSync(LAN_DB_FILE)) {
       const raw = fs.readFileSync(LAN_DB_FILE, 'utf-8');
       const data = JSON.parse(raw);
@@ -795,9 +857,20 @@ app.post('/api/lan/data/push-transaction', (req, res) => {
     }
 
     scheduleLanDbSave();
+    // Asynchronously persist to SQLite Relational DB
+    upsertSqliteTransactions([enriched], clientId || 'lan-terminal', clientName || 'Kasir').catch(() => {});
+    if (Array.isArray(transaction.items)) {
+      const stockItems = transaction.items.map((it: any) => ({
+        productId: it.product?.id || it.productId,
+        quantity: it.quantity || 1,
+        unitMultiplier: it.selectedUnit?.multiplier || 1,
+      }));
+      deductSqliteStock(stockItems).catch(() => {});
+    }
+
     addLanLog(
       'success',
-      `Transaksi ${transaction.invoiceNumber} (Rp ${(transaction.finalTotal || 0).toLocaleString('id-ID')}) dari ${clientName || 'Kasir'} diproses. Stok ${updatedStocks.length} produk dipotong di Server LAN.`
+      `Transaksi ${transaction.invoiceNumber} (Rp ${(transaction.finalTotal || 0).toLocaleString('id-ID')}) dari ${clientName || 'Kasir'} diproses. Stok ${updatedStocks.length} produk dipotong di Server LAN (SQLite WAL).`
     );
 
     res.json({
@@ -828,7 +901,8 @@ app.post('/api/lan/data/sync-products', (req, res) => {
     }
 
     scheduleLanDbSave();
-    addLanLog('info', `Katalog produk diperbarui di Server LAN: ${products.length} item. ${auditNote || ''}`);
+    upsertSqliteProducts(products).catch(() => {});
+    addLanLog('info', `Katalog produk diperbarui di Server LAN (SQLite Master): ${products.length} item. ${auditNote || ''}`);
 
     res.json({
       success: true,
@@ -862,7 +936,11 @@ app.post('/api/lan/database/seed', (req, res) => {
     }
 
     scheduleLanDbSave();
-    addLanLog('warn', `Master Server Database di-seed ulang: ${lanProductsStore.size} produk, ${lanCustomersStore.size} member, ${lanTransactionsStore.size} transaksi.`);
+    if (Array.isArray(products) && products.length > 0) upsertSqliteProducts(products).catch(() => {});
+    if (Array.isArray(customers) && customers.length > 0) upsertSqliteCustomers(customers).catch(() => {});
+    if (Array.isArray(suppliers) && suppliers.length > 0) upsertSqliteSuppliers(suppliers).catch(() => {});
+    if (Array.isArray(transactions) && transactions.length > 0) upsertSqliteTransactions(transactions, 'seed-client', 'Admin').catch(() => {});
+    addLanLog('warn', `Master Server Database di-seed ulang (SQLite Relational WAL): ${lanProductsStore.size} produk, ${lanCustomersStore.size} member, ${lanTransactionsStore.size} transaksi.`);
 
     res.json({
       success: true,
@@ -901,6 +979,7 @@ app.post('/api/lan/orders/held', (req, res) => {
     };
 
     lanHeldOrdersStore.set(heldOrder.id, orderWithTerminal);
+    saveSqliteHeldOrder(orderWithTerminal).catch(() => {});
     scheduleLanDbSave();
     addLanLog('info', `Pesanan #${heldOrder.id.slice(-6)} diparkir oleh ${clientName || 'Kasir'}. Bisa dipanggil di kasir manapun.`);
 
@@ -918,6 +997,7 @@ app.delete('/api/lan/orders/held/:id', (req, res) => {
   const { id } = req.params;
   const existed = lanHeldOrdersStore.has(id);
   lanHeldOrdersStore.delete(id);
+  deleteSqliteHeldOrder(id).catch(() => {});
   if (existed) {
     scheduleLanDbSave();
     addLanLog('info', `Pesanan parkir #${id.slice(-6)} telah diambil & diselesaikan.`);
@@ -925,21 +1005,65 @@ app.delete('/api/lan/orders/held/:id', (req, res) => {
   res.json({ success: true, removed: existed, remaining: lanHeldOrdersStore.size });
 });
 
-// 9. Legacy POS Sync Compatibility Layer
-app.get('/api/pos/sync-status', (req, res) => {
-  res.json({
-    status: 'online',
-    cloudSynced: true,
-    serverTime: new Date().toISOString(),
-    totalCloudTransactions: lanTransactionsStore.size,
-    lanStatus: {
-      activeClients: lanActiveClientsStore.size,
-      productsCount: lanProductsStore.size,
-    },
-  });
+// 9. Central POS Sync & Relational Database Layer
+app.get('/api/pos/sync-status', async (req, res) => {
+  try {
+    const dbStatus = await getSqliteDatabaseStatus();
+    res.json({
+      status: 'online',
+      cloudSynced: true,
+      database: 'SQLite Relational (WAL Mode)',
+      journalMode: dbStatus.journalMode || 'wal',
+      integrity: dbStatus.integrity || 'ok',
+      fileSizeKb: dbStatus.fileSizeKb || 0,
+      counts: dbStatus.counts,
+      serverTime: new Date().toISOString(),
+      totalCloudTransactions: dbStatus.counts.transactions || lanTransactionsStore.size,
+      lanStatus: {
+        activeClients: lanActiveClientsStore.size,
+        productsCount: dbStatus.counts.products || lanProductsStore.size,
+      },
+    });
+  } catch {
+    res.json({
+      status: 'online',
+      cloudSynced: true,
+      database: 'SQLite Relational (WAL Mode)',
+      serverTime: new Date().toISOString(),
+      totalCloudTransactions: lanTransactionsStore.size,
+      lanStatus: {
+        activeClients: lanActiveClientsStore.size,
+        productsCount: lanProductsStore.size,
+      },
+    });
+  }
 });
 
-app.post('/api/pos/transactions/sync', (req, res) => {
+app.get('/api/pos/database/status', async (req, res) => {
+  try {
+    const status = await getSqliteDatabaseStatus();
+    res.json({
+      success: true,
+      ...status,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/pos/database/check-integrity', async (req, res) => {
+  try {
+    const check = await checkSqliteIntegrity();
+    res.json({
+      success: true,
+      ...check,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/pos/transactions/sync', async (req, res) => {
   try {
     const { transactions, deviceId, cashierName } = req.body;
     if (!Array.isArray(transactions)) {
@@ -962,12 +1086,20 @@ app.post('/api/pos/transactions/sync', (req, res) => {
       syncedIds.push(key);
     }
 
+    // Persist to SQLite Master DB with ACID transaction guarantees
+    try {
+      await upsertSqliteTransactions(transactions, deviceId || 'pos-terminal', cashierName || 'Kasir');
+    } catch (e: any) {
+      console.warn('[SQLite Server] Error syncing transactions to SQLite:', e?.message || e);
+    }
+
     scheduleLanDbSave();
     res.json({
       success: true,
       syncedCount: syncedIds.length,
       syncedIds,
       serverTime: now,
+      database: 'SQLite Relational (WAL Mode)',
       totalCloudTransactions: lanTransactionsStore.size,
     });
   } catch (err: any) {
@@ -975,7 +1107,7 @@ app.post('/api/pos/transactions/sync', (req, res) => {
   }
 });
 
-app.post('/api/pos/transactions', (req, res) => {
+app.post('/api/pos/transactions', async (req, res) => {
   try {
     const tx = req.body;
     if (!tx || (!tx.id && !tx.invoiceNumber)) {
@@ -983,6 +1115,14 @@ app.post('/api/pos/transactions', (req, res) => {
     }
     const key = tx.id || tx.invoiceNumber;
     lanTransactionsStore.set(key, tx);
+
+    // Persist to SQLite Master DB
+    try {
+      await upsertSqliteTransactions([tx]);
+    } catch (e: any) {
+      console.warn('[SQLite Server] Error in single transaction insert:', e?.message || e);
+    }
+
     scheduleLanDbSave();
     res.json({ success: true, transaction: tx, serverTime: new Date().toISOString() });
   } catch (err: any) {
@@ -990,11 +1130,78 @@ app.post('/api/pos/transactions', (req, res) => {
   }
 });
 
-app.get('/api/pos/transactions', (req, res) => {
-  const list = Array.from(lanTransactionsStore.values()).sort(
-    (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-  );
-  res.json({ success: true, count: list.length, transactions: list });
+app.get('/api/pos/transactions', async (req, res) => {
+  try {
+    const {
+      page,
+      limit,
+      pageSize,
+      cursor,
+      startDate,
+      endDate,
+      from,
+      to,
+      preset,
+      paymentMethod,
+      method,
+      syncStatus,
+      search,
+      q,
+      all,
+    } = req.query;
+
+    // If 'all=true' explicitly requested (e.g., full backup export), return up to 5000 transactions
+    if (all === 'true' || all === '1') {
+      const list = await getSqliteTransactions(5000);
+      return res.json({ success: true, count: list.length, totalCount: list.length, transactions: list });
+    }
+
+    let computedStartDate = (startDate || from) as string | undefined;
+    let computedEndDate = (endDate || to) as string | undefined;
+
+    // Handle preset 'today' if explicitly passed
+    if (preset === 'today') {
+      const todayStr = new Date().toISOString().split('T')[0];
+      computedStartDate = todayStr;
+      computedEndDate = todayStr;
+    }
+
+    const paginated = await querySqliteTransactionsPaginated({
+      page: page ? parseInt(String(page), 10) : 1,
+      pageSize: pageSize || limit ? parseInt(String(pageSize || limit), 10) : 25,
+      cursor: cursor ? String(cursor) : undefined,
+      startDate: computedStartDate,
+      endDate: computedEndDate,
+      paymentMethod: (paymentMethod || method) ? String(paymentMethod || method) : undefined,
+      syncStatus: syncStatus ? String(syncStatus) : undefined,
+      search: (search || q) ? String(search || q) : undefined,
+    });
+
+    res.json({
+      success: true,
+      ...paginated,
+      count: paginated.transactions.length,
+    });
+  } catch (err: any) {
+    console.warn('[Transactions API] Error in paginated query, using fallback:', err?.message || err);
+    const list = Array.from(lanTransactionsStore.values()).sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+    res.json({
+      success: true,
+      transactions: list.slice(0, 25),
+      totalCount: list.length,
+      totalSalesAmount: list.reduce((sum, t) => sum + (t.finalTotal || 0), 0),
+      page: 1,
+      pageSize: 25,
+      totalPages: Math.ceil(list.length / 25) || 1,
+      hasNextPage: list.length > 25,
+      hasPrevPage: false,
+      nextCursor: null,
+      period: {},
+      count: Math.min(25, list.length),
+    });
+  }
 });
 
 // 6. AI Supplier Purchase Invoice OCR / Image Scanner
@@ -1298,27 +1505,149 @@ Kembalikan format JSON murni dengan format array objek:
 
 // 2. AI Retail Restock & Inventory Demand Forecasting (Purchase Order Plan)
 app.post('/api/ai/inventory-forecast', async (req, res) => {
-  const { products, recentTransactions, storeSettings } = req.body;
+  const {
+    products = [],
+    recentTransactions = [],
+    salesReturns = [],
+    purchaseReturns = [],
+    storeSettings = {},
+    targetDate,
+    deadstockRule = 'eliminate', // 'eliminate' | 'reduce' | 'none'
+    returnRule = 'reduce', // 'eliminate' | 'reduce' | 'none'
+  } = req.body;
+
+  const now = new Date();
+  let projectionDays = 14;
+  if (targetDate) {
+    const target = new Date(targetDate);
+    if (!isNaN(target.getTime())) {
+      const diff = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      projectionDays = Math.max(1, Math.min(60, diff || 7));
+    }
+  }
+
+  // Build 14-day history date map for charting
+  const last14Dates: string[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 86400000);
+    last14Dates.push(d.toISOString().slice(0, 10));
+  }
+
+  // Aggregate sales & returns per product
+  const productStats = new Map<string, {
+    totalSold: number;
+    totalReturned: number;
+    dailyHistory: Map<string, { sold: number; ret: number }>;
+  }>();
+
+  (products || []).forEach((p: any) => {
+    const daily = new Map<string, { sold: number; ret: number }>();
+    last14Dates.forEach((dt) => daily.set(dt, { sold: 0, ret: 0 }));
+    productStats.set(p.id, { totalSold: 0, totalReturned: 0, dailyHistory: daily });
+  });
+
+  (recentTransactions || []).forEach((t: any) => {
+    const txDate = (t.createdAt || '').slice(0, 10);
+    (t.items || []).forEach((item: any) => {
+      const pId = item.product?.id || item.productId;
+      const stat = pId ? productStats.get(pId) : null;
+      const qty = Number(item.quantity) || 1;
+      if (stat) {
+        stat.totalSold += qty;
+        if (stat.dailyHistory.has(txDate)) {
+          const entry = stat.dailyHistory.get(txDate)!;
+          entry.sold += qty;
+        }
+      }
+    });
+  });
+
+  (salesReturns || []).forEach((ret: any) => {
+    const retDate = (ret.createdAt || '').slice(0, 10);
+    (ret.items || []).forEach((item: any) => {
+      const pId = item.productId;
+      const stat = pId ? productStats.get(pId) : null;
+      const qty = Number(item.quantity) || 1;
+      if (stat) {
+        stat.totalReturned += qty;
+        if (stat.dailyHistory.has(retDate)) {
+          const entry = stat.dailyHistory.get(retDate)!;
+          entry.ret += qty;
+        }
+      }
+    });
+  });
 
   const generateRuleBasedForecast = () => {
-    const lowItems = (products || []).filter((p: any) => p.stock <= p.minStock);
-    const candidateItems = lowItems.length > 0 ? lowItems : (products || []).slice(0, 5);
+    const lowItems = (products || []).filter((p: any) => p.stock <= (p.minStock || 10));
+    const candidateItems = lowItems.length > 0 ? lowItems : (products || []).slice(0, 6);
 
     let totalBudget = 0;
+    let deadstockCount = 0;
+    let returnedItemsCount = 0;
+
     const suggestions = candidateItems.map((p: any) => {
+      const stat = productStats.get(p.id) || {
+        totalSold: 0,
+        totalReturned: 0,
+        dailyHistory: new Map(),
+      };
       const isZero = p.stock === 0;
-      const deficit = Math.max(0, (p.minStock || 10) * 2 - p.stock);
-      // Smart carton / case increment (multiple of 6, 12, or 24 for FMCG)
-      const orderQty = Math.max(12, Math.ceil(deficit / 6) * 6);
+      const isDeadstock = stat.totalSold === 0 && p.stock > 0;
+      const hasRetur = stat.totalReturned > 0;
+      if (isDeadstock) deadstockCount++;
+      if (hasRetur) returnedItemsCount++;
+
+      const dailyVelocity = Math.round((stat.totalSold / 14) * 100) / 100;
+      const projectedDemand = Math.ceil(dailyVelocity * projectionDays);
+      const deficit = Math.max(0, (p.minStock || 10) + projectedDemand - p.stock);
+      const rawOrderQty = Math.max(12, Math.ceil(deficit / 6) * 6);
+
+      let orderQty = rawOrderQty;
+      let quotaAdjustment: 'eliminated' | 'reduced' | 'normal' = 'normal';
+      let quotaAdjustmentReason: string | undefined = undefined;
+
+      if (isDeadstock) {
+        if (deadstockRule === 'eliminate') {
+          orderQty = 0;
+          quotaAdjustment = 'eliminated';
+          quotaAdjustmentReason = `Barang Deadstock (0 penjualan 14 hari). Kuota order dieliminasi (0) agar modal tidak macet.`;
+        } else if (deadstockRule === 'reduce') {
+          orderQty = Math.max(1, Math.floor(rawOrderQty * 0.5));
+          quotaAdjustment = 'reduced';
+          quotaAdjustmentReason = `Barang Deadstock/Slow-Moving. Kuota order dipangkas 50% (${orderQty} unit) sebagai penyangga minimal.`;
+        }
+      } else if (hasRetur) {
+        if (returnRule === 'eliminate') {
+          orderQty = 0;
+          quotaAdjustment = 'eliminated';
+          quotaAdjustmentReason = `Terdeteksi riwayat retur (${stat.totalReturned} unit). Kuota order dieliminasi untuk evaluasi supplier/mutu.`;
+        } else if (returnRule === 'reduce') {
+          orderQty = Math.max(1, Math.floor(rawOrderQty * 0.5));
+          quotaAdjustment = 'reduced';
+          quotaAdjustmentReason = `Ada riwayat retur (${stat.totalReturned} unit). Kuota order dipangkas 50% (${orderQty} unit) untuk mencegah kerugian.`;
+        }
+      }
+
       const cost = Number(p.costPrice) || 0;
       const subtotal = orderQty * cost;
       totalBudget += subtotal;
 
       let urgency = 'SEDANG';
-      if (isZero) urgency = 'KRITIS';
+      if (quotaAdjustment === 'eliminated') urgency = 'OPTIMAL';
+      else if (isZero) urgency = 'KRITIS';
       else if (p.stock <= (p.minStock || 5)) urgency = 'TINGGI';
 
-      const estimatedDays = isZero ? 0 : Math.max(1, Math.floor(p.stock / 1.8));
+      const estimatedDays = isZero ? 0 : dailyVelocity > 0 ? Math.max(1, Math.floor(p.stock / dailyVelocity)) : 30;
+
+      const salesHistoryByDate = last14Dates.map((dt) => {
+        const hist = stat.dailyHistory.get(dt) || { sold: 0, ret: 0 };
+        return {
+          date: dt.slice(5),
+          soldQty: hist.sold,
+          returnQty: hist.ret,
+        };
+      });
 
       return {
         productId: p.id,
@@ -1330,22 +1659,39 @@ app.post('/api/ai/inventory-forecast', async (req, res) => {
         currentStock: p.stock,
         minStock: p.minStock || 10,
         recommendedOrderQty: orderQty,
+        originalOrderQty: rawOrderQty,
+        quotaAdjustment,
+        quotaAdjustmentReason,
+        returnCount: stat.totalReturned,
+        returnRate: stat.totalSold > 0 ? Math.round((stat.totalReturned / stat.totalSold) * 100) : 0,
+        isDeadstock,
+        totalSoldPeriod: stat.totalSold,
+        dailySalesVelocity: dailyVelocity,
+        salesHistoryByDate,
         costPrice: cost,
         estimatedSubtotal: subtotal,
-        suggestedSupplier: p.brand ? `Distributor ${p.brand}` : 'PT Indomarco Adi Prima (Indofood)',
+        suggestedSupplier: p.brand ? `Distributor ${p.brand}` : 'PT Indomarco / Supplier FMCG',
         urgency,
         estimatedDaysLeft: estimatedDays,
-        actionAdvice: isZero
-          ? `Stok habis total! Prioritaskan pemesanan segera untuk mencegah kehilangan potensi penjualan ${p.name}.`
-          : `Stok menipis (${p.stock} ${p.unit || 'pcs'}). Pesan ${orderQty} ${p.unit || 'pcs'} untuk mengamankan persediaan 14-21 hari ke depan.`,
+        actionAdvice: quotaAdjustment === 'eliminated'
+          ? (quotaAdjustmentReason || 'Kuota dieliminasi berdasarkan aturan retur & deadstock.')
+          : isZero
+          ? `Stok habis! Prioritaskan pemesanan untuk mencukupi horizon ${projectionDays} hari ke depan.`
+          : `Sisa stok ${p.stock} ${p.unit || 'pcs'}. Pesan ${orderQty} ${p.unit || 'pcs'} untuk target pemenuhan ${projectionDays} hari.`,
       };
     });
 
     return {
-      summary: `Terdapat ${lowItems.length} produk yang telah mencapai atau di bawah batas minimum stok aman toko. Segera terbitkan Purchase Order (PO) untuk menghindari potensi kehilangan omzet.`,
-      healthScore: lowItems.length === 0 ? 95 : Math.max(45, 100 - (lowItems.length * 9)),
+      summary: `Rencana Restock terencana untuk target kebutuhan ${projectionDays} hari ke depan${targetDate ? ` (Target: ${targetDate})` : ''}. Diterapkan aturan eliminasi/pemangkasan kuota untuk ${deadstockCount} barang deadstock dan ${returnedItemsCount} barang dengan riwayat retur.`,
+      healthScore: lowItems.length === 0 ? 95 : Math.max(45, 100 - (lowItems.length * 8)),
       totalEstimatedBudget: totalBudget,
-      totalItemsToRestock: suggestions.length,
+      totalItemsToRestock: suggestions.filter((s) => s.recommendedOrderQty > 0).length,
+      targetDate: targetDate || now.toISOString().slice(0, 10),
+      projectionDays,
+      deadstockRule,
+      returnRule,
+      deadstockCount,
+      returnedItemsCount,
       forecasts: suggestions,
       deadstockOrExpiryAlerts: (products || [])
         .filter((p: any) => p.expiryDate && new Date(p.expiryDate).getTime() - Date.now() < 60 * 86400000)
@@ -1353,7 +1699,7 @@ app.post('/api/ai/inventory-forecast', async (req, res) => {
         .map((p: any) => ({
           productName: p.name,
           issue: 'Mendekati Tanggal Kadaluarsa (FEFO)',
-          suggestedPromotion: 'Tempatkan di rak bagian depan kasir dan berikan potongan harga tebus murah / bundel diskon.',
+          suggestedPromotion: 'Tempatkan di rak depan kasir dan berikan potongan tebus murah / diskon bundel.',
         })),
       isAiGenerated: false,
       generatedAt: new Date().toISOString(),
@@ -1362,43 +1708,49 @@ app.post('/api/ai/inventory-forecast', async (req, res) => {
 
   try {
     const prompt = `Anda adalah AI Supply Chain & Inventory Strategist untuk toko ritel modern "${storeSettings?.storeName || 'Ulilmart'}".
-Data Produk Toko (Stok, Min Stock, Kategori, Harga Beli, Harga Jual, Expired Date, Aisle/Rak, Brand):
-${JSON.stringify((products || []).map((p: any) => ({
-  id: p.id,
-  name: p.name,
-  sku: p.sku,
-  barcode: p.barcode,
-  category: p.categoryId,
-  brand: p.brand,
-  stock: p.stock,
-  minStock: p.minStock,
-  unit: p.unit,
-  costPrice: p.costPrice,
-  price: p.price,
-  expiryDate: p.expiryDate,
-  aisle: p.aisle,
-})))}
+Target Tanggal Restock: ${targetDate || 'Hari Ini'} (Horizon Proyeksi: ${projectionDays} hari ke depan).
+Kebijakan Aturan Retur: "${returnRule}" (eliminate = eliminasi jadi 0; reduce = pangkas kuota 50%; none = normal).
+Kebijakan Aturan Deadstock: "${deadstockRule}" (eliminate = eliminasi jadi 0; reduce = pangkas kuota 50%; none = normal).
 
-Data Transaksi Terakhir (${recentTransactions?.length || 0} transaksi):
-${JSON.stringify((recentTransactions || []).slice(0, 25).map((t: any) => ({
-  invoice: t.invoiceNumber,
-  items: t.items?.map((i: any) => ({ name: i.product.name, qty: i.quantity })),
-  total: t.finalTotal,
-  date: t.createdAt,
-})))}
+Data Produk Toko:
+${JSON.stringify((products || []).map((p: any) => {
+  const stat = productStats.get(p.id) || { totalSold: 0, totalReturned: 0 };
+  return {
+    id: p.id,
+    name: p.name,
+    sku: p.sku,
+    barcode: p.barcode,
+    category: p.categoryId,
+    brand: p.brand,
+    stock: p.stock,
+    minStock: p.minStock,
+    unit: p.unit,
+    costPrice: p.costPrice,
+    price: p.price,
+    expiryDate: p.expiryDate,
+    totalSoldLast14Days: stat.totalSold,
+    totalReturned: stat.totalReturned,
+    isDeadstock: stat.totalSold === 0 && p.stock > 0,
+  };
+}))}
 
-Tugas:
-1. Lakukan analisis mendalam terhadap inventaris toko ritel:
-   - Produk dengan stok habis (stok = 0) atau stok di bawah batas minimum (stock <= minStock).
-   - Produk fast-moving FMCG berdasarkan frekuensi transaksi terakhir.
-   - Produk dengan risiko FEFO (kadaluarsa dalam kurun 30-90 hari).
-2. Buat Rekomendasi Purchase Order (PO) lengkap dengan kuantitas pemesanan ekonomis (kelipatan karton/lusin yang realistis) dan estimasi anggaran total.
-3. Kembalikan JSON valid dengan struktur:
+Data Transaksi Terakhir (${recentTransactions?.length || 0} transaksi) & Retur (${salesReturns?.length || 0} retur).
+
+TUGAS UTAMA:
+1. Lakukan analisis stok untuk horizon target ${projectionDays} hari ke depan (berdasarkan run-rate penjualan).
+2. ATURAN WAJIB:
+   - Jika produk DEADSTOCK (0 penjualan): terapkan aturan "${deadstockRule}". Jika 'eliminate', set recommendedOrderQty = 0 dan quotaAdjustment = 'eliminated'. Jika 'reduce', pangkas kuota 50% dan quotaAdjustment = 'reduced'.
+   - Jika produk memiliki RIWAYAT RETUR (totalReturned > 0): terapkan aturan "${returnRule}". Jika 'eliminate', set recommendedOrderQty = 0 dan quotaAdjustment = 'eliminated'. Jika 'reduce', pangkas kuota 50% dan quotaAdjustment = 'reduced'.
+3. Sertakan alasan kuota yang jelas pada "quotaAdjustmentReason".
+4. Kembalikan JSON valid:
 {
-  "summary": "Ringkasan eksekutif kondisi inventaris toko saat ini dan alasan utama rencana restock dalam 2 kalimat profesional.",
-  "healthScore": 88, // Nilai kesehatan stok toko 0-100
-  "totalEstimatedBudget": 1850000, // Total estimasi biaya seluruh item yang diusulkan
-  "totalItemsToRestock": 4, // Jumlah varian/SKU produk yang perlu di-restock
+  "summary": "Ringkasan eksekutif 2 kalimat mencakup target tanggal, kondisi stok, dan penanganan retur/deadstock.",
+  "healthScore": 88,
+  "totalEstimatedBudget": 1850000,
+  "targetDate": "${targetDate || now.toISOString().slice(0, 10)}",
+  "projectionDays": ${projectionDays},
+  "deadstockRule": "${deadstockRule}",
+  "returnRule": "${returnRule}",
   "forecasts": [
     {
       "productId": "id_produk",
@@ -1410,19 +1762,25 @@ Tugas:
       "currentStock": 2,
       "minStock": 10,
       "recommendedOrderQty": 24,
+      "originalOrderQty": 24,
+      "quotaAdjustment": "normal" | "eliminated" | "reduced",
+      "quotaAdjustmentReason": "Alasan penyesuaian kuota jika tereliminasi atau dipangkas",
+      "returnCount": 0,
+      "isDeadstock": false,
+      "dailySalesVelocity": 1.5,
       "costPrice": 15000,
       "estimatedSubtotal": 360000,
-      "suggestedSupplier": "Nama Distributor atau Supplier",
+      "suggestedSupplier": "Nama Supplier",
       "urgency": "KRITIS" | "TINGGI" | "SEDANG" | "OPTIMAL",
       "estimatedDaysLeft": 2,
-      "actionAdvice": "Alasan spesifik dan saran pemesanan (misal: 'Stok menipis, barang fast-moving habis dalam 2 hari. Pesan 2 karton (24 pcs) sebelum akhir pekan')"
+      "actionAdvice": "Saran pemesanan spesifik dan run-rate"
     }
   ],
   "deadstockOrExpiryAlerts": [
     {
       "productName": "Nama Produk",
-      "issue": "Mendekati Tanggal Kadaluarsa / Perputaran Lambat",
-      "suggestedPromotion": "Beri diskon Flash Sale atau Bundling tebus murah di rak depan."
+      "issue": "Mendekati Kadaluarsa / Deadstock",
+      "suggestedPromotion": "Saran penanganan stok"
     }
   ]
 }
@@ -1435,30 +1793,62 @@ Tugas:
 
     const parsed = extractJsonFromText(rawText) || JSON.parse(rawText);
     
-    // Ensure estimatedSubtotal and totals are populated correctly
+    // Ensure estimatedSubtotal and totals are populated correctly and inject history array
     if (parsed && Array.isArray(parsed.forecasts)) {
       let calculatedTotal = 0;
+      let dCount = 0;
+      let rCount = 0;
+
       parsed.forecasts = parsed.forecasts.map((fc: any) => {
         const prod = (products || []).find((p: any) => p.id === fc.productId || p.name === fc.productName);
+        const pId = fc.productId || prod?.id || '';
+        const stat = productStats.get(pId) || { totalSold: 0, totalReturned: 0, dailyHistory: new Map() };
+        
+        const isDeadstock = fc.isDeadstock !== undefined ? fc.isDeadstock : (stat.totalSold === 0 && (prod?.stock || 0) > 0);
+        const returnCount = fc.returnCount !== undefined ? fc.returnCount : stat.totalReturned;
+        if (isDeadstock) dCount++;
+        if (returnCount > 0) rCount++;
+
         const cost = Number(fc.costPrice) || (prod ? Number(prod.costPrice) : 0);
-        const qty = Number(fc.recommendedOrderQty) || 12;
+        const qty = Number(fc.recommendedOrderQty) || 0;
         const subtotal = Number(fc.estimatedSubtotal) || (cost * qty);
         calculatedTotal += subtotal;
 
+        const salesHistoryByDate = last14Dates.map((dt) => {
+          const hist = stat.dailyHistory.get(dt) || { sold: 0, ret: 0 };
+          return {
+            date: dt.slice(5),
+            soldQty: hist.sold,
+            returnQty: hist.ret,
+          };
+        });
+
         return {
           ...fc,
-          productId: fc.productId || prod?.id || '',
+          productId: pId,
           sku: fc.sku || prod?.sku || '',
           barcode: fc.barcode || prod?.barcode || '',
           unit: fc.unit || prod?.unit || 'pcs',
           costPrice: cost,
           recommendedOrderQty: qty,
           estimatedSubtotal: subtotal,
+          isDeadstock,
+          returnCount,
+          totalSoldPeriod: stat.totalSold,
+          dailySalesVelocity: fc.dailySalesVelocity || Math.round((stat.totalSold / 14) * 100) / 100,
+          salesHistoryByDate,
           suggestedSupplier: fc.suggestedSupplier || (prod?.brand ? `Distributor ${prod.brand}` : 'PT Indomarco / Supplier FMCG'),
         };
       });
+
       parsed.totalEstimatedBudget = parsed.totalEstimatedBudget || calculatedTotal;
-      parsed.totalItemsToRestock = parsed.forecasts.length;
+      parsed.totalItemsToRestock = parsed.forecasts.filter((f: any) => f.recommendedOrderQty > 0).length;
+      parsed.targetDate = parsed.targetDate || targetDate || now.toISOString().slice(0, 10);
+      parsed.projectionDays = parsed.projectionDays || projectionDays;
+      parsed.deadstockRule = deadstockRule;
+      parsed.returnRule = returnRule;
+      parsed.deadstockCount = dCount;
+      parsed.returnedItemsCount = rCount;
     }
 
     res.json({
@@ -2610,8 +3000,498 @@ Kembalikan HANYA format JSON valid array objek:
   });
 });
 
+// ==============================================================================
+// GITHUB AUTO-UPDATE, FILE VERIFICATION & SYSTEM CLEANUP ENDPOINTS
+// ==============================================================================
+const OFFICIAL_GITHUB_REPO_URL = 'https://github.com/fyercz/Project-POS-Retailer.git';
+const OFFICIAL_GIT_BRANCH = 'main';
+
+interface JunkFileInfo {
+  path: string;
+  relativePath: string;
+  size: number;
+  category: string;
+  reason: string;
+}
+
+// Helper to scan for unnecessary junk files (logs, temporary files, OS junk, caches)
+function scanUnnecessaryFiles(rootDir: string): JunkFileInfo[] {
+  const junkList: JunkFileInfo[] = [];
+  const junkPatterns = [
+    { pattern: /\.DS_Store$/i, category: 'OS System Junk', reason: 'File metadata macOS Finder tidak diperlukan' },
+    { pattern: /^Thumbs\.db$/i, category: 'OS System Junk', reason: 'Cache thumbnail Windows Explorer' },
+    { pattern: /^ehthumbs\.db$/i, category: 'OS System Junk', reason: 'Cache thumbnail media Windows' },
+    { pattern: /^desktop\.ini$/i, category: 'OS System Junk', reason: 'Konfigurasi folder Windows Explorer' },
+    { pattern: /(npm-debug|yarn-error|yarn-debug|pnpm-debug)\.log.*/i, category: 'Logs & Debug Files', reason: 'Log error package manager' },
+    { pattern: /\.(tmp|temp|swp|bak|old)$/i, category: 'Temporary & Backup Files', reason: 'File sementara / backup editor' },
+    { pattern: /~$/i, category: 'Temporary & Backup Files', reason: 'File cadangan sementara teks editor' },
+  ];
+
+  function traverse(dir: string, depth = 0) {
+    if (depth > 6) return;
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        const relPath = path.relative(rootDir, fullPath);
+
+        // Never scan into .git or core protected folders
+        if (entry.isDirectory()) {
+          if (entry.name === '.git') continue;
+          if (entry.name === 'node_modules') {
+            // Check for stale vite cache inside node_modules/.vite
+            const viteCachePath = path.join(fullPath, '.vite');
+            if (fs.existsSync(viteCachePath)) {
+              try {
+                const viteCacheStat = fs.statSync(viteCachePath);
+                junkList.push({
+                  path: viteCachePath,
+                  relativePath: path.join(relPath, '.vite'),
+                  size: viteCacheStat.size || 4096,
+                  category: 'Build Cache & Temp Bundles',
+                  reason: 'Cache kompilasi pre-bundle Vite lokal',
+                });
+              } catch {}
+            }
+            continue;
+          }
+          traverse(fullPath, depth + 1);
+        } else if (entry.isFile()) {
+          for (const rule of junkPatterns) {
+            if (rule.pattern.test(entry.name)) {
+              try {
+                const stat = fs.statSync(fullPath);
+                junkList.push({
+                  path: fullPath,
+                  relativePath: relPath,
+                  size: stat.size,
+                  category: rule.category,
+                  reason: rule.reason,
+                });
+              } catch {}
+              break;
+            }
+          }
+        }
+      }
+    } catch {}
+  }
+
+  traverse(rootDir, 0);
+  return junkList;
+}
+
+// Safe internal file cleaner
+function cleanUnnecessaryFilesInternal(rootDir: string): { count: number; bytesFreed: number; deleted: string[] } {
+  const junkFiles = scanUnnecessaryFiles(rootDir);
+  let count = 0;
+  let bytesFreed = 0;
+  const deleted: string[] = [];
+
+  for (const item of junkFiles) {
+    try {
+      const normalized = item.relativePath.replace(/\\/g, '/');
+      if (
+        normalized.startsWith('.git') ||
+        normalized === 'package.json' ||
+        normalized === 'server.ts' ||
+        normalized.startsWith('src/') ||
+        normalized.startsWith('public/') ||
+        normalized.startsWith('data/')
+      ) {
+        continue;
+      }
+
+      if (fs.existsSync(item.path)) {
+        const stat = fs.statSync(item.path);
+        if (stat.isDirectory()) {
+          fs.rmSync(item.path, { recursive: true, force: true });
+        } else {
+          fs.unlinkSync(item.path);
+        }
+        count++;
+        bytesFreed += item.size;
+        deleted.push(item.relativePath);
+      }
+    } catch {}
+  }
+
+  return { count, bytesFreed, deleted };
+}
+
+app.get('/api/system/git-status', async (req, res) => {
+  try {
+    const gitDir = path.join(process.cwd(), '.git');
+    const isGitRepo = fs.existsSync(gitDir);
+
+    if (!isGitRepo) {
+      return res.json({
+        isGitRepo: false,
+        message: 'Folder .git belum terinisialisasi di direktori ini.',
+        officialRepoUrl: OFFICIAL_GITHUB_REPO_URL,
+        nodeVersion: process.version,
+        platform: process.platform,
+      });
+    }
+
+    let branch = 'main';
+    let currentCommit = '';
+    let commitMessage = '';
+    let commitDate = '';
+    let remoteUrl = '';
+    let uncommittedCount = 0;
+
+    try {
+      const { stdout: branchOut } = await execPromise('git branch --show-current', { cwd: process.cwd() });
+      branch = branchOut.trim() || 'main';
+    } catch {}
+
+    try {
+      const { stdout: commitOut } = await execPromise('git rev-parse --short HEAD', { cwd: process.cwd() });
+      currentCommit = commitOut.trim();
+    } catch {}
+
+    try {
+      const { stdout: logOut } = await execPromise('git log -1 --pretty=format:"%s"', { cwd: process.cwd() });
+      commitMessage = logOut.trim();
+    } catch {}
+
+    try {
+      const { stdout: dateOut } = await execPromise('git log -1 --pretty=format:"%cd" --date=relative', { cwd: process.cwd() });
+      commitDate = dateOut.trim();
+    } catch {}
+
+    try {
+      const { stdout: remoteOut } = await execPromise('git remote get-url origin', { cwd: process.cwd() });
+      remoteUrl = remoteOut.trim();
+    } catch {}
+
+    try {
+      const { stdout: stOut } = await execPromise('git status --porcelain', { cwd: process.cwd() });
+      uncommittedCount = stOut.split('\n').filter((l) => l.trim()).length;
+    } catch {}
+
+    // Check remote commit from GitHub repository
+    let remoteLatestCommit = '';
+    let hasUpdate = false;
+    let isUpToDate = true;
+    try {
+      const targetRepo = remoteUrl || OFFICIAL_GITHUB_REPO_URL;
+      const { stdout: lsOut } = await execPromise(`git ls-remote ${targetRepo} refs/heads/main`, {
+        cwd: process.cwd(),
+        timeout: 10000,
+      });
+      if (lsOut) {
+        const fullHash = lsOut.split('\t')[0].trim();
+        if (fullHash) {
+          remoteLatestCommit = fullHash.substring(0, 7);
+          if (currentCommit && remoteLatestCommit && currentCommit !== remoteLatestCommit) {
+            hasUpdate = true;
+            isUpToDate = false;
+          }
+        }
+      }
+    } catch {}
+
+    res.json({
+      isGitRepo: true,
+      branch,
+      currentCommit,
+      commitMessage,
+      commitDate,
+      remoteUrl: remoteUrl || OFFICIAL_GITHUB_REPO_URL,
+      officialRepoUrl: OFFICIAL_GITHUB_REPO_URL,
+      remoteLatestCommit,
+      hasUpdate,
+      isUpToDate,
+      uncommittedCount,
+      nodeVersion: process.version,
+      platform: process.platform,
+    });
+  } catch (err: any) {
+    res.status(500).json({ isGitRepo: false, error: err.message });
+  }
+});
+
+// Explicitly configure or re-initialize git remote to official repository
+app.post('/api/system/git-configure', async (req, res) => {
+  try {
+    const gitDir = path.join(process.cwd(), '.git');
+    const isGitRepo = fs.existsSync(gitDir);
+
+    if (!isGitRepo) {
+      await execPromise(`git init && git remote add origin ${OFFICIAL_GITHUB_REPO_URL} && git fetch origin main && git branch -M main && git reset origin/main`, {
+        cwd: process.cwd(),
+        timeout: 30000,
+      });
+    } else {
+      try {
+        await execPromise(`git remote set-url origin ${OFFICIAL_GITHUB_REPO_URL}`, { cwd: process.cwd() });
+      } catch {
+        await execPromise(`git remote add origin ${OFFICIAL_GITHUB_REPO_URL}`, { cwd: process.cwd() });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Repositori Git berhasil dikonfigurasi ke ${OFFICIAL_GITHUB_REPO_URL}`,
+      officialRepoUrl: OFFICIAL_GITHUB_REPO_URL,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/system/git-pull', async (req, res) => {
+  try {
+    const gitDir = path.join(process.cwd(), '.git');
+    if (!fs.existsSync(gitDir)) {
+      // Auto-initialize if missing
+      try {
+        await execPromise(`git init && git remote add origin ${OFFICIAL_GITHUB_REPO_URL} && git fetch origin main && git branch -M main && git reset origin/main`, {
+          cwd: process.cwd(),
+          timeout: 45000,
+        });
+      } catch (initErr: any) {
+        return res.status(400).json({
+          success: false,
+          message: 'Direktori Git belum diinisialisasi. Gagal melakukan auto-init repositori.',
+          details: initErr.message,
+        });
+      }
+    }
+
+    // 1. Auto cleanup unnecessary files prior to update
+    const cleanupResult = cleanUnnecessaryFilesInternal(process.cwd());
+
+    // 2. Ensure remote points to official GitHub repo
+    try {
+      await execPromise(`git remote set-url origin ${OFFICIAL_GITHUB_REPO_URL}`, { cwd: process.cwd() });
+    } catch {
+      await execPromise(`git remote add origin ${OFFICIAL_GITHUB_REPO_URL}`, { cwd: process.cwd() });
+    }
+
+    // 3. Run git pull / fetch
+    let pullOutput = '';
+    try {
+      const { stdout, stderr } = await execPromise('git pull origin main || git pull', {
+        cwd: process.cwd(),
+        timeout: 45000,
+      });
+      pullOutput = (stdout || stderr || '').trim();
+    } catch (pullErr: any) {
+      return res.status(500).json({
+        success: false,
+        step: 'git pull',
+        message: 'Gagal melakukan git pull. Periksa koneksi internet Anda atau file lokal yang mengalami konflik.',
+        details: pullErr.message,
+      });
+    }
+
+    // 4. Run npm install & npm run build
+    let buildOutput = '';
+    try {
+      const { stdout, stderr } = await execPromise('npm run build', {
+        cwd: process.cwd(),
+        timeout: 90000,
+      });
+      buildOutput = (stdout || stderr || '').trim();
+    } catch (buildErr: any) {
+      console.warn('Rebuild warning after pull:', buildErr?.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Kode berhasil ditarik dari GitHub dan dikompilasi!',
+      officialRepoUrl: OFFICIAL_GITHUB_REPO_URL,
+      pullOutput,
+      buildOutput,
+      cleanedFilesCount: cleanupResult.count,
+      cleanedBytesFreed: cleanupResult.bytesFreed,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Comprehensive system file integrity verification endpoint
+app.get('/api/system/verify-files', async (req, res) => {
+  try {
+    const rootDir = process.cwd();
+
+    // Critical system checklist items
+    const checklist = [
+      // Core Runtime
+      { path: 'package.json', category: 'Core Runtime', critical: true, description: 'Konfigurasi dependensi dan skrip proyek' },
+      { path: 'server.ts', category: 'Core Runtime', critical: true, description: 'Server backend Express & router API' },
+      { path: 'index.html', category: 'Core Runtime', critical: true, description: 'Template HTML utama aplikasi SPA' },
+      { path: 'vite.config.ts', category: 'Core Runtime', critical: true, description: 'Konfigurasi bundler Vite' },
+      { path: 'tsconfig.json', category: 'Core Runtime', critical: false, description: 'Konfigurasi compiler TypeScript' },
+      { path: 'metadata.json', category: 'Core Runtime', critical: false, description: 'Metadata identitas aplikasi POS' },
+
+      // App & UI Source
+      { path: 'src/main.tsx', category: 'Source Code', critical: true, description: 'Entry point React DOM' },
+      { path: 'src/App.tsx', category: 'Source Code', critical: true, description: 'Komponen induk aplikasi' },
+      { path: 'src/context/POSContext.tsx', category: 'Source Code', critical: true, description: 'Manajer state POS, kasir & transaksi' },
+      { path: 'src/types.ts', category: 'Source Code', critical: true, description: 'Definisi tipe data TypeScript' },
+      { path: 'src/index.css', category: 'Source Code', critical: false, description: 'Styling utama Tailwind CSS' },
+      { path: 'src/components/Header.tsx', category: 'Source Code', critical: false, description: 'Header navigasi kasir & profil' },
+      { path: 'src/components/ProductCatalog.tsx', category: 'Source Code', critical: false, description: 'Katalog produk & kasir POS' },
+      { path: 'src/components/SettingsModal.tsx', category: 'Source Code', critical: false, description: 'Pengaturan toko, struk & peluncuran' },
+      { path: 'src/components/DesktopAppModal.tsx', category: 'Source Code', critical: false, description: 'Pusat desktop, auto-update & hardware' },
+
+      // PWA & Assets
+      { path: 'public/manifest.json', category: 'PWA & Aset', critical: false, description: 'Web App Manifest PWA' },
+      { path: 'public/icon.svg', category: 'PWA & Aset', critical: false, description: 'Ikon logo aplikasi kasir' },
+      { path: 'public/sw.js', category: 'PWA & Aset', critical: false, description: 'Service Worker offline-first PWA' },
+
+      // Desktop Scripts & Auto-Update
+      { path: 'update.bat', category: 'Skrip Desktop & Auto-Update', critical: true, description: 'Script auto-update GitHub untuk Windows' },
+      { path: 'update.sh', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Script auto-update GitHub untuk Linux/macOS' },
+      { path: 'desktop.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Launcher mode desktop kasir Windows' },
+      { path: 'desktop.sh', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Launcher mode desktop kasir Linux/macOS' },
+      { path: 'run.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Script start server Windows' },
+      { path: 'run.sh', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Script start server Linux/macOS' },
+      { path: 'install.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Wizard instalasi Windows' },
+      { path: 'install.sh', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Wizard instalasi Linux/macOS' },
+
+      // Database & State
+      { path: 'data/lan-database.json', category: 'Database & Data Toko', critical: false, description: 'Database persisten server LAN' },
+
+      // Production Build Bundle
+      { path: 'dist/index.html', category: 'Production Build Bundle', critical: false, description: 'Kompilasi paket produksi web' },
+    ];
+
+    // Check git modified/untracked files
+    let gitStatusMap: Record<string, string> = {};
+    try {
+      const { stdout } = await execPromise('git status --porcelain', { cwd: rootDir });
+      const lines = stdout.split('\n');
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const statusCode = line.substring(0, 2).trim();
+        const filePath = line.substring(3).trim().replace(/^"|"$/g, '');
+        gitStatusMap[filePath] = statusCode;
+      }
+    } catch {}
+
+    const results = checklist.map((item) => {
+      const fullPath = path.join(rootDir, item.path);
+      const exists = fs.existsSync(fullPath);
+      let size = 0;
+      let lastModified: string | null = null;
+      let status: 'ok' | 'modified' | 'missing' | 'untracked' = exists ? 'ok' : 'missing';
+
+      if (exists) {
+        try {
+          const stat = fs.statSync(fullPath);
+          size = stat.size;
+          lastModified = stat.mtime.toISOString();
+        } catch {}
+
+        const gitStatus = gitStatusMap[item.path];
+        if (gitStatus) {
+          if (gitStatus.includes('M')) status = 'modified';
+          else if (gitStatus.includes('?')) status = 'untracked';
+          else if (gitStatus.includes('D')) status = 'missing';
+        }
+      }
+
+      return {
+        ...item,
+        exists,
+        size,
+        lastModified,
+        status,
+      };
+    });
+
+    const missingCritical = results.filter((r) => r.critical && !r.exists);
+    const missingOptional = results.filter((r) => !r.critical && !r.exists);
+    const modifiedCount = results.filter((r) => r.status === 'modified').length;
+
+    let overallHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
+    if (missingCritical.length > 0) {
+      overallHealth = 'critical';
+    } else if (missingOptional.length > 0) {
+      overallHealth = 'warning';
+    }
+
+    // Check environment prerequisites
+    const envPrerequisites = {
+      nodeVersion: process.version,
+      platform: process.platform,
+      gitInstalled: false,
+      distBuilt: fs.existsSync(path.join(rootDir, 'dist', 'index.html')),
+      nodeModulesInstalled: fs.existsSync(path.join(rootDir, 'node_modules')),
+      databaseAccessible: fs.existsSync(path.join(rootDir, 'data')),
+    };
+
+    try {
+      await execPromise('git --version');
+      envPrerequisites.gitInstalled = true;
+    } catch {}
+
+    res.json({
+      success: true,
+      overallHealth,
+      checkedAt: new Date().toISOString(),
+      officialRepoUrl: OFFICIAL_GITHUB_REPO_URL,
+      stats: {
+        total: results.length,
+        intact: results.filter((r) => r.status === 'ok').length,
+        modified: modifiedCount,
+        missing: results.filter((r) => !r.exists).length,
+        missingCritical: missingCritical.length,
+      },
+      envPrerequisites,
+      files: results,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Scan for unnecessary files (temp, logs, OS junk, caches)
+app.get('/api/system/cleanup-scan', async (req, res) => {
+  try {
+    const items = scanUnnecessaryFiles(process.cwd());
+    const totalBytes = items.reduce((acc, curr) => acc + curr.size, 0);
+
+    res.json({
+      success: true,
+      totalFiles: items.length,
+      totalBytes,
+      items,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Safely execute cleanup of unnecessary files
+app.post('/api/system/cleanup-execute', async (req, res) => {
+  try {
+    const cleanup = cleanUnnecessaryFilesInternal(process.cwd());
+    res.json({
+      success: true,
+      deletedCount: cleanup.count,
+      bytesFreed: cleanup.bytesFreed,
+      deletedList: cleanup.deleted,
+      message: `Pembersihan selesai! ${cleanup.count} file tidak perlu berhasil dihapus (${(cleanup.bytesFreed / 1024).toFixed(1)} KB dibebaskan).`,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Vite Middleware for development & Static Serving for production
 async function setupViteOrStatic() {
+  const distAssets = path.join(process.cwd(), 'dist', 'assets');
+  if (fs.existsSync(distAssets)) {
+    app.use('/assets', express.static(distAssets));
+  }
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },

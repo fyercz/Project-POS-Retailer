@@ -32,8 +32,8 @@ export interface UserFAQ {
   category: string;
 }
 
-export const APP_VERSION = 'v2.6.1';
-export const APP_LAST_UPDATED = 'September 2026';
+export const APP_VERSION = 'v2.6.5';
+export const APP_LAST_UPDATED = '23 September 2026';
 
 export const USER_MANUAL_SECTIONS: ManualSection[] = [
   {
@@ -60,6 +60,25 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           'Tekan tombol Esc untuk menutup dialog pop-up yang sedang aktif atau membersihkan pencarian.',
         ],
         shortcuts: ['Ctrl+F / F2: Cari Nama/SKU/Barcode', 'F3: Barcode Scanner Kamera'],
+      },
+      {
+        id: 'barcode-belum-terdaftar',
+        title: 'Scan Barcode Barang Belum Terdaftar (Otoritas Supervisor / Owner)',
+        summary: 'Penanganan saat kasir memindai barcode barang yang belum ada di database master toko.',
+        steps: [
+          'Saat kasir memindai barcode barang fisik di kasir atau kamera scanner (F3) dan kode barcode belum ada di database, sistem seketika memunculkan dialog "Barcode Belum Terdaftar".',
+          'Sesuai SOP keamanan toko, kasir frontliner tidak dapat mendaftarkan produk baru secara mandiri demi mencegah manipulasi harga/stok.',
+          'Pilih Supervisor atau Owner yang sedang bertugas di toko, lalu minta beliau memasukkan 4-digit PIN otorisasi (atau gunakan keypad pada layar).',
+          'Jika akun yang sedang login sudah memiliki wewenang di atas kasir (Supervisor / Owner / Inventory), tombol "Tambah Produk Sekarang" dapat langsung diklik tanpa perlu memasukkan PIN ulang.',
+          'Formulir pendaftaran produk baru akan terbuka dengan kode barcode yang telah terisi otomatis (pre-filled).',
+          'Isi nama produk (atau klik "Cari di Database Online" untuk otomatis melengkapi nama, merek, dan kategori), tentukan harga jual, harga modal, dan stok awal.',
+          'Klik "Simpan Produk". Sistem secara otomatis menyimpan produk baru ke master inventaris dan langsung memasukkan barang tersebut ke keranjang aktif kasir.',
+        ],
+        tips: [
+          'Transaksi pelanggan tidak terputus: Kasir tidak perlu mengulang scan karena produk baru otomatis masuk ke nota belanja yang sedang berjalan.',
+          'PIN default otorisasi master: Supervisor (7890) atau Hendro Wijaya Owner (9999). Dapat diubah kapan saja di menu Kelola Master Karyawan.',
+        ],
+        shortcuts: ['F3: Scanner Barcode', 'Enter: Cari / Validasi Barcode'],
       },
       {
         id: 'parkir-pesanan',
@@ -97,9 +116,10 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         summary: 'Menyelesaikan pembayaran pelanggan dengan berbagai metode bayar dan mencetak nota struk thermal kasir.',
         steps: [
           'Tekan tombol F9 atau klik tombol hijau "Bayar Sekarang" di bawah keranjang belanja.',
-          'Pilih metode pembayaran yang digunakan pembeli: Tunai (Cash), QRIS Dinamis/Statis, Kartu Debit/Kredit EDC, Transfer Bank, atau Saldo Poin.',
+          'Pilih metode pembayaran yang digunakan pembeli: Tunai (Cash), QRIS EDC BRI (diproses via mesin EDC BRI), atau Kartu EDC BRI (Debit/Kredit).',
           'Jika Tunai: Masukkan nominal uang yang diterima (atau pilih pecahan cepat Rp 50.000, Rp 100.000). Sistem otomatis menghitung jumlah kembalian secara presisi.',
-          'Klik "Selesaikan Pembayaran". Dialog struk kasir akan terbuka.',
+          'Jika QRIS / EDC: Input nominal pada mesin EDC BRI toko, setelah struk EDC approved, masukkan No. Ref / RRN EDC untuk mempermudah audit rekonsiliasi.',
+          'Klik "Selesaikan Pembayaran". Dialog struk kasir akan terbuka dan transaksi otomatis masuk ke Laporan Pembayaran & Settlement EDC BRI.',
           'Klik "Cetak Struk" untuk mencetak nota ke printer thermal 58mm atau 80mm.',
         ],
         tips: [
@@ -626,11 +646,207 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         ],
         shortcuts: ['Alt + D: Pusat Desktop', 'F11: Layar Penuh Kiosk'],
       },
+      {
+        id: 'kamera-android-http',
+        title: 'Penggunaan Kamera Scanner di HP Android (Solusi Koneksi HTTP / Insecure Context)',
+        summary: 'Mengatasi batasan Google Chrome Android saat membuka kasir melalui alamat IP lokal (http://192.168.x.x:3000) agar kamera dapat memindai barcode barang.',
+        steps: [
+          'Pahami mengapa izin kamera tidak muncul: Google Chrome di Android secara ketat menonaktifkan fitur live video stream & menyembunyikan popup izin kamera pada koneksi HTTP lokal non-HTTPS demi keamanan privasi.',
+          'Solusi 1 (Paling Cepat & Instan Tanpa Setting): Di jendela scanner kasir, tekan tombol "Foto Barcode (Kamera HP Android)". Sistem akan langsung membuka kamera bawaan smartphone Anda tanpa butuh izin browser, dan begitu difoto barcode otomatis terbaca serta masuk ke keranjang belanja!',
+          'Solusi 2 (Untuk Live Video Streaming): Buka tab baru di Chrome HP Anda -> ketik chrome://flags/#unsafely-treat-insecure-origin-as-secure -> masukkan alamat URL kasir (contoh: http://192.168.1.15:3000) -> ubah status jadi "Enabled" -> tekan tombol "Relaunch" di pojok kanan bawah.',
+          'Solusi 3 (Akses Cloud HTTPS): Buka aplikasi melalui Link Cloud HTTPS resmi toko di mana protokol keamanan HTTPS sudah aktif sehingga kamera langsung berjalan lancar tanpa konfigurasi apapun.',
+        ],
+        tips: [
+          'Jarak foto ideal untuk barcode adalah 10–15 cm dari kemasan barang agar garis kode batang tajam dan tidak buram.',
+          'Format gambar kamera beresolusi tinggi otomatis dioptimalkan oleh sistem kasir untuk deteksi secepat kilat.',
+        ],
+        shortcuts: ['F3: Scanner Kamera Barcode'],
+      },
+      {
+        id: 'autoupdate-github',
+        title: 'Auto-Update GitHub, Verifikasi File & Pembersihan Sistem',
+        summary: 'Memperbarui sistem kasir dari repositori GitHub resmi https://github.com/fyercz/Project-POS-Retailer.git, memverifikasi integritas file, dan membersihkan file sampah tanpa risiko kehilangan data transaksi toko.',
+        steps: [
+          'Buka menu profil di header atas -> klik "Auto-Update GitHub Resmi" atau "Verifikasi File & Pembersihan Sistem" (atau tekan Alt + D).',
+          'Pilih tab "Auto-Update GitHub" untuk melihat repositori resmi (https://github.com/fyercz/Project-POS-Retailer.git), status commit lokal, dan commit terbaru di GitHub.',
+          'Klik tombol "Tarik Update Sekarang" untuk menjalankan pembaruan 1-klik via server kasir. Sistem otomatis membersihkan file sementara, menarik file via "git pull origin main", dan mengompilasi ulang kode ("npm run build").',
+          'Pilih tab "Verifikasi File Sistem" untuk memindai keutuhan 28 file penting aplikasi (Core Runtime, Source Code, Skrip Desktop, PWA, dan Database).',
+          'Pilih tab "Bersihkan File Sampah" untuk memindai dan menghapus berkas residu sementara (*.tmp, *.bak, *.log, cache Vite) agar penyimpanan tetap rapi.',
+          'Atau unduh skrip "update.bat" (untuk Windows) atau jalankan "./update.sh" (untuk Linux/macOS) yang otomatis terkonfigurasi ke repositori resmi.',
+        ],
+        tips: [
+          'Jaminan Keamanan Data: Database toko (transaksi, riwayat kasir, produk, stok opname, dan pengaturan) tersimpan secara independen di IndexedDB browser lokal, sehingga 100% aman dan tidak akan hilang saat file kode ditarik dari GitHub atau saat pembersihan file dijalankan.',
+          'Repositori Resmi: https://github.com/fyercz/Project-POS-Retailer.git (branch main).',
+        ],
+        shortcuts: ['Alt + D: Pusat Desktop & Pemeliharaan Sistem'],
+      },
+    ],
+  },
+  {
+    id: 'offline-cloud-sync',
+    title: '12. Mode Offline-First, PWA & Sinkronisasi Awan (Cloud Sync)',
+    iconName: 'Cloud',
+    badge: 'Offline-First & PWA',
+    description: 'Panduan operasional kasir tanpa koneksi internet, arsitektur Progressive Web App (PWA), antrean transaksi lokal (IndexedDB), dan sinkronisasi otomatis ke cloud server.',
+    roles: ['Kasir', 'Supervisor', 'Manager', 'Owner'],
+    topics: [
+      {
+        id: 'operasional-offline-kasir',
+        title: 'Operasional Kasir Tanpa Internet (Offline-First POS)',
+        summary: 'Kasir tetap dapat melayani penjualan dengan kecepatan penuh meskipun koneksi WiFi terputus atau internet mati total.',
+        steps: [
+          'Jika koneksi internet toko terputus, sistem akan otomatis menampilkan lencana status "Offline (Tersimpan Lokal)" di bilah atas header.',
+          'Kasir tetap dapat mencari produk, memindai barcode, menambahkan varian produk, menerapkan diskon, dan menyelesaikan pembayaran seperti biasa.',
+          'Setiap nota transaksi yang diselesaikan saat offline akan otomatis disimpan secara aman ke database lokal browser (IndexedDB) dan struk thermal tetap tercetak.',
+          'Nomor antrean transaksi tertunda (Pending Sync) akan tertera di lencana cloud header.',
+        ],
+        tips: [
+          'Jangan membersihkan data riwayat browser (Clear Browsing Data) sebelum seluruh transaksi berstatus "Tersinkron".',
+          'Anda dapat menekan lencana status Cloud di header kapan saja untuk memeriksa daftar transaksi yang belum tersinkron.',
+        ],
+      },
+      {
+        id: 'mekanisme-background-sync',
+        title: 'Mekanisme Sinkronisasi Otomatis & Manual (Cloud Sync)',
+        summary: 'Cara kerja pengiriman transaksi tertunda ke server pusat saat internet kembali terhubung.',
+        steps: [
+          'Saat perangkat kasir kembali mendapatkan koneksi internet, sistem secara cerdas menjalankan "Background Sync" otomatis di latar belakang tanpa mengganggu kasir yang sedang melayani antrean.',
+          'Data transaksi yang ada di antrean lokal diunggah dan diverifikasi satu per satu ke server cloud toko.',
+          'Setelah seluruh antrean terverifikasi, status lencana akan berubah menjadi hijau ("Cloud Aktif & Tersinkron").',
+          'Untuk memicu sinkronisasi secara manual, klik ikon Cloud di header -> klik tombol "Sinkronkan Sekarang" pada jendela modal status.',
+        ],
+        tips: [
+          'Tersedia tombol "Simulasi Mode Offline" di modal sinkronisasi untuk melatih staf kasir baru menghadapi kondisi tanpa internet.',
+        ],
+      },
+      {
+        id: 'pencocokan-database-online',
+        title: 'Pencocokan Barcode Global Online (AI Product Enrichment)',
+        summary: 'Mendeteksi informasi produk baru secara otomatis dari database global internet hanya dengan memindai kode barcode.',
+        steps: [
+          'Saat mendaftarkan barang baru di menu Inventaris, klik tombol "Cari di Database Online" (ikon bola dunia).',
+          'Tembak barcode kemasan produk atau ketik nomor barcode 8-13 digit (EAN/UPC).',
+          'Sistem AI akan mencari informasi produk dari basis data produk retail global terpercaya.',
+          'Nama resmi produk, merek pabrik, kategori barang, satuan kemasan, dan rekomendasi harga pasar otomatis terisi ke formulir.',
+          'Klik "Gunakan Data Ini" untuk menghemat waktu input kasir.',
+        ],
+      },
+      {
+        id: 'arsitektur-pwa-cache',
+        title: 'Keandalan Cache PWA & Pembaruan Sistem Otomatis',
+        summary: 'Bagaimana teknologi Service Worker menjamin aplikasi kasir selalu cepat dimuat dan terhindar dari kendala layar kosong (self-healing cache).',
+        steps: [
+          'Aplikasi kasir ini berjalan dengan Service Worker terstandarisasi yang menerapkan strategi "Network-First" cerdas.',
+          'Seluruh antarmuka kasir dicadangkan ke cache lokal perangkat sehingga aplikasi dapat dibuka seketika bahkan saat tidak ada sinyal internet sama sekali.',
+          'Saat ada rilis fitur baru dari tim pengembang, sistem otomatis memperbarui aset tanpa menghapus data transaksi lokal kasir.',
+          'Jika aplikasi dijalankan di dalam portal manajemen atau iframe, sistem secara mandiri membersihkan cache usang untuk menjamin data selalu mutakhir.',
+        ],
+      },
     ],
   },
 ];
 
 export const APP_CHANGELOG: AppReleaseUpdate[] = [
+  {
+    version: 'v2.6.5',
+    releaseDate: '23 September 2026',
+    title: 'Prompt Tambah Produk Barcode Belum Terdaftar dengan Otoritas Supervisor / Owner',
+    highlight: 'Penanganan cerdas barcode fisik yang belum ada di database saat scan kasir: prompt pendaftaran produk instan dengan otorisasi PIN Supervisor/Owner, pre-fill barcode otomatis, auto-enrichment AI online, dan produk langsung masuk ke keranjang belanja kasir.',
+    changes: [
+      {
+        type: 'new',
+        text: 'Pendeteksian otomatis barcode tidak terdaftar saat kasir melakukan scan via kamera HP (F3), scanner barcode gun fisik (USB/Bluetooth), maupun pencarian katalog produk.',
+      },
+      {
+        type: 'security',
+        text: 'Sistem Role-Based Authorization (RBAC): Kasir frontliner tidak dapat mendaftarkan produk baru secara mandiri tanpa memasukkan PIN otorisasi pejabat yang berada di atas kasir (Supervisor, Kepala Toko, atau Owner).',
+      },
+      {
+        type: 'improved',
+        text: 'Bagi pengguna yang sudah login dengan hak akses Supervisor / Owner / Inventory, dialog langsung memberikan persetujuan 1-klik untuk mendaftarkan barang tanpa input PIN ulang.',
+      },
+      {
+        type: 'new',
+        text: 'Pre-fill barcode instan ke formulir produk lengkap dengan pencocokan database retail online dan penambahan otomatis ke keranjang aktif kasir seketika setelah formulir disimpan.',
+      },
+    ],
+  },
+  {
+    version: 'v2.6.4',
+    releaseDate: '23 September 2026',
+    title: 'Pusat Auto-Update Terintegrasi & Penarikan Berkas Kode Otomatis dari GitHub',
+    highlight: 'Dukungan penuh auto-update kode kasir langsung dari GitHub via tab interaktif di modal aplikasi desktop, skrip update.bat otomatis 1-klik untuk Windows, script update.sh, dan jaminan integritas data kasir 100% aman di IndexedDB.',
+    changes: [
+      {
+        type: 'new',
+        text: 'Tab baru "Update dari GitHub" di Pusat Aplikasi Desktop (Alt + D) lengkap dengan pendeteksi otomatis status branch, commit terakhir, dan remote origin URL.',
+      },
+      {
+        type: 'new',
+        text: 'Fitur pembaruan 1-klik via API server lokal (/api/system/git-pull) yang otomatis menarik perubahan kode terbaru dan mengompilasi ulang paket aplikasi.',
+      },
+      {
+        type: 'new',
+        text: 'Generator berkas skrip otomatis "update.bat" untuk pembaruan cepat dari luar browser di sistem operasi Windows.',
+      },
+      {
+        type: 'security',
+        text: 'Jaminan isolasi data: Database riwayat transaksi, katalog produk, stok, dan pengaturan toko tersimpan secara permanen di IndexedDB browser sehingga tidak akan hilang atau tereset saat update kode berlangsung.',
+      },
+    ],
+  },
+  {
+    version: 'v2.6.3',
+    releaseDate: '22 September 2026',
+    title: 'Solusi Kamera Browser Android: Pengambilan Foto Barcode Native & Bypass Insecure Context HTTP',
+    highlight: 'Dukungan penuh pemindaian barcode kamera di browser HP Android pada koneksi Wi-Fi lokal (HTTP), panduan bypass chrome://flags 1-klik, dan integrasi penangkapan barcode kamera asli tanpa perlu HTTPS.',
+    changes: [
+      {
+        type: 'fix',
+        text: 'Mengatasi kendala Google Chrome Android yang mematikan prompt izin kamera pada alamat IP lokal HTTP (http://192.168.x.x:3000) dengan menyediakan pemindai foto kamera native (HTML5 Environment Capture).',
+      },
+      {
+        type: 'new',
+        text: 'Decoder barcode foto multi-engine dengan akselerasi perangkat keras Web BarcodeDetector API dan auto-downscale canvas untuk foto kamera HP beresolusi tinggi (12–50MP).',
+      },
+      {
+        type: 'new',
+        text: 'Panduan interaktif aktivasi streaming video di Chrome Android melalui bendera "chrome://flags/#unsafely-treat-insecure-origin-as-secure" lengkap dengan tombol salin URL 1-klik.',
+      },
+      {
+        type: 'improved',
+        text: 'Penambahan topik khusus Bab 11 Buku Panduan dan FAQ seputar solusi kamera HP Android pada jaringan lokal kasir.',
+      },
+    ],
+  },
+  {
+    version: 'v2.6.2',
+    releaseDate: '22 September 2026',
+    title: 'Pembaruan Buku Panduan: Mode Offline-First PWA, Cloud Sync & Stabilitas Cache',
+    highlight: 'Penambahan Bab 12 dokumentasi resmi Mode Offline-First PWA & Sinkronisasi Awan, panduan pencocokan barcode online global, optimalisasi Service Worker self-healing, serta peningkatan kompatibilitas browser.',
+    changes: [
+      {
+        type: 'new',
+        text: 'Bab 12 Buku Panduan: "Mode Offline-First, PWA & Sinkronisasi Awan (Cloud Sync)" dengan 4 topik panduan operasional kasir mandiri.',
+      },
+      {
+        type: 'new',
+        text: 'Panduan lengkap penanganan kasir saat internet padam, antrean transaksi tertunda (IndexedDB), dan cara kerja Background Sync otomatis.',
+      },
+      {
+        type: 'new',
+        text: 'Panduan integrasi pencocokan database barcode global (AI Product Enrichment) untuk percepatan pendaftaran produk baru.',
+      },
+      {
+        type: 'improved',
+        text: 'Penyempurnaan arsitektur Service Worker dengan strategi caching Network-First dan pemulihan otomatis (self-healing cache) pada lingkungan pratinjau.',
+      },
+      {
+        type: 'fix',
+        text: 'Perlindungan runtime pada API window.matchMedia dan scrollIntoView untuk keandalan maksimal di seluruh jenis peramban dan mode layar.',
+      },
+    ],
+  },
   {
     version: 'v2.6.1',
     releaseDate: '16 September 2026',
@@ -766,5 +982,30 @@ export const USER_FAQS: UserFAQ[] = [
     category: 'Keamanan Data',
     question: 'Apakah data kasir aman jika komputer utama mengalami kerusakan mendadak?',
     answer: 'Data Anda aman asalkan rutin mengunduh berkas cadangan (Backup JSON) ke Flashdisk atau cloud melalui menu Backup & Restore (F9). Selain itu, sistem menyediakan fitur Titik Pemulihan (Restore Point) lokal yang dapat dipulihkan dengan 1 klik jika ada kesalahan entri data.',
+  },
+  {
+    category: 'Offline & Sinkronisasi',
+    question: 'Bagaimana kasir mengetahui jika sistem sedang dalam mode offline?',
+    answer: 'Perhatikan indikator status Cloud di pojok kanan atas bilah header. Jika berwarna oranye dengan ikon awan bergaris atau bertuliskan "Offline", sistem beroperasi penuh secara lokal. Jika berwarna hijau dengan centang ("Cloud Aktif"), koneksi internet tersambung dan data telah terverifikasi aman di cloud.',
+  },
+  {
+    category: 'Offline & Sinkronisasi',
+    question: 'Apakah transaksi yang dilakukan saat offline bisa hilang jika komputer dimatikan sebelum sinkronisasi?',
+    answer: 'Tidak hilang. Seluruh transaksi kasir disimpan di IndexedDB penyimpanan permanen peramban lokal. Saat komputer dinyalakan kembali dan terhubung ke internet, transaksi tersebut akan tetap berada di antrean dan langsung disinkronkan ke server secara otomatis.',
+  },
+  {
+    category: 'Hardware & Kamera Android',
+    question: 'Mengapa kamera browser di HP Android tidak bisa, muncul koneksi tidak aman (HTTP), dan prompt "Izinkan Kamera" tidak keluar?',
+    answer: 'Google Chrome di sistem Android secara ketat menonaktifkan prompt izin kamera pada alamat IP HTTP lokal (misal http://192.168.x.x:3000) demi keamanan privasi. Solusi tercepat tanpa pengaturan apapun: Tekan tombol "Foto Barcode (Kamera HP Android)" di jendela scanner kasir — kamera bawaan HP Anda akan langsung aktif untuk menjepret barcode dan produk otomatis masuk keranjang belanja. Jika Anda ingin video streaming menyala terus-menerus tanpa menekan tombol foto, buka tab baru di Chrome HP Anda, ketik "chrome://flags/#unsafely-treat-insecure-origin-as-secure", masukkan URL IP kasir, ubah status menjadi "Enabled", lalu ketuk "Relaunch". Alternatif lain, buka aplikasi melalui tautan Cloud HTTPS resmi.',
+  },
+  {
+    category: 'Pembaruan & GitHub',
+    question: 'Apakah aplikasi kasir bisa melakukan auto-update dengan menarik file dari GitHub tanpa menghapus data toko?',
+    answer: 'Bisa, 100%! Aplikasi kasir Ulilmart POS telah dilengkapi fitur auto-update terintegrasi dari GitHub. Anda cukup membuka menu "Pusat Alat" -> "Aplikasi Desktop & Integrasi Hardware" (Alt + D) -> tab "Update dari GitHub", lalu klik tombol "Tarik Update Sekarang". Atau di komputer Windows, Anda cukup mengklik ganda file "update.bat". Sistem akan otomatis menjalankan git pull dan mengompilasi kode terbaru. Seluruh riwayat transaksi kasir, katalog produk, stok, dan pengaturan toko tersimpan secara terpisah di IndexedDB browser sehingga dijamin AMAN dan TIDAK AKAN HILANG setelah update.',
+  },
+  {
+    category: 'Inventaris & Barcode',
+    question: 'Bagaimana cara kerja pencocokan barcode online untuk produk baru?',
+    answer: 'Buka menu Tambah Produk di Inventaris, lalu klik tombol "Cari di Database Online". Tembak barcode barang dengan scanner atau kamera. Sistem secara otomatis mencari data produk global untuk mengisi nama, kategori, merek, dan perkiraan harga jual tanpa perlu mengetik manual.',
   },
 ];

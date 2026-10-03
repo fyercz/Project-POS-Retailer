@@ -1,7 +1,76 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="100" fill="#0f172a" />
-  <circle cx="256" cy="256" r="180" fill="#10b981" fill-opacity="0.15" />
-  <path d="M160 160h192v192H160z" fill="none" />
-  <path d="M180 160v120c0 44 36 80 80 80s80-36 80-80V160" stroke="#10b981" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-  <circle cx="256" cy="180" r="16" fill="#34d399" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="iconBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="ulilLetterGradIcon" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4A93C6" />
+      <stop offset="47%" stop-color="#2E71A3" />
+      <stop offset="50%" stop-color="#1E5782" />
+      <stop offset="100%" stop-color="#164366" />
+    </linearGradient>
+    <linearGradient id="iconGloss" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Container with soft rounded corners -->
+  <rect width="512" height="512" rx="112" fill="url(#iconBgGrad)" />
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="#334155" stroke-width="4" stroke-opacity="0.6" />
+
+  <!-- ULIL Group Centered -->
+  <g transform="translate(68, 120) scale(0.95)">
+    <!-- Letters ULIL -->
+    <g fill="url(#ulilLetterGradIcon)">
+      <!-- U with notch -->
+      <path d="M 10 10 L 48 10 L 48 78 L 84 78 L 84 10 L 122 10 L 122 90 C 122 110, 106 124, 84 124 L 36 124 L 10 98 Z" />
+      <!-- L -->
+      <path d="M 134 10 L 172 10 L 172 86 L 220 86 L 220 124 L 134 124 Z" />
+      <!-- I -->
+      <path d="M 232 10 L 270 10 L 270 124 L 232 124 Z" />
+      <!-- L -->
+      <path d="M 282 10 L 320 10 L 320 86 L 368 86 L 368 124 L 282 124 Z" />
+    </g>
+
+    <!-- Gloss Sheen -->
+    <path d="M 10 10 L 122 10 L 122 60 C 100 52, 30 56, 10 60 Z
+             M 134 10 L 172 10 L 172 60 C 150 54, 134 57, 134 60 Z
+             M 232 10 L 270 10 L 270 60 C 250 54, 232 57, 232 60 Z
+             M 282 10 L 320 10 L 320 60 C 300 54, 282 57, 282 60 Z"
+          fill="url(#iconGloss)" />
+
+    <!-- Script 'Mart' -->
+    <g transform="translate(370, 116) rotate(-4)">
+      <text x="0" y="0"
+            font-family="'Brush Script MT', 'Dancing Script', 'Segoe Script', cursive, sans-serif"
+            font-size="78"
+            font-weight="bold"
+            font-style="italic"
+            fill="#38BDF8"
+            letter-spacing="2">Mart</text>
+    </g>
+
+    <!-- Banner [Lengkap] [& Hemat] -->
+    <g transform="translate(10, 142)">
+      <rect x="0" y="0" width="186" height="42" rx="4" fill="#205B85" />
+      <text x="93" y="29"
+            text-anchor="middle"
+            font-family="'Century Gothic', 'Montserrat', sans-serif"
+            font-size="24"
+            font-weight="800"
+            fill="#FFFFFF"
+            letter-spacing="1">Lengkap</text>
+
+      <rect x="186" y="0" width="194" height="42" rx="4" stroke="#38BDF8" stroke-width="3" fill="#0F172A" />
+      <text x="283" y="29"
+            text-anchor="middle"
+            font-family="'Century Gothic', 'Montserrat', sans-serif"
+            font-size="24"
+            font-weight="800"
+            fill="#38BDF8"
+            letter-spacing="1">&amp; Hemat</text>
+    </g>
+  </g>
 </svg>

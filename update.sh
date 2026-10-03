@@ -2,31 +2,74 @@
 set -e
 
 # ==============================================================================
-# Point of Sales - Auto-Update Script (Linux / macOS)
+# Ulilmart POS - Auto-Update, Verification & System Cleaner (Linux / macOS)
+# Menarik pembaruan kode terbaru dari repositori GitHub resmi,
+# membersihkan file yang tidak perlu, dan mengompilasi ulang aplikasi kasir.
 # ==============================================================================
 
+REPO_URL="https://github.com/fyercz/Project-POS-Retailer.git"
+
 echo ""
 echo "=========================================================="
-echo "   Point of Sales - Auto-Update Wizard                    "
+echo "   🏪 Ulilmart POS - Auto-Update & Pemeliharaan Sistem     "
+echo "=========================================================="
+echo "  Repositori Resmi : $REPO_URL"
+echo ""
+echo "  Pembaruan ini akan menarik file kode terbaru dari GitHub."
+echo "  [CATATAN PENTING KEAMANAN DATA]:"
+echo "  - Seluruh data transaksi, riwayat kasir, produk, dan stok"
+echo "    tersimpan di database lokal browser (IndexedDB) sehingga"
+echo "    100% AMAN dan TIDAK AKAN HILANG setelah update!"
+echo ""
 echo "=========================================================="
 echo ""
 
-# 1. Pull latest code if Git repository exists
-if [ -d .git ] && command -v git >/dev/null 2>&1; then
-    echo "[1/3] Menarik pembaruan kode terbaru dari Git (git pull)..."
-    git pull || echo "⚠️  Peringatan: Gagal melakukan git pull, melanjutkan dengan kode lokal."
+# 1. Bersihkan file yang tidak perlu pada sistem (logs, temp, cache, OS junk)
+echo "[1/4] Membersihkan file-file yang tidak perlu pada sistem..."
+find . -maxdepth 4 -type f \( \
+    -name "*.log" -o \
+    -name "*.tmp" -o \
+    -name "*.temp" -o \
+    -name "*.bak" -o \
+    -name "*.swp" -o \
+    -name ".DS_Store" -o \
+    -name "Thumbs.db" -o \
+    -name "*~" \
+\) -delete 2>/dev/null || true
+rm -rf node_modules/.vite 2>/dev/null || true
+echo "      [OK] Pembersihan file sementara dan cache selesai."
+echo ""
+
+# 2. Hubungkan ke Git dan tarik kode terbaru dari repositori resmi
+echo "[2/4] Menghubungkan ke GitHub ($REPO_URL)..."
+if command -v git >/dev/null 2>&1; then
+    if [ ! -d .git ]; then
+        echo "      Menginisialisasi repositori Git lokal..."
+        git init
+        git remote add origin "$REPO_URL"
+    else
+        git remote set-url origin "$REPO_URL" 2>/dev/null || git remote add origin "$REPO_URL" 2>/dev/null
+    fi
+
+    echo "      Menarik kode terbaru (git pull origin main)..."
+    git pull origin main || git pull origin master || git pull || echo "⚠️ Peringatan: Gagal pull, melanjutkan dengan kode lokal."
+    
+    echo ""
+    echo "[INFO] Versi Commit Terbaru:"
+    git log -1 --pretty=format:"  Commit : %h%n  Pesan  : %s%n  Waktu  : %cd%n" 2>/dev/null || true
+    echo ""
 else
-    echo "[1/3] Direktori Git tidak terdeteksi atau Git tidak terinstall. Melewati langkah git pull."
+    echo "⚠️ Git belum terpasang di sistem ini. Melewati penarikan kode Git."
 fi
 
-# 2. Update dependencies
+# 3. Update dependencies
 echo ""
-echo "[2/3] Memperbarui package dependencies (npm install)..."
+echo "[3/4] Memperbarui package dependencies (npm install)..."
 npm install
 
-# 3. Rebuild production bundle
+# 4. Rebuild production bundle
 echo ""
-echo "[3/3] Mengompilasi ulang aplikasi (npm run build)..."
+echo "[4/4] Mengompilasi ulang aplikasi (npm run build)..."
 npm run build
 
 # Ensure scripts remain executable
@@ -34,9 +77,10 @@ chmod +x *.sh 2>/dev/null || true
 
 echo ""
 echo "=========================================================="
-echo "🎉 Aplikasi Berhasil Diperbarui ke Versi Terbaru!"
+echo "🎉 [SUKSES] Ulilmart POS Berhasil Diperbarui & Dibersihkan!"
 echo "=========================================================="
 echo ""
-echo "Untuk menjalankan aplikasi kembali:"
-echo "  ▶️  ./run.sh"
+echo "Untuk menjalankan kasir kembali:"
+echo "  ▶️  ./desktop.sh  (Mode Desktop)"
+echo "  ▶️  ./run.sh      (Mode Server)"
 echo ""

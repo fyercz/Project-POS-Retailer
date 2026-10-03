@@ -39,7 +39,7 @@ const CATEGORY_PRESETS = [
   'Snack, Biskuit & Permen',
   'Perawatan Tubuh & Kosmetik',
   'Kebersihan Rumah & Deterjen',
-  'Roti & Produk Segar / Dairy',
+  'Frozen Food & Produk Dingin',
   'Distributor Grosir Campuran (General)',
 ];
 

@@ -2,17 +2,20 @@
 set -e
 
 # ==============================================================================
-# Point of Sales - Auto-Install Script (Linux / macOS)
+# Ulilmart POS - Auto-Install & Repository Setup Script (Linux / macOS)
 # ==============================================================================
+
+REPO_URL="https://github.com/fyercz/Project-POS-Retailer.git"
 
 echo ""
 echo "=========================================================="
-echo "   Point of Sales - Installation & Setup Wizard           "
+echo "   🏪 Ulilmart POS - Installation & Setup Wizard           "
 echo "=========================================================="
+echo "  Repositori Resmi : $REPO_URL"
 echo ""
 
 # 1. Check Node.js installation
-echo "[1/5] Memeriksa instalasi Node.js & npm..."
+echo "[1/6] Memeriksa instalasi Node.js & npm..."
 if ! command -v node >/dev/null 2>&1; then
     echo "❌ Error: Node.js belum terinstall pada sistem ini."
     echo "Silakan install Node.js (versi 18 ke atas) dari: https://nodejs.org/"
@@ -29,14 +32,29 @@ fi
 NPM_VERSION=$(npm -v)
 echo "✅ npm terdeteksi: $NPM_VERSION"
 
-# 2. Check & create .env configuration
+# 2. Check Git & Configure Official Repository
 echo ""
-echo "[2/5] Memeriksa file konfigurasi environment (.env)..."
+echo "[2/6] Memeriksa Git & repositori GitHub..."
+if command -v git >/dev/null 2>&1; then
+    if [ ! -d .git ]; then
+        echo "ℹ️  Menginisialisasi repositori Git lokal..."
+        git init
+        git remote add origin "$REPO_URL"
+    else
+        git remote set-url origin "$REPO_URL" 2>/dev/null || git remote add origin "$REPO_URL" 2>/dev/null
+    fi
+    echo "✅ Repositori terhubung ke: $REPO_URL"
+else
+    echo "ℹ️  Git belum terpasang. Aplikasi tetap dapat beroperasi secara lokal."
+fi
+
+# 3. Check & create .env configuration
+echo ""
+echo "[3/6] Memeriksa file konfigurasi environment (.env)..."
 if [ ! -f .env ]; then
     if [ -f .env.example ]; then
         cp .env.example .env
         echo "✅ Berhasil membuat file .env dari .env.example."
-        echo "ℹ️  Anda dapat mengisi GEMINI_API_KEY di file .env jika ingin mengaktifkan fitur AI Copilot."
     else
         touch .env
         echo "GEMINI_API_KEY=" >> .env
@@ -46,19 +64,19 @@ else
     echo "✅ File .env sudah ada."
 fi
 
-# 3. Install npm dependencies
+# 4. Install npm dependencies
 echo ""
-echo "[3/5] Menginstal seluruh package dependencies (npm install)..."
+echo "[4/6] Menginstal seluruh package dependencies (npm install)..."
 npm install
 
-# 4. Build application
+# 5. Build application
 echo ""
-echo "[4/5] Mengompilasi aplikasi untuk mode produksi (npm run build)..."
+echo "[5/6] Mengompilasi aplikasi untuk mode produksi (npm run build)..."
 npm run build
 
-# 5. Make shell scripts executable
+# 6. Make shell scripts executable
 echo ""
-echo "[5/5] Memberikan hak akses eksekusi script (*.sh)..."
+echo "[6/6] Memberikan hak akses eksekusi script (*.sh)..."
 chmod +x *.sh 2>/dev/null || true
 
 echo ""
@@ -67,8 +85,9 @@ echo "🎉 Instalasi Selesai dengan Sukses!"
 echo "=========================================================="
 echo ""
 echo "Cara menjalankan aplikasi:"
-echo "  ▶️  Mode Produksi (Rekomendasi Kasir) : ./run.sh"
-echo "  ▶️  Mode Pengembang (Development)      : ./run.sh --dev"
+echo "  ▶️  Mode Desktop Kasir : ./desktop.sh"
+echo "  ▶️  Mode Server Kasir  : ./run.sh"
+echo "  ▶️  Auto-Update GitHub : ./update.sh"
 echo ""
-echo "Atau buka langsung di browser: http://localhost:3000"
+echo "URL Akses Kasir: http://localhost:3000"
 echo ""

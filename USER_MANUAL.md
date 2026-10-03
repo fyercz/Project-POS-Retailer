@@ -1,5 +1,5 @@
 # 📖 Buku Panduan Pengguna & Dokumentasi Fitur Aplikasi POS
-**Versi Sistem:** v2.5.0  
+**Versi Sistem:** v2.6.5  
 **Tanggal Pembaruan:** September 2026  
 **Aplikasi:** Ulilmart Point of Sales (POS)
 
@@ -25,7 +25,8 @@ Ulilmart POS adalah sistem kasir ritel modern dan toko kelontong/minimarket yang
 
 * **Frontend:** React 18, TypeScript, Tailwind CSS, Lucide Icons.
 * **Backend:** Node.js Express Server (`server.ts`) port 3000.
-* **Penyimpanan:** IndexedDB Client Storage (beroperasi 100% tanpa internet) dengan sinkronisasi cadangan JSON.
+* **Penyimpanan & Database:** Basis Data Relasional Sejati SQLite WAL Mode (`data/pos-master.sqlite`) di Server Backend Pusat dengan jaminan transaksi ACID & Write-Ahead Logging; serta IndexedDB Client Storage di browser kasir untuk operasi offline tanpa henti.
+* **Sinkronisasi Otomatis Berkala:** Scheduler background sync periodik (default tiap 15 detik, dapat diatur 10s hingga 5m) yang otomatis mendorong transaksi kasir dan memeriksa status server pusat.
 * **Kecerdasan Buatan:** Google Gemini AI untuk asisten toko, OCR faktur belanja distributor, dan hitung stok rak visual.
 
 ---
@@ -50,12 +51,23 @@ Jika pelanggan lupa mengambil barang tambahan di lorong toko:
 1. Tekan tombol **`F9`** atau klik tombol hijau **"Bayar Sekarang"**.
 2. Pilih metode pembayaran:
    * **Tunai (Cash):** Masukkan uang pelanggan. Sistem otomatis menghitung kembalian uang pas.
-   * **QRIS:** Tampilkan kode QR dinamis/statis untuk dipindai oleh dompet digital pembeli (GoPay, OVO, Dana, BCA, dll.).
-   * **Kartu Debit / Kredit:** Masukkan nomor referensi mesin EDC.
-   * **Saldo Member:** Potong saldo deposit pelanggan terdaftar.
+   * **QRIS EDC BRI:** Pembayaran QRIS diproses langsung via mesin EDC BRI toko (tanpa gateway online eksternal). Kasir memilih menu QRIS pada mesin EDC BRI, pembeli scan QRIS di layar/struk EDC BRI (BRImo, BCA, GoPay, OVO, Dana, ShopeePay, dll). Setelah struk EDC keluar approved, kasir dapat memasukkan No. Referensi / RRN EDC untuk rekonsiliasi settlement.
+   * **Kartu EDC BRI (Debit / Kredit):** Pembayaran kartu diproses langsung via mesin EDC BRI toko dengan alur yang sama seperti QRIS (Dip Chip, Gesek Swipe, atau Tap Contactless), nasabah memasukkan 6 digit PIN kartu pada mesin EDC BRI, dan kasir mencatat No. Approval / RRN EDC serta batch struk untuk rekonsiliasi settlement.
 3. Klik **"Selesaikan Pembayaran"**.
-4. Struk thermal otomatis disiapkan (ukuran 58mm atau 80mm).
-5. Klik **"Cetak Struk"** atau gunakan mode cetak senyap *(Silent Direct Print)*.
+4. Transaksi otomatis dicatat ke modul **Laporan Pembayaran & Settlement EDC BRI** untuk memudahkan pencocokan struk settlement fisik harian saat tutup toko/shift.
+5. Struk thermal otomatis disiapkan (ukuran 58mm atau 80mm) memuat rincian metode pembayaran dan kode referensi EDC.
+
+### 2.4 Pendaftaran Cepat Barcode Belum Terdaftar (Otoritas Supervisor / Owner)
+Jika saat transaksi kasir memindai barcode barang fisik yang belum ada di database:
+1. Sistem otomatis menampilkan jendela konfirmasi **"Barcode Belum Terdaftar"** dengan kode barcode yang baru saja dipindai.
+2. **Aturan Hak Akses (RBAC):**
+   * **Kasir Frontliner:** Membutuhkan PIN otorisasi Supervisor / Owner untuk mencegah pendaftaran barang atau pengubahan harga tanpa persetujuan. Masukkan 4-digit PIN pejabat yang berwenang (misal: Supervisor `7890` atau Owner `9999`).
+   * **Supervisor / Owner / Inventory:** Jika akun yang sedang login sudah memiliki hak akses di atas kasir, tombol **"Tambah Produk Sekarang"** langsung aktif tanpa perlu memasukkan PIN ulang.
+3. Klik **"Verifikasi & Tambah Produk"**.
+4. Formulir pendaftaran produk baru terbuka dengan kode barcode yang sudah terisi otomatis *(pre-filled)*.
+5. Anda dapat mengklik tombol **"Cari di Database Online"** untuk mengisi nama produk, merek, dan kategori secara otomatis dari internet, atau mengetik nama dan harga secara manual.
+6. Klik **"Simpan Produk"**.
+7. **Otomatis Masuk Keranjang:** Produk baru langsung tersimpan ke master data toko dan otomatis dimasukkan ke keranjang kasir tanpa perlu scan ulang.
 
 ---
 
@@ -186,7 +198,23 @@ Fitur ini memungkinkan toko mengoperasikan banyak kasir sekaligus (PC Kasir 1, L
 
 ## 10. Log Pembaruan & Fitur Baru (Changelog)
 
-### Versi v2.5.0 (September 2026) — *Versi Terkini*
+### Versi v2.6.5 (September 2026) — *Versi Terkini*
+* **Prompt Tambah Produk Barcode Belum Terdaftar:** Penanganan cerdas saat kasir memindai barcode barang yang belum terdaftar di database master toko.
+* **Otoritas Di Atas Kasir (Supervisor / Owner RBAC):** Kasir tidak dapat menambahkan barang sendiri; memerlukan persetujuan dan verifikasi 4-digit PIN Supervisor (`7890`) atau Owner (`9999`).
+* **Persetujuan Langsung 1-Klik:** Akun aktif Supervisor/Owner/Inventory dapat langsung menyetujui tanpa input PIN ulang.
+* **Otomatisasi Alur Transaksi Kasir:** Barcode otomatis terisi, dukungan pencarian info produk online (AI Enrichment), dan produk baru otomatis langsung masuk ke keranjang nota kasir yang sedang berjalan.
+
+### Versi v2.7.0 (September 2026)
+* **Sinkronisasi Otomatis Berkala ke Server Pusat:** Fitur otomatisasi background sync periodik (tiap 10s, 15s, 30s, 1m, 2m, atau 5m) yang otomatis mengunggah transaksi kasir dan memeriksa status server tanpa membebani interaksi kasir.
+* **Basis Data Relasional SQLite WAL Mode (`pos-master.sqlite`):** Backend Express ditenagai basis data relasional sejati SQLite dengan mode *Write-Ahead Logging* (WAL). Memberikan integritas transaksi ACID, multi-kasir non-blocking reads/writes, skema tabel terindeks (`products`, `transactions`, `transaction_items`, `customers`, `suppliers`, `held_orders`, `sync_audit_logs`), serta relasi foreign keys on delete cascade.
+* **Pemeriksaan Integritas Database Real-Time (`PRAGMA integrity_check`):** Pengelola toko dapat memverifikasi kesehatan basis data SQLite dan struktur B-tree secara langsung dari antarmuka kasir.
+* **Penyelarasan Kartu EDC BRI dengan QRIS & Penghapusan Transfer:** Metode pembayaran kartu debit/kredit kini seragam dengan SOP mesin EDC BRI fisik toko, dan opsi transfer bank yang tidak relevan telah dibersihkan.
+
+### Versi v2.6.4 (September 2026)
+* **Pusat Auto-Update Terintegrasi dari GitHub:** Tab baru di Pusat Desktop (`Alt + D`) untuk memantau commit dan melakukan `git pull` 1-klik.
+* **Skrip Pembaruan Windows (`update.bat`):** Pembaruan otomatis dari luar browser tanpa kehilangan data IndexedDB.
+
+### Versi v2.5.0 (September 2026)
 * **Server Database Multi-Client LAN (`Alt + N`):** Kemampuan mengoperasikan banyak kasir terhubung secara simultan (PC, laptop, tablet, HP) dalam 1 jaringan toko tanpa internet.
 * **Sinkronisasi Stok Real-Time:** Penjualan di kasir manapun otomatis memotong stok di Server Master dan kasir lainnya secara otomatis.
 * **Shared Order Parking (Parkir Pesanan Antar-Kasir):** Pemindahan antrean belanja pelanggan dari Kasir 1 ke Kasir 2 tanpa perlu scan ulang barang.
@@ -216,16 +244,48 @@ Fitur ini memungkinkan toko mengoperasikan banyak kasir sekaligus (PC Kasir 1, L
 
 ---
 
-## 10. Panduan Pembaruan Aplikasi (Auto-Update)
-Jika ada pembaruan versi baru dari pengembang:
-1. Tutup aplikasi kasir yang sedang berjalan.
-2. Jalankan perintah pembaruan otomatis:
-   ```bash
-   npm run app:update
-   ```
-   Atau jika menggunakan Windows:
-   ```bat
-   update.bat
-   ```
-3. Sistem akan secara otomatis mengunduh pembaruan, memeriksa paket dependensi, dan mengompilasi ulang aplikasi kasir.
-4. Buka kembali aplikasi dengan mengklik `desktop.bat` atau `run.bat`.
+## 10. Panduan Pembaruan Aplikasi, Verifikasi File & Pemeliharaan Sistem
+
+Aplikasi kasir Ulilmart POS mendukung pembaruan kode otomatis langsung dari repositori GitHub resmi, verifikasi integritas file sistem, dan pembersihan file sampah yang tidak perlu.
+
+### 📌 Repositori Resmi GitHub
+* **URL:** `https://github.com/fyercz/Project-POS-Retailer.git`
+* **Branch Utama:** `main`
+
+### 🛡️ Jaminan Keamanan Data Toko
+Seluruh database riwayat penjualan, transaksi kasir, katalog produk, stok opname, data supplier, dan pengaturan toko tersimpan secara permanen di **IndexedDB lokal browser**. Melakukan update kode dari GitHub, verifikasi file, atau pembersihan cache **100% AMAN dan TIDAK AKAN MENGHAPUS ATAU MERESET DATA TOKO**.
+
+### Metode 1: Pembaruan 1-Klik dari Dalam Aplikasi (UI)
+1. Buka menu pengguna di pojok kanan atas atau klik tombol Desktop (atau tekan pintasan keyboard **`Alt + D`**).
+2. Pilih tab **"Auto-Update GitHub"** (ikon cabang Git hijau).
+3. Status repositori resmi (`https://github.com/fyercz/Project-POS-Retailer.git`), commit lokal, dan commit terbaru di GitHub akan tampil secara otomatis.
+4. Klik tombol hijau **"Tarik Update Sekarang"**. Sistem akan otomatis membersihkan file sementara, menjalankan `git pull origin main`, dan mengompilasi ulang aplikasi (`npm run build`).
+
+### Metode 2: Verifikasi Integritas File Sistem
+1. Pada menu Pusat Aplikasi Desktop & Pemeliharaan Sistem, klik tab **"Verifikasi File Sistem"**.
+2. Sistem akan memindai seluruh 28 file kritis (Core Runtime, Source Code, Skrip Desktop, PWA, dan Basis Data).
+3. Anda dapat melihat file mana yang utuh, dimodifikasi secara lokal, atau hilang, beserta status kesehatan sistem (*Overall Health*).
+
+### Metode 3: Pembersihan File yang Tidak Perlu (System Cleanup)
+1. Pada menu pemeliharaan, buka tab **"Bersihkan File Sampah"**.
+2. Klik tombol **"Pindai Sampah"** untuk mendeteksi file residu seperti `.tmp`, `*.bak`, `*.log`, `Thumbs.db`, `.DS_Store`, dan cache Vite yang usang.
+3. Klik **"Bersihkan File Sekarang"** untuk menghapus file-file tidak perlu tersebut secara aman dan membebaskan ruang penyimpanan komputer kasir.
+
+### Metode 4: Menggunakan File Skrip Windows (`update.bat`)
+1. Klik ganda file **`update.bat`** di dalam folder aplikasi kasir Anda (atau unduh langsung dari tab Update di `Alt + D`).
+2. Skrip otomatis membersihkan file sampah, menghubungkan ke repositori resmi `https://github.com/fyercz/Project-POS-Retailer.git`, menarik kode terbaru, memperbarui paket dependensi, dan mengompilasi ulang aplikasi.
+3. Setelah selesai, tekan tombol `Y` untuk langsung menyalakan kembali aplikasi kasir desktop.
+
+### Metode 5: Perintah Terminal Manual
+Jika Anda lebih terbiasa dengan baris perintah (Command Prompt / PowerShell / Terminal Linux & Mac):
+```bash
+# Opsi A: Skrip terintegrasi launcher
+npm run app:update
+
+# Opsi B: Perintah manual Git & Build dari repositori resmi
+git remote set-url origin https://github.com/fyercz/Project-POS-Retailer.git
+git pull origin main && npm install && npm run build
+
+# Opsi C: Skrip shell Linux / macOS
+./update.sh
+```

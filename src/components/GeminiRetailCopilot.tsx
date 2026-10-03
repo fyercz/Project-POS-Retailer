@@ -3,6 +3,7 @@ import {
   Sparkles,
   X,
   TrendingUp,
+  TrendingDown,
   Package,
   ShoppingBag,
   Tag,
@@ -27,10 +28,22 @@ import {
   Building2,
   DollarSign,
   Boxes,
+  BarChart3,
+  Calendar,
+  CalendarDays,
+  Ban,
+  Scissors,
+  RotateCcw,
+  CheckCircle2,
+  SlidersHorizontal,
+  Eye,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { AIForecastItem, AIDailyInsights, AIPromoResult, AIPurchaseOrderPlan } from '../types';
+import { RestockSalesTrendChart } from './RestockSalesTrendChart';
 
 export const GeminiRetailCopilot: React.FC = () => {
   const {
@@ -41,6 +54,8 @@ export const GeminiRetailCopilot: React.FC = () => {
     cart,
     products,
     transactions,
+    salesReturns,
+    purchaseReturns,
     customers,
     settings,
     addToCart,
@@ -59,6 +74,15 @@ export const GeminiRetailCopilot: React.FC = () => {
   const [customPOQuantities, setCustomPOQuantities] = useState<Record<string, number>>({});
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [appliedToReceivingFeedback, setAppliedToReceivingFeedback] = useState(false);
+
+  // Target Restock Date & Business Policy State (Deadstock & Returns)
+  const [targetRestockDate, setTargetRestockDate] = useState<string>('');
+  const [deadstockPolicy, setDeadstockPolicy] = useState<'eliminate' | 'reduce' | 'none'>('eliminate');
+  const [returnPolicy, setReturnPolicy] = useState<'reduce' | 'eliminate' | 'none'>('reduce');
+  const [activeChartModalItem, setActiveChartModalItem] = useState<AIForecastItem | null>(null);
+  const [expandedChartKeys, setExpandedChartKeys] = useState<string[]>([]);
+  const [filterRestockCategory, setFilterRestockCategory] = useState<'all' | 'need_restock' | 'deadstock' | 'returns' | 'eliminated'>('all');
+  const [isAllChartsExpanded, setIsAllChartsExpanded] = useState(false);
 
   // Insights state
   const [insightsData, setInsightsData] = useState<AIDailyInsights | null>(null);
@@ -122,29 +146,46 @@ export const GeminiRetailCopilot: React.FC = () => {
   const prevTriggerRef = useRef(restockPlanTriggerCounter);
 
   // Fetch forecast data (Restock Plan & Purchase Order)
-  const handleFetchForecast = async () => {
+  const handleFetchForecast = async (
+    overrideTargetDate?: string,
+    overrideDeadstockRule?: 'eliminate' | 'reduce' | 'none',
+    overrideReturnRule?: 'reduce' | 'eliminate' | 'none'
+  ) => {
     setIsLoadingForecast(true);
     try {
+      const dateToUse = overrideTargetDate !== undefined ? overrideTargetDate : targetRestockDate;
+      const deadstockToUse = overrideDeadstockRule !== undefined ? overrideDeadstockRule : deadstockPolicy;
+      const returnToUse = overrideReturnRule !== undefined ? overrideReturnRule : returnPolicy;
+
       const res = await fetch('/api/ai/inventory-forecast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           products,
           recentTransactions: transactions,
+          salesReturns,
+          purchaseReturns,
           storeSettings: settings,
+          targetDate: dateToUse,
+          deadstockRule: deadstockToUse,
+          returnRule: returnToUse,
         }),
       });
       if (res.ok) {
         const data: AIPurchaseOrderPlan = await res.json();
         setForecastData(data);
         if (data && Array.isArray(data.forecasts)) {
-          const keys = data.forecasts.map((f) => f.productId || f.productName);
-          setSelectedPOProductIds(keys);
           const initialQtys: Record<string, number> = {};
+          const selectedKeys: string[] = [];
           data.forecasts.forEach((f) => {
             const key = f.productId || f.productName;
-            initialQtys[key] = Number(f.recommendedOrderQty) || 12;
+            const qty = Number(f.recommendedOrderQty) || 0;
+            initialQtys[key] = qty;
+            if (qty > 0) {
+              selectedKeys.push(key);
+            }
           });
+          setSelectedPOProductIds(selectedKeys);
           setCustomPOQuantities(initialQtys);
         }
       }
@@ -173,21 +214,187 @@ export const GeminiRetailCopilot: React.FC = () => {
     }
   };
 
-  // Adjust order quantity for a specific item
+  // Adjust order quantity for a specific item (allows 0 for elimination)
   const handleUpdatePOQuantity = (idOrName: string, delta: number) => {
     setCustomPOQuantities((prev) => {
       const current = prev[idOrName] !== undefined ? prev[idOrName] : 12;
-      const updated = Math.max(1, current + delta);
+      const updated = Math.max(0, current + delta);
+      if (updated === 0) {
+        setSelectedPOProductIds((sel) => sel.filter((id) => id !== idOrName));
+      } else if (!selectedPOProductIds.includes(idOrName)) {
+        setSelectedPOProductIds((sel) => [...sel, idOrName]);
+      }
       return { ...prev, [idOrName]: updated };
     });
   };
 
   const handleSetPOQuantityDirect = (idOrName: string, value: number) => {
+    const updated = Math.max(0, value || 0);
     setCustomPOQuantities((prev) => ({
       ...prev,
-      [idOrName]: Math.max(1, value || 1),
+      [idOrName]: updated,
     }));
+    if (updated === 0) {
+      setSelectedPOProductIds((sel) => sel.filter((id) => id !== idOrName));
+    } else if (!selectedPOProductIds.includes(idOrName)) {
+      setSelectedPOProductIds((sel) => [...sel, idOrName]);
+    }
   };
+
+  // Single item quick actions: Eliminate (0), Reduce (-50%), Restore
+  const handleEliminateSingleItem = (itemKey: string) => {
+    setCustomPOQuantities((prev) => ({ ...prev, [itemKey]: 0 }));
+    setSelectedPOProductIds((prev) => prev.filter((id) => id !== itemKey));
+  };
+
+  const handleReduceSingleItem = (itemKey: string, rawQty?: number) => {
+    const base = rawQty || 12;
+    const reduced = Math.max(1, Math.floor(base * 0.5));
+    setCustomPOQuantities((prev) => ({ ...prev, [itemKey]: reduced }));
+    setSelectedPOProductIds((prev) => (prev.includes(itemKey) ? prev : [...prev, itemKey]));
+  };
+
+  const handleRestoreSingleItem = (itemKey: string, rawQty?: number) => {
+    const restored = rawQty || 12;
+    setCustomPOQuantities((prev) => ({ ...prev, [itemKey]: restored }));
+    setSelectedPOProductIds((prev) => (prev.includes(itemKey) ? prev : [...prev, itemKey]));
+  };
+
+  // Apply policy across all active forecast items
+  const handleApplyPoliciesLocally = (
+    newDeadstock: 'eliminate' | 'reduce' | 'none',
+    newReturn: 'reduce' | 'eliminate' | 'none'
+  ) => {
+    setDeadstockPolicy(newDeadstock);
+    setReturnPolicy(newReturn);
+    if (!forecastData?.forecasts) return;
+
+    const updatedQtys = { ...customPOQuantities };
+    const updatedSelected = new Set(selectedPOProductIds);
+
+    forecastData.forecasts.forEach((fc) => {
+      const key = fc.productId || fc.productName;
+      const original = fc.originalOrderQty || fc.recommendedOrderQty || 12;
+      const isDeadstock = fc.isDeadstock;
+      const hasRetur = (fc.returnCount || 0) > 0;
+
+      if (isDeadstock) {
+        if (newDeadstock === 'eliminate') {
+          updatedQtys[key] = 0;
+          updatedSelected.delete(key);
+        } else if (newDeadstock === 'reduce') {
+          updatedQtys[key] = Math.max(1, Math.floor(original * 0.5));
+          updatedSelected.add(key);
+        } else {
+          updatedQtys[key] = original;
+          updatedSelected.add(key);
+        }
+      } else if (hasRetur) {
+        if (newReturn === 'eliminate') {
+          updatedQtys[key] = 0;
+          updatedSelected.delete(key);
+        } else if (newReturn === 'reduce') {
+          updatedQtys[key] = Math.max(1, Math.floor(original * 0.5));
+          updatedSelected.add(key);
+        } else {
+          updatedQtys[key] = original;
+          updatedSelected.add(key);
+        }
+      }
+    });
+
+    setCustomPOQuantities(updatedQtys);
+    setSelectedPOProductIds(Array.from(updatedSelected));
+  };
+
+  // Toggle accordion chart per item
+  const handleToggleExpandChart = (key: string) => {
+    setExpandedChartKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  const handleToggleExpandAllCharts = () => {
+    if (isAllChartsExpanded) {
+      setExpandedChartKeys([]);
+      setIsAllChartsExpanded(false);
+    } else {
+      if (forecastData?.forecasts) {
+        setExpandedChartKeys(forecastData.forecasts.map((f) => f.productId || f.productName));
+      }
+      setIsAllChartsExpanded(true);
+    }
+  };
+
+  // Target date preset calculations
+  const datePresets = useMemo(() => {
+    const today = new Date();
+    const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+
+    const nextSat = new Date(today);
+    const dayOfWeek = today.getDay();
+    const daysUntilSaturday = (6 - dayOfWeek + 7) % 7 || 7;
+    nextSat.setDate(today.getDate() + daysUntilSaturday);
+
+    const p7 = new Date(today);
+    p7.setDate(today.getDate() + 7);
+
+    const p14 = new Date(today);
+    p14.setDate(today.getDate() + 14);
+
+    const endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    return [
+      { label: 'Hari Ini', date: formatDate(today) },
+      { label: 'Akhir Pekan (Sabtu)', date: formatDate(nextSat) },
+      { label: '+7 Hari (1 Pekan)', date: formatDate(p7) },
+      { label: '+14 Hari (2 Pekan)', date: formatDate(p14) },
+      { label: 'Akhir Bulan', date: formatDate(endMonth) },
+    ];
+  }, []);
+
+  // Filtered forecast items based on category tabs
+  const filteredForecasts = useMemo(() => {
+    if (!forecastData?.forecasts) return [];
+    return forecastData.forecasts.filter((fc) => {
+      const key = fc.productId || fc.productName;
+      const qty = customPOQuantities[key] !== undefined ? customPOQuantities[key] : (fc.recommendedOrderQty || 0);
+      const isDeadstock = fc.isDeadstock;
+      const hasRetur = (fc.returnCount || 0) > 0;
+      const isEliminated = qty === 0;
+
+      if (filterRestockCategory === 'need_restock') return qty > 0 && !isDeadstock;
+      if (filterRestockCategory === 'deadstock') return isDeadstock;
+      if (filterRestockCategory === 'returns') return hasRetur;
+      if (filterRestockCategory === 'eliminated') return isEliminated;
+      return true;
+    });
+  }, [forecastData, customPOQuantities, filterRestockCategory]);
+
+  const filterCounts = useMemo(() => {
+    if (!forecastData?.forecasts) return { all: 0, need: 0, deadstock: 0, returns: 0, eliminated: 0 };
+    let deadstockCount = 0;
+    let returnsCount = 0;
+    let eliminatedCount = 0;
+    let needCount = 0;
+
+    forecastData.forecasts.forEach((fc) => {
+      const key = fc.productId || fc.productName;
+      const qty = customPOQuantities[key] !== undefined ? customPOQuantities[key] : (fc.recommendedOrderQty || 0);
+      if (fc.isDeadstock) deadstockCount++;
+      if ((fc.returnCount || 0) > 0) returnsCount++;
+      if (qty === 0) eliminatedCount++;
+      else if (!fc.isDeadstock) needCount++;
+    });
+
+    return {
+      all: forecastData.forecasts.length,
+      need: needCount,
+      deadstock: deadstockCount,
+      returns: returnsCount,
+      eliminated: eliminatedCount,
+    };
+  }, [forecastData, customPOQuantities]);
 
   // Apply selected items directly to Goods Receiving (Terima Barang)
   const handleApplyPOToReceiving = () => {
@@ -525,7 +732,7 @@ export const GeminiRetailCopilot: React.FC = () => {
     <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
       <div
         id="gemini-retail-copilot-drawer"
-        className="w-full max-w-xl h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-200"
+        className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-200"
       >
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 text-white flex items-center justify-between">
@@ -668,11 +875,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                       className="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-xs flex items-center justify-between gap-3 hover:border-emerald-500/60 transition-all"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <img
-                          src={sug.product.image}
-                          alt={sug.product.name}
-                          className="w-14 h-14 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shrink-0"
-                        />
+                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                          <Package className="w-6 h-6" />
+                        </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
@@ -722,6 +927,7 @@ export const GeminiRetailCopilot: React.FC = () => {
           {/* TAB 2: RENCANA RESTOCK (PURCHASE ORDER PLAN) */}
           {activeCopilotTab === 'forecast' && (
             <div className="space-y-4">
+              {/* Header Title & Refresh */}
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -729,19 +935,213 @@ export const GeminiRetailCopilot: React.FC = () => {
                     Rencana Restock & Purchase Order (PO)
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Analisis persediaan cerdas oleh Gemini AI untuk mencegah stockout dan mengestimasi anggaran pembelian ke distributor.
+                    Sistem cerdas AI yang memperhitungkan tanggal target restock, analisis grafik penjualan, serta eliminasi/pemangkasan kuota barang retur & deadstock.
                   </p>
                 </div>
 
                 <button
-                  onClick={handleFetchForecast}
+                  onClick={() => handleFetchForecast()}
                   disabled={isLoadingForecast}
-                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 cursor-pointer shadow-xs transition shrink-0"
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 cursor-pointer shadow-xs transition shrink-0"
                   title="Analisis ulang tingkat stok dan transaksi toko"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoadingForecast ? 'animate-spin' : ''}`} />
                   <span>Hitung Ulang</span>
                 </button>
+              </div>
+
+              {/* TARGET DATE & HORIZON CONTROLLER CARD */}
+              <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-xs">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
+                      <CalendarDays className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">
+                        Sesuaikan Target Tanggal Restock
+                      </span>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Proyeksikan kebutuhan stok hingga tanggal tertentu berdasarkan tren ritel
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="date"
+                      value={targetRestockDate}
+                      onChange={(e) => setTargetRestockDate(e.target.value)}
+                      className="text-xs font-medium px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleFetchForecast(targetRestockDate)}
+                      disabled={isLoadingForecast}
+                      className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50"
+                    >
+                      Terapkan
+                    </button>
+                  </div>
+                </div>
+
+                {/* Date presets */}
+                <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 mr-1">Preset:</span>
+                  {datePresets.map((preset, idx) => {
+                    const isSelected = targetRestockDate === preset.date;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setTargetRestockDate(preset.date);
+                          handleFetchForecast(preset.date);
+                        }}
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-lg border transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold'
+                            : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-emerald-300'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
+                  {targetRestockDate && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTargetRestockDate('');
+                        handleFetchForecast('');
+                      }}
+                      className="text-[10px] font-medium text-rose-500 hover:underline ml-1"
+                    >
+                      Reset (Default 14 Hari)
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* DEADSTOCK & RETURN POLICY CONTROL PANEL */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-emerald-500" />
+                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                      Aturan Kebijakan Retur & Deadstock
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px]">
+                    <span className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold">
+                      {filterCounts.deadstock} Deadstock
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold">
+                      {filterCounts.returns} Riwayat Retur
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
+                      {filterCounts.eliminated} Dieliminasi (0)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                  {/* Deadstock Rule Policy */}
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                        Jika Produk Deadstock (0 Terjual):
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleApplyPoliciesLocally('eliminate', returnPolicy)}
+                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                          deadstockPolicy === 'eliminate'
+                            ? 'bg-rose-600 text-white border-rose-500 shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                        }`}
+                        title="Eliminasi kuota order menjadi 0 untuk mencegah modal tertahan"
+                      >
+                        🚫 Eliminasi (0)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyPoliciesLocally('reduce', returnPolicy)}
+                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                          deadstockPolicy === 'reduce'
+                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                        }`}
+                        title="Pangkas kuota order 50%"
+                      >
+                        ✂️ Pangkas 50%
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyPoliciesLocally('none', returnPolicy)}
+                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                          deadstockPolicy === 'none'
+                            ? 'bg-slate-700 text-white border-slate-600 shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                        }`}
+                        title="Tanpa pembatasan otomatis"
+                      >
+                        Bebas Normal
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Return Rule Policy */}
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                        <RotateCcw className="w-3.5 h-3.5 text-amber-500" />
+                        Jika Ada Riwayat Retur Konsumen:
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleApplyPoliciesLocally(deadstockPolicy, 'reduce')}
+                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                          returnPolicy === 'reduce'
+                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                        }`}
+                        title="Pangkas kuota 50% untuk mitigasi produk rusak/cacat"
+                      >
+                        ✂️ Pangkas 50%
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyPoliciesLocally(deadstockPolicy, 'eliminate')}
+                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                          returnPolicy === 'eliminate'
+                            ? 'bg-rose-600 text-white border-rose-500 shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                        }`}
+                        title="Eliminasi kuota order menjadi 0 hingga vendor dievaluasi"
+                      >
+                        🚫 Eliminasi (0)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyPoliciesLocally(deadstockPolicy, 'none')}
+                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                          returnPolicy === 'none'
+                            ? 'bg-slate-700 text-white border-slate-600 shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                        }`}
+                        title="Tanpa pembatasan otomatis"
+                      >
+                        Bebas Normal
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {isLoadingForecast ? (
@@ -752,10 +1152,10 @@ export const GeminiRetailCopilot: React.FC = () => {
                   </div>
                   <div>
                     <h5 className="font-bold text-sm text-slate-900 dark:text-white">
-                      Menganalisis Inventaris & Tren Penjualan...
+                      Menganalisis Perilaku Grafik Penjualan & Aturan Restock...
                     </h5>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-                      Gemini AI sedang menghitung batas aman stok, kecepatan perputaran (velocity), kuantitas pesanan ekonomis (karton/lusin), dan total estimasi anggaran PO.
+                      AI sedang mengevaluasi riwayat 14 hari transaksi, mendeteksi produk retur dan deadstock, serta menyesuaikan kuota pemesanan ekonomis ke distributor.
                     </p>
                   </div>
                 </div>
@@ -797,11 +1197,11 @@ export const GeminiRetailCopilot: React.FC = () => {
                       );
                       const selQty = selItems.reduce((acc, fc) => {
                         const key = fc.productId || fc.productName;
-                        return acc + (customPOQuantities[key] !== undefined ? customPOQuantities[key] : fc.recommendedOrderQty);
+                        return acc + (customPOQuantities[key] !== undefined ? customPOQuantities[key] : (fc.recommendedOrderQty || 0));
                       }, 0);
                       const selCost = selItems.reduce((acc, fc) => {
                         const key = fc.productId || fc.productName;
-                        const q = customPOQuantities[key] !== undefined ? customPOQuantities[key] : fc.recommendedOrderQty;
+                        const q = customPOQuantities[key] !== undefined ? customPOQuantities[key] : (fc.recommendedOrderQty || 0);
                         return acc + q * (fc.costPrice || 0);
                       }, 0);
 
@@ -840,6 +1240,77 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                   {/* Restock Recommendations List */}
                   <div className="space-y-2.5">
+                    {/* Category Filter Pills and View Mode */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => setFilterRestockCategory('all')}
+                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                            filterRestockCategory === 'all'
+                              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                          }`}
+                        >
+                          Semua ({filterCounts.all})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFilterRestockCategory('need_restock')}
+                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                            filterRestockCategory === 'need_restock'
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                          }`}
+                        >
+                          Butuh Restock ({filterCounts.need})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFilterRestockCategory('deadstock')}
+                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                            filterRestockCategory === 'deadstock'
+                              ? 'bg-rose-600 text-white'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                          }`}
+                        >
+                          Deadstock ({filterCounts.deadstock})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFilterRestockCategory('returns')}
+                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                            filterRestockCategory === 'returns'
+                              ? 'bg-amber-500 text-slate-950'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                          }`}
+                        >
+                          Riwayat Retur ({filterCounts.returns})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFilterRestockCategory('eliminated')}
+                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                            filterRestockCategory === 'eliminated'
+                              ? 'bg-slate-700 text-white'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                          }`}
+                        >
+                          Dieliminasi ({filterCounts.eliminated})
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleToggleExpandAllCharts}
+                        className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer ml-auto"
+                      >
+                        <BarChart3 className="w-3.5 h-3.5" />
+                        <span>{isAllChartsExpanded ? 'Tutup Semua Grafik' : 'Buka Semua Grafik Penjualan'}</span>
+                      </button>
+                    </div>
+
+                    {/* Toolbar Actions */}
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
                         <button
@@ -914,23 +1385,33 @@ export const GeminiRetailCopilot: React.FC = () => {
                       </div>
                     </div>
 
-                    {forecastData.forecasts && forecastData.forecasts.length > 0 ? (
-                      <div className="space-y-2.5">
-                        {forecastData.forecasts.map((fc, i) => {
+                    {/* Filtered Forecasts List */}
+                    {filteredForecasts.length > 0 ? (
+                      <div className="space-y-3">
+                        {filteredForecasts.map((fc, i) => {
                           const itemKey = fc.productId || fc.productName;
                           const isSelected = selectedPOProductIds.includes(itemKey);
                           const orderQty =
                             customPOQuantities[itemKey] !== undefined
                               ? customPOQuantities[itemKey]
-                              : fc.recommendedOrderQty || 12;
+                              : (fc.recommendedOrderQty || 0);
+                          const originalQty = fc.originalOrderQty || fc.recommendedOrderQty || 12;
+                          const isEliminated = orderQty === 0;
+                          const isReduced = orderQty > 0 && orderQty < originalQty;
                           const unitCost = Number(fc.costPrice) || 0;
                           const subtotal = orderQty * unitCost;
+                          const isChartExpanded = expandedChartKeys.includes(itemKey);
+                          const matchedProduct = products.find(
+                            (p) => p.id === fc.productId || p.name === fc.productName
+                          );
 
                           return (
                             <div
                               key={i}
                               className={`p-3.5 rounded-2xl border transition-all ${
-                                isSelected
+                                isEliminated
+                                  ? 'border-rose-300/70 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/10'
+                                  : isSelected
                                   ? 'border-emerald-300 dark:border-emerald-700/80 bg-white dark:bg-slate-900 shadow-xs'
                                   : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 opacity-70'
                               }`}
@@ -951,11 +1432,43 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                                 <div className="flex-1 min-w-0 space-y-2">
                                   {/* Title & Badges */}
-                                  <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-start justify-between gap-2 flex-wrap">
                                     <div className="min-w-0">
-                                      <h6 className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                                        {fc.productName}
-                                      </h6>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <h6 className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                                          {fc.productName}
+                                        </h6>
+
+                                        {/* Status & Rule Badges */}
+                                        {fc.isDeadstock && (
+                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-1">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Deadstock (0 Terjual)
+                                          </span>
+                                        )}
+
+                                        {(fc.returnCount || 0) > 0 && (
+                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1">
+                                            <RotateCcw className="w-3 h-3" />
+                                            Retur: {fc.returnCount} Unit
+                                          </span>
+                                        )}
+
+                                        {isEliminated && (
+                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white flex items-center gap-1">
+                                            <Ban className="w-3 h-3" />
+                                            Kuota Dieliminasi (0)
+                                          </span>
+                                        )}
+
+                                        {isReduced && (
+                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 flex items-center gap-1">
+                                            <Scissors className="w-3 h-3" />
+                                            Kuota Dipangkas (-50%)
+                                          </span>
+                                        )}
+                                      </div>
+
                                       <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 flex-wrap">
                                         {fc.category && (
                                           <span className="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-800 rounded font-medium">
@@ -980,6 +1493,14 @@ export const GeminiRetailCopilot: React.FC = () => {
                                       {fc.urgency}
                                     </span>
                                   </div>
+
+                                  {/* Quota adjustment explanation if modified */}
+                                  {fc.quotaAdjustmentReason && (
+                                    <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+                                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                                      <span className="font-semibold">{fc.quotaAdjustmentReason}</span>
+                                    </div>
+                                  )}
 
                                   {/* Suggested Supplier */}
                                   {fc.suggestedSupplier && (
@@ -1023,9 +1544,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                                       <input
                                         type="number"
                                         value={orderQty}
-                                        min={1}
+                                        min={0}
                                         onChange={(e) =>
-                                          handleSetPOQuantityDirect(itemKey, parseInt(e.target.value) || 1)
+                                          handleSetPOQuantityDirect(itemKey, parseInt(e.target.value) || 0)
                                         }
                                         className="w-14 px-1.5 py-0.5 text-center font-bold text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                       />
@@ -1054,6 +1575,90 @@ export const GeminiRetailCopilot: React.FC = () => {
                                     <span className="font-bold text-amber-900 dark:text-amber-300 mr-1">Rekomendasi AI:</span>
                                     {fc.actionAdvice}
                                   </div>
+
+                                  {/* QUICK ACTION BAR: GRAPH & QUOTA POLICY */}
+                                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex-wrap">
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleToggleExpandChart(itemKey)}
+                                        className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
+                                          isChartExpanded
+                                            ? 'bg-emerald-600 text-white shadow-xs'
+                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                                        }`}
+                                      >
+                                        <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
+                                        <span>{isChartExpanded ? 'Tutup Grafik' : 'Perilaku Grafik Penjualan'}</span>
+                                        {isChartExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => setActiveChartModalItem(fc)}
+                                        className="px-2 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                                        title="Buka grafik layar penuh di modal terpisah"
+                                      >
+                                        <Eye className="w-3.5 h-3.5" />
+                                        <span>Fokus</span>
+                                      </button>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 ml-auto">
+                                      {!isEliminated ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleEliminateSingleItem(itemKey)}
+                                          className="px-2 py-1 rounded-lg border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold hover:bg-rose-100 transition cursor-pointer flex items-center gap-1"
+                                          title="Set kuota order ke 0 (eliminasi)"
+                                        >
+                                          <Ban className="w-3 h-3" />
+                                          <span>Eliminasi (0)</span>
+                                        </button>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRestoreSingleItem(itemKey, originalQty)}
+                                          className="px-2 py-1 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold hover:bg-emerald-100 transition cursor-pointer flex items-center gap-1"
+                                          title="Pulihkan kuota order normal"
+                                        >
+                                          <CheckCircle2 className="w-3 h-3" />
+                                          <span>Pulihkan Kuota ({originalQty})</span>
+                                        </button>
+                                      )}
+
+                                      {!isReduced && !isEliminated && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleReduceSingleItem(itemKey, originalQty)}
+                                          className="px-2 py-1 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 transition cursor-pointer flex items-center gap-1"
+                                          title="Pangkas kuota 50%"
+                                        >
+                                          <Scissors className="w-3 h-3" />
+                                          <span>Pangkas 50%</span>
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* INLINE RECHARTS EXPANDED ACCORDION */}
+                                  {isChartExpanded && (
+                                    <div className="pt-2 animate-in fade-in duration-200">
+                                      <RestockSalesTrendChart
+                                        item={fc}
+                                        product={matchedProduct}
+                                        currency={settings.currency}
+                                        targetDate={targetRestockDate}
+                                        projectionDays={forecastData.projectionDays || 14}
+                                        currentOrderQty={orderQty}
+                                        onUpdateOrderQty={(newQty) => handleSetPOQuantityDirect(itemKey, newQty)}
+                                        onEliminate={() => handleEliminateSingleItem(itemKey)}
+                                        onReduce={() => handleReduceSingleItem(itemKey, originalQty)}
+                                        onRestore={() => handleRestoreSingleItem(itemKey, originalQty)}
+                                        isModal={false}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -1063,9 +1668,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                     ) : (
                       <div className="p-6 text-center rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                         <Check className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                        <h6 className="font-bold text-sm text-slate-900 dark:text-white">Semua Stok Aman</h6>
+                        <h6 className="font-bold text-sm text-slate-900 dark:text-white">Tidak Ada Produk Pada Kategori Ini</h6>
                         <p className="text-xs text-slate-500 mt-1">
-                          Tidak ditemukan produk yang berada di bawah batas minimum stok ritel saat ini.
+                          Silakan ganti filter di atas atau klik "Semua" untuk melihat seluruh rekomendasi restock ritel.
                         </p>
                       </div>
                     )}
@@ -1465,6 +2070,44 @@ export const GeminiRetailCopilot: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* MODAL FOKUS GRAFIK PENJUALAN & RESTOCK */}
+      {activeChartModalItem && (
+        <RestockSalesTrendChart
+          isModal={true}
+          item={activeChartModalItem}
+          product={products.find(
+            (p) => p.id === activeChartModalItem.productId || p.name === activeChartModalItem.productName
+          )}
+          currency={settings.currency}
+          targetDate={targetRestockDate}
+          projectionDays={forecastData?.projectionDays || 14}
+          currentOrderQty={
+            customPOQuantities[activeChartModalItem.productId || activeChartModalItem.productName] !== undefined
+              ? customPOQuantities[activeChartModalItem.productId || activeChartModalItem.productName]
+              : (activeChartModalItem.recommendedOrderQty || 0)
+          }
+          onUpdateOrderQty={(newQty) =>
+            handleSetPOQuantityDirect(activeChartModalItem.productId || activeChartModalItem.productName, newQty)
+          }
+          onEliminate={() =>
+            handleEliminateSingleItem(activeChartModalItem.productId || activeChartModalItem.productName)
+          }
+          onReduce={() =>
+            handleReduceSingleItem(
+              activeChartModalItem.productId || activeChartModalItem.productName,
+              activeChartModalItem.originalOrderQty || activeChartModalItem.recommendedOrderQty
+            )
+          }
+          onRestore={() =>
+            handleRestoreSingleItem(
+              activeChartModalItem.productId || activeChartModalItem.productName,
+              activeChartModalItem.originalOrderQty || activeChartModalItem.recommendedOrderQty
+            )
+          }
+          onClose={() => setActiveChartModalItem(null)}
+        />
+      )}
     </div>
   );
 };

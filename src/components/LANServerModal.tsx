@@ -31,6 +31,7 @@ import {
   Globe,
   Radio,
   Sparkles,
+  Camera,
 } from 'lucide-react';
 import { LANConfig, LANRole, LANServerStatus, LANClient, LANServerLog, Product, Transaction, Customer, Supplier } from '../types';
 import {
@@ -720,6 +721,15 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                           <span>Masih Gagal Terhubung di HP? Buka Solusi &rarr;</span>
                         </button>
                       </div>
+
+                      {accessMode === 'wifi_lan' && (
+                        <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-[11px] text-slate-600 dark:text-slate-300 flex items-start gap-2">
+                          <Camera className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <span>
+                            <strong>Tips Kamera Scanner di HP:</strong> Karena menggunakan Wi-Fi lokal (HTTP), Chrome Android mematikan prompt izin kamera. Gunakan tombol <strong>"Foto Barcode (Kamera HP)"</strong> untuk scan instan tanpa perlu izin browser, atau buka panduan <code className="text-indigo-600 dark:text-indigo-400">chrome://flags</code> di tab Solusi Kasir HP.
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* QR Code Quick Scan for Mobile/Tablet */}

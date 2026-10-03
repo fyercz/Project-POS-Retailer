@@ -26,6 +26,13 @@ import {
   BackupPayload,
   RestorePoint,
   PriceHistoryRecord,
+  CustomerDiscount,
+  CustomerDiscountSuggestion,
+  OperationalExpense,
+  JournalEntry,
+  ChartOfAccount,
+  BalanceSheet,
+  IncomeStatement,
 } from '../types';
 import {
   INITIAL_CATEGORIES,
@@ -36,6 +43,7 @@ import {
   DEFAULT_STORE_SETTINGS,
   INITIAL_RECENT_TRANSACTIONS,
   INITIAL_EMPLOYEES,
+  INITIAL_EXPENSES,
 } from '../data/mockData';
 import { generateInvoiceNumber } from '../utils/formatters';
 import { offlineSyncManager } from '../utils/offlineSyncManager';
@@ -49,6 +57,13 @@ import {
   fetchLANSharedHeldOrders,
 } from '../utils/lanSyncManager';
 import { posStorage, StorageDiagnostics } from '../utils/posStorage';
+import { generateCustomerDiscountSuggestions } from '../utils/customerDiscountRecommender';
+import {
+  STANDARD_CHART_OF_ACCOUNTS,
+  generateJournalEntries,
+  computeBalanceSheet,
+  computeIncomeStatement,
+} from '../utils/accountingLedger';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -115,6 +130,11 @@ export interface POSCartContextType extends POSCartActionsContextType {
   appliedVoucher: Voucher | null;
   applyVoucher: (code: string) => { success: boolean; message: string };
   removeVoucher: () => void;
+  customerDiscount: CustomerDiscount | null;
+  applyCustomerDiscount: (discount: CustomerDiscount) => void;
+  removeCustomerDiscount: () => void;
+  customerDiscountAmount: number;
+  customerDiscountSuggestions: CustomerDiscountSuggestion[];
   usePoints: boolean;
   setUsePoints: (use: boolean) => void;
   pointsToRedeem: number;
@@ -161,6 +181,7 @@ export interface POSTransactionsContextType {
   updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
   vouchers: Voucher[];
   addVoucher: (v: Voucher) => void;
+  clearAllTransactions: () => void;
 }
 
 export interface POSAuthShiftContextType {
@@ -215,6 +236,12 @@ export interface POSUIContextType {
   lastSyncTime: string | null;
   serviceWorkerActive: boolean;
   backgroundSyncSupported: boolean;
+  autoSyncEnabled: boolean;
+  autoSyncIntervalSeconds: number;
+  databaseEngine: string;
+  setAutoSyncEnabled: (enabled: boolean) => void;
+  setAutoSyncInterval: (seconds: number) => void;
+  triggerAutoPeriodicSync: () => Promise<void>;
   syncPendingTransactions: () => Promise<CloudSyncResult>;
   isSyncModalOpen: boolean;
   setIsSyncModalOpen: (open: boolean) => void;
@@ -222,6 +249,11 @@ export interface POSUIContextType {
   clearSyncNotification: () => void;
   isBarcodeScannerOpen: boolean;
   setIsBarcodeScannerOpen: (open: boolean) => void;
+  isUnregisteredBarcodeModalOpen: boolean;
+  setIsUnregisteredBarcodeModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  unregisteredBarcode: string;
+  setUnregisteredBarcode: (barcode: string) => void;
+  openUnregisteredBarcodePrompt: (barcode: string) => void;
   scanBarcodeAndAddToCart: (code: string) => {
     success: boolean;
     product?: Product;
@@ -259,6 +291,15 @@ export interface POSUIContextType {
     customers?: Customer[];
     suppliers?: Supplier[];
   }) => void;
+  prepareStoreForLaunch: (options?: { resetTransactions?: boolean; resetProductsToBlank?: boolean }) => { success: boolean; message: string };
+  // Accounting & Financial Statements (Double-Entry & Balance Sheet)
+  expenses: OperationalExpense[];
+  addExpense: (expense: Omit<OperationalExpense, 'id' | 'date'>) => OperationalExpense;
+  deleteExpense: (id: string) => void;
+  journalEntries: JournalEntry[];
+  balanceSheet: BalanceSheet;
+  incomeStatement: IncomeStatement;
+  chartOfAccounts: ChartOfAccount[];
 }
 
 // Composite interface for complete backwards compatibility
@@ -347,6 +388,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [tableNumber, setTableNumber] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
+  const [customerDiscount, setCustomerDiscount] = useState<CustomerDiscount | null>(null);
   const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
 
   // Held Orders
@@ -422,6 +464,18 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (parsed.receiptFooterMessage && /nexamart/i.test(parsed.receiptFooterMessage)) {
           parsed.receiptFooterMessage = parsed.receiptFooterMessage.replace(/nexamart/gi, 'ulilmart');
         }
+        if (!parsed.address || parsed.address.includes('Orchard') || parsed.address.includes('Jakarta')) {
+          parsed.address = DEFAULT_STORE_SETTINGS.address;
+        }
+        if (!parsed.phone || parsed.phone.includes('(021) 7890') || parsed.phone.includes('(021)')) {
+          parsed.phone = DEFAULT_STORE_SETTINGS.phone;
+        }
+        if (!parsed.branchName || parsed.branchName.includes('Orchard') || parsed.branchName.includes('Utama Ritel')) {
+          parsed.branchName = DEFAULT_STORE_SETTINGS.branchName;
+        }
+        parsed.googleMapsUrl = parsed.googleMapsUrl || DEFAULT_STORE_SETTINGS.googleMapsUrl;
+        parsed.operatingHours = parsed.operatingHours || DEFAULT_STORE_SETTINGS.operatingHours;
+        parsed.storeTagline = parsed.storeTagline || DEFAULT_STORE_SETTINGS.storeTagline;
         parsed.pointRedemptionRate = parsed.pointRedemptionRate || 100;
         parsed.minRedeemPoints = parsed.minRedeemPoints !== undefined ? parsed.minRedeemPoints : 10;
         return parsed;
@@ -583,6 +637,55 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   });
 
+  const [pastShifts, setPastShifts] = useState<ShiftSummary[]>(() => {
+    try {
+      const saved = localStorage.getItem('pos_past_shifts_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return [];
+  });
+
+  // Operational Expenses for Accounting Ledger & Income Statement
+  const [expenses, setExpenses] = useState<OperationalExpense[]>(() => {
+    try {
+      const saved = localStorage.getItem('pos_operational_expenses');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_EXPENSES;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('pos_operational_expenses', JSON.stringify(expenses));
+    } catch {
+      // ignore
+    }
+  }, [expenses]);
+
+  const addExpense = (expData: Omit<OperationalExpense, 'id' | 'date'>): OperationalExpense => {
+    const newExp: OperationalExpense = {
+      ...expData,
+      id: `exp-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
+      date: new Date().toISOString(),
+    };
+    setExpenses((prev) => [newExp, ...prev]);
+    return newExp;
+  };
+
+  const deleteExpense = (expId: string) => {
+    setExpenses((prev) => prev.filter((e) => e.id !== expId));
+  };
+
   // Modal States
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [activeReceipt, setActiveReceipt] = useState<Transaction | null>(null);
@@ -604,6 +707,17 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Barcode Scanner Camera State
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
+
+  // Unregistered Barcode Authority Prompt State
+  const [isUnregisteredBarcodeModalOpen, setIsUnregisteredBarcodeModalOpen] = useState(false);
+  const [unregisteredBarcode, setUnregisteredBarcode] = useState('');
+
+  const openUnregisteredBarcodePrompt = useCallback((barcode: string) => {
+    const clean = (barcode || '').trim();
+    if (!clean) return;
+    setUnregisteredBarcode(clean);
+    setIsUnregisteredBarcodeModalOpen(true);
+  }, []);
 
   // Backup & Restore Points State
   const [isBackupRestoreOpen, setIsBackupRestoreOpen] = useState(false);
@@ -1267,6 +1381,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearCart = () => {
     setCart([]);
     setAppliedVoucher(null);
+    setCustomerDiscount(null);
     setUsePoints(false);
   };
 
@@ -1324,15 +1439,34 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return 0;
   }, [appliedVoucher, subtotal]);
 
+  // Customer-specific discount calculation based on loyalty status and previous purchase history
+  const customerDiscountAmount = useMemo(() => {
+    if (!customerDiscount) return 0;
+    if (customerDiscount.targetType === 'item' && customerDiscount.targetProductId) {
+      const targetItem = cart.find((i) => i.product.id === customerDiscount.targetProductId);
+      if (!targetItem) return 0;
+      return Math.round((targetItem.totalPrice * customerDiscount.value) / 100);
+    }
+    // Cart-level discount
+    if (customerDiscount.minSpend && subtotal < customerDiscount.minSpend) {
+      return 0;
+    }
+    if (customerDiscount.type === 'percentage') {
+      const disc = (subtotal * customerDiscount.value) / 100;
+      return Math.round(disc);
+    }
+    return Math.min(customerDiscount.value, subtotal);
+  }, [customerDiscount, cart, subtotal]);
+
   // Loyalty Points discount calculations (configurable rate: default 1 point = Rp 100 discount)
   const pointRedemptionRate = settings.pointRedemptionRate || 100;
 
   const maxRedeemablePoints = useMemo(() => {
     if (!selectedCustomer || selectedCustomer.points <= 0) return 0;
-    const remainingBill = Math.max(0, subtotal - voucherDiscount);
+    const remainingBill = Math.max(0, subtotal - voucherDiscount - customerDiscountAmount);
     const maxPointsByBill = Math.floor(remainingBill / pointRedemptionRate);
     return Math.min(selectedCustomer.points, maxPointsByBill);
-  }, [selectedCustomer, subtotal, voucherDiscount, pointRedemptionRate]);
+  }, [selectedCustomer, subtotal, voucherDiscount, customerDiscountAmount, pointRedemptionRate]);
 
   // Points to redeem capped at customer balance and payable total
   const effectivePointsToRedeem = Math.min(pointsToRedeem, maxRedeemablePoints);
@@ -1341,10 +1475,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!selectedCustomer || effectivePointsToRedeem <= 0) {
       return 0;
     }
-    const remainingBill = Math.max(0, subtotal - voucherDiscount);
+    const remainingBill = Math.max(0, subtotal - voucherDiscount - customerDiscountAmount);
     const disc = effectivePointsToRedeem * pointRedemptionRate;
     return Math.min(disc, remainingBill);
-  }, [selectedCustomer, effectivePointsToRedeem, pointRedemptionRate, subtotal, voucherDiscount]);
+  }, [selectedCustomer, effectivePointsToRedeem, pointRedemptionRate, subtotal, voucherDiscount, customerDiscountAmount]);
+
+  // Dynamic customer discount recommendations based on purchase history and loyalty tier
+  const customerDiscountSuggestions = useMemo(() => {
+    return generateCustomerDiscountSuggestions(selectedCustomer, cart, subtotal, transactions);
+  }, [selectedCustomer, cart, subtotal, transactions]);
+
+  const applyCustomerDiscount = (discount: CustomerDiscount) => {
+    setCustomerDiscount(discount);
+  };
+
+  const removeCustomerDiscount = () => {
+    setCustomerDiscount(null);
+  };
 
   const usePoints = effectivePointsToRedeem > 0;
 
@@ -1361,7 +1508,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPointsToRedeem(clamped);
   };
 
-  const totalDiscount = voucherDiscount + pointsDiscount;
+  const totalDiscount = voucherDiscount + pointsDiscount + customerDiscountAmount;
   // Sales Tax & Surcharges removed on sales as requested
   const taxAmount = 0;
   const serviceChargeAmount = 0;
@@ -1408,6 +1555,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
       subtotal,
       note,
+      customerDiscount: customerDiscount || undefined,
     };
 
     setHeldOrders((prev) => [newHeld, ...prev]);
@@ -1415,6 +1563,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     clearCart();
     setTableNumber('');
     setSelectedCustomer(null);
+    setCustomerDiscount(null);
     return true;
   };
 
@@ -1443,6 +1592,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrderType(heldOrder.orderType);
     setTableNumber(heldOrder.tableNumber || '');
     setSelectedCustomer(heldOrder.customer || null);
+    if (heldOrder.customerDiscount) {
+      setCustomerDiscount(heldOrder.customerDiscount);
+    } else {
+      setCustomerDiscount(null);
+    }
     deleteHeldOrder(heldOrder.id);
   };
 
@@ -1569,6 +1723,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notes,
     };
 
+    setPastShifts((prev) => {
+      const updated = [closed, ...prev];
+      try {
+        localStorage.setItem('pos_past_shifts_v1', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
     // Start clean new shift
     const nextShift: ShiftSummary = {
       id: `shift-${Date.now()}`,
@@ -1610,6 +1772,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       serviceChargeAmount: 0,
       discountAmount: totalDiscount,
       voucherCode: appliedVoucher?.code,
+      customerDiscount: customerDiscount || undefined,
+      customerDiscountAmount: customerDiscountAmount > 0 ? customerDiscountAmount : undefined,
       pointsUsed: pointsUsed > 0 ? pointsUsed : undefined,
       pointsDiscount: pointsDiscount > 0 ? pointsDiscount : undefined,
       pointsEarned,
@@ -2114,6 +2278,18 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSuppliers((prev) => prev.filter((s) => s.id !== id));
   };
 
+  const clearAllTransactions = () => {
+    setTransactions([]);
+    setSalesReturns([]);
+    setCart([]);
+    setHeldOrders([]);
+    localStorage.removeItem('pos_retail_tx_v2');
+    localStorage.removeItem('pos_retail_tx_v3');
+    localStorage.removeItem('pos_active_cart');
+    localStorage.removeItem('pos_held_orders');
+    posStorage.setItem('pos_retail_tx_v3', []).catch(console.warn);
+  };
+
   const resetToRetailDefaults = () => {
     posStorage.clear().catch(console.warn);
     localStorage.removeItem('pos_retail_products_v2');
@@ -2574,6 +2750,55 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [restorePoints, restoreFromPayload]
   );
 
+  const prepareStoreForLaunch = useCallback(
+    (options?: { resetTransactions?: boolean; resetProductsToBlank?: boolean }): { success: boolean; message: string } => {
+      try {
+        // 1. Snapshot safety restore point before launch cleanup
+        createRestorePoint(
+          'Titik Pulih Pra-Peluncuran Toko (Pre-Launch)',
+          'Cadangan otomatis sistem sebelum inisialisasi pembukaan toko dan pembersihan data demo.',
+          'auto_pre_reset'
+        );
+
+        // 2. Clear test transactions, sales returns, held orders, active cart
+        if (options?.resetTransactions !== false) {
+          setTransactions([]);
+          setSalesReturns([]);
+          setCart([]);
+          setHeldOrders([]);
+          localStorage.removeItem('pos_retail_tx_v2');
+          localStorage.removeItem('pos_retail_tx_v3');
+          localStorage.removeItem('pos_active_cart');
+          localStorage.removeItem('pos_held_orders');
+          posStorage.setItem('pos_retail_tx_v3', []).catch(console.warn);
+        }
+
+        // 3. Reset shift so day 1 cashier opening starts fresh
+        setCurrentShift(null);
+        localStorage.removeItem('pos_current_shift_v1');
+
+        // 4. Products options
+        if (options?.resetProductsToBlank) {
+          setProducts([]);
+          localStorage.removeItem('pos_retail_products_v2');
+          localStorage.removeItem('pos_retail_products_v3');
+          posStorage.setItem('pos_retail_products_v3', []).catch(console.warn);
+        }
+
+        return {
+          success: true,
+          message: 'Sistem POS berhasil disiapkan untuk peluncuran toko (Ready to Launch)!',
+        };
+      } catch (err: any) {
+        return {
+          success: false,
+          message: `Gagal menyiapkan sistem toko: ${err?.message || 'Terjadi kesalahan sistem'}`,
+        };
+      }
+    },
+    [createRestorePoint]
+  );
+
   // Auto-seed initial baseline restore point on first boot so users have an immediate point to test
   useEffect(() => {
     if (restorePoints.length === 0 && products.length > 0) {
@@ -2684,6 +2909,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       appliedVoucher,
       applyVoucher,
       removeVoucher,
+      customerDiscount,
+      applyCustomerDiscount,
+      removeCustomerDiscount,
+      customerDiscountAmount,
+      customerDiscountSuggestions,
       usePoints,
       setUsePoints,
       pointsToRedeem,
@@ -2713,6 +2943,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tableNumber,
       selectedCustomer,
       appliedVoucher,
+      customerDiscount,
+      applyCustomerDiscount,
+      removeCustomerDiscount,
+      customerDiscountAmount,
+      customerDiscountSuggestions,
       usePoints,
       pointsToRedeem,
       maxRedeemablePoints,
@@ -2755,6 +2990,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateCustomer,
       vouchers,
       addVoucher,
+      clearAllTransactions,
     }),
     [
       isPaymentModalOpen,
@@ -2802,7 +3038,46 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ]
   );
 
-  // --- Domain Split 6: UI, Modals, Offline Sync, Settings, AI Copilot, Diagnostics ---
+  // --- Domain Split 6: UI, Modals, Offline Sync, Settings, AI Copilot, Diagnostics & Accounting ---
+  const chartOfAccounts = STANDARD_CHART_OF_ACCOUNTS;
+
+  const allShifts = useMemo(() => {
+    return [currentShift, ...pastShifts].filter(Boolean) as ShiftSummary[];
+  }, [currentShift, pastShifts]);
+
+  const journalEntries = useMemo(() => {
+    return generateJournalEntries({
+      transactions,
+      salesReturns,
+      supplierPurchases,
+      shifts: allShifts,
+      expenses,
+      initialCapital: settings.initialCapital || 50000000,
+    });
+  }, [transactions, salesReturns, supplierPurchases, allShifts, expenses, settings.initialCapital]);
+
+  const balanceSheet = useMemo(() => {
+    return computeBalanceSheet({
+      products,
+      transactions,
+      customers,
+      supplierPurchases,
+      shifts: allShifts,
+      expenses,
+      initialCapital: settings.initialCapital || 50000000,
+      pointRedemptionRate: settings.pointRedemptionRate || 100,
+    });
+  }, [products, transactions, customers, supplierPurchases, allShifts, expenses, settings.initialCapital, settings.pointRedemptionRate]);
+
+  const incomeStatement = useMemo(() => {
+    return computeIncomeStatement({
+      transactions,
+      salesReturns,
+      shifts: allShifts,
+      expenses,
+    });
+  }, [transactions, salesReturns, allShifts, expenses]);
+
   const uiValue = useMemo<POSUIContextType>(
     () => ({
       activeView,
@@ -2834,6 +3109,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       lastSyncTime: syncState.lastSyncTime,
       serviceWorkerActive: syncState.serviceWorkerActive,
       backgroundSyncSupported: syncState.backgroundSyncSupported,
+      autoSyncEnabled: syncState.autoSyncEnabled ?? true,
+      autoSyncIntervalSeconds: syncState.autoSyncIntervalSeconds ?? 15,
+      databaseEngine: syncState.databaseEngine || 'SQLite Relational (WAL Mode)',
+      setAutoSyncEnabled: (enabled: boolean) => offlineSyncManager.setAutoSyncEnabled(enabled),
+      setAutoSyncInterval: (seconds: number) => offlineSyncManager.setAutoSyncInterval(seconds),
+      triggerAutoPeriodicSync: () => offlineSyncManager.triggerAutoPeriodicSync(),
       syncPendingTransactions,
       isSyncModalOpen,
       setIsSyncModalOpen,
@@ -2841,6 +3122,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       clearSyncNotification,
       isBarcodeScannerOpen,
       setIsBarcodeScannerOpen,
+      isUnregisteredBarcodeModalOpen,
+      setIsUnregisteredBarcodeModalOpen,
+      unregisteredBarcode,
+      setUnregisteredBarcode,
+      openUnregisteredBarcodePrompt,
       scanBarcodeAndAddToCart,
       restorePoints,
       createRestorePoint,
@@ -2857,6 +3143,15 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isLANModalOpen,
       setIsLANModalOpen,
       applyMasterLANData,
+      prepareStoreForLaunch,
+      // Accounting & Financial Statements
+      expenses,
+      addExpense,
+      deleteExpense,
+      journalEntries,
+      balanceSheet,
+      incomeStatement,
+      chartOfAccounts,
     }),
     [
       activeView,
@@ -2874,6 +3169,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       syncNotification,
       clearSyncNotification,
       isBarcodeScannerOpen,
+      isUnregisteredBarcodeModalOpen,
+      unregisteredBarcode,
+      openUnregisteredBarcodePrompt,
       scanBarcodeAndAddToCart,
       restorePoints,
       isBackupRestoreOpen,
@@ -2882,6 +3180,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       runStorageBenchmark,
       isLANModalOpen,
       applyMasterLANData,
+      prepareStoreForLaunch,
+      expenses,
+      journalEntries,
+      balanceSheet,
+      incomeStatement,
+      chartOfAccounts,
     ]
   );
 

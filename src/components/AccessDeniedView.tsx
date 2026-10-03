@@ -120,7 +120,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
                 className="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-                Hint demo: Supervisor: <span className="font-mono font-bold">7890</span> • Owner: <span className="font-mono font-bold">9999</span>
+                Masukkan 4-digit PIN Supervisor atau Owner untuk otorisasi akses.
               </p>
             </div>
 

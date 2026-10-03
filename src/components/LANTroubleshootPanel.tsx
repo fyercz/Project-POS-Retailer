@@ -375,7 +375,79 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
           )}
         </div>
 
-        {/* CARD 5: Cara Cek IP PC Kasir di Windows */}
+        {/* CARD 5: Kendala Kamera di Browser HP Android (Koneksi Tidak Aman / HTTP) */}
+        <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden">
+          <button
+            onClick={() => toggleCard('issue_android_camera')}
+            className="w-full p-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                5
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <span>HP Android: Kamera Tidak Berfungsi &amp; Prompt "Izinkan Kamera" Tidak Muncul</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                    Koneksi HTTP
+                  </span>
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Penyebab: Google Chrome membatasi video stream kamera pada alamat IP lokal non-HTTPS
+                </p>
+              </div>
+            </div>
+            {expandedCard === 'issue_android_camera' ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+          </button>
+
+          {expandedCard === 'issue_android_camera' && (
+            <div className="px-4 pb-4 pt-1 space-y-3 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-950/30 text-xs">
+              <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                Di Android, Google Chrome secara sistem <strong>mematikan popup izin kamera</strong> jika website dibuka via HTTP (misal <code>http://192.168.x.x:3000</code>). Ada 3 solusi yang dapat Anda pilih:
+              </p>
+
+              <div className="space-y-2.5">
+                {/* Solusi A */}
+                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-1">
+                  <div className="font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5 text-xs">
+                    <span>Solusi 1 (Paling Cepat &amp; Instan):</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
+                      Rekomendasi
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800/90 dark:text-emerald-300/90 leading-relaxed">
+                    Di jendela pemindai barcode atau opname kasir, tekan tombol <strong>"Foto Barcode (Kamera HP Android)"</strong>. Kamera bawaan HP Anda akan langsung terbuka untuk menjepret barcode dan barang otomatis masuk keranjang tanpa perlu HTTPS maupun izin browser!
+                  </p>
+                </div>
+
+                {/* Solusi B */}
+                <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                  <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                    Solusi 2: Aktifkan Video Streaming Langsung di Chrome Android (chrome://flags)
+                  </div>
+                  <ol className="list-decimal list-inside space-y-1 text-slate-600 dark:text-slate-400 text-[11px]">
+                    <li>Buka tab baru di Chrome HP Anda &rarr; ketik <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code></li>
+                    <li>Pada kolom <em>"Insecure origins treated as secure"</em>, masukkan URL kasir ini: <strong className="text-indigo-600 dark:text-indigo-400 font-mono">{localWifiUrl}</strong></li>
+                    <li>Ubah status menjadi <strong>Enabled</strong> &rarr; ketuk tombol biru <strong>Relaunch</strong> di pojok kanan bawah Chrome.</li>
+                    <li>Buka kembali kasir &rarr; kotak dialog "Izinkan Akses Kamera" akan langsung muncul dengan lancar!</li>
+                  </ol>
+                </div>
+
+                {/* Solusi C */}
+                <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-1">
+                  <div className="font-bold text-indigo-900 dark:text-indigo-200 text-xs">
+                    Solusi 3: Gunakan Akses Link Cloud Publik (HTTPS)
+                  </div>
+                  <p className="text-[11px] text-indigo-800/90 dark:text-indigo-300/90 leading-relaxed">
+                    Jika aplikasi diakses via Link Cloud HTTPS resmi, izin kamera browser otomatis aktif tanpa perlu pengaturan apapun.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* CARD 6: Cara Cek IP PC Kasir di Windows */}
         <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 overflow-hidden">
           <button
             onClick={() => toggleCard('issue_find_ip')}
@@ -383,7 +455,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
           >
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-xs">
-                5
+                6
               </div>
               <div>
                 <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">

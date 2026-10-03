@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useDeferredValue } from 'react';
 import {
   Package,
   Search,
@@ -41,6 +41,8 @@ import {
   FileSpreadsheet,
   Database,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import {
   usePOSCatalog,
@@ -57,6 +59,7 @@ import { ProductFormModal } from '../ProductFormModal';
 import { SupplierFormModal } from '../SupplierFormModal';
 import { PriceTagModal } from '../PriceTagModal';
 import { DataImportModal } from '../DataImportModal';
+import { DirectFileImportModal } from '../DirectFileImportModal';
 import { OnlineDatabaseMatcherModal } from '../OnlineDatabaseMatcherModal';
 import { BulkStockAdjustmentModal } from '../BulkStockAdjustmentModal';
 import { StockTakeCSVModal } from '../StockTakeCSVModal';
@@ -67,6 +70,13 @@ import {
   InventoryAlertFilterType,
   getProductExpiryDiffDays,
 } from '../InventoryAlertBanner';
+import { DateFilterBar } from '../DateFilterBar';
+import {
+  DateFilterPreset,
+  isDateWithinFilter,
+  toLocalYMD,
+  formatPeriodLabel,
+} from '../../utils/dateFilters';
 
 interface ReceivingItem {
   productId: string;
@@ -85,6 +95,7 @@ interface SupplierReturnItemRow {
 export const InventoryView: React.FC = () => {
   const {
     products,
+    categories,
     updateProductStock,
     deleteProduct,
     deleteProductsBatch,
@@ -156,6 +167,16 @@ export const InventoryView: React.FC = () => {
   const [supplierSearch, setSupplierSearch] = useState('');
   const [supplierCategoryFilter, setSupplierCategoryFilter] = useState('all');
 
+  // Date Filter State for Faktur Masuk (Purchases): Defaults to 'today' to keep display focused
+  const [purchaseDatePreset, setPurchaseDatePreset] = useState<DateFilterPreset>('today');
+  const [purchaseStartDate, setPurchaseStartDate] = useState<string>(() => toLocalYMD(new Date()));
+  const [purchaseEndDate, setPurchaseEndDate] = useState<string>(() => toLocalYMD(new Date()));
+
+  // Date Filter State for Retur Supplier (Returns): Defaults to 'today' to keep display focused
+  const [returnDatePreset, setReturnDatePreset] = useState<DateFilterPreset>('today');
+  const [returnStartDate, setReturnStartDate] = useState<string>(() => toLocalYMD(new Date()));
+  const [returnEndDate, setReturnEndDate] = useState<string>(() => toLocalYMD(new Date()));
+
   // Master Item (Product) Modal State
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
@@ -168,6 +189,7 @@ export const InventoryView: React.FC = () => {
 
   // Smart Data Import Modal State
   const [isDataImportOpen, setIsDataImportOpen] = useState(false);
+  const [isDirectFileImportOpen, setIsDirectFileImportOpen] = useState(false);
 
   // Quick Stock Take CSV Modal State
   const [isStockTakeCSVOpen, setIsStockTakeCSVOpen] = useState(false);
@@ -257,101 +279,196 @@ export const InventoryView: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const outOfStockCount = products.filter((p) => p.stock === 0).length;
-  const lowStockCount = products.filter((p) => p.stock <= p.minStock).length;
-  const totalStockUnits = products.reduce((sum, p) => sum + p.stock, 0);
-  const totalValuation = products.reduce((sum, p) => sum + p.stock * p.costPrice, 0);
+  // Pagination for Master Products
+  const [productPage, setProductPage] = useState(1);
+  const [productPageSize, setProductPageSize] = useState(30);
 
-  // Expiration calculations (FEFO)
-  const expiredCount = products.filter((p) => {
-    const diff = getProductExpiryDiffDays(p.expiryDate);
-    return diff !== null && diff < 0;
-  }).length;
+  const deferredSearch = useDeferredValue(search);
+  const deferredSupplierSearch = useDeferredValue(supplierSearch);
 
-  const criticalExpCount = products.filter((p) => {
-    const diff = getProductExpiryDiffDays(p.expiryDate);
-    return diff !== null && diff >= 0 && diff <= 30;
-  }).length;
+  // Reset page whenever search or filter changes
+  useEffect(() => {
+    setProductPage(1);
+  }, [deferredSearch, categoryFilter, productOriginFilter, alertFilter]);
 
-  const approachingExpCount = products.filter((p) => {
-    const diff = getProductExpiryDiffDays(p.expiryDate);
-    return diff !== null && diff > 30 && diff <= 90;
-  }).length;
+  // Single-pass memoized inventory metrics (O(N) single pass instead of 8 separate filter/reduce iterations)
+  const inventoryMetrics = useMemo(() => {
+    let outOfStock = 0;
+    let lowStock = 0;
+    let totalStock = 0;
+    let totalVal = 0;
+    let exp = 0;
+    let criticalExp = 0;
+    let approachingExp = 0;
+    let alerts = 0;
 
-  const totalExpAlertsCount = expiredCount + criticalExpCount + approachingExpCount;
-  const totalAlertsCount = products.filter((p) => {
-    if (p.stock <= p.minStock) return true;
-    const diff = getProductExpiryDiffDays(p.expiryDate);
-    return diff !== null && diff <= 90;
-  }).length;
+    for (let i = 0; i < products.length; i++) {
+      const p = products[i];
+      totalStock += p.stock;
+      totalVal += p.stock * p.costPrice;
 
-  const filteredProducts = products.filter((p) => {
-    const query = search.toLowerCase();
-    const matchQuery =
-      !query ||
-      p.name.toLowerCase().includes(query) ||
-      p.sku.toLowerCase().includes(query) ||
-      p.barcode.toLowerCase().includes(query) ||
-      (p.brand && p.brand.toLowerCase().includes(query));
-    const matchCat = categoryFilter === 'all' || p.categoryId === categoryFilter;
-    const matchOrigin =
-      productOriginFilter === 'all'
-        ? true
-        : productOriginFilter === 'imported'
-        ? isImportedProduct(p)
-        : !isImportedProduct(p);
+      const isZero = p.stock === 0;
+      const isLow = p.stock <= p.minStock;
+      if (isZero) outOfStock++;
+      if (isLow) lowStock++;
 
-    let matchAlert = true;
-    if (alertFilter === 'low-stock') {
-      matchAlert = p.stock <= p.minStock;
-    } else if (alertFilter === 'out-of-stock') {
-      matchAlert = p.stock === 0;
-    } else if (alertFilter === 'critical-exp') {
       const diff = getProductExpiryDiffDays(p.expiryDate);
-      matchAlert = diff !== null && diff <= 30;
-    } else if (alertFilter === 'approaching-exp') {
-      const diff = getProductExpiryDiffDays(p.expiryDate);
-      matchAlert = diff !== null && diff > 30 && diff <= 90;
-    } else if (alertFilter === 'all-exp') {
-      const diff = getProductExpiryDiffDays(p.expiryDate);
-      matchAlert = diff !== null && diff <= 90;
+      let hasExpAlert = false;
+      if (diff !== null) {
+        if (diff < 0) {
+          exp++;
+          hasExpAlert = true;
+        } else if (diff <= 30) {
+          criticalExp++;
+          hasExpAlert = true;
+        } else if (diff <= 90) {
+          approachingExp++;
+          hasExpAlert = true;
+        }
+      }
+
+      if (isLow || hasExpAlert) {
+        alerts++;
+      }
     }
 
-    return matchQuery && matchCat && matchOrigin && matchAlert;
-  });
+    return {
+      outOfStockCount: outOfStock,
+      lowStockCount: lowStock,
+      totalStockUnits: totalStock,
+      totalValuation: totalVal,
+      expiredCount: exp,
+      criticalExpCount: criticalExp,
+      approachingExpCount: approachingExp,
+      totalExpAlertsCount: exp + criticalExp + approachingExp,
+      totalAlertsCount: alerts,
+    };
+  }, [products]);
 
-  const filteredSuppliers = suppliers.filter((s) => {
-    const query = (activeTab === 'suppliers' ? supplierSearch || search : search).toLowerCase();
-    const matchQuery =
-      !query ||
-      s.name.toLowerCase().includes(query) ||
-      (s.contactPerson && s.contactPerson.toLowerCase().includes(query)) ||
-      s.phone.toLowerCase().includes(query) ||
-      (s.category && s.category.toLowerCase().includes(query)) ||
-      (s.address && s.address.toLowerCase().includes(query));
-    const matchCat =
-      supplierCategoryFilter === 'all' || (s.category && s.category.toLowerCase().includes(supplierCategoryFilter.toLowerCase()));
-    return matchQuery && matchCat;
-  });
+  const {
+    outOfStockCount,
+    lowStockCount,
+    totalStockUnits,
+    totalValuation,
+    expiredCount,
+    criticalExpCount,
+    approachingExpCount,
+    totalExpAlertsCount,
+    totalAlertsCount,
+  } = inventoryMetrics;
 
-  const filteredPurchases = supplierPurchases.filter((purch) => {
-    const query = search.toLowerCase();
-    return (
-      !query ||
-      purch.invoiceNumber.toLowerCase().includes(query) ||
-      purch.supplierName.toLowerCase().includes(query)
+  const filteredProducts = useMemo(() => {
+    const query = deferredSearch.trim().toLowerCase();
+    return products.filter((p) => {
+      const matchQuery =
+        !query ||
+        p.name.toLowerCase().includes(query) ||
+        p.sku.toLowerCase().includes(query) ||
+        p.barcode.toLowerCase().includes(query) ||
+        (p.brand && p.brand.toLowerCase().includes(query));
+      if (!matchQuery) return false;
+
+      const matchCat = categoryFilter === 'all' || p.categoryId === categoryFilter;
+      if (!matchCat) return false;
+
+      const matchOrigin =
+        productOriginFilter === 'all'
+          ? true
+          : productOriginFilter === 'imported'
+          ? isImportedProduct(p)
+          : !isImportedProduct(p);
+      if (!matchOrigin) return false;
+
+      if (alertFilter === 'low-stock') {
+        return p.stock <= p.minStock;
+      } else if (alertFilter === 'out-of-stock') {
+        return p.stock === 0;
+      } else if (alertFilter === 'critical-exp') {
+        const diff = getProductExpiryDiffDays(p.expiryDate);
+        return diff !== null && diff <= 30;
+      } else if (alertFilter === 'approaching-exp') {
+        const diff = getProductExpiryDiffDays(p.expiryDate);
+        return diff !== null && diff > 30 && diff <= 90;
+      } else if (alertFilter === 'all-exp') {
+        const diff = getProductExpiryDiffDays(p.expiryDate);
+        return diff !== null && diff <= 90;
+      }
+
+      return true;
+    });
+  }, [products, deferredSearch, categoryFilter, productOriginFilter, alertFilter]);
+
+  const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / productPageSize));
+
+  const paginatedProducts = useMemo(() => {
+    const start = (productPage - 1) * productPageSize;
+    return filteredProducts.slice(start, start + productPageSize);
+  }, [filteredProducts, productPage, productPageSize]);
+
+  const filteredSuppliers = useMemo(() => {
+    const rawQuery = activeTab === 'suppliers' ? deferredSupplierSearch || deferredSearch : deferredSearch;
+    const query = rawQuery.trim().toLowerCase();
+    return suppliers.filter((s) => {
+      const matchQuery =
+        !query ||
+        s.name.toLowerCase().includes(query) ||
+        (s.contactPerson && s.contactPerson.toLowerCase().includes(query)) ||
+        s.phone.toLowerCase().includes(query) ||
+        (s.category && s.category.toLowerCase().includes(query)) ||
+        (s.address && s.address.toLowerCase().includes(query));
+      const matchCat =
+        supplierCategoryFilter === 'all' || (s.category && s.category.toLowerCase().includes(supplierCategoryFilter.toLowerCase()));
+      return matchQuery && matchCat;
+    });
+  }, [suppliers, activeTab, deferredSupplierSearch, deferredSearch, supplierCategoryFilter]);
+
+  const filteredPurchases = useMemo(() => {
+    const query = deferredSearch.trim().toLowerCase();
+    return supplierPurchases.filter((purch) => {
+      const matchQuery =
+        !query ||
+        purch.invoiceNumber.toLowerCase().includes(query) ||
+        purch.supplierName.toLowerCase().includes(query);
+      const matchDate = isDateWithinFilter(purch.createdAt, purchaseStartDate, purchaseEndDate);
+      return matchQuery && matchDate;
+    });
+  }, [supplierPurchases, deferredSearch, purchaseStartDate, purchaseEndDate]);
+
+  const filteredReturns = useMemo(() => {
+    const query = deferredSearch.trim().toLowerCase();
+    return purchaseReturns.filter((ret) => {
+      const matchQuery =
+        !query ||
+        ret.returnNumber.toLowerCase().includes(query) ||
+        ret.supplierName.toLowerCase().includes(query) ||
+        (ret.referenceInvoiceNumber && ret.referenceInvoiceNumber.toLowerCase().includes(query));
+      const matchDate = isDateWithinFilter(ret.createdAt, returnStartDate, returnEndDate);
+      return matchQuery && matchDate;
+    });
+  }, [purchaseReturns, deferredSearch, returnStartDate, returnEndDate]);
+
+  // Period Financial & Quantity Summaries for Purchases and Returns
+  const totalFilteredPurchaseAmount = useMemo(() => {
+    return filteredPurchases.reduce((sum, p) => sum + (p.totalAmount || 0), 0);
+  }, [filteredPurchases]);
+
+  const totalFilteredPurchaseQty = useMemo(() => {
+    return filteredPurchases.reduce(
+      (sum, p) => sum + (p.items || []).reduce((s, i) => s + (i.quantity || 0), 0),
+      0
     );
-  });
+  }, [filteredPurchases]);
 
-  const filteredReturns = purchaseReturns.filter((ret) => {
-    const query = search.toLowerCase();
-    return (
-      !query ||
-      ret.returnNumber.toLowerCase().includes(query) ||
-      ret.supplierName.toLowerCase().includes(query) ||
-      (ret.referenceInvoiceNumber && ret.referenceInvoiceNumber.toLowerCase().includes(query))
+  const totalFilteredReturnAmount = useMemo(() => {
+    return filteredReturns.reduce((sum, r) => sum + (r.totalAmount || 0), 0);
+  }, [filteredReturns]);
+
+  const totalFilteredReturnQty = useMemo(() => {
+    return filteredReturns.reduce(
+      (sum, r) => sum + (r.items || []).reduce((s, i) => s + (i.quantity || 0), 0),
+      0
     );
-  });
+  }, [filteredReturns]);
 
   // Calculate purchase stats per supplier
   const getSupplierPurchasesSummary = (suppName: string) => {
@@ -1111,16 +1228,36 @@ export const InventoryView: React.FC = () => {
                   </div>
                 </button>
                 <button
+                  id="btn-import-direct-file"
+                  onClick={() => {
+                    setIsAuditDropdownOpen(false);
+                    setIsDirectFileImportOpen(true);
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <Upload className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span>Impor File Langsung (As-Is)</span>
+                      <span className="px-1 py-0.2 text-[9px] font-bold rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                        Tanpa Koreksi
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-normal">Impor CSV/Excel asli tanpa auto-koreksi</div>
+                  </div>
+                </button>
+                <button
+                  id="btn-import-with-correction"
                   onClick={() => {
                     setIsAuditDropdownOpen(false);
                     setIsDataImportOpen(true);
                   }}
                   className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
                 >
-                  <Upload className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
                   <div>
-                    <div>Import &amp; Koreksi Produk</div>
-                    <div className="text-[10px] text-slate-400 font-normal">Import file &amp; auto-koreksi ejaan</div>
+                    <div>Impor dengan Auto-Koreksi AI</div>
+                    <div className="text-[10px] text-slate-400 font-normal">Pembersihan ejaan singkatan &amp; gramasi</div>
                   </div>
                 </button>
               </div>
@@ -1279,14 +1416,11 @@ export const InventoryView: React.FC = () => {
               className="px-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 cursor-pointer font-medium"
             >
               <option value="all">Semua Kategori</option>
-              <option value="groceries">Sembako & Beras</option>
-              <option value="instant-food">Makanan Instan & Bumbu</option>
-              <option value="beverages">Minuman & Kopi</option>
-              <option value="snacks">Snack & Biskuit</option>
-              <option value="personal-care">Perawatan Diri & Sabun</option>
-              <option value="household">Pembersih Rumah Tangga</option>
-              <option value="dairy">Susu & Produk Dingin</option>
-              <option value="bakery">Roti & Sarapan</option>
+              {categories.filter((c) => c.id !== 'all').map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
             </select>
 
             <select
@@ -1490,6 +1624,9 @@ export const InventoryView: React.FC = () => {
           <div className="flex items-center gap-3 text-xs flex-wrap ml-auto">
             <span className="text-slate-500 dark:text-slate-400">
               Total Faktur: <strong className="text-slate-900 dark:text-white font-mono">{filteredPurchases.length}</strong>
+              {filteredPurchases.length !== supplierPurchases.length && (
+                <span className="text-slate-400 text-[11px] ml-1">(dari {supplierPurchases.length})</span>
+              )}
             </span>
             <button
               onClick={() => {
@@ -1503,6 +1640,18 @@ export const InventoryView: React.FC = () => {
               <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>Cetak Pricetag per Faktur</span>
             </button>
+          </div>
+        )}
+
+        {/* Returns Metrics */}
+        {activeTab === 'returns' && (
+          <div className="flex items-center gap-3 text-xs flex-wrap ml-auto">
+            <span className="text-slate-500 dark:text-slate-400">
+              Total Retur: <strong className="text-slate-900 dark:text-white font-mono">{filteredReturns.length}</strong>
+              {filteredReturns.length !== purchaseReturns.length && (
+                <span className="text-slate-400 text-[11px] ml-1">(dari {purchaseReturns.length})</span>
+              )}
+            </span>
           </div>
         )}
       </div>
@@ -1605,8 +1754,8 @@ export const InventoryView: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((prod) => {
+                {paginatedProducts.length > 0 ? (
+                  paginatedProducts.map((prod) => {
                     const isLow = prod.stock <= prod.minStock;
                     const isZero = prod.stock === 0;
                     const isImported = isImportedProduct(prod);
@@ -1888,6 +2037,58 @@ export const InventoryView: React.FC = () => {
                 )}
               </tbody>
             </table>
+
+            {/* Pagination Toolbar */}
+            {filteredProducts.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-850 border-t border-slate-200 dark:border-slate-800 text-xs">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                  <span>
+                    Menampilkan <strong className="text-slate-800 dark:text-slate-200 font-mono">{Math.min((productPage - 1) * productPageSize + 1, filteredProducts.length)} - {Math.min(productPage * productPageSize, filteredProducts.length)}</strong> dari <strong className="text-slate-800 dark:text-slate-200 font-mono">{filteredProducts.length}</strong> produk
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-700">|</span>
+                  <label className="flex items-center gap-1.5">
+                    <span className="text-[11px]">Baris:</span>
+                    <select
+                      value={productPageSize}
+                      onChange={(e) => {
+                        setProductPageSize(Number(e.target.value));
+                        setProductPage(1);
+                      }}
+                      className="px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                    >
+                      <option value={20}>20</option>
+                      <option value={30}>30</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setProductPage((p) => Math.max(1, p - 1))}
+                    disabled={productPage <= 1}
+                    className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition cursor-pointer shadow-2xs"
+                    title="Halaman Sebelumnya"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Prev</span>
+                  </button>
+                  <span className="px-2 font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">
+                    {productPage} / {totalProductPages}
+                  </span>
+                  <button
+                    onClick={() => setProductPage((p) => Math.min(totalProductPages, p + 1))}
+                    disabled={productPage >= totalProductPages}
+                    className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition cursor-pointer shadow-2xs"
+                    title="Halaman Berikutnya"
+                  >
+                    <span className="hidden sm:inline">Next</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : activeTab === 'price_history' ? (
           <div className="p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-950/50">
@@ -2031,209 +2232,331 @@ export const InventoryView: React.FC = () => {
             </div>
           </div>
         ) : activeTab === 'purchases' ? (
-          /* Supplier Purchases Invoices Table */
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
-              <tr>
-                <th className="py-3 px-4">No. Faktur / Waktu</th>
-                <th className="py-3 px-4">Supplier & Syarat</th>
-                <th className="py-3 px-4">Barang Dibeli</th>
-                <th className="py-3 px-4 text-right">Diskon & DPP</th>
-                <th className="py-3 px-4 text-right">PPN Masukan</th>
-                <th className="py-3 px-4 text-right">Total Tagihan</th>
-                <th className="py-3 px-4 text-center">Aksi & Label</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-              {filteredPurchases.length > 0 ? (
-                filteredPurchases.map((purch) => (
-                  <tr key={purch.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                        {purch.invoiceNumber}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                        <Calendar className="w-3 h-3 text-slate-400" />
-                        {formatDate(purch.createdAt)}
-                      </div>
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-900 dark:text-slate-100">
-                        {purch.supplierName}
-                      </div>
-                      <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">
-                        {purch.paymentTerms}
-                      </div>
-                      {purch.notes && (
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 italic mt-0.5">
-                          {purch.notes}
-                        </div>
-                      )}
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <div className="space-y-1">
-                        {purch.items.map((item, idx) => (
-                          <div key={idx} className="flex items-center gap-2 text-[11px]">
-                            <span className="font-bold text-slate-800 dark:text-slate-200">
-                              {item.quantity}x
-                            </span>
-                            <span className="text-slate-600 dark:text-slate-300">
-                              {item.productName}
-                            </span>
-                            <span className="text-slate-400 font-mono text-[10px]">
-                              (@{formatCurrency(item.costPrice, settings.currency)})
-                            </span>
+          /* Supplier Purchases Invoices Table with Date Filter */
+          <div className="flex flex-col min-h-full">
+            <DateFilterBar
+              idPrefix="inventory-purchases-date-filter"
+              label="Filter Tanggal Faktur Masuk"
+              preset={purchaseDatePreset}
+              startDate={purchaseStartDate}
+              endDate={purchaseEndDate}
+              onPresetChange={(newPreset, sDate, eDate) => {
+                setPurchaseDatePreset(newPreset);
+                setPurchaseStartDate(sDate);
+                setPurchaseEndDate(eDate);
+              }}
+              onDateChange={(sDate, eDate) => {
+                setPurchaseStartDate(sDate);
+                setPurchaseEndDate(eDate);
+                setPurchaseDatePreset('custom');
+              }}
+              totalFilteredCount={filteredPurchases.length}
+              totalAllCount={supplierPurchases.length}
+              summaryBadge={
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">
+                    Total Tagihan:
+                  </span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs">
+                    {formatCurrency(totalFilteredPurchaseAmount, settings.currency)}
+                  </span>
+                  <span className="text-slate-400 text-[10px]">
+                    ({totalFilteredPurchaseQty} pcs barang)
+                  </span>
+                </div>
+              }
+            />
+            <div className="flex-1 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
+                  <tr>
+                    <th className="py-3 px-4">No. Faktur / Waktu</th>
+                    <th className="py-3 px-4">Supplier & Syarat</th>
+                    <th className="py-3 px-4">Barang Dibeli</th>
+                    <th className="py-3 px-4 text-right">Diskon & DPP</th>
+                    <th className="py-3 px-4 text-right">PPN Masukan</th>
+                    <th className="py-3 px-4 text-right">Total Tagihan</th>
+                    <th className="py-3 px-4 text-center">Aksi & Label</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                  {filteredPurchases.length > 0 ? (
+                    filteredPurchases.map((purch) => (
+                      <tr key={purch.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="py-3 px-4">
+                          <div className="font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                            {purch.invoiceNumber}
                           </div>
-                        ))}
-                      </div>
-                    </td>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                            <Calendar className="w-3 h-3 text-slate-400" />
+                            {formatDate(purch.createdAt)}
+                          </div>
+                        </td>
 
-                    <td className="py-3 px-4 text-right font-mono">
-                      {purch.discountAmount > 0 ? (
-                        <div>
-                          <span className="text-rose-500 font-medium text-[10px]">
-                            -{formatCurrency(purch.discountAmount, settings.currency)} ({purch.discountRate}%)
+                        <td className="py-3 px-4">
+                          <div className="font-semibold text-slate-900 dark:text-slate-100">
+                            {purch.supplierName}
+                          </div>
+                          <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">
+                            {purch.paymentTerms}
+                          </div>
+                          {purch.notes && (
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 italic mt-0.5">
+                              {purch.notes}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-4">
+                          <div className="space-y-1">
+                            {(purch.items || []).map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-[11px]">
+                                <span className="font-bold text-slate-800 dark:text-slate-200">
+                                  {item.quantity}x
+                                </span>
+                                <span className="text-slate-600 dark:text-slate-300">
+                                  {item.productName}
+                                </span>
+                                <span className="text-slate-400 font-mono text-[10px]">
+                                  (@{formatCurrency(item.costPrice, settings.currency)})
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+
+                        <td className="py-3 px-4 text-right font-mono">
+                          {purch.discountAmount > 0 ? (
+                            <div>
+                              <span className="text-rose-500 font-medium text-[10px]">
+                                -{formatCurrency(purch.discountAmount, settings.currency)} ({purch.discountRate}%)
+                              </span>
+                              <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">
+                                DPP: {formatCurrency(purch.dppAmount, settings.currency)}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">
+                              {formatCurrency(purch.subtotal, settings.currency)}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-4 text-right font-mono">
+                          <div className="font-bold text-blue-600 dark:text-blue-400">
+                            +{formatCurrency(purch.ppnAmount, settings.currency)}
+                          </div>
+                          <span className="text-[10px] text-slate-400">PPN {purch.ppnRate}%</span>
+                        </td>
+
+                        <td className="py-3 px-4 text-right font-mono">
+                          <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                            {formatCurrency(purch.totalAmount, settings.currency)}
+                          </div>
+                          <span className="text-[10px] text-slate-400">
+                            {(purch.items || []).reduce((sum, i) => sum + (i.quantity || 0), 0)} total pcs
                           </span>
-                          <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">
-                            DPP: {formatCurrency(purch.dppAmount, settings.currency)}
+                        </td>
+
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProductForPriceTag(null);
+                              setPurchaseForPriceTag(purch);
+                              setIsPriceTagModalOpen(true);
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-[11px] flex items-center gap-1.5 mx-auto cursor-pointer transition-all shadow-2xs active:scale-95 whitespace-nowrap"
+                            title={`Cetak pricetag untuk ${purch.items.length} item barang dari faktur ${purch.invoiceNumber}`}
+                          >
+                            <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                            <span>Cetak Pricetag</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-slate-400">
+                        {supplierPurchases.length > 0 ? (
+                          <div className="max-w-md mx-auto space-y-2">
+                            <FileText className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-1" />
+                            <p className="font-semibold text-slate-700 dark:text-slate-200">
+                              Tidak ada faktur pembelian pada periode ini ({formatPeriodLabel(purchaseDatePreset, purchaseStartDate, purchaseEndDate)}).
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Terdapat {supplierPurchases.length} faktur pembelian tercatat pada tanggal lainnya.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPurchaseDatePreset('all');
+                                setPurchaseStartDate('');
+                                setPurchaseEndDate('');
+                              }}
+                              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition"
+                            >
+                              <span>Tampilkan Seluruh Faktur ({supplierPurchases.length})</span>
+                            </button>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">
-                          {formatCurrency(purch.subtotal, settings.currency)}
-                        </div>
-                      )}
-                    </td>
-
-                    <td className="py-3 px-4 text-right font-mono">
-                      <div className="font-bold text-blue-600 dark:text-blue-400">
-                        +{formatCurrency(purch.ppnAmount, settings.currency)}
-                      </div>
-                      <span className="text-[10px] text-slate-400">PPN {purch.ppnRate}%</span>
-                    </td>
-
-                    <td className="py-3 px-4 text-right font-mono">
-                      <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                        {formatCurrency(purch.totalAmount, settings.currency)}
-                      </div>
-                      <span className="text-[10px] text-slate-400">
-                        {purch.items.reduce((sum, i) => sum + i.quantity, 0)} total pcs
-                      </span>
-                    </td>
-
-                    <td className="py-3 px-4 text-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProductForPriceTag(null);
-                          setPurchaseForPriceTag(purch);
-                          setIsPriceTagModalOpen(true);
-                        }}
-                        className="px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-[11px] flex items-center gap-1.5 mx-auto cursor-pointer transition-all shadow-2xs active:scale-95 whitespace-nowrap"
-                        title={`Cetak pricetag untuk ${purch.items.length} item barang dari faktur ${purch.invoiceNumber}`}
-                      >
-                        <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                        <span>Cetak Pricetag</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    <FileText className="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
-                    <p className="font-semibold text-slate-700 dark:text-slate-300">Belum ada faktur pembelian supplier</p>
-                    <p className="text-xs text-slate-400 mt-1">Catat penerimaan stok masuk dengan mengklik tombol "+ Input Pembelian".</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                        ) : (
+                          <div>
+                            <FileText className="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
+                            <p className="font-semibold text-slate-700 dark:text-slate-300">Belum ada faktur pembelian supplier</p>
+                            <p className="text-xs text-slate-400 mt-1">Catat penerimaan stok masuk dengan mengklik tombol "+ Input Pembelian".</p>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : (
-          /* Purchase Returns Table */
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
-              <tr>
-                <th className="py-3 px-4">No. Retur / Waktu</th>
-                <th className="py-3 px-4">Supplier & Alasan</th>
-                <th className="py-3 px-4">Barang Diretur</th>
-                <th className="py-3 px-4">Ref. Faktur Asal</th>
-                <th className="py-3 px-4 text-right">Nilai Klaim Retur</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-              {filteredReturns.length > 0 ? (
-                filteredReturns.map((ret) => (
-                  <tr key={ret.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="font-bold font-mono text-rose-600 dark:text-rose-400">
-                        {ret.returnNumber}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                        <Calendar className="w-3 h-3 text-slate-400" />
-                        {formatDate(ret.createdAt)}
-                      </div>
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-900 dark:text-slate-100">
-                        {ret.supplierName}
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800 inline-block mt-1">
-                        {ret.reason}
-                      </span>
-                      {ret.notes && (
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 italic mt-0.5">
-                          {ret.notes}
-                        </div>
-                      )}
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <div className="space-y-1">
-                        {ret.items.map((item, idx) => (
-                          <div key={idx} className="flex items-center gap-2 text-[11px]">
-                            <span className="font-bold text-rose-600 dark:text-rose-400">
-                              -{item.quantity}x
-                            </span>
-                            <span className="text-slate-800 dark:text-slate-200">
-                              {item.productName}
-                            </span>
-                            <span className="text-slate-400 font-mono text-[10px]">
-                              (@{formatCurrency(item.costPrice, settings.currency)})
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-
-                    <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-400">
-                      {ret.referenceInvoiceNumber || '-'}
-                    </td>
-
-                    <td className="py-3 px-4 text-right font-mono">
-                      <div className="text-sm font-black text-rose-600 dark:text-rose-400">
-                        -{formatCurrency(ret.totalAmount, settings.currency)}
-                      </div>
-                      <span className="text-[10px] text-slate-400">
-                        {ret.items.reduce((sum, i) => sum + i.quantity, 0)} pcs keluar
-                      </span>
-                    </td>
+          /* Purchase Returns Table with Date Filter */
+          <div className="flex flex-col min-h-full">
+            <DateFilterBar
+              idPrefix="inventory-returns-date-filter"
+              label="Filter Tanggal Retur Supplier"
+              preset={returnDatePreset}
+              startDate={returnStartDate}
+              endDate={returnEndDate}
+              onPresetChange={(newPreset, sDate, eDate) => {
+                setReturnDatePreset(newPreset);
+                setReturnStartDate(sDate);
+                setReturnEndDate(eDate);
+              }}
+              onDateChange={(sDate, eDate) => {
+                setReturnStartDate(sDate);
+                setReturnEndDate(eDate);
+                setReturnDatePreset('custom');
+              }}
+              totalFilteredCount={filteredReturns.length}
+              totalAllCount={purchaseReturns.length}
+              summaryBadge={
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">
+                    Total Klaim Retur:
+                  </span>
+                  <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-xs">
+                    -{formatCurrency(totalFilteredReturnAmount, settings.currency)}
+                  </span>
+                  <span className="text-slate-400 text-[10px]">
+                    ({totalFilteredReturnQty} pcs barang keluar)
+                  </span>
+                </div>
+              }
+            />
+            <div className="flex-1 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
+                  <tr>
+                    <th className="py-3 px-4">No. Retur / Waktu</th>
+                    <th className="py-3 px-4">Supplier & Alasan</th>
+                    <th className="py-3 px-4">Barang Diretur</th>
+                    <th className="py-3 px-4">Ref. Faktur Asal</th>
+                    <th className="py-3 px-4 text-right">Nilai Klaim Retur</th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
-                    <RotateCcw className="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
-                    <p className="font-semibold text-slate-700 dark:text-slate-300">Belum ada nota retur supplier</p>
-                    <p className="text-xs text-slate-400 mt-1">Kembalikan barang rusak/kadaluarsa ke distributor melalui tombol "+ Retur ke Supplier".</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                  {filteredReturns.length > 0 ? (
+                    filteredReturns.map((ret) => (
+                      <tr key={ret.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="py-3 px-4">
+                          <div className="font-bold font-mono text-rose-600 dark:text-rose-400">
+                            {ret.returnNumber}
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                            <Calendar className="w-3 h-3 text-slate-400" />
+                            {formatDate(ret.createdAt)}
+                          </div>
+                        </td>
+
+                        <td className="py-3 px-4">
+                          <div className="font-semibold text-slate-900 dark:text-slate-100">
+                            {ret.supplierName}
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800 inline-block mt-1">
+                            {ret.reason}
+                          </span>
+                          {ret.notes && (
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 italic mt-0.5">
+                              {ret.notes}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-4">
+                          <div className="space-y-1">
+                            {(ret.items || []).map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-[11px]">
+                                <span className="font-bold text-rose-600 dark:text-rose-400">
+                                  -{item.quantity}x
+                                </span>
+                                <span className="text-slate-800 dark:text-slate-200">
+                                  {item.productName}
+                                </span>
+                                <span className="text-slate-400 font-mono text-[10px]">
+                                  (@{formatCurrency(item.costPrice, settings.currency)})
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+
+                        <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-400">
+                          {ret.referenceInvoiceNumber || '-'}
+                        </td>
+
+                        <td className="py-3 px-4 text-right font-mono">
+                          <div className="text-sm font-black text-rose-600 dark:text-rose-400">
+                            -{formatCurrency(ret.totalAmount, settings.currency)}
+                          </div>
+                          <span className="text-[10px] text-slate-400">
+                            {(ret.items || []).reduce((sum, i) => sum + (i.quantity || 0), 0)} pcs keluar
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-slate-400">
+                        {purchaseReturns.length > 0 ? (
+                          <div className="max-w-md mx-auto space-y-2">
+                            <RotateCcw className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-1" />
+                            <p className="font-semibold text-slate-700 dark:text-slate-200">
+                              Tidak ada nota retur supplier pada periode ini ({formatPeriodLabel(returnDatePreset, returnStartDate, returnEndDate)}).
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Terdapat {purchaseReturns.length} nota retur supplier tercatat pada tanggal lainnya.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReturnDatePreset('all');
+                                setReturnStartDate('');
+                                setReturnEndDate('');
+                              }}
+                              className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition"
+                            >
+                              <span>Tampilkan Seluruh Retur ({purchaseReturns.length})</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div>
+                            <RotateCcw className="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
+                            <p className="font-semibold text-slate-700 dark:text-slate-300">Belum ada nota retur supplier</p>
+                            <p className="text-xs text-slate-400 mt-1">Kembalikan barang rusak/kadaluarsa ke distributor melalui tombol "+ Retur ke Supplier".</p>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
 
@@ -3127,6 +3450,12 @@ export const InventoryView: React.FC = () => {
         }}
         initialSelectedProduct={productForPriceTag}
         initialPurchaseInvoice={purchaseForPriceTag}
+      />
+
+      {/* Direct File Import (As-Is / No Auto-Correction) */}
+      <DirectFileImportModal
+        isOpen={isDirectFileImportOpen}
+        onClose={() => setIsDirectFileImportOpen(false)}
       />
 
       {/* Smart Data Import & Grammar/Gramasi Auto-Corrector */}

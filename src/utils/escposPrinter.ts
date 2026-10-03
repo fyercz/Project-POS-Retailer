@@ -193,9 +193,18 @@ export const buildTransactionReceiptEscPos = (
   builder.align('center');
   builder.bold(true);
   builder.size('large');
-  builder.line(settings.storeName || 'SMART RETAIL POS');
+  builder.line(settings.storeName || 'ULIL MART');
   builder.size('normal');
   builder.bold(false);
+  if (settings.storeTagline) {
+    builder.line(settings.storeTagline);
+  } else {
+    builder.line('Lengkap & Hemat');
+  }
+
+  if (settings.branchName) {
+    builder.line(settings.branchName);
+  }
 
   if (settings.address) {
     builder.line(settings.address);
@@ -264,10 +273,21 @@ export const buildTransactionReceiptEscPos = (
   builder.divider('-');
 
   // Payment Breakdown
-  builder.twoColumns('Metode Bayar', tx.payment.method.toUpperCase());
+  const methodLabel = tx.payment.method === 'qris'
+    ? (tx.payment.bankName || 'QRIS EDC BRI')
+    : tx.payment.method === 'card'
+    ? (tx.payment.bankName || 'KARTU EDC BRI')
+    : tx.payment.method === 'cash'
+    ? 'TUNAI (CASH)'
+    : 'TRANSFER BANK';
+
+  builder.twoColumns('Metode Bayar', methodLabel);
   builder.twoColumns('Bayar / Tunai', formatCurrency(tx.payment.amountTendered, settings.currency));
   if (tx.payment.change > 0) {
     builder.twoColumns('Kembalian', formatCurrency(tx.payment.change, settings.currency));
+  }
+  if (tx.payment.referenceCode) {
+    builder.twoColumns('Ref/RRN EDC', tx.payment.referenceCode);
   }
   if (tx.pointsEarned && tx.pointsEarned > 0) {
     builder.twoColumns('Poin Didapat', `+${tx.pointsEarned} Poin`);

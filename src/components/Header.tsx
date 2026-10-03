@@ -27,6 +27,9 @@ import {
   Laptop,
   BookOpen,
   Network,
+  Rocket,
+  GitBranch,
+  FileCheck,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import {
@@ -44,6 +47,7 @@ import { UserManualModal } from './UserManualModal';
 import { LANServerModal } from './LANServerModal';
 import { OfflineSyncBadge } from './OfflineSyncBadge';
 import { AuthorityModal } from './AuthorityModal';
+import { UlilMartLogo } from './UlilMartLogo';
 import { isViewAllowed } from '../utils/permissions';
 import { isDesktopApp } from '../utils/desktopHelper';
 
@@ -106,13 +110,24 @@ export const Header: React.FC = () => {
     onSuccess: () => {},
   });
 
-  const handleOpenSettings = () => {
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'settings' | 'launch'>('settings');
+  const [desktopInitialTab, setDesktopInitialTab] = useState<'install' | 'kiosk' | 'hardware' | 'electron' | 'autoupdate' | 'verify' | 'cleanup'>('install');
+
+  const handleOpenDesktopModal = (tab: 'install' | 'kiosk' | 'hardware' | 'electron' | 'autoupdate' | 'verify' | 'cleanup' = 'install') => {
+    setDesktopInitialTab(tab);
+    setIsDesktopModalOpen(true);
+  };
+
+  const handleOpenSettings = (tab: 'settings' | 'launch' = 'settings') => {
+    setSettingsInitialTab(tab);
     if (activeEmployee?.role !== 'owner') {
       setAuthorityModalConfig({
         isOpen: true,
-        title: 'Pengaturan Toko & Struk',
+        title: tab === 'launch' ? 'Kesiapan Peluncuran Toko' : 'Pengaturan Toko & Struk',
         description:
-          'Konfigurasi sistem toko, printer struk, dan persentase pajak dibatasi untuk Pemilik Toko (Owner). Masukkan PIN Owner untuk otorisasi.',
+          tab === 'launch'
+            ? 'Inisialisasi buka toko dan pembersihan data demo dibatasi untuk Pemilik Toko (Owner). Masukkan PIN Owner untuk otorisasi.'
+            : 'Konfigurasi sistem toko, printer struk, dan persentase pajak dibatasi untuk Pemilik Toko (Owner). Masukkan PIN Owner untuk otorisasi.',
         requiredRole: 'owner',
         onSuccess: () => setIsSettingsOpen(true),
       });
@@ -241,22 +256,24 @@ export const Header: React.FC = () => {
           dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800"
       >
         {/* Left Branding & Branch */}
-        <div className="flex items-center space-x-2 md:space-x-3 min-w-0 shrink">
-          <div className="flex items-center space-x-2 md:space-x-3 shrink-0">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-lg flex items-center justify-center font-black text-slate-950 shadow-md shadow-emerald-500/20 text-base">
-              U
+        <div className="flex items-center space-x-2 md:space-x-3 shrink-0">
+          <div className="flex items-center space-x-2 md:space-x-2.5 shrink-0">
+            {/* Logo on desktop / tablet: full brand logo; on mobile: compact mark */}
+            <div className="hidden sm:flex items-center shrink-0 py-1">
+              <UlilMartLogo variant="full" height={38} className="shrink-0" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white truncate">
-                  {settings.storeName || 'Ulilmart Ritel'}
-                </span>
-                <span className="hidden sm:inline-flex text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border dark:border-emerald-800/50 items-center gap-1">
+            <div className="sm:hidden flex items-center shrink-0">
+              <UlilMartLogo variant="mark" width={36} height={36} className="shrink-0 shadow-xs" />
+            </div>
+
+            <div className="hidden 2xl:block pl-2.5 border-l border-slate-200 dark:border-slate-800">
+              <div className="flex items-center space-x-1.5">
+                <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border dark:border-emerald-800/50 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   Ritel Aktif
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal truncate max-w-[130px] md:max-w-[180px]">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-normal truncate max-w-[130px]">
                 {settings.branchName}
               </p>
             </div>
@@ -689,12 +706,29 @@ export const Header: React.FC = () => {
                     id="menu-item-settings"
                     onClick={() => {
                       setIsUserMenuOpen(false);
-                      handleOpenSettings();
+                      handleOpenSettings('settings');
                     }}
-                    className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition font-medium"
+                    className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition font-medium cursor-pointer"
                   >
                     <SettingsIcon className="w-4 h-4 text-slate-500" />
-                    <span>Pengaturan Toko & Struk</span>
+                    <span>Pengaturan Toko &amp; Struk</span>
+                  </button>
+
+                  <button
+                    id="menu-item-ready-to-launch"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      handleOpenSettings('launch');
+                    }}
+                    className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition font-medium cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Rocket className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>Kesiapan Peluncuran (Ready to Launch)</span>
+                    </div>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                      Siap Buka
+                    </span>
                   </button>
 
                   <button
@@ -772,12 +806,41 @@ export const Header: React.FC = () => {
                       id="menu-item-desktop-hub"
                       onClick={() => {
                         setIsUserMenuOpen(false);
-                        setIsDesktopModalOpen(true);
+                        handleOpenDesktopModal('kiosk');
                       }}
                       className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition font-medium"
                     >
                       <Laptop className="w-4 h-4 text-blue-500" />
                       <span>Mode Layar Penuh Kiosk / Desktop</span>
+                    </button>
+
+                    <button
+                      id="menu-item-autoupdate-hub"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        handleOpenDesktopModal('autoupdate');
+                      }}
+                      className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition font-medium"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <GitBranch className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span className="truncate">Auto-Update GitHub Resmi</span>
+                      </div>
+                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold shrink-0">
+                        v-Pull
+                      </span>
+                    </button>
+
+                    <button
+                      id="menu-item-verify-hub"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        handleOpenDesktopModal('verify');
+                      }}
+                      className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition font-medium"
+                    >
+                      <FileCheck className="w-4 h-4 text-indigo-500" />
+                      <span>Verifikasi File &amp; Pembersihan Sistem</span>
                     </button>
                   </div>
                 </div>
@@ -845,8 +908,20 @@ export const Header: React.FC = () => {
       {/* Modals */}
       {isHeldModalOpen && <HeldOrdersModal isOpen={isHeldModalOpen} onClose={() => setIsHeldModalOpen(false)} />}
       {isShortcutsOpen && <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />}
-      {isSettingsOpen && <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />}
-      {isDesktopModalOpen && <DesktopAppModal isOpen={isDesktopModalOpen} onClose={() => setIsDesktopModalOpen(false)} />}
+      {isSettingsOpen && (
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          initialTab={settingsInitialTab}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      )}
+      {isDesktopModalOpen && (
+        <DesktopAppModal
+          isOpen={isDesktopModalOpen}
+          initialTab={desktopInitialTab}
+          onClose={() => setIsDesktopModalOpen(false)}
+        />
+      )}
       {isManualModalOpen && <UserManualModal isOpen={isManualModalOpen} onClose={() => setIsManualModalOpen(false)} />}
       <LANServerModal
         isOpen={isLANModalOpen}

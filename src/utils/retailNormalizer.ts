@@ -1179,3 +1179,168 @@ export function parseRetailLine(
     selected: true,
   };
 }
+
+/**
+ * Parses a raw line directly AS-IS WITHOUT any auto-correction,
+ * spelling substitution, or AI normalizer modifications.
+ */
+export function parseRetailLineRaw(
+  rawLine: string,
+  index: number,
+  minProfitPoints = 15
+): ParsedItem | null {
+  const line = rawLine.trim();
+  if (!line) return null;
+
+  const lineLower = line.toLowerCase();
+  // Skip header rows
+  if (
+    (lineLower.includes('barcode') && lineLower.includes('nama')) ||
+    (lineLower.includes('kode') && lineLower.includes('nama')) ||
+    (lineLower.includes('nama produk') && lineLower.includes('harga')) ||
+    (lineLower.includes('harga beli') && lineLower.includes('harga jual')) ||
+    (lineLower.includes('display rak') && lineLower.includes('perolehan')) ||
+    (lineLower.startsWith('no;') && lineLower.includes('nama')) ||
+    (lineLower.startsWith('no,') && lineLower.includes('nama'))
+  ) {
+    return null;
+  }
+
+  // Detect delimiter
+  let delimiter: string | null = null;
+  if (line.includes('\t')) delimiter = '\t';
+  else if (line.includes(';')) delimiter = ';';
+  else if (line.includes('|')) delimiter = '|';
+  else if (line.includes(',')) delimiter = ',';
+
+  let rawBarcode = '';
+  let rawName = '';
+  let rawCost = 0;
+  let rawPrice = 0;
+  let rawStock = 24;
+  let rawCategoryHint = '';
+  let rawUnit = 'pcs';
+
+  if (delimiter) {
+    const rawParts = line.split(delimiter).map((p) => p.replace(/^["']|["']$/g, '').trim());
+
+    if (rawParts.length >= 5) {
+      const col2Val = parsePriceNumber(rawParts[2], -1);
+      const col3Val = parsePriceNumber(rawParts[3], -1);
+      const col4Val = parsePriceNumber(rawParts[4], -1);
+
+      const isDisplayJumlahPerolehan =
+        col4Val >= 0 &&
+        col3Val >= 0 &&
+        col2Val >= 0 &&
+        (col4Val >= 100 || (col4Val === 0 && col3Val <= 1000));
+
+      if (isDisplayJumlahPerolehan) {
+        rawBarcode = extractCleanBarcode(rawParts[0]);
+        rawName = rawParts[1] || `Produk #${index + 1}`;
+        rawCost = Math.round(col4Val * 100) / 100;
+        rawStock = Math.max(0, col3Val);
+        rawPrice = rawCost > 0 ? Math.ceil((rawCost * 1.25) / 100) * 100 : 5000;
+        if (rawParts[5]) rawCategoryHint = rawParts[5];
+      } else if (isLikelyBarcode(rawParts[0])) {
+        rawBarcode = extractCleanBarcode(rawParts[0]);
+        rawName = rawParts[1] || `Produk #${index + 1}`;
+        rawCost = parsePriceNumber(rawParts[2], 0);
+        rawPrice = parsePriceNumber(rawParts[3], rawCost > 0 ? Math.round(rawCost * 1.25) : 5000);
+        rawStock = parsePriceNumber(rawParts[4], 24);
+        if (rawParts[5]) rawCategoryHint = rawParts[5];
+        if (rawParts[6]) rawUnit = rawParts[6];
+      } else {
+        rawName = rawParts[0];
+        rawCost = parsePriceNumber(rawParts[1], 0);
+        rawPrice = parsePriceNumber(rawParts[2], rawCost > 0 ? Math.round(rawCost * 1.25) : 5000);
+        rawStock = parsePriceNumber(rawParts[3], 24);
+        rawBarcode = extractCleanBarcode(rawParts[4] || '');
+        if (rawParts[5]) rawCategoryHint = rawParts[5];
+      }
+    } else if (rawParts.length === 4) {
+      if (isLikelyBarcode(rawParts[0])) {
+        rawBarcode = extractCleanBarcode(rawParts[0]);
+        rawName = rawParts[1] || `Produk #${index + 1}`;
+        rawCost = parsePriceNumber(rawParts[2], 0);
+        rawPrice = parsePriceNumber(rawParts[3], rawCost > 0 ? Math.round(rawCost * 1.25) : 5000);
+      } else if (isLikelyBarcode(rawParts[3])) {
+        rawName = rawParts[0];
+        rawCost = parsePriceNumber(rawParts[1], 0);
+        rawPrice = parsePriceNumber(rawParts[2], rawCost > 0 ? Math.round(rawCost * 1.25) : 5000);
+        rawBarcode = extractCleanBarcode(rawParts[3]);
+      } else {
+        rawName = rawParts[0];
+        rawCost = parsePriceNumber(rawParts[1], 0);
+        rawPrice = parsePriceNumber(rawParts[2], rawCost > 0 ? Math.round(rawCost * 1.25) : 5000);
+        rawStock = parsePriceNumber(rawParts[3], 24);
+      }
+    } else if (rawParts.length === 3) {
+      if (isLikelyBarcode(rawParts[0])) {
+        rawBarcode = extractCleanBarcode(rawParts[0]);
+        rawName = rawParts[1];
+        rawPrice = parsePriceNumber(rawParts[2], 5000);
+        rawCost = Math.round(rawPrice * 0.8);
+      } else {
+        rawName = rawParts[0];
+        const p1 = parsePriceNumber(rawParts[1], 0);
+        const p2 = parsePriceNumber(rawParts[2], 0);
+        if (p2 > 1000) {
+          rawCost = p1;
+          rawPrice = p2;
+        } else {
+          rawCost = Math.round(p1 * 0.8);
+          rawPrice = p1;
+          rawStock = p2 || 24;
+        }
+      }
+    } else if (rawParts.length === 2) {
+      if (isLikelyBarcode(rawParts[0])) {
+        rawBarcode = extractCleanBarcode(rawParts[0]);
+        rawName = rawParts[1];
+        rawPrice = 5000;
+        rawCost = 4000;
+      } else {
+        rawName = rawParts[0];
+        rawPrice = parsePriceNumber(rawParts[1], 5000);
+        rawCost = Math.round(rawPrice * 0.8);
+      }
+    } else {
+      rawName = rawParts[0] || `Produk #${index + 1}`;
+    }
+  } else {
+    rawName = line;
+  }
+
+  // Ensure barcode
+  if (!rawBarcode || rawBarcode.trim().length === 0) {
+    rawBarcode = `899${Math.floor(100000000 + Math.random() * 900000000)}`;
+  }
+
+  const categoryId = rawCategoryHint ? mapCategory(rawCategoryHint) : mapCategory(rawName);
+  const marginNominal = Math.max(0, rawPrice - rawCost);
+  const profitMarginPercent = rawPrice > 0 ? (marginNominal / rawPrice) * 100 : 0;
+  const isPointsEligible = profitMarginPercent >= minProfitPoints;
+  const sku = `SKU-${categoryId.slice(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+
+  return {
+    id: `raw-${index}-${Date.now()}-${rawBarcode}`,
+    originalText: line,
+    name: rawName.trim(), // Keep exact name as in file! No auto-correction.
+    brand: '',
+    gramasi: '',
+    categoryId,
+    unit: rawUnit,
+    costPrice: rawCost,
+    price: rawPrice,
+    stock: rawStock,
+    sku,
+    barcode: rawBarcode,
+    aisle: 'Lorong Toko',
+    wholesaleUnits: [],
+    corrections: [], // Zero auto-corrections!
+    profitMarginPercent,
+    isPointsEligible,
+    selected: true,
+  };
+}

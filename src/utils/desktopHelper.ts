@@ -64,11 +64,15 @@ export function isElectronApp(): boolean {
 
 export function isStandalonePWA(): boolean {
   if (typeof window === 'undefined') return false;
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.matchMedia('(display-mode: window-controls-overlay)').matches ||
-    (window.navigator as any).standalone === true
-  );
+  try {
+    const hasMatchMedia = typeof window.matchMedia === 'function';
+    const isStandalone = hasMatchMedia && Boolean(window.matchMedia('(display-mode: standalone)')?.matches);
+    const isOverlay = hasMatchMedia && Boolean(window.matchMedia('(display-mode: window-controls-overlay)')?.matches);
+    const isIosStandalone = (window.navigator as any)?.standalone === true;
+    return Boolean(isStandalone || isOverlay || isIosStandalone);
+  } catch {
+    return false;
+  }
 }
 
 export function isDesktopApp(): boolean {
@@ -517,4 +521,281 @@ shell\\install\\command=install.bat
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, 200);
+}
+
+export const DEFAULT_GITHUB_REPO_URL = 'https://github.com/fyercz/Project-POS-Retailer.git';
+
+/**
+ * Download update.bat - 1-Click GitHub Auto-Updater for Windows with auto-cleanup
+ */
+export function downloadUpdateBat(): void {
+  const content = `@echo off
+title Ulilmart POS - Auto-Update & System Cleaner (GitHub)
+color 0B
+cd /d "%~dp0"
+echo ==========================================================
+echo    Ulilmart POS - Auto-Update & Pemeliharaan Sistem
+echo ==========================================================
+echo  Repositori: https://github.com/fyercz/Project-POS-Retailer.git
+echo  [INFO] Data transaksi dan produk 100%% aman di IndexedDB.
+echo ==========================================================
+echo.
+
+set REPO_URL=https://github.com/fyercz/Project-POS-Retailer.git
+set GIT_CMD=git
+where git >nul 2>nul || (if exist "C:\\Program Files\\Git\\cmd\\git.exe" set "GIT_CMD=C:\\Program Files\\Git\\cmd\\git.exe")
+
+REM 1. Bersihkan file sampah dan temporary yang tidak perlu
+echo [1/4] Membersihkan file sementara, cache, dan log sistem...
+del /f /q /s *.tmp *.bak *.log Thumbs.db .DS_Store 2>nul
+if exist "node_modules\\.vite" rd /s /q "node_modules\\.vite" 2>nul
+echo       Pembersihan file sampah selesai.
+echo.
+
+REM 2. Hubungkan ke Git dan tarik kode terbaru
+echo [2/4] Menghubungkan ke GitHub (%REPO_URL%)...
+if not exist .git (
+    echo       Menginisialisasi repositori Git lokal...
+    "%GIT_CMD%" init
+    "%GIT_CMD%" remote add origin %REPO_URL%
+) else (
+    "%GIT_CMD%" remote set-url origin %REPO_URL% 2>nul || "%GIT_CMD%" remote add origin %REPO_URL% 2>nul
+)
+
+"%GIT_CMD%" pull origin main || "%GIT_CMD%" pull
+echo.
+
+REM 3. Perbarui paket dependensi
+echo [3/4] Memperbarui package dependensi (npm install)...
+call npm install
+echo.
+
+REM 4. Kompilasi ulang paket produksi
+echo [4/4] Mengompilasi aplikasi kasir (npm run build)...
+call npm run build
+echo.
+
+echo ==========================================================
+echo    🎉 Pembaruan & Pembersihan Sistem Berhasil!
+echo ==========================================================
+set /p RUN_NOW="Nyalakan kasir desktop sekarang (Y/T)? "
+if /i "%RUN_NOW%"=="Y" (
+    if exist desktop.bat (start "" desktop.bat) else (start "" npm start)
+)
+exit /b 0
+`;
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'update.bat';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 200);
+}
+
+export interface GitStatusResponse {
+  isGitRepo: boolean;
+  branch?: string;
+  currentCommit?: string;
+  commitMessage?: string;
+  commitDate?: string;
+  remoteUrl?: string;
+  officialRepoUrl?: string;
+  remoteLatestCommit?: string;
+  hasUpdate?: boolean;
+  isUpToDate?: boolean;
+  uncommittedCount?: number;
+  nodeVersion?: string;
+  platform?: string;
+  message?: string;
+  error?: string;
+}
+
+export async function fetchGitStatus(): Promise<GitStatusResponse> {
+  try {
+    const res = await fetch('/api/system/git-status');
+    if (!res.ok) {
+      throw new Error(`HTTP Error: ${res.status}`);
+    }
+    return await res.json();
+  } catch (err: any) {
+    return {
+      isGitRepo: false,
+      message: 'Gagal terhubung ke server lokal POS.',
+      error: err?.message,
+    };
+  }
+}
+
+export async function configureGitRemote(): Promise<{ success: boolean; message: string; officialRepoUrl?: string }> {
+  try {
+    const res = await fetch('/api/system/git-configure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      message: 'Gagal mengonfigurasi repositori Git: ' + (err?.message || String(err)),
+    };
+  }
+}
+
+export async function triggerGitPull(): Promise<{
+  success: boolean;
+  message: string;
+  officialRepoUrl?: string;
+  pullOutput?: string;
+  buildOutput?: string;
+  cleanedFilesCount?: number;
+  cleanedBytesFreed?: number;
+  details?: string;
+}> {
+  try {
+    const res = await fetch('/api/system/git-pull', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      message: 'Gagal menghubungi server untuk update.',
+      details: err?.message,
+    };
+  }
+}
+
+export interface VerifiedFileItem {
+  path: string;
+  category: string;
+  critical: boolean;
+  description: string;
+  exists: boolean;
+  size: number;
+  lastModified: string | null;
+  status: 'ok' | 'modified' | 'missing' | 'untracked';
+}
+
+export interface SystemVerificationResponse {
+  success: boolean;
+  overallHealth: 'healthy' | 'warning' | 'critical';
+  checkedAt: string;
+  officialRepoUrl: string;
+  stats: {
+    total: number;
+    intact: number;
+    modified: number;
+    missing: number;
+    missingCritical: number;
+  };
+  envPrerequisites: {
+    nodeVersion: string;
+    platform: string;
+    gitInstalled: boolean;
+    distBuilt: boolean;
+    nodeModulesInstalled: boolean;
+    databaseAccessible: boolean;
+  };
+  files: VerifiedFileItem[];
+  error?: string;
+}
+
+export async function verifySystemFiles(): Promise<SystemVerificationResponse> {
+  try {
+    const res = await fetch('/api/system/verify-files');
+    if (!res.ok) {
+      throw new Error(`HTTP Error: ${res.status}`);
+    }
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      overallHealth: 'critical',
+      checkedAt: new Date().toISOString(),
+      officialRepoUrl: DEFAULT_GITHUB_REPO_URL,
+      stats: { total: 0, intact: 0, modified: 0, missing: 0, missingCritical: 0 },
+      envPrerequisites: {
+        nodeVersion: 'unknown',
+        platform: 'unknown',
+        gitInstalled: false,
+        distBuilt: false,
+        nodeModulesInstalled: false,
+        databaseAccessible: false,
+      },
+      files: [],
+      error: err?.message,
+    };
+  }
+}
+
+export interface CleanupJunkItem {
+  path: string;
+  relativePath: string;
+  size: number;
+  category: string;
+  reason: string;
+}
+
+export interface CleanupScanResponse {
+  success: boolean;
+  totalFiles: number;
+  totalBytes: number;
+  items: CleanupJunkItem[];
+  error?: string;
+}
+
+export async function scanUnnecessaryFiles(): Promise<CleanupScanResponse> {
+  try {
+    const res = await fetch('/api/system/cleanup-scan');
+    if (!res.ok) {
+      throw new Error(`HTTP Error: ${res.status}`);
+    }
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      totalFiles: 0,
+      totalBytes: 0,
+      items: [],
+      error: err?.message,
+    };
+  }
+}
+
+export interface CleanupExecuteResponse {
+  success: boolean;
+  deletedCount: number;
+  bytesFreed: number;
+  deletedList: string[];
+  message: string;
+  error?: string;
+}
+
+export async function executeSystemCleanup(): Promise<CleanupExecuteResponse> {
+  try {
+    const res = await fetch('/api/system/cleanup-execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP Error: ${res.status}`);
+    }
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      deletedCount: 0,
+      bytesFreed: 0,
+      deletedList: [],
+      message: 'Gagal menjalankan pembersihan sistem: ' + (err?.message || String(err)),
+      error: err?.message,
+    };
+  }
 }

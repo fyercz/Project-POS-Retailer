@@ -21,6 +21,7 @@ import {
 import { usePOS } from '../context/POSContext';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { Transaction } from '../types';
+import { UlilMartLogo } from './UlilMartLogo';
 import { printViaIframe, openPrintWindow } from '../utils/printHelper';
 import {
   buildTransactionReceiptEscPos,
@@ -295,36 +296,54 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
               paperSize === '58mm' ? 'w-[280px]' : 'w-[360px]'
             }`}
           >
-            {/* Store Header */}
+            {/* Store Header: Logo & Store Identity */}
             <div className="text-center space-y-1 pb-3 border-b border-dashed border-slate-400">
-              <h2 className="font-bold text-sm tracking-wider uppercase">{settings.storeName}</h2>
-              <p className="text-[10px] text-slate-600">{settings.branchName}</p>
-              <p className="text-[10px] text-slate-600">{settings.address}</p>
-              <p className="text-[10px] text-slate-600">Tel: {settings.phone}</p>
+              {settings.showLogoOnReceipt !== false ? (
+                <>
+                  <div className="flex justify-center mb-1">
+                    <UlilMartLogo
+                      variant="receipt"
+                      width={paperSize === '58mm' ? 175 : 210}
+                      className="mx-auto"
+                    />
+                  </div>
+                  {settings.branchName && (
+                    <p className="text-[10px] text-slate-700 font-semibold">{settings.branchName}</p>
+                  )}
+                  <p className="text-[10px] text-slate-600 leading-tight">{settings.address}</p>
+                  <p className="text-[10px] text-slate-600 font-medium">Telp/WA: {settings.phone}</p>
+                </>
+              ) : (
+                <>
+                  <h2 className="font-bold text-sm tracking-wider uppercase">{settings.storeName}</h2>
+                  <p className="text-[10px] text-slate-600 font-semibold">{settings.storeTagline || 'Lengkap & Hemat'}</p>
+                  {settings.branchName && (
+                    <p className="text-[10px] text-slate-600">{settings.branchName}</p>
+                  )}
+                  <p className="text-[10px] text-slate-600 leading-tight">{settings.address}</p>
+                  <p className="text-[10px] text-slate-600">Telp/WA: {settings.phone}</p>
+                </>
+              )}
             </div>
 
             {/* Meta Info */}
             <div className="py-2 space-y-0.5 text-[10px] text-slate-700 border-b border-dashed border-slate-400">
               <div className="flex justify-between">
-                <span>Receipt:</span>
+                <span>No. Nota:</span>
                 <span className="font-bold">{transaction.invoiceNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span>Date:</span>
+                <span>Tanggal:</span>
                 <span>{formatDate(transaction.createdAt)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Kasir:</span>
                 <span>{transaction.cashierName}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Jenis:</span>
-                <span className="font-semibold text-emerald-700">Penjualan Langsung</span>
-              </div>
               {transaction.customer && (
                 <div className="flex justify-between">
                   <span>Pelanggan:</span>
-                  <span>
+                  <span className="font-medium">
                     {transaction.customer.name}
                   </span>
                 </div>
@@ -367,6 +386,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
                 <div className="flex justify-between text-slate-700">
                   <span>
                     Diskon {transaction.voucherCode ? `(${transaction.voucherCode})` : ''}
+                    {transaction.customerDiscount ? ` (${transaction.customerDiscount.badge})` : ''}
                     {transaction.pointsUsed && transaction.pointsUsed > 0 ? ` (Poin: -${transaction.pointsUsed} pts)` : ''}
                   </span>
                   <span>-{formatCurrency(transaction.discountAmount, settings.currency)}</span>
@@ -382,21 +402,31 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
             {/* Payment Details */}
             <div className="py-2 space-y-0.5 text-[10px] border-b border-dashed border-slate-400">
               <div className="flex justify-between">
-                <span>Payment Method:</span>
-                <span className="uppercase font-bold">{transaction.payment.method}</span>
+                <span>Metode Bayar:</span>
+                <span className="uppercase font-bold">
+                  {transaction.payment.method === 'qris'
+                    ? (transaction.payment.bankName || 'QRIS EDC BRI')
+                    : transaction.payment.method === 'card'
+                    ? (transaction.payment.bankName || 'KARTU EDC BRI')
+                    : transaction.payment.method === 'cash'
+                    ? 'TUNAI (CASH)'
+                    : 'TRANSFER BANK'}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span>Amount Tendered:</span>
+                <span>Nominal Bayar:</span>
                 <span>{formatCurrency(transaction.payment.amountTendered, settings.currency)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Change:</span>
-                <span>{formatCurrency(transaction.payment.change, settings.currency)}</span>
-              </div>
+              {transaction.payment.change > 0 && (
+                <div className="flex justify-between">
+                  <span>Kembalian:</span>
+                  <span>{formatCurrency(transaction.payment.change, settings.currency)}</span>
+                </div>
+              )}
               {transaction.payment.referenceCode && (
                 <div className="flex justify-between">
-                  <span>Ref / Auth:</span>
-                  <span>{transaction.payment.referenceCode}</span>
+                  <span>Ref / RRN EDC:</span>
+                  <span className="font-mono">{transaction.payment.referenceCode}</span>
                 </div>
               )}
             </div>

@@ -25,6 +25,7 @@ import { usePOS } from '../context/POSContext';
 import { AIStockOpnameDetectedItem, AIStockOpnameResult } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { compressImageForAI, formatBytes, CompressedImageResult } from '../utils/imageCompressor';
+import { getResilientCameraStream, getCameraErrorMessage } from '../utils/cameraHelper';
 
 interface AIVisualStockOpnameModalProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoFileInputRef = useRef<HTMLInputElement>(null);
+  const nativeCameraInputRef = useRef<HTMLInputElement>(null);
   const videoCaptureIntervalRef = useRef<any>(null);
 
   useEffect(() => {
@@ -75,21 +77,21 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
   const handleStartCamera = async () => {
     try {
       setIsCameraActive(true);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
+      const stream = await getResilientCameraStream({
+        facingMode: 'environment',
+        idealWidth: 1280,
+        idealHeight: 720,
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.muted = true;
+        videoRef.current.play().catch(console.warn);
       }
     } catch (err) {
       console.error('Camera access error:', err);
       setIsCameraActive(false);
-      setNotification('Tidak dapat mengakses kamera langsung. Silakan pilih foto dari berkas/galeri.');
+      const errInfo = getCameraErrorMessage(err);
+      setNotification(`${errInfo.title}: ${errInfo.message}`);
     }
   };
 
@@ -407,8 +409,8 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
     }
   };
 
-  // Generate Demo Shelf Image for one-click testing
-  const handleLoadDemoShelf = () => {
+  // Generate Sample Shelf Image for instant testing
+  const handleLoadSampleShelf = () => {
     const canvas = document.createElement('canvas');
     canvas.width = 700;
     canvas.height = 450;
@@ -468,8 +470,8 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
       ctx.fillStyle = '#0f172a';
       ctx.fillText('BIMOLI 2L', 290, 300);
 
-      const demo = canvas.toDataURL('image/jpeg');
-      setCapturedFrames([demo]);
+      const sampleImage = canvas.toDataURL('image/jpeg');
+      setCapturedFrames([sampleImage]);
       setScanResult(null);
     }
   };
@@ -752,14 +754,30 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                   ) : capturedFrames.length > 0 ? (
                     <div className="w-full space-y-3">
                       <div className="grid grid-cols-2 gap-2">
-                        {capturedFrames.map((frame, i) => (
+                        {capturedFrames.map((_, i) => (
                           <div
                             key={i}
-                            className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xs"
+                            className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-left shadow-xs"
                           >
-                            <img src={frame} alt={`Frame ${i + 1}`} className="w-full h-full object-cover" />
-                            <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-[9px] bg-black/75 text-white rounded font-mono">
-                              {scannedType === 'video_stream' ? `Frame Video #${i + 1}` : `Foto #${i + 1}`}
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                                {scannedType === 'video_stream' ? (
+                                  <Film className="w-4 h-4" />
+                                ) : (
+                                  <Camera className="w-4 h-4" />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                                  {scannedType === 'video_stream' ? `Frame #${i + 1}` : `Foto Rak #${i + 1}`}
+                                </p>
+                                <span className="text-[10px] text-slate-500 font-mono">
+                                  Tersimpan (No Preview)
+                                </span>
+                              </div>
+                            </div>
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+                              OK
                             </span>
                           </div>
                         ))}
@@ -822,14 +840,30 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                     accept="video/*,.mp4,.webm,.mov,.m4v,.mkv"
                     className="hidden"
                   />
+                  <input
+                    type="file"
+                    ref={nativeCameraInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                  />
 
                   <div className="flex flex-wrap items-center justify-center gap-2 mt-4 w-full">
+                    <button
+                      type="button"
+                      onClick={() => nativeCameraInputRef.current?.click()}
+                      className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      title="Gunakan aplikasi kamera bawaan HP (paling stabil di Android)"
+                    >
+                      <Camera className="w-3.5 h-3.5" /> Foto Kamera HP
+                    </button>
                     <button
                       type="button"
                       onClick={handleStartCamera}
                       className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
-                      <Camera className="w-3.5 h-3.5" /> Kamera Live
+                      <Video className="w-3.5 h-3.5" /> Live Stream
                     </button>
                     <button
                       type="button"
@@ -843,14 +877,14 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                       onClick={() => fileInputRef.current?.click()}
                       className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
-                      <Upload className="w-3.5 h-3.5" /> Unggah Foto Rak
+                      <Upload className="w-3.5 h-3.5" /> Galeri / File
                     </button>
                     <button
                       type="button"
-                      onClick={handleLoadDemoShelf}
+                      onClick={handleLoadSampleShelf}
                       className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center gap-1 cursor-pointer shadow-2xs"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Contoh Rak Demo
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Sampel Rak Toko
                     </button>
                   </div>
                 </div>

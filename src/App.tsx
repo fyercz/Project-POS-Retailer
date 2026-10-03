@@ -23,6 +23,8 @@ import { OfflineSyncModal } from './components/OfflineSyncModal';
 import { OfflineNotificationBanner } from './components/OfflineNotificationBanner';
 import { BarcodeScannerModal } from './components/BarcodeScannerModal';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
+import { UnregisteredBarcodeModal } from './components/UnregisteredBarcodeModal';
+import { ProductFormModal } from './components/ProductFormModal';
 import { AccessDeniedView } from './components/AccessDeniedView';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { isViewAllowed, getDefaultView } from './utils/permissions';
@@ -45,6 +47,10 @@ const POSMainApp: React.FC = () => {
     setIsShiftModalOpen,
     isSyncModalOpen,
     isBarcodeScannerOpen,
+    isUnregisteredBarcodeModalOpen,
+    setIsUnregisteredBarcodeModalOpen,
+    unregisteredBarcode,
+    addToCart,
     cart,
     finalTotal,
     settings,
@@ -52,6 +58,17 @@ const POSMainApp: React.FC = () => {
 
   // Mobile POS view state: toggle between catalog and cart
   const [mobilePosTab, setMobilePosTab] = useState<'catalog' | 'cart'>('catalog');
+
+  // Authorized Add Product modal state (triggered after supervisor/owner approves an unregistered barcode)
+  const [authorizedProductConfig, setAuthorizedProductConfig] = useState<{
+    isOpen: boolean;
+    barcode: string;
+    authorizer: { authorizedBy: string; authorizerRole: string } | null;
+  }>({
+    isOpen: false,
+    barcode: '',
+    authorizer: null,
+  });
 
   // If the logged-in employee role cannot view the activeView, automatically shift to their default view
   useEffect(() => {
@@ -189,6 +206,47 @@ const POSMainApp: React.FC = () => {
         isOpen={isBackupRestoreOpen}
         onClose={() => setIsBackupRestoreOpen(false)}
       />
+
+      {/* Prompt Tambah Produk Barcode Belum Terdaftar (Otoritas Supervisor / Owner) */}
+      {isUnregisteredBarcodeModalOpen && (
+        <UnregisteredBarcodeModal
+          isOpen={isUnregisteredBarcodeModalOpen}
+          barcode={unregisteredBarcode}
+          onClose={() => setIsUnregisteredBarcodeModalOpen(false)}
+          onAuthorizeSuccess={(barcode, authorizer) => {
+            setIsUnregisteredBarcodeModalOpen(false);
+            setAuthorizedProductConfig({
+              isOpen: true,
+              barcode,
+              authorizer,
+            });
+          }}
+        />
+      )}
+
+      {/* Authorized Product Creation Modal (Auto adds to POS cart on save) */}
+      {authorizedProductConfig.isOpen && (
+        <ProductFormModal
+          isOpen={authorizedProductConfig.isOpen}
+          onClose={() =>
+            setAuthorizedProductConfig({
+              isOpen: false,
+              barcode: '',
+              authorizer: null,
+            })
+          }
+          initialBarcode={authorizedProductConfig.barcode}
+          authorizationInfo={authorizedProductConfig.authorizer}
+          onSuccess={(savedProduct) => {
+            setAuthorizedProductConfig({
+              isOpen: false,
+              barcode: '',
+              authorizer: null,
+            });
+            addToCart(savedProduct);
+          }}
+        />
+      )}
     </div>
   );
 };

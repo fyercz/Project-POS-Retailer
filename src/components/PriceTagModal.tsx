@@ -1191,11 +1191,9 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                               )}
                             </button>
 
-                            <img
-                              src={p.image}
-                              alt={p.name}
-                              className="w-10 h-10 object-cover rounded-lg bg-slate-100 border border-slate-200 dark:border-slate-700"
-                            />
+                            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 shrink-0">
+                              <Package className="w-5 h-5 text-emerald-500" />
+                            </div>
 
                             <div>
                               <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-2">
