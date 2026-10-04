@@ -30,6 +30,7 @@ export const STANDARD_CHART_OF_ACCOUNTS: ChartOfAccount[] = [
   // 2000 - KEWAJIBAN (LIABILITAS)
   { code: '2010', name: 'Utang Dagang Supplier', category: 'liability', normalBalance: 'credit', description: 'Tagihan tempo faktur pembelian barang distributor' },
   { code: '2020', name: 'Liabilitas Poin Loyalitas', category: 'liability', normalBalance: 'credit', description: 'Titipan saldo poin member yang belum ditukarkan' },
+  { code: '2030', name: 'Utang Titipan / Konsinyasi Supplier', category: 'liability', normalBalance: 'credit', description: 'Kewajiban titip jual konsinyasi supplier yang menunggu rekonsiliasi penjualan' },
 
   // 3000 - EKUITAS
   { code: '3010', name: 'Modal Awal Pemilik', category: 'equity', normalBalance: 'credit', description: 'Setoran modal investasi awal pendirian toko' },
@@ -266,29 +267,35 @@ export function generateJournalEntries(options: {
     const totalPurchase = Number(po.finalTotal ?? po.totalAmount) || 0;
     if (totalPurchase <= 0) continue;
 
-    const isCredit = (po.paymentTerms || '').toLowerCase().includes('tempo') ||
-      (po.paymentTerms || '').toLowerCase().includes('kredit') ||
-      (po.paymentTerms || '').toLowerCase().includes('hari');
+    const termsLower = (po.paymentTerms || '').toLowerCase();
+    const isConsignment = termsLower.includes('konsinyasi') || termsLower.includes('titip');
+    const isCredit = !isConsignment && (termsLower.includes('tempo') || termsLower.includes('kredit') || termsLower.includes('hari'));
 
-    const paymentCreditCode = isCredit ? '2010' : '1010';
-    const paymentCreditName = isCredit ? 'Utang Dagang Supplier' : 'Kas di Laci Kasir';
+    const paymentCreditCode = isConsignment ? '2030' : (isCredit ? '2010' : '1010');
+    const paymentCreditName = isConsignment
+      ? 'Utang Titipan / Konsinyasi Supplier'
+      : (isCredit ? 'Utang Dagang Supplier' : 'Kas di Laci Kasir');
 
     const lines = [
       {
         accountCode: '1050',
-        accountName: 'Persediaan Barang Dagang',
+        accountName: isConsignment ? 'Persediaan Barang Konsinyasi' : 'Persediaan Barang Dagang',
         debit: totalPurchase,
         credit: 0,
-        memo: `Penerimaan stok masuk dari supplier ${po.supplierName}`,
+        memo: isConsignment
+          ? `Penerimaan stok konsinyasi dari supplier ${po.supplierName}`
+          : `Penerimaan stok masuk dari supplier ${po.supplierName}`,
       },
       {
         accountCode: paymentCreditCode,
         accountName: paymentCreditName,
         debit: 0,
         credit: totalPurchase,
-        memo: isCredit
-          ? `Kewajiban utang tempo PO ${po.invoiceNumber} (${po.paymentTerms})`
-          : `Pembayaran tunai pembelian ${po.supplierName}`,
+        memo: isConsignment
+          ? `Kewajiban titip jual konsinyasi PO ${po.invoiceNumber} (${po.supplierName})`
+          : (isCredit
+              ? `Kewajiban utang tempo PO ${po.invoiceNumber} (${po.paymentTerms})`
+              : `Pembayaran tunai pembelian ${po.supplierName}`),
       },
     ];
 
@@ -297,7 +304,9 @@ export function generateJournalEntries(options: {
       date: po.createdAt,
       referenceNumber: po.invoiceNumber,
       sourceType: 'purchase_order',
-      description: `Penerimaan PO Supplier: ${po.supplierName}`,
+      description: isConsignment
+        ? `Penerimaan Titip Jual (Konsinyasi): ${po.supplierName}`
+        : `Penerimaan PO Supplier: ${po.supplierName}`,
       lines,
       totalDebit: totalPurchase,
       totalCredit: totalPurchase,
@@ -624,12 +633,13 @@ export function computeBalanceSheet(options: {
     }
   }
 
-  // Deduct cash purchases of POs
+  // Deduct cash purchases of POs (Tunai murni yang mengurangi kas di laci kasir)
   for (const po of supplierPurchases) {
     const total = Number(po.finalTotal ?? po.totalAmount) || 0;
-    const isCredit = (po.paymentTerms || '').toLowerCase().includes('tempo') ||
-      (po.paymentTerms || '').toLowerCase().includes('kredit');
-    if (!isCredit) {
+    const termsLower = (po.paymentTerms || '').toLowerCase();
+    const isConsignment = termsLower.includes('konsinyasi') || termsLower.includes('titip');
+    const isCredit = !isConsignment && (termsLower.includes('tempo') || termsLower.includes('kredit') || termsLower.includes('hari'));
+    if (!isCredit && !isConsignment) {
       cashOnHand = Math.max(0, cashOnHand - total);
     }
   }
@@ -640,11 +650,16 @@ export function computeBalanceSheet(options: {
   // 3. Liabilities
   // Accounts Payable: sum of supplier purchases on credit/tempo
   let accountsPayable = 0;
+  let consignmentPayable = 0;
   for (const po of supplierPurchases) {
-    const isCredit = (po.paymentTerms || '').toLowerCase().includes('tempo') ||
-      (po.paymentTerms || '').toLowerCase().includes('kredit');
+    const total = Number(po.finalTotal ?? po.totalAmount) || 0;
+    const termsLower = (po.paymentTerms || '').toLowerCase();
+    const isConsignment = termsLower.includes('konsinyasi') || termsLower.includes('titip');
+    const isCredit = !isConsignment && (termsLower.includes('tempo') || termsLower.includes('kredit') || termsLower.includes('hari'));
     if (isCredit) {
-      accountsPayable += Number(po.finalTotal ?? po.totalAmount) || 0;
+      accountsPayable += total;
+    } else if (isConsignment) {
+      consignmentPayable += total;
     }
   }
 
@@ -652,7 +667,7 @@ export function computeBalanceSheet(options: {
   const totalMemberPoints = customers.reduce((sum, c) => sum + (c.points || 0), 0);
   const pointsLiability = totalMemberPoints * pointRedemptionRate;
 
-  const totalCurrentLiabilities = accountsPayable + pointsLiability;
+  const totalCurrentLiabilities = accountsPayable + pointsLiability + consignmentPayable;
   const totalLiabilities = totalCurrentLiabilities;
 
   // 4. Equity
@@ -686,6 +701,7 @@ export function computeBalanceSheet(options: {
     },
     liabilities: {
       accountsPayable,
+      consignmentPayable,
       pointsLiability,
       totalCurrentLiabilities,
       totalLiabilities,

@@ -29,6 +29,7 @@ import {
 } from '../context/POSContext';
 import { ProductCard } from './ProductCard';
 import { searchProductsFuzzy, ScoredProduct } from '../utils/fuzzySearch';
+import { playScannerSound } from '../utils/scannerAudio';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   LayoutGrid,
@@ -198,13 +199,16 @@ export const ProductCatalog: React.FC = () => {
       if (exactMatch && exactMatch.stock > 0) {
         e.preventDefault();
         addToCart(exactMatch);
+        playScannerSound('success');
         setSearchQuery('');
       } else if (filteredProducts.length === 1 && filteredProducts[0].stock > 0) {
         e.preventDefault();
         addToCart(filteredProducts[0]);
+        playScannerSound('success');
         setSearchQuery('');
       } else if (filteredProducts.length === 0 && searchQuery.trim()) {
         e.preventDefault();
+        playScannerSound('error');
         openUnregisteredBarcodePrompt(searchQuery.trim());
       }
     }

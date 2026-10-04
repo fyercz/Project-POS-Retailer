@@ -57,6 +57,7 @@ export const GeminiRetailCopilot: React.FC = () => {
     salesReturns,
     purchaseReturns,
     customers,
+    suppliers,
     settings,
     addToCart,
     addVoucher,
@@ -73,6 +74,7 @@ export const GeminiRetailCopilot: React.FC = () => {
   const [selectedPOProductIds, setSelectedPOProductIds] = useState<string[]>([]);
   const [customPOQuantities, setCustomPOQuantities] = useState<Record<string, number>>({});
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [copiedSupplierFeedback, setCopiedSupplierFeedback] = useState<string | null>(null);
   const [appliedToReceivingFeedback, setAppliedToReceivingFeedback] = useState(false);
 
   // Target Restock Date & Business Policy State (Deadstock & Returns)
@@ -82,6 +84,8 @@ export const GeminiRetailCopilot: React.FC = () => {
   const [activeChartModalItem, setActiveChartModalItem] = useState<AIForecastItem | null>(null);
   const [expandedChartKeys, setExpandedChartKeys] = useState<string[]>([]);
   const [filterRestockCategory, setFilterRestockCategory] = useState<'all' | 'need_restock' | 'deadstock' | 'returns' | 'eliminated'>('all');
+  const [selectedSupplierFilter, setSelectedSupplierFilter] = useState<string>('all');
+  const [restockViewMode, setRestockViewMode] = useState<'grouped_supplier' | 'list'>('grouped_supplier');
   const [isAllChartsExpanded, setIsAllChartsExpanded] = useState(false);
 
   // Insights state
@@ -165,6 +169,7 @@ export const GeminiRetailCopilot: React.FC = () => {
           recentTransactions: transactions,
           salesReturns,
           purchaseReturns,
+          suppliers,
           storeSettings: settings,
           targetDate: dateToUse,
           deadstockRule: deadstockToUse,
@@ -353,7 +358,21 @@ export const GeminiRetailCopilot: React.FC = () => {
     ];
   }, []);
 
-  // Filtered forecast items based on category tabs
+  // Registered Supplier Options based on AI Forecasts and Registered Suppliers
+  const registeredSupplierOptions = useMemo(() => {
+    if (!forecastData?.forecasts) return [];
+    const map = new Map<string, { name: string; count: number; supplierId?: string }>();
+    forecastData.forecasts.forEach((f) => {
+      const supName = f.suggestedSupplier || 'Distributor Lainnya';
+      if (!map.has(supName)) {
+        map.set(supName, { name: supName, count: 0, supplierId: f.supplierId });
+      }
+      map.get(supName)!.count += 1;
+    });
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }, [forecastData]);
+
+  // Filtered forecast items based on category tabs AND selected supplier
   const filteredForecasts = useMemo(() => {
     if (!forecastData?.forecasts) return [];
     return forecastData.forecasts.filter((fc) => {
@@ -363,13 +382,77 @@ export const GeminiRetailCopilot: React.FC = () => {
       const hasRetur = (fc.returnCount || 0) > 0;
       const isEliminated = qty === 0;
 
-      if (filterRestockCategory === 'need_restock') return qty > 0 && !isDeadstock;
-      if (filterRestockCategory === 'deadstock') return isDeadstock;
-      if (filterRestockCategory === 'returns') return hasRetur;
-      if (filterRestockCategory === 'eliminated') return isEliminated;
+      if (filterRestockCategory === 'need_restock' && (qty === 0 || isDeadstock)) return false;
+      if (filterRestockCategory === 'deadstock' && !isDeadstock) return false;
+      if (filterRestockCategory === 'returns' && !hasRetur) return false;
+      if (filterRestockCategory === 'eliminated' && !isEliminated) return false;
+
+      if (selectedSupplierFilter !== 'all') {
+        const supName = fc.suggestedSupplier || 'Distributor Lainnya';
+        if (supName !== selectedSupplierFilter && fc.supplierId !== selectedSupplierFilter) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [forecastData, customPOQuantities, filterRestockCategory]);
+  }, [forecastData, customPOQuantities, filterRestockCategory, selectedSupplierFilter]);
+
+  // Group restock recommendations by registered supplier
+  const supplierGroups = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        supplierName: string;
+        supplierId?: string;
+        paymentTerms?: string;
+        supplierObj?: any;
+        items: AIForecastItem[];
+        totalBudget: number;
+        totalSelectedBudget: number;
+        totalUnits: number;
+        selectedCount: number;
+      }
+    >();
+
+    filteredForecasts.forEach((item) => {
+      const supName = item.suggestedSupplier || 'Distributor Lainnya';
+      if (!map.has(supName)) {
+        const found = suppliers.find(
+          (s) => s.id === item.supplierId || s.name.toLowerCase() === supName.toLowerCase()
+        );
+        map.set(supName, {
+          supplierName: supName,
+          supplierId: item.supplierId || found?.id,
+          paymentTerms: item.supplierTerms || found?.paymentTerms || 'Tunai',
+          supplierObj: found,
+          items: [],
+          totalBudget: 0,
+          totalSelectedBudget: 0,
+          totalUnits: 0,
+          selectedCount: 0,
+        });
+      }
+      const group = map.get(supName)!;
+      group.items.push(item);
+
+      const itemKey = item.productId || item.productName;
+      const isSelected = selectedPOProductIds.includes(itemKey);
+      const qty =
+        customPOQuantities[itemKey] !== undefined ? customPOQuantities[itemKey] : (item.recommendedOrderQty || 0);
+      const cost = Number(item.costPrice) || 0;
+      const subtotal = qty * cost;
+
+      group.totalUnits += qty;
+      group.totalBudget += subtotal;
+      if (isSelected) {
+        group.selectedCount += 1;
+        group.totalSelectedBudget += subtotal;
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.totalBudget - a.totalBudget);
+  }, [filteredForecasts, suppliers, customPOQuantities, selectedPOProductIds]);
 
   const filterCounts = useMemo(() => {
     if (!forecastData?.forecasts) return { all: 0, need: 0, deadstock: 0, returns: 0, eliminated: 0 };
@@ -395,6 +478,20 @@ export const GeminiRetailCopilot: React.FC = () => {
       eliminated: eliminatedCount,
     };
   }, [forecastData, customPOQuantities]);
+
+  // Select / Deselect all products belonging to a specific supplier
+  const handleToggleSelectSupplierPO = (supplierName: string) => {
+    const group = supplierGroups.find((g) => g.supplierName === supplierName);
+    if (!group) return;
+    const groupKeys = group.items.map((i) => i.productId || i.productName);
+    const allSelected = groupKeys.every((k) => selectedPOProductIds.includes(k));
+
+    if (allSelected) {
+      setSelectedPOProductIds((prev) => prev.filter((k) => !groupKeys.includes(k)));
+    } else {
+      setSelectedPOProductIds((prev) => Array.from(new Set([...prev, ...groupKeys])));
+    }
+  };
 
   // Apply selected items directly to Goods Receiving (Terima Barang)
   const handleApplyPOToReceiving = () => {
@@ -426,28 +523,40 @@ export const GeminiRetailCopilot: React.FC = () => {
     }, 800);
   };
 
-  // Copy PO order summary as WhatsApp / Email friendly plain text
-  const handleCopyPOText = () => {
+  // Copy PO order summary as WhatsApp / Email friendly plain text (universal or per-supplier)
+  const handleCopyPOText = (targetSupplierName?: string) => {
     if (!forecastData?.forecasts) return;
-    const selectedItems = forecastData.forecasts.filter((item) =>
+    const pool = targetSupplierName
+      ? forecastData.forecasts.filter((i) => (i.suggestedSupplier || 'Distributor Lainnya') === targetSupplierName)
+      : forecastData.forecasts;
+    const selectedItems = pool.filter((item) =>
       selectedPOProductIds.includes(item.productId || item.productName)
     );
-    if (selectedItems.length === 0) return;
+    const itemsToExport = selectedItems.length > 0 ? selectedItems : targetSupplierName ? pool : [];
+    if (itemsToExport.length === 0) return;
 
     const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const poNumber = `PO-AI-${Date.now().toString().slice(-6)}`;
+    const foundSup = targetSupplierName ? suppliers.find((s) => s.name === targetSupplierName) : null;
 
     let totalQty = 0;
     let totalBudget = 0;
 
-    let text = `*RENCANA PURCHASE ORDER (PO) RESTOCK TOKO*\n`;
-    text += `Nomor Draft: ${poNumber}\n`;
+    let text = targetSupplierName
+      ? `*PURCHASE ORDER (PO) RESTOCK KE DISTRIBUTOR*\n`
+      : `*RENCANA PURCHASE ORDER (PO) RESTOCK TOKO*\n`;
+    text += `Nomor PO: ${poNumber}\n`;
     text += `Tanggal: ${dateStr}\n`;
-    text += `Toko: ${settings.storeName}\n`;
+    text += `Pemesan: ${settings.storeName}\n`;
+    if (targetSupplierName) {
+      text += `Distributor: *${targetSupplierName}*\n`;
+      if (foundSup?.contactPerson) text += `Kontak: ${foundSup.contactPerson} (${foundSup.phone || '-'})\n`;
+      if (foundSup?.paymentTerms) text += `Syarat Pembayaran: *${foundSup.paymentTerms}*\n`;
+    }
     text += `------------------------------------\n`;
     text += `*DAFTAR BARANG YANG DIPESAN:*\n`;
 
-    selectedItems.forEach((item, idx) => {
+    itemsToExport.forEach((item, idx) => {
       const key = item.productId || item.productName;
       const qty = customPOQuantities[key] !== undefined ? customPOQuantities[key] : item.recommendedOrderQty;
       const cost = item.costPrice || 0;
@@ -457,40 +566,52 @@ export const GeminiRetailCopilot: React.FC = () => {
 
       text += `${idx + 1}. *${item.productName}*\n`;
       text += `   - Jumlah Pesanan: ${qty} ${item.unit || 'pcs'}\n`;
-      if (item.suggestedSupplier) text += `   - Distributor: ${item.suggestedSupplier}\n`;
+      if (!targetSupplierName && item.suggestedSupplier) {
+        text += `   - Distributor: ${item.suggestedSupplier}\n`;
+      }
       text += `   - Estimasi Biaya: ${formatCurrency(subtotal, settings.currency)}\n`;
     });
 
     text += `------------------------------------\n`;
-    text += `*Total Varian (SKU):* ${selectedItems.length} produk\n`;
+    text += `*Total Varian (SKU):* ${itemsToExport.length} produk\n`;
     text += `*Total Kuantitas:* ${totalQty} unit\n`;
     text += `*Estimasi Anggaran Total:* ${formatCurrency(totalBudget, settings.currency)}\n`;
     text += `\n_Digenerate secara otomatis oleh Gemini AI Retail Copilot_`;
 
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
-      setCopyFeedback(true);
-      setTimeout(() => setCopyFeedback(false), 2500);
+      if (targetSupplierName) {
+        setCopiedSupplierFeedback(targetSupplierName);
+        setTimeout(() => setCopiedSupplierFeedback(null), 2500);
+      } else {
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 2500);
+      }
     }
   };
 
-  // Print or Download PO Slip
-  const handlePrintPO = () => {
+  // Print or Download PO Slip (universal or per-supplier)
+  const handlePrintPO = (targetSupplierName?: string) => {
     if (!forecastData?.forecasts) return;
-    const selectedItems = forecastData.forecasts.filter((item) =>
+    const pool = targetSupplierName
+      ? forecastData.forecasts.filter((i) => (i.suggestedSupplier || 'Distributor Lainnya') === targetSupplierName)
+      : forecastData.forecasts;
+    const selectedItems = pool.filter((item) =>
       selectedPOProductIds.includes(item.productId || item.productName)
     );
-    if (selectedItems.length === 0) return;
+    const itemsToExport = selectedItems.length > 0 ? selectedItems : targetSupplierName ? pool : [];
+    if (itemsToExport.length === 0) return;
 
     const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const poNumber = `PO-AI-${Date.now().toString().slice(-6)}`;
+    const foundSup = targetSupplierName ? suppliers.find((s) => s.name === targetSupplierName) : null;
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
     let totalQty = 0;
     let totalBudget = 0;
 
-    const rowsHtml = selectedItems
+    const rowsHtml = itemsToExport
       .map((item, idx) => {
         const key = item.productId || item.productName;
         const qty = customPOQuantities[key] !== undefined ? customPOQuantities[key] : item.recommendedOrderQty;
@@ -506,7 +627,7 @@ export const GeminiRetailCopilot: React.FC = () => {
             <strong>${item.productName}</strong><br/>
             <small style="color: #64748b;">SKU: ${item.sku || '-'} | Barcode: ${item.barcode || '-'}</small>
           </td>
-          <td style="padding: 8px;">${item.suggestedSupplier || '-'}</td>
+          ${!targetSupplierName ? `<td style="padding: 8px;">${item.suggestedSupplier || '-'}</td>` : ''}
           <td style="padding: 8px; text-align: center;">${item.currentStock}</td>
           <td style="padding: 8px; text-align: center; font-weight: bold; color: #059669;">+${qty} ${item.unit || 'pcs'}</td>
           <td style="padding: 8px; text-align: right;">${formatCurrency(cost, settings.currency)}</td>
@@ -529,6 +650,7 @@ export const GeminiRetailCopilot: React.FC = () => {
             .total-box { margin-top: 20px; float: right; width: 340px; background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 13px; border: 1px solid #e2e8f0; }
             .total-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
             .grand-total { font-size: 15px; font-weight: bold; border-top: 2px solid #cbd5e1; padding-top: 6px; color: #059669; }
+            .supplier-card { background: #f1f5f9; border-radius: 6px; padding: 10px 14px; margin-top: 12px; font-size: 12px; }
             @media print { .no-print { display: none; } }
           </style>
         </head>
@@ -539,11 +661,28 @@ export const GeminiRetailCopilot: React.FC = () => {
               <div class="meta">${settings.address || 'Smart Retail Point of Sale'} | Telp: ${settings.phone || '-'}</div>
             </div>
             <div style="text-align: right;">
-              <span style="display: inline-block; background: #dcfce7; color: #166534; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 11px;">PURCHASE ORDER (PO) DRAFT</span>
+              <span style="display: inline-block; background: #dcfce7; color: #166534; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 11px;">PURCHASE ORDER (PO) RESMI</span>
               <div style="font-weight: bold; margin-top: 4px; font-size: 14px;">${poNumber}</div>
               <div style="font-size: 11px; color: #64748b;">Tanggal: ${dateStr}</div>
             </div>
           </div>
+
+          ${
+            targetSupplierName
+              ? `
+          <div class="supplier-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong>Distributor / Supplier:</strong> <span style="font-size: 14px; font-weight: bold;">${targetSupplierName}</span><br/>
+                <span style="color: #64748b;">PIC: ${foundSup?.contactPerson || '-'} | Telp: ${foundSup?.phone || '-'}</span>
+              </div>
+              <div style="text-align: right;">
+                <span style="background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">Syarat Pembayaran: ${foundSup?.paymentTerms || 'Tunai'}</span>
+              </div>
+            </div>
+          </div>`
+              : ''
+          }
 
           <div style="margin-top: 16px; background: #f8fafc; border-left: 4px solid #10b981; padding: 10px 14px; font-size: 12px; border-radius: 4px;">
             <strong>Ringkasan Analisis AI:</strong> ${forecastData?.summary || 'Rencana pemesanan restock barang menipis dan fast moving ritel.'}
@@ -554,7 +693,7 @@ export const GeminiRetailCopilot: React.FC = () => {
               <tr>
                 <th style="width: 30px; text-align: center;">No</th>
                 <th>Produk</th>
-                <th>Distributor / Supplier</th>
+                ${!targetSupplierName ? `<th>Distributor / Supplier</th>` : ''}
                 <th style="text-align: center;">Stok Saat Ini</th>
                 <th style="text-align: center;">Kuantitas PO</th>
                 <th style="text-align: right;">Harga Beli</th>
@@ -568,29 +707,30 @@ export const GeminiRetailCopilot: React.FC = () => {
 
           <div class="total-box">
             <div class="total-row">
-              <span>Total SKU Dipilih:</span>
-              <strong>${selectedItems.length} produk</strong>
+              <span>Total SKU Dipesan:</span>
+              <strong>${itemsToExport.length} produk</strong>
             </div>
             <div class="total-row">
               <span>Total Kuantitas:</span>
               <strong>${totalQty} unit</strong>
             </div>
             <div class="total-row grand-total">
-              <span>Estimasi Anggaran:</span>
+              <span>Estimasi Anggaran PO:</span>
               <span>${formatCurrency(totalBudget, settings.currency)}</span>
             </div>
           </div>
 
           <div style="clear: both; margin-top: 40px; font-size: 11px; color: #94a3b8; text-align: center;">
-            Dokumen ini di-generate secara otomatis melalui Gemini Retail Copilot AI. Silakan konfirmasi ketersediaan dan harga distributor sebelum penerbitan PO final.
+            Dokumen ini di-generate secara otomatis melalui Gemini Retail Copilot AI. Silakan konfirmasi ketersediaan dan harga distributor sebelum pengiriman barang.
           </div>
-          <script>
-            window.onload = function() { window.print(); }
-          </script>
         </body>
       </html>
     `);
     printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 400);
   };
 
   // Fetch daily sales insights
@@ -1239,7 +1379,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                   </div>
 
                   {/* Restock Recommendations List */}
-                  <div className="space-y-2.5">
+                  <div className="space-y-3">
                     {/* Category Filter Pills and View Mode */}
                     <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -1310,8 +1450,92 @@ export const GeminiRetailCopilot: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Toolbar Actions */}
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                    {/* REGISTERED SUPPLIER CATEGORIZATION & VIEW MODE TOGGLE */}
+                    <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          <span className="text-xs font-bold text-slate-900 dark:text-white">
+                            Kategori Distributor / Supplier Terdaftar
+                          </span>
+                        </div>
+
+                        {/* View Mode Toggle: Grouped by Supplier vs Flat List */}
+                        <div className="flex items-center bg-slate-200 dark:bg-slate-800 p-0.5 rounded-xl text-xs">
+                          <button
+                            type="button"
+                            onClick={() => setRestockViewMode('grouped_supplier')}
+                            className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                              restockViewMode === 'grouped_supplier'
+                                ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                            }`}
+                            title="Kelompokkan rekomendasi per distributor terdaftar"
+                          >
+                            <Building2 className="w-3.5 h-3.5" />
+                            <span>Grup per Supplier</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRestockViewMode('list')}
+                            className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                              restockViewMode === 'list'
+                                ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                            }`}
+                            title="Tampilkan daftar seluruh produk sekaligus"
+                          >
+                            <Layers className="w-3.5 h-3.5" />
+                            <span>Daftar Semua</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Supplier Filter Pills */}
+                      <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSupplierFilter('all')}
+                          className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer ${
+                            selectedSupplierFilter === 'all'
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 border border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          Semua Distributor ({forecastData.forecasts?.length || 0})
+                        </button>
+                        {registeredSupplierOptions.map((sup) => {
+                          const isSel = selectedSupplierFilter === sup.name;
+                          return (
+                            <button
+                              key={sup.name}
+                              type="button"
+                              onClick={() => setSelectedSupplierFilter(isSel ? 'all' : sup.name)}
+                              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                                isSel
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 border border-slate-200 dark:border-slate-700'
+                              }`}
+                            >
+                              <Building2 className={`w-3 h-3 ${isSel ? 'text-white' : 'text-slate-400'}`} />
+                              <span>{sup.name}</span>
+                              <span
+                                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                                  isSel
+                                    ? 'bg-emerald-700 text-white'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                                }`}
+                              >
+                                {sup.count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Universal Toolbar Actions */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -1334,10 +1558,10 @@ export const GeminiRetailCopilot: React.FC = () => {
                       <div className="flex items-center gap-1.5 flex-wrap ml-auto">
                         <button
                           type="button"
-                          onClick={handleCopyPOText}
+                          onClick={() => handleCopyPOText()}
                           disabled={selectedPOProductIds.length === 0}
                           className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
-                          title="Salin teks purchase order untuk dikirimkan via WhatsApp / Email"
+                          title="Salin teks purchase order untuk seluruh barang terpilih via WhatsApp"
                         >
                           {copyFeedback ? (
                             <>
@@ -1347,20 +1571,20 @@ export const GeminiRetailCopilot: React.FC = () => {
                           ) : (
                             <>
                               <Copy className="w-3.5 h-3.5 text-slate-500" />
-                              <span>Salin PO</span>
+                              <span>Salin Semua PO</span>
                             </>
                           )}
                         </button>
 
                         <button
                           type="button"
-                          onClick={handlePrintPO}
+                          onClick={() => handlePrintPO()}
                           disabled={selectedPOProductIds.length === 0}
                           className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
-                          title="Cetak atau unduh draft surat pesanan barang"
+                          title="Cetak seluruh pesanan barang terpilih"
                         >
                           <Printer className="w-3.5 h-3.5 text-slate-500" />
-                          <span>Cetak</span>
+                          <span>Cetak Semua</span>
                         </button>
 
                         <button
@@ -1368,7 +1592,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                           onClick={handleApplyPOToReceiving}
                           disabled={selectedPOProductIds.length === 0}
                           className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] flex items-center gap-1.5 transition cursor-pointer shadow-xs disabled:opacity-50 active:scale-95"
-                          title="Muat seluruh barang dan kuantitas terpilih ke modal Form Terima Barang"
+                          title="Muat seluruh barang terpilih ke Form Terima Barang gudang"
                         >
                           {appliedToReceivingFeedback ? (
                             <>
@@ -1385,295 +1609,441 @@ export const GeminiRetailCopilot: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Filtered Forecasts List */}
-                    {filteredForecasts.length > 0 ? (
-                      <div className="space-y-3">
-                        {filteredForecasts.map((fc, i) => {
-                          const itemKey = fc.productId || fc.productName;
-                          const isSelected = selectedPOProductIds.includes(itemKey);
-                          const orderQty =
-                            customPOQuantities[itemKey] !== undefined
-                              ? customPOQuantities[itemKey]
-                              : (fc.recommendedOrderQty || 0);
-                          const originalQty = fc.originalOrderQty || fc.recommendedOrderQty || 12;
-                          const isEliminated = orderQty === 0;
-                          const isReduced = orderQty > 0 && orderQty < originalQty;
-                          const unitCost = Number(fc.costPrice) || 0;
-                          const subtotal = orderQty * unitCost;
-                          const isChartExpanded = expandedChartKeys.includes(itemKey);
-                          const matchedProduct = products.find(
-                            (p) => p.id === fc.productId || p.name === fc.productName
-                          );
+                    {/* FORECAST ITEM CARD RENDERER HELPER */}
+                    {(() => {
+                      const renderForecastCard = (fc: AIForecastItem, idx: number, hideSupplierBadge: boolean = false) => {
+                        const itemKey = fc.productId || fc.productName;
+                        const isSelected = selectedPOProductIds.includes(itemKey);
+                        const orderQty =
+                          customPOQuantities[itemKey] !== undefined
+                            ? customPOQuantities[itemKey]
+                            : (fc.recommendedOrderQty || 0);
+                        const originalQty = fc.originalOrderQty || fc.recommendedOrderQty || 12;
+                        const isEliminated = orderQty === 0;
+                        const isReduced = orderQty > 0 && orderQty < originalQty;
+                        const unitCost = Number(fc.costPrice) || 0;
+                        const subtotal = orderQty * unitCost;
+                        const isChartExpanded = expandedChartKeys.includes(itemKey);
+                        const matchedProduct = products.find(
+                          (p) => p.id === fc.productId || p.name === fc.productName
+                        );
 
-                          return (
-                            <div
-                              key={i}
-                              className={`p-3.5 rounded-2xl border transition-all ${
-                                isEliminated
-                                  ? 'border-rose-300/70 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/10'
-                                  : isSelected
-                                  ? 'border-emerald-300 dark:border-emerald-700/80 bg-white dark:bg-slate-900 shadow-xs'
-                                  : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 opacity-70'
-                              }`}
-                            >
-                              <div className="flex items-start gap-2.5">
-                                {/* Checkbox */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleSelectPOItem(itemKey)}
-                                  className="mt-0.5 text-slate-400 hover:text-emerald-600 cursor-pointer shrink-0"
-                                >
-                                  {isSelected ? (
-                                    <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                  ) : (
-                                    <Square className="w-4 h-4 text-slate-300 dark:text-slate-600" />
-                                  )}
-                                </button>
+                        return (
+                          <div
+                            key={`${fc.productId || fc.productName}-${idx}`}
+                            className={`p-3.5 rounded-2xl border transition-all ${
+                              isEliminated
+                                ? 'border-rose-300/70 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/10'
+                                : isSelected
+                                ? 'border-emerald-300 dark:border-emerald-700/80 bg-white dark:bg-slate-900 shadow-xs'
+                                : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 opacity-70'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5">
+                              {/* Checkbox */}
+                              <button
+                                type="button"
+                                onClick={() => handleToggleSelectPOItem(itemKey)}
+                                className="mt-0.5 text-slate-400 hover:text-emerald-600 cursor-pointer shrink-0"
+                              >
+                                {isSelected ? (
+                                  <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                ) : (
+                                  <Square className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                                )}
+                              </button>
 
-                                <div className="flex-1 min-w-0 space-y-2">
-                                  {/* Title & Badges */}
-                                  <div className="flex items-start justify-between gap-2 flex-wrap">
-                                    <div className="min-w-0">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <h6 className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                                          {fc.productName}
-                                        </h6>
+                              <div className="flex-1 min-w-0 space-y-2">
+                                {/* Title & Badges */}
+                                <div className="flex items-start justify-between gap-2 flex-wrap">
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h6 className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                                        {fc.productName}
+                                      </h6>
 
-                                        {/* Status & Rule Badges */}
-                                        {fc.isDeadstock && (
-                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-1">
-                                            <AlertTriangle className="w-3 h-3" />
-                                            Deadstock (0 Terjual)
-                                          </span>
-                                        )}
+                                      {/* Status & Rule Badges */}
+                                      {fc.isDeadstock && (
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-1">
+                                          <AlertTriangle className="w-3 h-3" />
+                                          Deadstock (0 Terjual)
+                                        </span>
+                                      )}
 
-                                        {(fc.returnCount || 0) > 0 && (
-                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1">
-                                            <RotateCcw className="w-3 h-3" />
-                                            Retur: {fc.returnCount} Unit
-                                          </span>
-                                        )}
+                                      {(fc.returnCount || 0) > 0 && (
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1">
+                                          <RotateCcw className="w-3 h-3" />
+                                          Retur: {fc.returnCount} Unit
+                                        </span>
+                                      )}
 
-                                        {isEliminated && (
-                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white flex items-center gap-1">
-                                            <Ban className="w-3 h-3" />
-                                            Kuota Dieliminasi (0)
-                                          </span>
-                                        )}
+                                      {isEliminated && (
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white flex items-center gap-1">
+                                          <Ban className="w-3 h-3" />
+                                          Kuota Dieliminasi (0)
+                                        </span>
+                                      )}
 
-                                        {isReduced && (
-                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 flex items-center gap-1">
-                                            <Scissors className="w-3 h-3" />
-                                            Kuota Dipangkas (-50%)
-                                          </span>
-                                        )}
-                                      </div>
-
-                                      <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 flex-wrap">
-                                        {fc.category && (
-                                          <span className="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-800 rounded font-medium">
-                                            {fc.category}
-                                          </span>
-                                        )}
-                                        {fc.sku && <span>SKU: {fc.sku}</span>}
-                                        {fc.barcode && <span>Barcode: {fc.barcode}</span>}
-                                      </div>
-                                    </div>
-
-                                    {/* Urgency Pill */}
-                                    <span
-                                      className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
-                                        fc.urgency.includes('KRITIS')
-                                          ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse'
-                                          : fc.urgency.includes('TINGGI')
-                                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                                          : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
-                                      }`}
-                                    >
-                                      {fc.urgency}
-                                    </span>
-                                  </div>
-
-                                  {/* Quota adjustment explanation if modified */}
-                                  {fc.quotaAdjustmentReason && (
-                                    <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
-                                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
-                                      <span className="font-semibold">{fc.quotaAdjustmentReason}</span>
-                                    </div>
-                                  )}
-
-                                  {/* Suggested Supplier */}
-                                  {fc.suggestedSupplier && (
-                                    <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1 rounded-xl">
-                                      <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                      <span className="truncate">
-                                        Distributor: <strong>{fc.suggestedSupplier}</strong>
-                                      </span>
-                                    </div>
-                                  )}
-
-                                  {/* Stock Stats & Restock Stepper */}
-                                  <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800 flex-wrap">
-                                    <div className="flex items-center gap-3 text-xs font-mono text-slate-600 dark:text-slate-400">
-                                      <span>
-                                        Sisa: <strong className="text-slate-900 dark:text-white">{fc.currentStock}</strong> {fc.unit || 'pcs'}
-                                      </span>
-                                      <span>
-                                        Min: <strong className="text-slate-900 dark:text-white">{fc.minStock}</strong>
-                                      </span>
-                                      {fc.estimatedDaysLeft !== undefined && (
-                                        <span className="text-rose-600 dark:text-rose-400 font-bold">
-                                          ~{fc.estimatedDaysLeft} hari tersisa
+                                      {isReduced && (
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 flex items-center gap-1">
+                                          <Scissors className="w-3 h-3" />
+                                          Kuota Dipangkas (-50%)
                                         </span>
                                       )}
                                     </div>
 
-                                    {/* Order Stepper */}
-                                    <div className="flex items-center gap-1.5 ml-auto">
-                                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mr-1">
-                                        Kuantitas PO:
-                                      </span>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleUpdatePOQuantity(itemKey, -6)}
-                                        className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer text-slate-700 dark:text-slate-200"
-                                        title="Kurangi 6 unit"
-                                      >
-                                        <Minus className="w-3 h-3" />
-                                      </button>
-                                      <input
-                                        type="number"
-                                        value={orderQty}
-                                        min={0}
-                                        onChange={(e) =>
-                                          handleSetPOQuantityDirect(itemKey, parseInt(e.target.value) || 0)
-                                        }
-                                        className="w-14 px-1.5 py-0.5 text-center font-bold text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                                      />
-                                      <button
-                                        type="button"
-                                        onClick={() => handleUpdatePOQuantity(itemKey, 6)}
-                                        className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer text-slate-700 dark:text-slate-200"
-                                        title="Tambah 6 unit"
-                                      >
-                                        <Plus className="w-3 h-3" />
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* Subtotal & Strategic Advice */}
-                                  <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-slate-800/60">
-                                    <span className="text-[11px] text-slate-500">
-                                      Biaya Satuan: {formatCurrency(unitCost, settings.currency)}
-                                    </span>
-                                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-                                      Subtotal: {formatCurrency(subtotal, settings.currency)}
-                                    </span>
-                                  </div>
-
-                                  <div className="text-[11px] text-slate-600 dark:text-slate-400 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 p-2 rounded-xl leading-relaxed">
-                                    <span className="font-bold text-amber-900 dark:text-amber-300 mr-1">Rekomendasi AI:</span>
-                                    {fc.actionAdvice}
-                                  </div>
-
-                                  {/* QUICK ACTION BAR: GRAPH & QUOTA POLICY */}
-                                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex-wrap">
-                                    <div className="flex items-center gap-1.5">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleToggleExpandChart(itemKey)}
-                                        className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
-                                          isChartExpanded
-                                            ? 'bg-emerald-600 text-white shadow-xs'
-                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-                                        }`}
-                                      >
-                                        <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
-                                        <span>{isChartExpanded ? 'Tutup Grafik' : 'Perilaku Grafik Penjualan'}</span>
-                                        {isChartExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                      </button>
-
-                                      <button
-                                        type="button"
-                                        onClick={() => setActiveChartModalItem(fc)}
-                                        className="px-2 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 text-xs font-semibold flex items-center gap-1 cursor-pointer"
-                                        title="Buka grafik layar penuh di modal terpisah"
-                                      >
-                                        <Eye className="w-3.5 h-3.5" />
-                                        <span>Fokus</span>
-                                      </button>
-                                    </div>
-
-                                    <div className="flex items-center gap-1 ml-auto">
-                                      {!isEliminated ? (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleEliminateSingleItem(itemKey)}
-                                          className="px-2 py-1 rounded-lg border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold hover:bg-rose-100 transition cursor-pointer flex items-center gap-1"
-                                          title="Set kuota order ke 0 (eliminasi)"
-                                        >
-                                          <Ban className="w-3 h-3" />
-                                          <span>Eliminasi (0)</span>
-                                        </button>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleRestoreSingleItem(itemKey, originalQty)}
-                                          className="px-2 py-1 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold hover:bg-emerald-100 transition cursor-pointer flex items-center gap-1"
-                                          title="Pulihkan kuota order normal"
-                                        >
-                                          <CheckCircle2 className="w-3 h-3" />
-                                          <span>Pulihkan Kuota ({originalQty})</span>
-                                        </button>
+                                    <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 flex-wrap">
+                                      {fc.category && (
+                                        <span className="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-800 rounded font-medium">
+                                          {fc.category}
+                                        </span>
                                       )}
-
-                                      {!isReduced && !isEliminated && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleReduceSingleItem(itemKey, originalQty)}
-                                          className="px-2 py-1 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 transition cursor-pointer flex items-center gap-1"
-                                          title="Pangkas kuota 50%"
-                                        >
-                                          <Scissors className="w-3 h-3" />
-                                          <span>Pangkas 50%</span>
-                                        </button>
-                                      )}
+                                      {fc.sku && <span>SKU: {fc.sku}</span>}
+                                      {fc.barcode && <span>Barcode: {fc.barcode}</span>}
                                     </div>
                                   </div>
 
-                                  {/* INLINE RECHARTS EXPANDED ACCORDION */}
-                                  {isChartExpanded && (
-                                    <div className="pt-2 animate-in fade-in duration-200">
-                                      <RestockSalesTrendChart
-                                        item={fc}
-                                        product={matchedProduct}
-                                        currency={settings.currency}
-                                        targetDate={targetRestockDate}
-                                        projectionDays={forecastData.projectionDays || 14}
-                                        currentOrderQty={orderQty}
-                                        onUpdateOrderQty={(newQty) => handleSetPOQuantityDirect(itemKey, newQty)}
-                                        onEliminate={() => handleEliminateSingleItem(itemKey)}
-                                        onReduce={() => handleReduceSingleItem(itemKey, originalQty)}
-                                        onRestore={() => handleRestoreSingleItem(itemKey, originalQty)}
-                                        isModal={false}
-                                      />
-                                    </div>
-                                  )}
+                                  {/* Urgency Pill */}
+                                  <span
+                                    className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                                      fc.urgency.includes('KRITIS')
+                                        ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse'
+                                        : fc.urgency.includes('TINGGI')
+                                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                        : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                                    }`}
+                                  >
+                                    {fc.urgency}
+                                  </span>
                                 </div>
+
+                                {/* Quota adjustment explanation if modified */}
+                                {fc.quotaAdjustmentReason && (
+                                  <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+                                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                                    <span className="font-semibold">{fc.quotaAdjustmentReason}</span>
+                                  </div>
+                                )}
+
+                                {/* Suggested Supplier badge when in flat list view */}
+                                {!hideSupplierBadge && fc.suggestedSupplier && (
+                                  <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1 rounded-xl flex-wrap">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <Building2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                      <span className="truncate">
+                                        Distributor: <strong>{fc.suggestedSupplier}</strong>
+                                      </span>
+                                    </div>
+                                    {fc.supplierTerms && (
+                                      <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                                        {fc.supplierTerms}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Stock Stats & Restock Stepper */}
+                                <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800 flex-wrap">
+                                  <div className="flex items-center gap-3 text-xs font-mono text-slate-600 dark:text-slate-400">
+                                    <span>
+                                      Sisa: <strong className="text-slate-900 dark:text-white">{fc.currentStock}</strong> {fc.unit || 'pcs'}
+                                    </span>
+                                    <span>
+                                      Min: <strong className="text-slate-900 dark:text-white">{fc.minStock}</strong>
+                                    </span>
+                                    {fc.estimatedDaysLeft !== undefined && (
+                                      <span className="text-rose-600 dark:text-rose-400 font-bold">
+                                        ~{fc.estimatedDaysLeft} hari tersisa
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Order Stepper */}
+                                  <div className="flex items-center gap-1.5 ml-auto">
+                                    <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mr-1">
+                                      Kuantitas PO:
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpdatePOQuantity(itemKey, -6)}
+                                      className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer text-slate-700 dark:text-slate-200"
+                                      title="Kurangi 6 unit"
+                                    >
+                                      <Minus className="w-3 h-3" />
+                                    </button>
+                                    <input
+                                      type="number"
+                                      value={orderQty}
+                                      min={0}
+                                      onChange={(e) =>
+                                        handleSetPOQuantityDirect(itemKey, parseInt(e.target.value) || 0)
+                                      }
+                                      className="w-14 px-1.5 py-0.5 text-center font-bold text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpdatePOQuantity(itemKey, 6)}
+                                      className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer text-slate-700 dark:text-slate-200"
+                                      title="Tambah 6 unit"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Subtotal & Strategic Advice */}
+                                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-slate-800/60">
+                                  <span className="text-[11px] text-slate-500">
+                                    Biaya Satuan: {formatCurrency(unitCost, settings.currency)}
+                                  </span>
+                                  <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                                    Subtotal: {formatCurrency(subtotal, settings.currency)}
+                                  </span>
+                                </div>
+
+                                <div className="text-[11px] text-slate-600 dark:text-slate-400 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 p-2 rounded-xl leading-relaxed">
+                                  <span className="font-bold text-amber-900 dark:text-amber-300 mr-1">Rekomendasi AI:</span>
+                                  {fc.actionAdvice}
+                                </div>
+
+                                {/* QUICK ACTION BAR: GRAPH & QUOTA POLICY */}
+                                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex-wrap">
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleExpandChart(itemKey)}
+                                      className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
+                                        isChartExpanded
+                                          ? 'bg-emerald-600 text-white shadow-xs'
+                                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                                      }`}
+                                    >
+                                      <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
+                                      <span>{isChartExpanded ? 'Tutup Grafik' : 'Perilaku Grafik Penjualan'}</span>
+                                      {isChartExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => setActiveChartModalItem(fc)}
+                                      className="px-2 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                                      title="Buka grafik layar penuh di modal terpisah"
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                      <span>Fokus</span>
+                                    </button>
+                                  </div>
+
+                                  <div className="flex items-center gap-1 ml-auto">
+                                    {!isEliminated ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleEliminateSingleItem(itemKey)}
+                                        className="px-2 py-1 rounded-lg border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold hover:bg-rose-100 transition cursor-pointer flex items-center gap-1"
+                                        title="Set kuota order ke 0 (eliminasi)"
+                                      >
+                                        <Ban className="w-3 h-3" />
+                                        <span>Eliminasi (0)</span>
+                                      </button>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRestoreSingleItem(itemKey, originalQty)}
+                                        className="px-2 py-1 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold hover:bg-emerald-100 transition cursor-pointer flex items-center gap-1"
+                                        title="Pulihkan kuota order normal"
+                                      >
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        <span>Pulihkan Kuota ({originalQty})</span>
+                                      </button>
+                                    )}
+
+                                    {!isReduced && !isEliminated && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleReduceSingleItem(itemKey, originalQty)}
+                                        className="px-2 py-1 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 transition cursor-pointer flex items-center gap-1"
+                                        title="Pangkas kuota 50%"
+                                      >
+                                        <Scissors className="w-3 h-3" />
+                                        <span>Pangkas 50%</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* INLINE RECHARTS EXPANDED ACCORDION */}
+                                {isChartExpanded && (
+                                  <div className="pt-2 animate-in fade-in duration-200">
+                                    <RestockSalesTrendChart
+                                      item={fc}
+                                      product={matchedProduct}
+                                      currency={settings.currency}
+                                      targetDate={targetRestockDate}
+                                      projectionDays={forecastData.projectionDays || 14}
+                                      currentOrderQty={orderQty}
+                                      onUpdateOrderQty={(newQty) => handleSetPOQuantityDirect(itemKey, newQty)}
+                                      onEliminate={() => handleEliminateSingleItem(itemKey)}
+                                      onReduce={() => handleReduceSingleItem(itemKey, originalQty)}
+                                      onRestore={() => handleRestoreSingleItem(itemKey, originalQty)}
+                                      isModal={false}
+                                    />
+                                  </div>
+                                )}
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="p-6 text-center rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                        <Check className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                        <h6 className="font-bold text-sm text-slate-900 dark:text-white">Tidak Ada Produk Pada Kategori Ini</h6>
-                        <p className="text-xs text-slate-500 mt-1">
-                          Silakan ganti filter di atas atau klik "Semua" untuk melihat seluruh rekomendasi restock ritel.
-                        </p>
-                      </div>
-                    )}
+                          </div>
+                        );
+                      };
+
+                      if (filteredForecasts.length === 0) {
+                        return (
+                          <div className="p-6 text-center rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                            <Check className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                            <h6 className="font-bold text-sm text-slate-900 dark:text-white">
+                              Tidak Ada Produk Pada Kategori Ini
+                            </h6>
+                            <p className="text-xs text-slate-500 mt-1">
+                              Silakan ganti filter di atas atau klik "Semua" untuk melihat seluruh rekomendasi restock ritel.
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      // MODE 1: GROUPED BY REGISTERED SUPPLIER (Kategori per Supplier)
+                      if (restockViewMode === 'grouped_supplier') {
+                        return (
+                          <div className="space-y-4">
+                            {supplierGroups.map((group) => {
+                              const groupKeys = group.items.map((it) => it.productId || it.productName);
+                              const isAllGroupSelected =
+                                groupKeys.length > 0 && groupKeys.every((k) => selectedPOProductIds.includes(k));
+                              const isSomeGroupSelected =
+                                groupKeys.some((k) => selectedPOProductIds.includes(k)) && !isAllGroupSelected;
+
+                              return (
+                                <div
+                                  key={group.supplierName}
+                                  className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3.5 space-y-3"
+                                >
+                                  {/* Supplier Section Header Card */}
+                                  <div className="flex items-center justify-between gap-3 flex-wrap bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleToggleSelectSupplierPO(group.supplierName)}
+                                        className="text-slate-400 hover:text-emerald-600 cursor-pointer shrink-0"
+                                        title={isAllGroupSelected ? 'Batalkan pilihan supplier ini' : 'Pilih semua produk supplier ini'}
+                                      >
+                                        {isAllGroupSelected ? (
+                                          <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                        ) : isSomeGroupSelected ? (
+                                          <div className="w-4 h-4 rounded border-2 border-emerald-600 bg-emerald-100 flex items-center justify-center text-[10px] text-emerald-800 font-black">
+                                            -
+                                          </div>
+                                        ) : (
+                                          <Square className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                                        )}
+                                      </button>
+
+                                      <div className="min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <div className="flex items-center gap-1.5">
+                                            <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                            <span className="font-black text-xs text-slate-900 dark:text-white truncate">
+                                              {group.supplierName}
+                                            </span>
+                                          </div>
+
+                                          {/* Payment Terms Badge */}
+                                          <span
+                                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                              (group.paymentTerms || '').toLowerCase().includes('konsinyasi')
+                                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-200'
+                                                : (group.paymentTerms || '').toLowerCase().includes('tempo')
+                                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200'
+                                                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200'
+                                            }`}
+                                          >
+                                            {group.paymentTerms || 'Tunai'}
+                                          </span>
+                                        </div>
+
+                                        {group.supplierObj && (
+                                          <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex-wrap">
+                                            {group.supplierObj.contactPerson && (
+                                              <span>
+                                                PIC: <strong className="text-slate-700 dark:text-slate-300">{group.supplierObj.contactPerson}</strong>
+                                              </span>
+                                            )}
+                                            {group.supplierObj.phone && (
+                                              <span>Telp: {group.supplierObj.phone}</span>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Supplier Subtotal & Actions */}
+                                    <div className="flex items-center gap-2 ml-auto flex-wrap">
+                                      <div className="text-right mr-1">
+                                        <div className="text-[10px] text-slate-400 font-semibold uppercase">Total PO Supplier</div>
+                                        <div className="text-xs font-black text-emerald-700 dark:text-emerald-400">
+                                          {formatCurrency(group.totalSelectedBudget, settings.currency)}
+                                          <span className="text-[10px] font-normal text-slate-500 ml-1">
+                                            ({group.selectedCount}/{group.items.length} SKU)
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopyPOText(group.supplierName)}
+                                        className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
+                                        title={`Salin PO khusus ${group.supplierName} untuk WhatsApp`}
+                                      >
+                                        {copiedSupplierFeedback === group.supplierName ? (
+                                          <>
+                                            <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                            <span className="text-emerald-600 dark:text-emerald-400">Tersalin!</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Copy className="w-3.5 h-3.5 text-slate-400" />
+                                            <span>Salin PO</span>
+                                          </>
+                                        )}
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => handlePrintPO(group.supplierName)}
+                                        className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
+                                        title={`Cetak surat pesanan ${group.supplierName}`}
+                                      >
+                                        <Printer className="w-3.5 h-3.5 text-slate-400" />
+                                        <span>Cetak PO</span>
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Items in this Supplier Group */}
+                                  <div className="space-y-2.5">
+                                    {group.items.map((fc, idx) => renderForecastCard(fc, idx, true))}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      }
+
+                      // MODE 2: FLAT LIST OF ALL ITEMS
+                      return (
+                        <div className="space-y-3">
+                          {filteredForecasts.map((fc, i) => renderForecastCard(fc, i, false))}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Deadstock & FEFO Expiry Alerts (if any) */}

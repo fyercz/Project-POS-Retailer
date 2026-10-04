@@ -356,6 +356,8 @@ export interface AIForecastItem {
   costPrice?: number;
   estimatedSubtotal?: number;
   suggestedSupplier?: string;
+  supplierId?: string;
+  supplierTerms?: string;
 }
 
 export interface AIPurchaseOrderPlan {
@@ -745,6 +747,7 @@ export interface BalanceSheet {
   };
   liabilities: {
     accountsPayable: number; // Utang tempo supplier
+    consignmentPayable?: number; // Utang titipan konsinyasi supplier
     pointsLiability: number; // Beban titipan poin member
     totalCurrentLiabilities: number;
     totalLiabilities: number;

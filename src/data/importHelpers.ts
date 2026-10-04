@@ -10,7 +10,7 @@ export function mapCategory(catName: string): string {
   if (c === 'cat-clean' || c === 'home_care' || c.includes('pembersih') || c.includes('kebersihan') || c.includes('deterjen') || c.includes('rumah') || c.includes('cuci') || c.includes('pewangi') || c.includes('karbol') || c.includes('lantai') || c.includes('nyamuk')) return 'home_care';
   if (c === 'cat-other' || c === 'atk_meds' || c.includes('atk') || c.includes('obat') || c.includes('baterai') || c.includes('medis') || c.includes('toko') || c.includes('kertas')) return 'atk_meds';
   if (c === 'cat-cig' || c === 'tobacco' || c.includes('rokok') || c.includes('tembakau') || c.includes('cerutu') || c.includes('kretek') || c.includes('filter')) return 'tobacco';
-  if (c === 'cat-bakery' || c === 'bakery_ready' || c.includes('roti') || c.includes('bakery') || c.includes('siap saji') || c.includes('kue') || c.includes('onigiri') || c.includes('bento')) return 'bakery_ready';
+  if (c === 'cat-bakery' || c === 'bakery_ready' || c.includes('roti') || c.includes('selai') || c.includes('bakery') || c.includes('siap saji') || c.includes('kue') || c.includes('onigiri') || c.includes('bento')) return 'bakery_ready';
   return 'groceries';
 }
 

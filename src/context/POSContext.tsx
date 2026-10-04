@@ -40,6 +40,7 @@ import {
   INITIAL_CUSTOMERS,
   INITIAL_VOUCHERS,
   INITIAL_SUPPLIERS,
+  INITIAL_SUPPLIER_PURCHASES,
   DEFAULT_STORE_SETTINGS,
   INITIAL_RECENT_TRANSACTIONS,
   INITIAL_EMPLOYEES,
@@ -64,6 +65,7 @@ import {
   computeBalanceSheet,
   computeIncomeStatement,
 } from '../utils/accountingLedger';
+import { playScannerSound } from '../utils/scannerAudio';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -532,9 +534,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [supplierPurchases, setSupplierPurchases] = useState<SupplierPurchase[]>(() => {
     const saved = localStorage.getItem('pos_supplier_purchases_v2');
-    if (!saved) return [];
+    if (!saved) return INITIAL_SUPPLIER_PURCHASES;
     try {
       const list: SupplierPurchase[] = JSON.parse(saved);
+      if (!Array.isArray(list) || list.length === 0) return INITIAL_SUPPLIER_PURCHASES;
       const seen = new Set<string>();
       return list.map((p, i) => {
         let id = p.id;
@@ -545,7 +548,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { ...p, id };
       });
     } catch {
-      return [];
+      return INITIAL_SUPPLIER_PURCHASES;
     }
   });
 
@@ -1224,6 +1227,61 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     },
     [products, addToCart]
   );
+
+  // Global Hardware USB / Bluetooth Barcode Scanner listener with subtle audio feedback
+  useEffect(() => {
+    let buffer = '';
+    let lastKeyTime = Date.now();
+
+    const handleHardwareBarcodeInput = (e: KeyboardEvent) => {
+      // Ignore if user is typing inside an input, textarea, or contentEditable element
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      // Ignore modifier keys
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+      const currentTime = Date.now();
+      const diff = currentTime - lastKeyTime;
+      lastKeyTime = currentTime;
+
+      if (e.key === 'Enter') {
+        // Barcode scanners typically emit characters within 10-50ms intervals
+        if (buffer.length >= 3 && diff < 120) {
+          e.preventDefault();
+          const scannedCode = buffer.trim();
+          buffer = '';
+          const result = scanBarcodeAndAddToCart(scannedCode);
+          playScannerSound(result.success ? 'success' : 'error');
+          if (!result.success) {
+            openUnregisteredBarcodePrompt(scannedCode);
+          }
+        } else {
+          buffer = '';
+        }
+        return;
+      }
+
+      // Collect barcode characters if typed in rapid succession
+      if (e.key.length === 1) {
+        if (diff > 120) {
+          buffer = e.key;
+        } else {
+          buffer += e.key;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleHardwareBarcodeInput);
+    return () => window.removeEventListener('keydown', handleHardwareBarcodeInput);
+  }, [scanBarcodeAndAddToCart, openUnregisteredBarcodePrompt]);
 
   const updateCartItemQuantity = (cartItemId: string, delta: number) => {
     setCart((prevCart) => {

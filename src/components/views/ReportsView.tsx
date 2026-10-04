@@ -1323,6 +1323,18 @@ export const ReportsView: React.FC = () => {
                           </span>
                         </div>
 
+                        {Boolean(balanceSheet.liabilities.consignmentPayable && balanceSheet.liabilities.consignmentPayable > 0) && (
+                          <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                            <div>
+                              <span className="font-medium text-slate-800 dark:text-slate-200">2030 • Utang Titipan / Konsinyasi</span>
+                              <p className="text-[10px] text-slate-400">Titipan barang konsinyasi supplier menunggu rekonsiliasi</p>
+                            </div>
+                            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                              {formatCurrency(balanceSheet.liabilities.consignmentPayable || 0, settings.currency)}
+                            </span>
+                          </div>
+                        )}
+
                         <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                           <div>
                             <span className="font-medium text-slate-800 dark:text-slate-200">2020 • Liabilitas Poin Member</span>

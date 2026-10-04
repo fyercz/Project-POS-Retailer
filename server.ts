@@ -1510,6 +1510,7 @@ app.post('/api/ai/inventory-forecast', async (req, res) => {
     recentTransactions = [],
     salesReturns = [],
     purchaseReturns = [],
+    suppliers = [],
     storeSettings = {},
     targetDate,
     deadstockRule = 'eliminate', // 'eliminate' | 'reduce' | 'none'
@@ -1525,6 +1526,83 @@ app.post('/api/ai/inventory-forecast', async (req, res) => {
       projectionDays = Math.max(1, Math.min(60, diff || 7));
     }
   }
+
+  // Helper: Match product to registered supplier
+  const matchRegisteredSupplier = (p: any) => {
+    if (!suppliers || suppliers.length === 0) {
+      return {
+        supplierId: 'sup-default',
+        supplierName: p.brand ? `Distributor ${p.brand}` : 'Supplier Umum FMCG',
+        paymentTerms: 'Tunai',
+      };
+    }
+
+    if (p.supplierId) {
+      const found = suppliers.find((s: any) => s.id === p.supplierId);
+      if (found) {
+        return {
+          supplierId: found.id,
+          supplierName: found.name,
+          paymentTerms: found.paymentTerms || 'Tunai',
+        };
+      }
+    }
+
+    const pName = (p.name || '').toLowerCase();
+    const pCat = (p.categoryId || '').toLowerCase();
+    const pBrand = (p.brand || '').toLowerCase();
+
+    for (const sup of suppliers) {
+      const sName = (sup.name || '').toLowerCase();
+      const sNotes = (sup.notes || '').toLowerCase();
+      const sAll = `${sName} ${sNotes}`;
+
+      // Roti & Selai / Bakery / Snack Lokal (Konsinyasi)
+      if (
+        (pCat.includes('bakery') || pCat.includes('roti') || pName.includes('roti') || pName.includes('selai') || pName.includes('sari roti')) &&
+        (sAll.includes('roti') || sAll.includes('snack') || sAll.includes('berkah roti') || sAll.includes('titip') || sAll.includes('konsinyasi'))
+      ) {
+        return { supplierId: sup.id, supplierName: sup.name, paymentTerms: sup.paymentTerms || 'Konsinyasi (Titip Jual)' };
+      }
+
+      // Sembako, Beras, Minyak, Telur, Gula
+      if (
+        (pCat.includes('staple') || pName.includes('beras') || pName.includes('minyak') || pName.includes('telur') || pName.includes('gula')) &&
+        (sAll.includes('sembako') || sAll.includes('beras') || sAll.includes('sumber berkah') || sAll.includes('pangan'))
+      ) {
+        return { supplierId: sup.id, supplierName: sup.name, paymentTerms: sup.paymentTerms || 'Tempo 14 Hari' };
+      }
+
+      // Brand exact or partial match with supplier name/notes
+      if (pBrand && (sName.includes(pBrand) || sNotes.includes(pBrand))) {
+        return { supplierId: sup.id, supplierName: sup.name, paymentTerms: sup.paymentTerms || 'Tempo 30 Hari' };
+      }
+
+      // Unilever / Personal Care / Home Care
+      if (
+        (pCat.includes('personal') || pCat.includes('home') || pName.includes('lifebuoy') || pName.includes('sunlight') || pName.includes('pepsodent') || pName.includes('rinso')) &&
+        (sAll.includes('unilever') || sAll.includes('wings') || sAll.includes('personal') || sAll.includes('home care'))
+      ) {
+        return { supplierId: sup.id, supplierName: sup.name, paymentTerms: sup.paymentTerms || 'Tempo 30 Hari' };
+      }
+
+      // FMCG / Indomie / Aqua / Minuman / Makanan
+      if (
+        (pCat.includes('beverage') || pCat.includes('instant') || pCat.includes('snack') || pName.includes('indomie') || pName.includes('aqua')) &&
+        (sAll.includes('indomarco') || sAll.includes('fmcg') || sAll.includes('distributor'))
+      ) {
+        return { supplierId: sup.id, supplierName: sup.name, paymentTerms: sup.paymentTerms || 'Tempo 30 Hari' };
+      }
+    }
+
+    // Default to first supplier
+    const first = suppliers[0];
+    return {
+      supplierId: first.id,
+      supplierName: first.name,
+      paymentTerms: first.paymentTerms || 'Tunai',
+    };
+  };
 
   // Build 14-day history date map for charting
   const last14Dates: string[] = [];
@@ -1649,6 +1727,8 @@ app.post('/api/ai/inventory-forecast', async (req, res) => {
         };
       });
 
+      const matchedSup = matchRegisteredSupplier(p);
+
       return {
         productId: p.id,
         productName: p.name,
@@ -1670,7 +1750,9 @@ app.post('/api/ai/inventory-forecast', async (req, res) => {
         salesHistoryByDate,
         costPrice: cost,
         estimatedSubtotal: subtotal,
-        suggestedSupplier: p.brand ? `Distributor ${p.brand}` : 'PT Indomarco / Supplier FMCG',
+        suggestedSupplier: matchedSup.supplierName,
+        supplierId: matchedSup.supplierId,
+        supplierTerms: matchedSup.paymentTerms,
         urgency,
         estimatedDaysLeft: estimatedDays,
         actionAdvice: quotaAdjustment === 'eliminated'
@@ -1682,7 +1764,7 @@ app.post('/api/ai/inventory-forecast', async (req, res) => {
     });
 
     return {
-      summary: `Rencana Restock terencana untuk target kebutuhan ${projectionDays} hari ke depan${targetDate ? ` (Target: ${targetDate})` : ''}. Diterapkan aturan eliminasi/pemangkasan kuota untuk ${deadstockCount} barang deadstock dan ${returnedItemsCount} barang dengan riwayat retur.`,
+      summary: `Rencana Restock terencana untuk target kebutuhan ${projectionDays} hari ke depan${targetDate ? ` (Target: ${targetDate})` : ''}. Dikelompokkan berdasarkan distributor/supplier terdaftar dan diterapkan aturan eliminasi/pemangkasan kuota untuk ${deadstockCount} barang deadstock dan ${returnedItemsCount} barang dengan riwayat retur.`,
       healthScore: lowItems.length === 0 ? 95 : Math.max(45, 100 - (lowItems.length * 8)),
       totalEstimatedBudget: totalBudget,
       totalItemsToRestock: suggestions.filter((s) => s.recommendedOrderQty > 0).length,
@@ -1712,6 +1794,16 @@ Target Tanggal Restock: ${targetDate || 'Hari Ini'} (Horizon Proyeksi: ${project
 Kebijakan Aturan Retur: "${returnRule}" (eliminate = eliminasi jadi 0; reduce = pangkas kuota 50%; none = normal).
 Kebijakan Aturan Deadstock: "${deadstockRule}" (eliminate = eliminasi jadi 0; reduce = pangkas kuota 50%; none = normal).
 
+DAFTAR SUPPLIER / DISTRIBUTOR TERDAFTAR DI SISTEM:
+${JSON.stringify((suppliers || []).map((s: any) => ({
+  id: s.id,
+  name: s.name,
+  paymentTerms: s.paymentTerms,
+  contactPerson: s.contactPerson,
+  phone: s.phone,
+  notes: s.notes,
+})))}
+
 Data Produk Toko:
 ${JSON.stringify((products || []).map((p: any) => {
   const stat = productStats.get(p.id) || { totalSold: 0, totalReturned: 0 };
@@ -1738,13 +1830,18 @@ Data Transaksi Terakhir (${recentTransactions?.length || 0} transaksi) & Retur (
 
 TUGAS UTAMA:
 1. Lakukan analisis stok untuk horizon target ${projectionDays} hari ke depan (berdasarkan run-rate penjualan).
-2. ATURAN WAJIB:
+2. KATEGORISASI KE SUPPLIER TERDAFTAR (WAJIB):
+   - Setiap item rekomendasi restock HARUS dikaitkan ke salah satu Supplier yang TERDAFTAR di atas!
+   - Contoh: produk roti/snack/selai ke supplier roti/konsinyasi; sembako/beras/gula ke supplier sembako; FMCG/Indomie/minuman ke distributor FMCG resmi.
+   - Isi "suggestedSupplier" dengan NAMA supplier terdaftar, dan "supplierId" dengan ID supplier terdaftar (misal "sup-001").
+   - Sertakan "supplierTerms" dengan syarat pembayaran supplier tersebut (misal "Tempo 14 Hari", "Konsinyasi (Titip Jual)", atau "Tunai").
+3. ATURAN RETUR & DEADSTOCK:
    - Jika produk DEADSTOCK (0 penjualan): terapkan aturan "${deadstockRule}". Jika 'eliminate', set recommendedOrderQty = 0 dan quotaAdjustment = 'eliminated'. Jika 'reduce', pangkas kuota 50% dan quotaAdjustment = 'reduced'.
    - Jika produk memiliki RIWAYAT RETUR (totalReturned > 0): terapkan aturan "${returnRule}". Jika 'eliminate', set recommendedOrderQty = 0 dan quotaAdjustment = 'eliminated'. Jika 'reduce', pangkas kuota 50% dan quotaAdjustment = 'reduced'.
-3. Sertakan alasan kuota yang jelas pada "quotaAdjustmentReason".
-4. Kembalikan JSON valid:
+4. Sertakan alasan kuota yang jelas pada "quotaAdjustmentReason".
+5. Kembalikan JSON valid:
 {
-  "summary": "Ringkasan eksekutif 2 kalimat mencakup target tanggal, kondisi stok, dan penanganan retur/deadstock.",
+  "summary": "Ringkasan eksekutif 2 kalimat mencakup target tanggal, kondisi stok per distributor supplier terdaftar, dan penanganan retur/deadstock.",
   "healthScore": 88,
   "totalEstimatedBudget": 1850000,
   "targetDate": "${targetDate || now.toISOString().slice(0, 10)}",
@@ -1770,7 +1867,9 @@ TUGAS UTAMA:
       "dailySalesVelocity": 1.5,
       "costPrice": 15000,
       "estimatedSubtotal": 360000,
-      "suggestedSupplier": "Nama Supplier",
+      "suggestedSupplier": "Nama Supplier Terdaftar",
+      "supplierId": "sup-001",
+      "supplierTerms": "Tempo 14 Hari",
       "urgency": "KRITIS" | "TINGGI" | "SEDANG" | "OPTIMAL",
       "estimatedDaysLeft": 2,
       "actionAdvice": "Saran pemesanan spesifik dan run-rate"
@@ -1823,6 +1922,12 @@ TUGAS UTAMA:
           };
         });
 
+        const fallbackSup = matchRegisteredSupplier(prod || { name: fc.productName });
+        const finalSupplierName = fc.suggestedSupplier || fallbackSup.supplierName;
+        const matchedSupFromList = (suppliers || []).find(
+          (s: any) => s.id === fc.supplierId || s.name === finalSupplierName || s.name.toLowerCase().includes(finalSupplierName.toLowerCase())
+        );
+
         return {
           ...fc,
           productId: pId,
@@ -1837,7 +1942,9 @@ TUGAS UTAMA:
           totalSoldPeriod: stat.totalSold,
           dailySalesVelocity: fc.dailySalesVelocity || Math.round((stat.totalSold / 14) * 100) / 100,
           salesHistoryByDate,
-          suggestedSupplier: fc.suggestedSupplier || (prod?.brand ? `Distributor ${prod.brand}` : 'PT Indomarco / Supplier FMCG'),
+          suggestedSupplier: matchedSupFromList ? matchedSupFromList.name : finalSupplierName,
+          supplierId: matchedSupFromList ? matchedSupFromList.id : (fc.supplierId || fallbackSup.supplierId),
+          supplierTerms: matchedSupFromList ? (matchedSupFromList.paymentTerms || 'Tunai') : (fc.supplierTerms || fallbackSup.paymentTerms),
         };
       });
 

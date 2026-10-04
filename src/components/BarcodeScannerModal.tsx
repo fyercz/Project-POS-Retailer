@@ -472,13 +472,19 @@ export const BarcodeScannerModal: React.FC = () => {
             {/* Audio Toggle */}
             <button
               type="button"
-              onClick={() => setSoundEnabled(!soundEnabled)}
+              onClick={() => {
+                const next = !soundEnabled;
+                setSoundEnabled(next);
+                if (next) {
+                  playScannerSound('success', { volume: 0.08 });
+                }
+              }}
               className={`p-1.5 rounded-lg border text-xs transition-colors cursor-pointer ${
                 soundEnabled
                   ? 'bg-slate-800 border-slate-700 text-emerald-400'
                   : 'bg-slate-800/50 border-slate-800 text-slate-500'
               }`}
-              title={soundEnabled ? 'Suara Kasir Aktif' : 'Suara Dimatikan'}
+              title={soundEnabled ? 'Suara Chirp Kasir Aktif (Berhasil & Gagal)' : 'Suara Dimatikan'}
             >
               {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>

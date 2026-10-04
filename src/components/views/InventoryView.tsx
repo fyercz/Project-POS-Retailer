@@ -57,6 +57,8 @@ import { AIInvoiceScannerModal } from '../AIInvoiceScannerModal';
 import { AIVisualStockOpnameModal } from '../AIVisualStockOpnameModal';
 import { ProductFormModal } from '../ProductFormModal';
 import { SupplierFormModal } from '../SupplierFormModal';
+import { SupplierPurchaseDetailModal } from '../SupplierPurchaseDetailModal';
+import { parsePaymentTermsInfo } from '../../utils/paymentTermsHelper';
 import { PriceTagModal } from '../PriceTagModal';
 import { DataImportModal } from '../DataImportModal';
 import { DirectFileImportModal } from '../DirectFileImportModal';
@@ -186,6 +188,11 @@ export const InventoryView: React.FC = () => {
   const [isPriceTagModalOpen, setIsPriceTagModalOpen] = useState(false);
   const [productForPriceTag, setProductForPriceTag] = useState<Product | null>(null);
   const [purchaseForPriceTag, setPurchaseForPriceTag] = useState<SupplierPurchase | null>(null);
+
+  // Supplier Purchase Detail & Receipt Modal State
+  const [selectedPurchaseForDetail, setSelectedPurchaseForDetail] = useState<SupplierPurchase | null>(null);
+  const [isPurchaseDetailOpen, setIsPurchaseDetailOpen] = useState(false);
+  const [purchaseTermsFilter, setPurchaseTermsFilter] = useState<'all' | 'tempo' | 'consignment' | 'cash'>('all');
 
   // Smart Data Import Modal State
   const [isDataImportOpen, setIsDataImportOpen] = useState(false);
@@ -430,9 +437,54 @@ export const InventoryView: React.FC = () => {
         purch.invoiceNumber.toLowerCase().includes(query) ||
         purch.supplierName.toLowerCase().includes(query);
       const matchDate = isDateWithinFilter(purch.createdAt, purchaseStartDate, purchaseEndDate);
-      return matchQuery && matchDate;
+
+      let matchTerms = true;
+      if (purchaseTermsFilter !== 'all') {
+        const termsInfo = parsePaymentTermsInfo(purch.createdAt, purch.paymentTerms);
+        matchTerms = termsInfo.category === purchaseTermsFilter;
+      }
+
+      return matchQuery && matchDate && matchTerms;
     });
-  }, [supplierPurchases, deferredSearch, purchaseStartDate, purchaseEndDate]);
+  }, [supplierPurchases, deferredSearch, purchaseStartDate, purchaseEndDate, purchaseTermsFilter]);
+
+  const purchaseTermsStats = useMemo(() => {
+    let tempoTotal = 0;
+    let tempoCount = 0;
+    let consignmentTotal = 0;
+    let consignmentCount = 0;
+    let cashTotal = 0;
+    let cashCount = 0;
+    let urgentTempoCount = 0;
+
+    supplierPurchases.forEach((p) => {
+      const info = parsePaymentTermsInfo(p.createdAt, p.paymentTerms);
+      const val = Number(p.finalTotal ?? p.totalAmount) || 0;
+      if (info.category === 'tempo') {
+        tempoTotal += val;
+        tempoCount++;
+        if (info.urgency === 'urgent' || info.urgency === 'overdue') {
+          urgentTempoCount++;
+        }
+      } else if (info.category === 'consignment') {
+        consignmentTotal += val;
+        consignmentCount++;
+      } else {
+        cashTotal += val;
+        cashCount++;
+      }
+    });
+
+    return {
+      tempoTotal,
+      tempoCount,
+      consignmentTotal,
+      consignmentCount,
+      cashTotal,
+      cashCount,
+      urgentTempoCount,
+    };
+  }, [supplierPurchases]);
 
   const filteredReturns = useMemo(() => {
     const query = deferredSearch.trim().toLowerCase();
@@ -758,12 +810,11 @@ export const InventoryView: React.FC = () => {
 
     setNotificationMsg({
       type: 'success',
-      text: `Faktur Pembelian ${invoiceNumber} dari ${supplierName} senilai ${formatCurrency(finalReceivingTotal, settings.currency)} berhasil diproses & stok bertambah.`,
-      actionLabel: 'Cetak Pricetag Faktur Ini',
+      text: `Faktur Pembelian ${invoiceNumber} (${paymentTerms}) dari ${supplierName} senilai ${formatCurrency(finalReceivingTotal, settings.currency)} berhasil diproses & stok bertambah.`,
+      actionLabel: 'Lihat Nota Faktur',
       onAction: () => {
-        setProductForPriceTag(null);
-        setPurchaseForPriceTag(createdPurchaseForModal);
-        setIsPriceTagModalOpen(true);
+        setSelectedPurchaseForDetail(createdPurchaseForModal);
+        setIsPurchaseDetailOpen(true);
       },
     });
     setTimeout(() => setNotificationMsg(null), 8000);
@@ -2266,115 +2317,218 @@ export const InventoryView: React.FC = () => {
                 </div>
               }
             />
+
+            {/* Payment Terms Quick Filter Tabs */}
+            <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-slate-500 font-medium mr-1 text-[11px]">Skema Bayar:</span>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseTermsFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    purchaseTermsFilter === 'all'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
+                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <span>Semua Syarat</span>
+                  <span className="text-[10px] opacity-75 font-mono">({supplierPurchases.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPurchaseTermsFilter('tempo')}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    purchaseTermsFilter === 'tempo'
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-50'
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Tempo (TOP)</span>
+                  <span className="text-[10px] opacity-75 font-mono">({purchaseTermsStats.tempoCount})</span>
+                  {purchaseTermsStats.urgentTempoCount > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-bold">
+                      {purchaseTermsStats.urgentTempoCount} jatuh tempo
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPurchaseTermsFilter('consignment')}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    purchaseTermsFilter === 'consignment'
+                      ? 'bg-purple-600 text-white shadow-2xs'
+                      : 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-50'
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Konsinyasi / Titip Jual</span>
+                  <span className="text-[10px] opacity-75 font-mono">({purchaseTermsStats.consignmentCount})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPurchaseTermsFilter('cash')}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    purchaseTermsFilter === 'cash'
+                      ? 'bg-emerald-600 text-white shadow-2xs'
+                      : 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50'
+                  }`}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Tunai / Cash</span>
+                  <span className="text-[10px] opacity-75 font-mono">({purchaseTermsStats.cashCount})</span>
+                </button>
+              </div>
+
+              {/* Quick totals breakdown */}
+              <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
+                <span>Utang Tempo: <strong className="text-blue-600 dark:text-blue-400 font-mono">{formatCurrency(purchaseTermsStats.tempoTotal, settings.currency)}</strong></span>
+                <span>Titip Jual: <strong className="text-purple-600 dark:text-purple-400 font-mono">{formatCurrency(purchaseTermsStats.consignmentTotal, settings.currency)}</strong></span>
+              </div>
+            </div>
+
             <div className="flex-1 overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
                   <tr>
                     <th className="py-3 px-4">No. Faktur / Waktu</th>
-                    <th className="py-3 px-4">Supplier & Syarat</th>
+                    <th className="py-3 px-4">Supplier & Syarat Bayar</th>
                     <th className="py-3 px-4">Barang Dibeli</th>
                     <th className="py-3 px-4 text-right">Diskon & DPP</th>
                     <th className="py-3 px-4 text-right">PPN Masukan</th>
                     <th className="py-3 px-4 text-right">Total Tagihan</th>
-                    <th className="py-3 px-4 text-center">Aksi & Label</th>
+                    <th className="py-3 px-4 text-center">Aksi & Nota</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {filteredPurchases.length > 0 ? (
-                    filteredPurchases.map((purch) => (
-                      <tr key={purch.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="py-3 px-4">
-                          <div className="font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                            {purch.invoiceNumber}
-                          </div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                            <Calendar className="w-3 h-3 text-slate-400" />
-                            {formatDate(purch.createdAt)}
-                          </div>
-                        </td>
-
-                        <td className="py-3 px-4">
-                          <div className="font-semibold text-slate-900 dark:text-slate-100">
-                            {purch.supplierName}
-                          </div>
-                          <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">
-                            {purch.paymentTerms}
-                          </div>
-                          {purch.notes && (
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400 italic mt-0.5">
-                              {purch.notes}
+                    filteredPurchases.map((purch) => {
+                      const termsInfo = parsePaymentTermsInfo(purch.createdAt, purch.paymentTerms);
+                      return (
+                        <tr key={purch.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                              {purch.invoiceNumber}
                             </div>
-                          )}
-                        </td>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                              <Calendar className="w-3 h-3 text-slate-400" />
+                              {formatDate(purch.createdAt)}
+                            </div>
+                          </td>
 
-                        <td className="py-3 px-4">
-                          <div className="space-y-1">
-                            {(purch.items || []).map((item, idx) => (
-                              <div key={idx} className="flex items-center gap-2 text-[11px]">
-                                <span className="font-bold text-slate-800 dark:text-slate-200">
-                                  {item.quantity}x
-                                </span>
-                                <span className="text-slate-600 dark:text-slate-300">
-                                  {item.productName}
-                                </span>
-                                <span className="text-slate-400 font-mono text-[10px]">
-                                  (@{formatCurrency(item.costPrice, settings.currency)})
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </td>
-
-                        <td className="py-3 px-4 text-right font-mono">
-                          {purch.discountAmount > 0 ? (
-                            <div>
-                              <span className="text-rose-500 font-medium text-[10px]">
-                                -{formatCurrency(purch.discountAmount, settings.currency)} ({purch.discountRate}%)
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                              <span>{purch.supplierName}</span>
+                            </div>
+                            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${termsInfo.badgeClasses.bg} ${termsInfo.badgeClasses.border} ${termsInfo.badgeClasses.text}`}>
+                                <CreditCard className="w-3 h-3" />
+                                <span>{termsInfo.badgeLabel}</span>
                               </span>
-                              <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">
-                                DPP: {formatCurrency(purch.dppAmount, settings.currency)}
+                              {termsInfo.category === 'tempo' && (
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                                  termsInfo.urgency === 'overdue' || termsInfo.urgency === 'urgent'
+                                    ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
+                                    : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                                }`}>
+                                  <Clock className="w-3 h-3" />
+                                  <span>{termsInfo.statusBadgeText} ({termsInfo.dueDateFormatted})</span>
+                                </span>
+                              )}
+                            </div>
+                            {purch.notes && (
+                              <div className="text-[10px] text-slate-500 dark:text-slate-400 italic mt-1 line-clamp-1">
+                                {purch.notes}
                               </div>
+                            )}
+                          </td>
+
+                          <td className="py-3 px-4">
+                            <div className="space-y-1">
+                              {(purch.items || []).map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-2 text-[11px]">
+                                  <span className="font-bold text-slate-800 dark:text-slate-200">
+                                    {item.quantity}x
+                                  </span>
+                                  <span className="text-slate-600 dark:text-slate-300">
+                                    {item.productName}
+                                  </span>
+                                  <span className="text-slate-400 font-mono text-[10px]">
+                                    (@{formatCurrency(item.costPrice, settings.currency)})
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          ) : (
-                            <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">
-                              {formatCurrency(purch.subtotal, settings.currency)}
+                          </td>
+
+                          <td className="py-3 px-4 text-right font-mono">
+                            {purch.discountAmount && purch.discountAmount > 0 ? (
+                              <div>
+                                <span className="text-rose-500 font-medium text-[10px]">
+                                  -{formatCurrency(purch.discountAmount, settings.currency)} ({purch.discountRate}%)
+                                </span>
+                                <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">
+                                  DPP: {formatCurrency(purch.dppAmount, settings.currency)}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">
+                                {formatCurrency(purch.subtotal || purch.totalAmount, settings.currency)}
+                              </div>
+                            )}
+                          </td>
+
+                          <td className="py-3 px-4 text-right font-mono">
+                            <div className="font-bold text-blue-600 dark:text-blue-400">
+                              +{formatCurrency(purch.ppnAmount || 0, settings.currency)}
                             </div>
-                          )}
-                        </td>
+                            <span className="text-[10px] text-slate-400">PPN {purch.ppnRate || 0}%</span>
+                          </td>
 
-                        <td className="py-3 px-4 text-right font-mono">
-                          <div className="font-bold text-blue-600 dark:text-blue-400">
-                            +{formatCurrency(purch.ppnAmount, settings.currency)}
-                          </div>
-                          <span className="text-[10px] text-slate-400">PPN {purch.ppnRate}%</span>
-                        </td>
+                          <td className="py-3 px-4 text-right font-mono">
+                            <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                              {formatCurrency(purch.finalTotal ?? purch.totalAmount, settings.currency)}
+                            </div>
+                            <span className="text-[10px] text-slate-400">
+                              {(purch.items || []).reduce((sum, i) => sum + (i.quantity || 0), 0)} total pcs
+                            </span>
+                          </td>
 
-                        <td className="py-3 px-4 text-right font-mono">
-                          <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                            {formatCurrency(purch.totalAmount, settings.currency)}
-                          </div>
-                          <span className="text-[10px] text-slate-400">
-                            {(purch.items || []).reduce((sum, i) => sum + (i.quantity || 0), 0)} total pcs
-                          </span>
-                        </td>
-
-                        <td className="py-3 px-4 text-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setProductForPriceTag(null);
-                              setPurchaseForPriceTag(purch);
-                              setIsPriceTagModalOpen(true);
-                            }}
-                            className="px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-[11px] flex items-center gap-1.5 mx-auto cursor-pointer transition-all shadow-2xs active:scale-95 whitespace-nowrap"
-                            title={`Cetak pricetag untuk ${purch.items.length} item barang dari faktur ${purch.invoiceNumber}`}
-                          >
-                            <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                            <span>Cetak Pricetag</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedPurchaseForDetail(purch);
+                                  setIsPurchaseDetailOpen(true);
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 whitespace-nowrap"
+                                title={`Lihat rincian & cetak nota faktur pembelian ${purch.invoiceNumber}`}
+                              >
+                                <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                <span>Lihat Faktur</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setProductForPriceTag(null);
+                                  setPurchaseForPriceTag(purch);
+                                  setIsPriceTagModalOpen(true);
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 whitespace-nowrap"
+                                title={`Cetak pricetag untuk ${purch.items.length} item barang dari faktur ${purch.invoiceNumber}`}
+                              >
+                                <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                <span>Pricetag</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
                       <td colSpan={7} className="py-12 text-center text-slate-400">
@@ -3684,6 +3838,22 @@ export const InventoryView: React.FC = () => {
             text: summary,
           });
           setTimeout(() => setNotificationMsg(null), 6000);
+        }}
+      />
+
+      {/* Supplier Purchase Invoice Detail & Print Modal */}
+      <SupplierPurchaseDetailModal
+        isOpen={isPurchaseDetailOpen}
+        onClose={() => {
+          setIsPurchaseDetailOpen(false);
+          setSelectedPurchaseForDetail(null);
+        }}
+        purchase={selectedPurchaseForDetail}
+        settings={settings}
+        onPrintPriceTags={(purch) => {
+          setProductForPriceTag(null);
+          setPurchaseForPriceTag(purch);
+          setIsPriceTagModalOpen(true);
         }}
       />
 
