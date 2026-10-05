@@ -2,16 +2,28 @@
 REM ==============================================================================
 REM Ulilmart POS - Auto-Install & Repository Setup Script (Windows)
 REM ==============================================================================
+chcp 65001 >nul 2>&1
 title Ulilmart POS - Installer & Setup Wizard
 color 0A
 
 cd /d "%~dp0"
 set REPO_URL=https://github.com/fyercz/Project-POS-Retailer.git
 
-echo.
-echo ==========================================================
-echo    🏪 Ulilmart POS - Windows Installation Wizard           
-echo ==========================================================
+cls
+echo ==============================================================================
+echo     ┌──────┐
+echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
+echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
+echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
+echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
+echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
+echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+echo     ┌───────────────────────────────┬───────────────────────────────┐
+echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
+echo     └───────────────────────────────┴───────────────────────────────┘
+echo                   S M A R T   R E T A I L   P O S
+echo             [ WIZARD INSTALASI & PERSIAPAN SISTEM ]
+echo ==============================================================================
 echo  Repositori Resmi : %REPO_URL%
 echo.
 
@@ -91,9 +103,17 @@ echo ==========================================================
 echo [SUKSES] Instalasi Selesai!
 echo ==========================================================
 echo.
+REM Otomatis buat shortcut berlogo Ulilmart di Desktop & Folder
+if exist "%~dp0buat-shortcut-logo.bat" (
+    echo [INFO] Menyiapkan shortcut dengan logo resmi Ulilmart...
+    call buat-shortcut-logo.bat
+)
+
+echo.
 echo Untuk menjalankan aplikasi:
-echo   - Mode Desktop Kasir : desktop.bat
+echo   - Mode Desktop Kasir : desktop.bat (atau klik ikon Ulilmart POS Kasir.lnk)
 echo   - Mode Server Kasir  : run.bat
+echo   - Generator Shortcut : buat-shortcut-logo.bat
 echo   - Auto-Update GitHub : update.bat
 echo.
 echo URL Akses Kasir: http://localhost:3000

@@ -3,6 +3,7 @@ REM ============================================================================
 REM Ulilmart POS - Setup Auto-Run & Startup Wizard (Windows)
 REM Mengonfigurasi PC Kasir agar otomatis membuka aplikasi saat komputer dinyalakan
 REM ==============================================================================
+chcp 65001 >nul 2>&1
 title Ulilmart POS - Konfigurasi Auto-Run Kasir
 color 0B
 
@@ -10,9 +11,20 @@ cd /d "%~dp0"
 
 :MENU
 cls
-echo ==========================================================
-echo    🏪 ULILMART POS - WIZARD KONFIGURASI AUTO-RUN KASIR
-echo ==========================================================
+echo ==============================================================================
+echo     ┌──────┐
+echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
+echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
+echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
+echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
+echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
+echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+echo     ┌───────────────────────────────┬───────────────────────────────┐
+echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
+echo     └───────────────────────────────┴───────────────────────────────┘
+echo                   S M A R T   R E T A I L   P O S
+echo             [ WIZARD KONFIGURASI STARTUP KASIR ]
+echo ==============================================================================
 echo.
 echo  Pilih opsi yang Anda inginkan:
 echo.
@@ -22,8 +34,8 @@ echo.
 echo  [2] Nonaktifkan Auto-Run dari Startup Windows
 echo      (PC tidak akan membuka kasir otomatis saat menyala)
 echo.
-echo  [3] Buat Shortcut Ikon Kasir di Desktop
-echo      (Kemudahan klik satu kali dari layar utama komputer)
+echo  [3] Buat Shortcut Ikon Logo Kasir Resmi di Desktop ^& Folder
+echo      (Ikon logo Ulilmart resmi di desktop dan di folder aplikasi)
 echo.
 echo  [4] Jalankan Aplikasi Kasir Sekarang (Auto-Run)
 echo.
@@ -54,7 +66,7 @@ goto MENU
 
 :SHORTCUT
 cls
-call autorun.bat --shortcut
+call buat-shortcut-logo.bat
 goto MENU
 
 :JALANKAN

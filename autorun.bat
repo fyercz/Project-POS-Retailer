@@ -3,6 +3,7 @@ REM ============================================================================
 REM Ulilmart POS - Universal Auto-Run Launcher (Windows)
 REM Memeriksa dependensi, auto-install, auto-build, dan langsung membuka kasir
 REM ==============================================================================
+chcp 65001 >nul 2>&1
 title Ulilmart POS - Cashier Auto-Run Launcher
 color 0A
 
@@ -14,10 +15,37 @@ if "%1"=="--install-startup" goto SETUP_STARTUP
 if "%1"=="--remove-startup" goto REMOVE_STARTUP
 if "%1"=="--shortcut" goto CREATE_SHORTCUT
 
-echo ==========================================================
-echo    🏪 Ulilmart POS - Auto-Run Cashier System
-echo ==========================================================
+cls
+echo ==============================================================================
+echo     ┌──────┐
+echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
+echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
+echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
+echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
+echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
+echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+echo     ┌───────────────────────────────┬───────────────────────────────┐
+echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
+echo     └───────────────────────────────┴───────────────────────────────┘
+echo                   S M A R T   R E T A I L   P O S
+echo               [ SISTEM KASIR AUTO-RUN TERMINAL ]
+echo ==============================================================================
 echo.
+
+REM Pastikan shortcut berlogo resmi Ulilmart (ulilmart.ico) terpasang di Desktop & Folder
+if exist "%~dp0ulilmart.ico" (
+    powershell -NoProfile -Command ^
+        "$ws = New-Object -ComObject WScript.Shell; " ^
+        "$desk = [System.Environment]::GetFolderPath('Desktop'); " ^
+        "$deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; " ^
+        "if (-not (Test-Path $deskLnk)) { " ^
+        "  $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0autorun.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir (Lengkap & Hemat)'; $s1.Save(); " ^
+        "}; " ^
+        "$localLnk = '%~dp0Ulilmart POS Kasir.lnk'; " ^
+        "if (-not (Test-Path $localLnk)) { " ^
+        "  $s2 = $ws.CreateShortcut($localLnk); $s2.TargetPath = '%~dp0autorun.bat'; $s2.WorkingDirectory = '%~dp0'; $s2.IconLocation = '%~dp0ulilmart.ico,0'; $s2.Description = 'Ulilmart POS Kasir (Lengkap & Hemat)'; $s2.Save(); " ^
+        "};" >nul 2>&1
+)
 
 REM 1. Periksa ketersediaan Node.js
 where node >nul 2>nul
@@ -109,7 +137,7 @@ set SHORTCUT_PATH=%STARTUP_FOLDER%\Ulilmart POS.lnk
 set TARGET_BAT=%~dp0autorun.bat
 set WORKING_DIR=%~dp0
 
-powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; $s.Description = 'Ulilmart Point of Sales Kasir'; $s.Save()"
+powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; if (Test-Path '%WORKING_DIR%ulilmart.ico') { $s.IconLocation = '%WORKING_DIR%ulilmart.ico,0' }; $s.Description = 'Ulilmart Point of Sales Kasir'; $s.Save()"
 if %ERRORLEVEL% equ 0 (
     echo ✅ Berhasil! Ulilmart POS akan otomatis berjalan setiap kali komputer dinyalakan.
     echo Lokasi shortcut: %SHORTCUT_PATH%
@@ -148,7 +176,7 @@ set SHORTCUT_PATH=%DESKTOP_FOLDER%\Ulilmart POS Kasir.lnk
 set TARGET_BAT=%~dp0autorun.bat
 set WORKING_DIR=%~dp0
 
-powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; $s.Description = 'Ulilmart Point of Sales Kasir'; $s.Save()"
+powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; if (Test-Path '%WORKING_DIR%ulilmart.ico') { $s.IconLocation = '%WORKING_DIR%ulilmart.ico,0' }; $s.Description = 'Ulilmart Point of Sales Kasir'; $s.Save()"
 if %ERRORLEVEL% equ 0 (
     echo ✅ Shortcut desktop berhasil dibuat: %SHORTCUT_PATH%
 ) else (

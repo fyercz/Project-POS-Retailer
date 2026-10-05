@@ -169,13 +169,38 @@ export async function triggerCashDrawerKick(): Promise<{ success: boolean; messa
 export function downloadWindowsDesktopLauncher(options: { kioskMode?: boolean } = {}): void {
   const kioskFlag = options.kioskMode ? ' --kiosk' : '';
   const batContent = `@echo off
+chcp 65001 >nul 2>&1
 title Ulilmart POS - Terminal Kasir Desktop
 color 0A
+cd /d "%~dp0"
 
-echo ================================================================
-echo    ULTIMATE POINT OF SALES - DESKTOP CASHIER RUNNER
-echo ================================================================
+cls
+echo ==============================================================================
+echo     ┌──────┐
+echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
+echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
+echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
+echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
+echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
+echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+echo     ┌───────────────────────────────┬───────────────────────────────┐
+echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
+echo     └───────────────────────────────┴───────────────────────────────┘
+echo                   S M A R T   R E T A I L   P O S
+echo               [ MODE APLIKASI DESKTOP KASIR MANDIRI ]
+echo ==============================================================================
 echo.
+
+REM Pasang shortcut berlogo resmi jika file ulilmart.ico ada
+if exist "%~dp0ulilmart.ico" (
+    powershell -NoProfile -Command ^
+        "$ws = New-Object -ComObject WScript.Shell; " ^
+        "$desk = [System.Environment]::GetFolderPath('Desktop'); " ^
+        "$deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; " ^
+        "if (-not (Test-Path $deskLnk)) { " ^
+        "  $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0desktop.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir (Lengkap & Hemat)'; $s1.Save(); " ^
+        "};" >nul 2>&1
+)
 
 REM 1. Pindah ke direktori skrip ini berada
 cd /d "%~dp0"
@@ -222,9 +247,9 @@ start "" %TARGET_URL%
 
 :selesai
 echo.
-echo ================================================================
-echo  Aplikasi Desktop Berjalan! Jangan tutup jendela ini saat kasir aktif.
-echo ================================================================
+echo ==============================================================================
+echo  ✅ Aplikasi Desktop Berjalan! Jangan tutup jendela ini saat kasir aktif.
+echo ==============================================================================
 `;
 
   const blob = new Blob([batContent], { type: 'text/plain;charset=utf-8' });
@@ -315,6 +340,7 @@ export function downloadAutorunBat(): void {
 REM ==============================================================================
 REM Ulilmart POS - Universal Auto-Run Launcher (Windows)
 REM ==============================================================================
+chcp 65001 >nul 2>&1
 title Ulilmart POS - Cashier Auto-Run Launcher
 color 0A
 
@@ -325,10 +351,33 @@ if "%1"=="--install-startup" goto SETUP_STARTUP
 if "%1"=="--remove-startup" goto REMOVE_STARTUP
 if "%1"=="--shortcut" goto CREATE_SHORTCUT
 
-echo ==========================================================
-echo    🏪 Ulilmart POS - Auto-Run Cashier System
-echo ==========================================================
+cls
+echo ==============================================================================
+echo     ┌──────┐
+echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
+echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
+echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
+echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
+echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
+echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+echo     ┌───────────────────────────────┬───────────────────────────────┐
+echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
+echo     └───────────────────────────────┴───────────────────────────────┘
+echo                   S M A R T   R E T A I L   P O S
+echo               [ SISTEM KASIR AUTO-RUN TERMINAL ]
+echo ==============================================================================
 echo.
+
+REM Pasang shortcut berlogo resmi jika file ulilmart.ico ada
+if exist "%~dp0ulilmart.ico" (
+    powershell -NoProfile -Command ^
+        "$ws = New-Object -ComObject WScript.Shell; " ^
+        "$desk = [System.Environment]::GetFolderPath('Desktop'); " ^
+        "$deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; " ^
+        "if (-not (Test-Path $deskLnk)) { " ^
+        "  $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0autorun.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir (Lengkap & Hemat)'; $s1.Save(); " ^
+        "};" >nul 2>&1
+)
 
 where node >nul 2>nul
 if %ERRORLEVEL% neq 0 (
@@ -397,8 +446,8 @@ set SHORTCUT_PATH=%STARTUP_FOLDER%\\Ulilmart POS.lnk
 set TARGET_BAT=%~dp0autorun.bat
 set WORKING_DIR=%~dp0
 
-powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; $s.Description = 'Ulilmart Point of Sales Kasir'; $s.Save()"
-echo Berhasil mendaftarkan ke Windows Startup!
+powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; if (Test-Path '%WORKING_DIR%ulilmart.ico') { $s.IconLocation = '%WORKING_DIR%ulilmart.ico,0' }; $s.Description = 'Ulilmart Point of Sales Kasir'; $s.Save()"
+echo Berhasil mendaftarkan ke Windows Startup dengan logo resmi!
 pause
 exit /b 0
 
@@ -416,8 +465,8 @@ set SHORTCUT_PATH=%DESKTOP_FOLDER%\\Ulilmart POS Kasir.lnk
 set TARGET_BAT=%~dp0autorun.bat
 set WORKING_DIR=%~dp0
 
-powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; $s.Description = 'Ulilmart Point of Sales Kasir'; $s.Save()"
-echo Shortcut desktop berhasil dibuat!
+powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; if (Test-Path '%WORKING_DIR%ulilmart.ico') { $s.IconLocation = '%WORKING_DIR%ulilmart.ico,0' }; $s.Description = 'Ulilmart Point of Sales Kasir (Lengkap & Hemat)'; $s.Save()"
+echo Shortcut desktop dengan logo resmi berhasil dibuat!
 pause
 exit /b 0
 `;
@@ -440,19 +489,33 @@ exit /b 0
  */
 export function downloadSetupStartupBat(): void {
   const content = `@echo off
+chcp 65001 >nul 2>&1
 title Ulilmart POS - Konfigurasi Auto-Run Kasir
 color 0B
 cd /d "%~dp0"
 
 :MENU
 cls
-echo ==========================================================
-echo    🏪 ULILMART POS - WIZARD KONFIGURASI AUTO-RUN KASIR
-echo ==========================================================
+echo ==============================================================================
+echo     ┌──────┐
+echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
+echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
+echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
+echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
+echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
+echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+echo     ┌───────────────────────────────┬───────────────────────────────┐
+echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
+echo     └───────────────────────────────┴───────────────────────────────┘
+echo                   S M A R T   R E T A I L   P O S
+echo             [ WIZARD KONFIGURASI STARTUP KASIR ]
+echo ==============================================================================
+echo.
+echo  Pilih opsi yang Anda inginkan:
 echo.
 echo  [1] Aktifkan Auto-Run saat Komputer Dinyalakan (Windows Startup)
 echo  [2] Nonaktifkan Auto-Run dari Startup Windows
-echo  [3] Buat Shortcut Ikon Kasir di Layar Desktop
+echo  [3] Buat Shortcut Ikon Logo Kasir Resmi di Desktop ^& Folder
 echo  [4] Jalankan Aplikasi Kasir Sekarang (autorun.bat)
 echo  [5] Keluar
 echo.
@@ -468,7 +531,11 @@ if "%PILIHAN%"=="2" (
     goto MENU
 )
 if "%PILIHAN%"=="3" (
-    call autorun.bat --shortcut
+    if exist "%~dp0buat-shortcut-logo.bat" (
+        call buat-shortcut-logo.bat
+    ) else (
+        call autorun.bat --shortcut
+    )
     goto MENU
 )
 if "%PILIHAN%"=="4" (
@@ -494,12 +561,91 @@ goto MENU
 }
 
 /**
+ * Download buat-shortcut-logo.bat - Generator Shortcut Berlogo Resmi
+ */
+export function downloadBuatShortcutLogoBat(): void {
+  const content = `@echo off
+REM ==============================================================================
+REM Ulilmart POS - Generator Shortcut Berlogo Resmi (Windows)
+REM Membuat shortcut aplikasi dengan ikon logo Ulilmart (ulilmart.ico)
+REM di Desktop, Folder Aplikasi, dan Startup Windows.
+REM ==============================================================================
+chcp 65001 >nul 2>&1
+title Ulilmart POS - Generator Shortcut Berlogo Resmi
+color 0B
+
+cd /d "%~dp0"
+
+cls
+echo ==============================================================================
+echo     ┌──────┐
+echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
+echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
+echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
+echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
+echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
+echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+echo     ┌───────────────────────────────┬───────────────────────────────┐
+echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
+echo     └───────────────────────────────┴───────────────────────────────┘
+echo                   S M A R T   R E T A I L   P O S
+echo          [ PEMBUAT SHORTCUT DENGAN IKON LOGO RESMI ULILMART ]
+echo ==============================================================================
+echo.
+
+set "ICON_FILE=%~dp0ulilmart.ico"
+set "DESKTOP_BAT=%~dp0desktop.bat"
+set "WORKING_DIR=%~dp0"
+
+echo [1/2] Membuat shortcut di Desktop Windows dengan logo Ulilmart...
+powershell -NoProfile -Command ^
+    "$ws = New-Object -ComObject WScript.Shell; " ^
+    "$desk = [System.Environment]::GetFolderPath('Desktop'); " ^
+    "$s = $ws.CreateShortcut(\"$desk\\Ulilmart POS Kasir.lnk\"); " ^
+    "$s.TargetPath = '%DESKTOP_BAT%'; " ^
+    "$s.WorkingDirectory = '%WORKING_DIR%'; " ^
+    "if (Test-Path '%ICON_FILE%') { $s.IconLocation = '%ICON_FILE%,0' }; " ^
+    "$s.Description = 'Ulilmart POS Kasir Ritel Mandiri (Lengkap & Hemat)'; " ^
+    "$s.Save();"
+
+echo [2/2] Membuat shortcut di folder aplikasi saat ini dengan logo...
+powershell -NoProfile -Command ^
+    "$ws = New-Object -ComObject WScript.Shell; " ^
+    "$s = $ws.CreateShortcut('%~dp0Ulilmart POS Kasir.lnk'); " ^
+    "$s.TargetPath = '%DESKTOP_BAT%'; " ^
+    "$s.WorkingDirectory = '%WORKING_DIR%'; " ^
+    "if (Test-Path '%ICON_FILE%') { $s.IconLocation = '%ICON_FILE%,0' }; " ^
+    "$s.Description = 'Ulilmart POS Kasir Ritel Mandiri (Lengkap & Hemat)'; " ^
+    "$s.Save();"
+
+echo.
+echo ==============================================================================
+echo   🎉 SELESAI! Shortcut berlogo resmi Ulilmart telah terpasang di Desktop & Folder!
+echo ==============================================================================
+echo.
+pause
+`;
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'buat-shortcut-logo.bat';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 200);
+}
+
+/**
  * Download autorun.inf - Windows media autorun descriptor
  */
 export function downloadAutorunInf(): void {
   const content = `[AutoRun]
 open=autorun.bat
-icon=public/icon.svg
+icon=ulilmart.ico
 label=Ulilmart POS Kasir
 action=Jalankan Aplikasi Kasir Ulilmart
 shell\\open=Buka Ulilmart POS Kasir
@@ -530,15 +676,29 @@ export const DEFAULT_GITHUB_REPO_URL = 'https://github.com/fyercz/Project-POS-Re
  */
 export function downloadUpdateBat(): void {
   const content = `@echo off
+chcp 65001 >nul 2>&1
 title Ulilmart POS - Auto-Update & System Cleaner (GitHub)
 color 0B
 cd /d "%~dp0"
-echo ==========================================================
-echo    Ulilmart POS - Auto-Update & Pemeliharaan Sistem
-echo ==========================================================
+
+cls
+echo ==============================================================================
+echo     ┌──────┐
+echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
+echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
+echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
+echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
+echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
+echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+echo     ┌───────────────────────────────┬───────────────────────────────┐
+echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
+echo     └───────────────────────────────┴───────────────────────────────┘
+echo                   S M A R T   R E T A I L   P O S
+echo             [ AUTO-UPDATE & PEMELIHARAAN SISTEM ]
+echo ==============================================================================
 echo  Repositori: https://github.com/fyercz/Project-POS-Retailer.git
 echo  [INFO] Data transaksi dan produk 100%% aman di IndexedDB.
-echo ==========================================================
+echo ==============================================================================
 echo.
 
 set REPO_URL=https://github.com/fyercz/Project-POS-Retailer.git

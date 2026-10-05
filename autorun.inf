@@ -1,6 +1,6 @@
 [AutoRun]
 open=autorun.bat
-icon=public/icon.svg
+icon=ulilmart.ico
 label=Ulilmart POS Kasir
 action=Jalankan Aplikasi Kasir Ulilmart
 shell\open=Buka Ulilmart POS Kasir

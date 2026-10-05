@@ -47,6 +47,7 @@ import {
   downloadUnixDesktopLauncher,
   downloadAutorunBat,
   downloadSetupStartupBat,
+  downloadBuatShortcutLogoBat,
   downloadAutorunInf,
   downloadUpdateBat,
   fetchGitStatus,
@@ -1168,6 +1169,14 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>Unduh autorun.bat</span>
+                    </button>
+                    <button
+                      onClick={() => downloadBuatShortcutLogoBat()}
+                      className="px-3.5 py-1.5 rounded-xl border border-sky-300 dark:border-sky-700 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/50 text-sky-800 dark:text-sky-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      title="Buat shortcut aplikasi berlogo resmi Ulilmart di Desktop dan Folder"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                      <span>Unduh buat-shortcut-logo.bat</span>
                     </button>
                     <button
                       onClick={() => downloadSetupStartupBat()}

@@ -4,6 +4,7 @@ REM Ulilmart POS - Auto-Update, Verification & System Cleaner (Windows)
 REM Menarik pembaruan kode terbaru dari repositori GitHub resmi,
 REM membersihkan file sampah yang tidak perlu, dan mengompilasi ulang aplikasi.
 REM ==============================================================================
+chcp 65001 >nul 2>&1
 title Ulilmart POS - Auto-Update & System Cleaner (GitHub)
 color 0B
 
@@ -11,10 +12,21 @@ cd /d "%~dp0"
 
 set REPO_URL=https://github.com/fyercz/Project-POS-Retailer.git
 
-echo.
-echo ==========================================================
-echo    🏪 Ulilmart POS - Auto-Update & Pemeliharaan Sistem
-echo ==========================================================
+cls
+echo ==============================================================================
+echo     ┌──────┐
+echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
+echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
+echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
+echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
+echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
+echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+echo     ┌───────────────────────────────┬───────────────────────────────┐
+echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
+echo     └───────────────────────────────┴───────────────────────────────┘
+echo                   S M A R T   R E T A I L   P O S
+echo             [ AUTO-UPDATE & PEMELIHARAAN SISTEM ]
+echo ==============================================================================
 echo  Repositori Resmi : %REPO_URL%
 echo.
 echo  Pembaruan ini akan menarik file kode terbaru dari GitHub.
@@ -22,7 +34,7 @@ echo  [CATATAN PENTING KEAMANAN DATA]:
 echo  - Seluruh data transaksi, riwayat kasir, produk, dan stok
 echo    tersimpan di database lokal browser (IndexedDB) sehingga
 echo    100%% AMAN dan TIDAK AKAN HILANG setelah update!
-echo ==========================================================
+echo ==============================================================================
 echo.
 
 REM 1. Pembersihan file sampah dan file yang tidak perlu
