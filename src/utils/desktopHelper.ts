@@ -722,7 +722,22 @@ if not exist .git (
     "%GIT_CMD%" remote set-url origin %REPO_URL% 2>nul || "%GIT_CMD%" remote add origin %REPO_URL% 2>nul
 )
 
-"%GIT_CMD%" pull origin main || "%GIT_CMD%" pull
+echo       Mengambil pembaruan aktual dari GitHub (git fetch)...
+"%GIT_CMD%" fetch origin main --depth=10 2>nul || "%GIT_CMD%" fetch origin main
+if %errorlevel% equ 0 (
+    echo       Menyelaraskan seluruh file proyek ke rilis GitHub terbaru (origin/main)...
+    "%GIT_CMD%" branch -M main 2>nul
+    "%GIT_CMD%" reset --hard origin/main
+) else (
+    echo       Mencoba cabang cadangan (master)...
+    "%GIT_CMD%" fetch origin master --depth=10 2>nul || "%GIT_CMD%" fetch origin master
+    if %errorlevel% equ 0 (
+        "%GIT_CMD%" branch -M master 2>nul
+        "%GIT_CMD%" reset --hard origin/master
+    ) else (
+        "%GIT_CMD%" pull origin main 2>nul || "%GIT_CMD%" pull
+    )
+)
 echo.
 
 REM 3. Perbarui paket dependensi
@@ -738,6 +753,10 @@ echo.
 echo ==========================================================
 echo    🎉 Pembaruan & Pembersihan Sistem Berhasil!
 echo ==========================================================
+echo.
+echo [INFO] Versi Commit Aktual Terbaru di Komputer Ini:
+"%GIT_CMD%" log -1 --pretty=format:"  Commit : %%h%%n  Pesan  : %%s%%n  Waktu  : %%cd%%n" 2>nul
+echo.
 set /p RUN_NOW="Nyalakan kasir desktop sekarang (Y/T)? "
 if /i "%RUN_NOW%"=="Y" (
     if exist desktop.bat (start "" desktop.bat) else (start "" npm start)
@@ -767,6 +786,11 @@ export interface GitStatusResponse {
   remoteUrl?: string;
   officialRepoUrl?: string;
   remoteLatestCommit?: string;
+  remoteCommitMessage?: string;
+  remoteCommitDate?: string;
+  remoteCommitAuthor?: string;
+  remoteHtmlUrl?: string;
+  lastCheckedAt?: string;
   hasUpdate?: boolean;
   isUpToDate?: boolean;
   uncommittedCount?: number;
@@ -776,9 +800,10 @@ export interface GitStatusResponse {
   error?: string;
 }
 
-export async function fetchGitStatus(): Promise<GitStatusResponse> {
+export async function fetchGitStatus(forceRefresh = false): Promise<GitStatusResponse> {
   try {
-    const res = await fetch('/api/system/git-status');
+    const url = forceRefresh ? '/api/system/git-status?refresh=true' : '/api/system/git-status';
+    const res = await fetch(url);
     if (!res.ok) {
       throw new Error(`HTTP Error: ${res.status}`);
     }

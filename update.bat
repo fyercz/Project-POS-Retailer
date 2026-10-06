@@ -78,16 +78,26 @@ if not exist .git (
     "%GIT_CMD%" remote set-url origin %REPO_URL% 2>nul || "%GIT_CMD%" remote add origin %REPO_URL% 2>nul
 )
 
-echo Menarik pembaruan kode terbaru dari GitHub (%REPO_URL%)...
-"%GIT_CMD%" pull origin main
-if %errorlevel% neq 0 (
-    echo.
-    echo [INFO] Mencoba fallback pull default...
-    "%GIT_CMD%" pull origin master 2>nul || "%GIT_CMD%" pull
+echo [INFO] Mengambil pembaruan kode aktual dari server GitHub (git fetch)...
+"%GIT_CMD%" fetch origin main --depth=10 2>nul || "%GIT_CMD%" fetch origin main
+if %errorlevel% equ 0 (
+    echo [INFO] Menyelaraskan seluruh file proyek ke rilis GitHub terbaru (origin/main)...
+    "%GIT_CMD%" branch -M main 2>nul
+    "%GIT_CMD%" reset --hard origin/main
+) else (
+    echo [INFO] Mencoba cabang cadangan (master)...
+    "%GIT_CMD%" fetch origin master --depth=10 2>nul || "%GIT_CMD%" fetch origin master
+    if %errorlevel% equ 0 (
+        "%GIT_CMD%" branch -M master 2>nul
+        "%GIT_CMD%" reset --hard origin/master
+    ) else (
+        echo [INFO] Mencoba fallback git pull...
+        "%GIT_CMD%" pull origin main 2>nul || "%GIT_CMD%" pull
+    )
 )
 
 echo.
-echo [INFO] Versi Commit Terbaru:
+echo [INFO] Versi Commit Aktual Terbaru di Komputer Ini:
 "%GIT_CMD%" log -1 --pretty=format:"  Commit : %%h%%n  Pesan  : %%s%%n  Waktu  : %%cd%%n" 2>nul
 echo.
 

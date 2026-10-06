@@ -58,11 +58,20 @@ if command -v git >/dev/null 2>&1; then
         git remote set-url origin "$REPO_URL" 2>/dev/null || git remote add origin "$REPO_URL" 2>/dev/null
     fi
 
-    echo "      Menarik kode terbaru (git pull origin main)..."
-    git pull origin main || git pull origin master || git pull || echo "⚠️ Peringatan: Gagal pull, melanjutkan dengan kode lokal."
+    echo "      Mengambil rilis aktual dari GitHub (git fetch)..."
+    if git fetch origin main --depth=10 2>/dev/null || git fetch origin main; then
+        echo "      Menyelaraskan seluruh file proyek ke rilis GitHub terbaru (origin/main)..."
+        git branch -M main 2>/dev/null || true
+        git reset --hard origin/main
+    else
+        echo "      Mencoba cabang cadangan (master)..."
+        git fetch origin master 2>/dev/null || true
+        git branch -M master 2>/dev/null || true
+        git reset --hard origin/master 2>/dev/null || git pull origin main 2>/dev/null || git pull || echo "⚠️ Peringatan: Gagal pull, melanjutkan dengan kode lokal."
+    fi
     
     echo ""
-    echo "[INFO] Versi Commit Terbaru:"
+    echo "[INFO] Versi Commit Aktual Terbaru di Komputer Ini:"
     git log -1 --pretty=format:"  Commit : %h%n  Pesan  : %s%n  Waktu  : %cd%n" 2>/dev/null || true
     echo ""
 else

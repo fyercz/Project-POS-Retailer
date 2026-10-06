@@ -3113,6 +3113,89 @@ Kembalikan HANYA format JSON valid array objek:
 const OFFICIAL_GITHUB_REPO_URL = 'https://github.com/fyercz/Project-POS-Retailer.git';
 const OFFICIAL_GIT_BRANCH = 'main';
 
+interface RemoteCommitInfo {
+  commitHash: string; // 7 chars short hash
+  fullHash: string;
+  commitMessage: string;
+  commitDate: string;
+  authorName: string;
+  htmlUrl: string;
+  fetchedAt: string;
+}
+
+let cachedRemoteCommit: RemoteCommitInfo | null = null;
+let lastRemoteFetchTime = 0;
+
+// Helper to query live GitHub API / ls-remote for actual latest commit
+async function fetchLatestGitHubCommitInfo(forceRefresh = false): Promise<RemoteCommitInfo | null> {
+  const now = Date.now();
+  if (!forceRefresh && cachedRemoteCommit && now - lastRemoteFetchTime < 45000) {
+    return cachedRemoteCommit;
+  }
+
+  // 1. Primary: Query GitHub REST API directly for accurate commit metadata
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+    const resp = await fetch('https://api.github.com/repos/fyercz/Project-POS-Retailer/commits/main', {
+      headers: {
+        'User-Agent': 'Ulilmart-POS-Retailer',
+        'Accept': 'application/vnd.github.v3+json',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (resp.ok) {
+      const data: any = await resp.json();
+      const fullHash = data.sha || '';
+      const commitHash = fullHash.substring(0, 7);
+      const commitMessage = (data.commit?.message || '').split('\n')[0].trim();
+      const commitDate = data.commit?.author?.date || '';
+      const authorName = data.commit?.author?.name || '';
+      const htmlUrl = data.html_url || '';
+
+      cachedRemoteCommit = {
+        commitHash,
+        fullHash,
+        commitMessage,
+        commitDate,
+        authorName,
+        htmlUrl,
+        fetchedAt: new Date().toISOString(),
+      };
+      lastRemoteFetchTime = now;
+      return cachedRemoteCommit;
+    }
+  } catch {}
+
+  // 2. Secondary fallback: Query git ls-remote from local git binary
+  try {
+    const { stdout: lsOut } = await execPromise(`git ls-remote ${OFFICIAL_GITHUB_REPO_URL} refs/heads/main`, {
+      cwd: process.cwd(),
+      timeout: 10000,
+    });
+    if (lsOut) {
+      const fullHash = lsOut.split('\t')[0].trim();
+      if (fullHash) {
+        cachedRemoteCommit = {
+          commitHash: fullHash.substring(0, 7),
+          fullHash,
+          commitMessage: cachedRemoteCommit?.commitMessage || 'Pembaruan terkini dari repositori GitHub',
+          commitDate: cachedRemoteCommit?.commitDate || new Date().toISOString(),
+          authorName: cachedRemoteCommit?.authorName || 'GitHub',
+          htmlUrl: `https://github.com/fyercz/Project-POS-Retailer/commit/${fullHash}`,
+          fetchedAt: new Date().toISOString(),
+        };
+        lastRemoteFetchTime = now;
+        return cachedRemoteCommit;
+      }
+    }
+  } catch {}
+
+  return cachedRemoteCommit;
+}
+
 interface JunkFileInfo {
   path: string;
   relativePath: string;
@@ -3228,87 +3311,74 @@ function cleanUnnecessaryFilesInternal(rootDir: string): { count: number; bytesF
 
 app.get('/api/system/git-status', async (req, res) => {
   try {
+    const forceRefresh = req.query.refresh === 'true' || req.query.refresh === '1';
+    const remoteInfo = await fetchLatestGitHubCommitInfo(forceRefresh);
+
     const gitDir = path.join(process.cwd(), '.git');
     const isGitRepo = fs.existsSync(gitDir);
-
-    if (!isGitRepo) {
-      return res.json({
-        isGitRepo: false,
-        message: 'Folder .git belum terinisialisasi di direktori ini.',
-        officialRepoUrl: OFFICIAL_GITHUB_REPO_URL,
-        nodeVersion: process.version,
-        platform: process.platform,
-      });
-    }
 
     let branch = 'main';
     let currentCommit = '';
     let commitMessage = '';
     let commitDate = '';
-    let remoteUrl = '';
+    let remoteUrl = OFFICIAL_GITHUB_REPO_URL;
     let uncommittedCount = 0;
 
-    try {
-      const { stdout: branchOut } = await execPromise('git branch --show-current', { cwd: process.cwd() });
-      branch = branchOut.trim() || 'main';
-    } catch {}
+    if (isGitRepo) {
+      try {
+        const { stdout: branchOut } = await execPromise('git branch --show-current', { cwd: process.cwd() });
+        branch = branchOut.trim() || 'main';
+      } catch {}
 
-    try {
-      const { stdout: commitOut } = await execPromise('git rev-parse --short HEAD', { cwd: process.cwd() });
-      currentCommit = commitOut.trim();
-    } catch {}
+      try {
+        const { stdout: commitOut } = await execPromise('git rev-parse --short HEAD', { cwd: process.cwd() });
+        currentCommit = commitOut.trim();
+      } catch {}
 
-    try {
-      const { stdout: logOut } = await execPromise('git log -1 --pretty=format:"%s"', { cwd: process.cwd() });
-      commitMessage = logOut.trim();
-    } catch {}
+      try {
+        const { stdout: logOut } = await execPromise('git log -1 --pretty=format:"%s"', { cwd: process.cwd() });
+        commitMessage = logOut.trim();
+      } catch {}
 
-    try {
-      const { stdout: dateOut } = await execPromise('git log -1 --pretty=format:"%cd" --date=relative', { cwd: process.cwd() });
-      commitDate = dateOut.trim();
-    } catch {}
+      try {
+        const { stdout: dateOut } = await execPromise('git log -1 --pretty=format:"%cd" --date=relative', { cwd: process.cwd() });
+        commitDate = dateOut.trim();
+      } catch {}
 
-    try {
-      const { stdout: remoteOut } = await execPromise('git remote get-url origin', { cwd: process.cwd() });
-      remoteUrl = remoteOut.trim();
-    } catch {}
+      try {
+        const { stdout: remoteOut } = await execPromise('git remote get-url origin', { cwd: process.cwd() });
+        remoteUrl = remoteOut.trim() || OFFICIAL_GITHUB_REPO_URL;
+      } catch {}
 
-    try {
-      const { stdout: stOut } = await execPromise('git status --porcelain', { cwd: process.cwd() });
-      uncommittedCount = stOut.split('\n').filter((l) => l.trim()).length;
-    } catch {}
+      try {
+        const { stdout: stOut } = await execPromise('git status --porcelain', { cwd: process.cwd() });
+        uncommittedCount = stOut.split('\n').filter((l) => l.trim()).length;
+      } catch {}
+    }
 
-    // Check remote commit from GitHub repository
-    let remoteLatestCommit = '';
-    let hasUpdate = false;
-    let isUpToDate = true;
-    try {
-      const targetRepo = remoteUrl || OFFICIAL_GITHUB_REPO_URL;
-      const { stdout: lsOut } = await execPromise(`git ls-remote ${targetRepo} refs/heads/main`, {
-        cwd: process.cwd(),
-        timeout: 10000,
-      });
-      if (lsOut) {
-        const fullHash = lsOut.split('\t')[0].trim();
-        if (fullHash) {
-          remoteLatestCommit = fullHash.substring(0, 7);
-          if (currentCommit && remoteLatestCommit && currentCommit !== remoteLatestCommit) {
-            hasUpdate = true;
-            isUpToDate = false;
-          }
-        }
-      }
-    } catch {}
+    const remoteLatestCommit = remoteInfo?.commitHash || '';
+    const hasUpdate = (currentCommit && remoteLatestCommit)
+      ? currentCommit.toLowerCase() !== remoteLatestCommit.toLowerCase()
+      : !isGitRepo && Boolean(remoteLatestCommit);
+
+    const isUpToDate = (currentCommit && remoteLatestCommit)
+      ? currentCommit.toLowerCase() === remoteLatestCommit.toLowerCase()
+      : false;
 
     res.json({
-      isGitRepo: true,
-      branch,
-      currentCommit,
-      commitMessage,
-      commitDate,
-      remoteUrl: remoteUrl || OFFICIAL_GITHUB_REPO_URL,
+      isGitRepo,
+      branch: branch || 'main',
+      currentCommit: currentCommit || (isGitRepo ? '-' : 'Non-Git (Lokal)'),
+      commitMessage: commitMessage || (isGitRepo ? '' : 'Versi build lokal mandiri'),
+      commitDate: commitDate || '',
+      remoteUrl,
       officialRepoUrl: OFFICIAL_GITHUB_REPO_URL,
-      remoteLatestCommit,
+      remoteLatestCommit: remoteLatestCommit || currentCommit || '',
+      remoteCommitMessage: remoteInfo?.commitMessage || '',
+      remoteCommitDate: remoteInfo?.commitDate || '',
+      remoteCommitAuthor: remoteInfo?.authorName || '',
+      remoteHtmlUrl: remoteInfo?.htmlUrl || '',
+      lastCheckedAt: remoteInfo?.fetchedAt || new Date().toISOString(),
       hasUpdate,
       isUpToDate,
       uncommittedCount,
@@ -3327,9 +3397,9 @@ app.post('/api/system/git-configure', async (req, res) => {
     const isGitRepo = fs.existsSync(gitDir);
 
     if (!isGitRepo) {
-      await execPromise(`git init && git remote add origin ${OFFICIAL_GITHUB_REPO_URL} && git fetch origin main && git branch -M main && git reset origin/main`, {
+      await execPromise(`git init && git remote add origin ${OFFICIAL_GITHUB_REPO_URL} && git fetch origin main --depth=10 && git branch -M main && git reset --hard origin/main`, {
         cwd: process.cwd(),
-        timeout: 30000,
+        timeout: 35000,
       });
     } else {
       try {
@@ -3338,6 +3408,10 @@ app.post('/api/system/git-configure', async (req, res) => {
         await execPromise(`git remote add origin ${OFFICIAL_GITHUB_REPO_URL}`, { cwd: process.cwd() });
       }
     }
+
+    // Refresh cache
+    cachedRemoteCommit = null;
+    lastRemoteFetchTime = 0;
 
     res.json({
       success: true,
@@ -3353,18 +3427,13 @@ app.post('/api/system/git-pull', async (req, res) => {
   try {
     const gitDir = path.join(process.cwd(), '.git');
     if (!fs.existsSync(gitDir)) {
-      // Auto-initialize if missing
       try {
-        await execPromise(`git init && git remote add origin ${OFFICIAL_GITHUB_REPO_URL} && git fetch origin main && git branch -M main && git reset origin/main`, {
+        await execPromise(`git init && git remote add origin ${OFFICIAL_GITHUB_REPO_URL}`, {
           cwd: process.cwd(),
-          timeout: 45000,
+          timeout: 15000,
         });
       } catch (initErr: any) {
-        return res.status(400).json({
-          success: false,
-          message: 'Direktori Git belum diinisialisasi. Gagal melakukan auto-init repositori.',
-          details: initErr.message,
-        });
+        console.warn('Git init warning:', initErr.message);
       }
     }
 
@@ -3375,27 +3444,46 @@ app.post('/api/system/git-pull', async (req, res) => {
     try {
       await execPromise(`git remote set-url origin ${OFFICIAL_GITHUB_REPO_URL}`, { cwd: process.cwd() });
     } catch {
-      await execPromise(`git remote add origin ${OFFICIAL_GITHUB_REPO_URL}`, { cwd: process.cwd() });
+      try {
+        await execPromise(`git remote add origin ${OFFICIAL_GITHUB_REPO_URL}`, { cwd: process.cwd() });
+      } catch {}
     }
 
-    // 3. Run git pull / fetch
+    // 3. Bulletproof update: fetch & hard reset to origin/main (prevents untracked merge conflict aborts)
     let pullOutput = '';
     try {
-      const { stdout, stderr } = await execPromise('git pull origin main || git pull', {
+      const { stdout: fetchOut, stderr: fetchErr } = await execPromise('git fetch origin main --depth=10 || git fetch origin main', {
         cwd: process.cwd(),
         timeout: 45000,
       });
-      pullOutput = (stdout || stderr || '').trim();
-    } catch (pullErr: any) {
-      return res.status(500).json({
-        success: false,
-        step: 'git pull',
-        message: 'Gagal melakukan git pull. Periksa koneksi internet Anda atau file lokal yang mengalami konflik.',
-        details: pullErr.message,
+      await execPromise('git branch -M main', { cwd: process.cwd(), timeout: 10000 }).catch(() => {});
+      const { stdout: resetOut, stderr: resetErr } = await execPromise('git reset --hard origin/main', {
+        cwd: process.cwd(),
+        timeout: 30000,
       });
+      pullOutput = [fetchOut, fetchErr, resetOut, resetErr].filter(Boolean).join('\n').trim();
+    } catch (pullErr: any) {
+      try {
+        await execPromise('git fetch origin master && git branch -M master && git reset --hard origin/master', {
+          cwd: process.cwd(),
+          timeout: 45000,
+        });
+        pullOutput = 'Berhasil disinkronkan ke cabang master.';
+      } catch (fallbackErr: any) {
+        return res.status(500).json({
+          success: false,
+          step: 'git fetch & reset',
+          message: 'Gagal memperbarui kode dari GitHub. Periksa koneksi internet Anda.',
+          details: pullErr.message || fallbackErr.message,
+        });
+      }
     }
 
-    // 4. Run npm install & npm run build
+    // Invalidate remote cache
+    cachedRemoteCommit = null;
+    lastRemoteFetchTime = 0;
+
+    // 4. Rebuild production bundle
     let buildOutput = '';
     try {
       const { stdout, stderr } = await execPromise('npm run build', {
@@ -3405,12 +3493,21 @@ app.post('/api/system/git-pull', async (req, res) => {
       buildOutput = (stdout || stderr || '').trim();
     } catch (buildErr: any) {
       console.warn('Rebuild warning after pull:', buildErr?.message);
+      buildOutput = 'Kompilasi selesai dengan catatan: ' + buildErr?.message;
     }
+
+    // Read new commit
+    let newCommit = '';
+    try {
+      const { stdout } = await execPromise('git rev-parse --short HEAD', { cwd: process.cwd() });
+      newCommit = stdout.trim();
+    } catch {}
 
     res.json({
       success: true,
-      message: 'Kode berhasil ditarik dari GitHub dan dikompilasi!',
+      message: `Kode berhasil ditarik dari GitHub dan diperbarui ke commit ${newCommit || 'terbaru'}!`,
       officialRepoUrl: OFFICIAL_GITHUB_REPO_URL,
+      newCommit,
       pullOutput,
       buildOutput,
       cleanedFilesCount: cleanupResult.count,
