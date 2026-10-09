@@ -965,7 +965,7 @@ export const InventoryView: React.FC = () => {
                   <td style="padding: 6px 8px; font-weight: 600; color: #0f172a;">${p.name}</td>
                   <td style="padding: 6px 8px; font-family: monospace; color: #64748b; font-size: 10px;">${p.sku} ${p.barcode ? `• ${p.barcode}` : ''}</td>
                   <td style="padding: 6px 8px; color: #64748b;">${p.categoryId}</td>
-                  <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold;">${p.stock} ${p.unit || 'pcs'}</td>
+                  <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold;">${p.stock}</td>
                   <td style="padding: 6px 8px; text-align: center; border-left: 1px dashed #cbd5e1; border-right: 1px dashed #cbd5e1; width: 110px;">[ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</td>
                   <td style="padding: 6px 8px; text-align: right; font-family: monospace;">${formatCurrency(p.costPrice || 0, settings.currency)}</td>
                   <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold; color: #059669;">${formatCurrency(p.price, settings.currency)}</td>
@@ -1857,9 +1857,6 @@ export const InventoryView: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                              Satuan: {prod.unit}
-                            </span>
                           </div>
                         </td>
 
@@ -1916,7 +1913,7 @@ export const InventoryView: React.FC = () => {
                           <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">
                             min: {prod.minStock}
                             {prod.lastOrderQuantity ? (
-                              <span className="ml-1 text-[9px] text-blue-600 dark:text-blue-400 font-sans" title={`Batas min 50% dari order terakhir (${prod.lastOrderQuantity} ${prod.unit})`}>
+                              <span className="ml-1 text-[9px] text-blue-600 dark:text-blue-400 font-sans" title={`Batas min 50% dari order terakhir (${prod.lastOrderQuantity})`}>
                                 (50% PO: {prod.lastOrderQuantity})
                               </span>
                             ) : null}
@@ -2741,7 +2738,7 @@ export const InventoryView: React.FC = () => {
               <div className="flex items-center justify-between mt-2 text-xs">
                 <span className="text-slate-500">Stok Saat Ini:</span>
                 <span className="font-bold font-mono text-emerald-600 dark:text-emerald-400 text-sm">
-                  {editingProduct.stock} {editingProduct.unit}
+                  {editingProduct.stock}
                 </span>
               </div>
             </div>
@@ -2804,8 +2801,7 @@ export const InventoryView: React.FC = () => {
                   ? editingProduct.stock + (adjustmentValue || 0)
                   : adjustmentType === 'subtract'
                   ? Math.max(0, editingProduct.stock - (adjustmentValue || 0))
-                  : Math.max(0, adjustmentValue || 0)}{' '}
-                {editingProduct.unit}
+                  : Math.max(0, adjustmentValue || 0)}
               </span>
             </div>
 
@@ -2850,7 +2846,7 @@ export const InventoryView: React.FC = () => {
                 SKU: {productToDelete.sku} | Barcode: {productToDelete.barcode}
               </p>
               <p className="text-rose-600 dark:text-rose-400 font-semibold pt-1">
-                Sisa Stok Fisik: {productToDelete.stock} {productToDelete.unit}
+                Sisa Stok Fisik: {productToDelete.stock}
               </p>
             </div>
 

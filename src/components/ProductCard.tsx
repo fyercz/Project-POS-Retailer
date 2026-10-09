@@ -109,7 +109,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             <div className="flex items-center justify-between">
               <span>SKU: {product.sku}</span>
               <span className="font-sans font-medium text-slate-600 dark:text-slate-300">
-                Stok: {product.stock} {product.unit}
+                Stok: {product.stock}
               </span>
             </div>
             {product.expiryDate && (

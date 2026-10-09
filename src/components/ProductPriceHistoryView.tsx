@@ -218,7 +218,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
           <strong>Produk:</strong> ${currentProduct.name}<br/>
           <strong>SKU / Barcode:</strong> ${currentProduct.sku} / ${currentProduct.barcode}<br/>
           <strong>Harga Jual Terkini:</strong> ${formatCurrency(currentProduct.price, settings.currency)} | <strong>Harga Modal Terkini:</strong> ${formatCurrency(currentProduct.costPrice, settings.currency)}<br/>
-          <strong>Margin Laba Saat Ini:</strong> ${(((currentProduct.price - currentProduct.costPrice) / (currentProduct.price || 1)) * 100).toFixed(1)}% (${formatCurrency(currentProduct.price - currentProduct.costPrice, settings.currency)} / ${currentProduct.unit})
+          <strong>Margin Laba Saat Ini:</strong> ${(((currentProduct.price - currentProduct.costPrice) / (currentProduct.price || 1)) * 100).toFixed(1)}% (${formatCurrency(currentProduct.price - currentProduct.costPrice, settings.currency)})
         </div>
 
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -357,8 +357,6 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                     <span>SKU: {currentProduct.sku}</span>
                     <span>•</span>
                     <span>Barcode: {currentProduct.barcode}</span>
-                    <span>•</span>
-                    <span>Satuan: {currentProduct.unit}</span>
                   </div>
                 </div>
               </div>
@@ -552,7 +550,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
               {analytics.currentMarginPercent.toFixed(1)}%
             </div>
             <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-              Laba: {formatCurrency(analytics.currentMarginNominal, settings.currency)} / {currentProduct.unit}
+              Laba: {formatCurrency(analytics.currentMarginNominal, settings.currency)}
             </div>
           </div>
 
@@ -861,7 +859,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                     {(((currentProduct.price - currentProduct.costPrice) / (currentProduct.price || 1)) * 100).toFixed(1)}%
                   </div>
                   <div className="text-[10px] text-slate-500">
-                    Rp {currentProduct.price - currentProduct.costPrice} / {currentProduct.unit}
+                    Rp {currentProduct.price - currentProduct.costPrice}
                   </div>
                 </div>
               </div>
@@ -908,8 +906,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                   {newSellingPriceInput > 0
                     ? (((newSellingPriceInput - newCostPriceInput) / newSellingPriceInput) * 100).toFixed(1)
                     : 0}
-                  % ({formatCurrency(newSellingPriceInput - newCostPriceInput, settings.currency)} /{' '}
-                  {currentProduct.unit})
+                  % ({formatCurrency(newSellingPriceInput - newCostPriceInput, settings.currency)})
                 </span>
               </div>
 

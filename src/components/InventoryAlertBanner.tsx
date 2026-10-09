@@ -328,7 +328,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                           </p>
                         </div>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                          SKU: {p.sku} • Min: {p.minStock} {p.unit}
+                          SKU: {p.sku} • Min: {p.minStock}
                           {p.lastOrderQuantity ? ` (50% PO: ${p.lastOrderQuantity})` : ''}
                         </span>
                       </div>
@@ -342,7 +342,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                                 : 'text-amber-600 dark:text-amber-400'
                             }`}
                           >
-                            {isZero ? '0 (HABIS)' : `${p.stock} ${p.unit}`}
+                            {isZero ? '0 (HABIS)' : `${p.stock}`}
                           </span>
                           <span className="text-[9px] text-slate-400">
                             Modal: {formatCurrency(p.costPrice, currency)}
@@ -510,7 +510,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                           </p>
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-                          <span>Stok: {p.stock} {p.unit}</span>
+                          <span>Stok: {p.stock}</span>
                           <span>• Batch: {p.batchNumber || '-'}</span>
                         </div>
                       </div>

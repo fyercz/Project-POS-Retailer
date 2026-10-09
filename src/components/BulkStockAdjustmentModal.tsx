@@ -683,7 +683,6 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                             <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
                               <span>SKU: {p.sku}</span>
                               {p.barcode && <span>• Barcode: {p.barcode}</span>}
-                              <span>• Satuan: {p.unit}</span>
                             </div>
                           </div>
                         </div>
@@ -693,9 +692,6 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                       <td className="py-3 px-3 text-center">
                         <span className="font-mono font-bold text-sm text-slate-700 dark:text-slate-300">
                           {item.originalStock}
-                        </span>
-                        <span className="text-[10px] text-slate-400 block font-mono">
-                          {p.unit}
                         </span>
                       </td>
 
@@ -753,11 +749,11 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                         <div className="mt-1">
                           {delta > 0 ? (
                             <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                              +{delta} {p.unit}
+                              +{delta}
                             </span>
                           ) : delta < 0 ? (
                             <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 font-mono">
-                              {delta} {p.unit}
+                              {delta}
                             </span>
                           ) : (
                             <span className="text-[10px] text-slate-400 font-mono">

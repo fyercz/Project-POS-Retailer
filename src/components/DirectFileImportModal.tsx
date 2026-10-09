@@ -17,19 +17,20 @@ import {
 import { Product } from '../types';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
-import { parseRetailLineRaw, ParsedItem } from '../utils/retailNormalizer';
+import { parseRetailLineRaw, parseFullCSVText, ParsedItem } from '../utils/retailNormalizer';
+import { downloadCategoryGuideCSV, downloadCategoryGuideTXT } from '../data/categoryGuide';
 
 interface DirectFileImportModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const SAMPLE_CSV = `barcode,nama_produk,harga_beli,harga_jual,stok,kategori,satuan
-8999999190112,Indomie Goreng Spesial 80g,2700,3100,120,Makanan,pcs
-8992775211029,Bimoli Minyak Goreng 2L,33500,38500,36,Sembako,pouch
-8991001100223,Kopi Kapal Api Special Mix 24g,1100,1500,200,Minuman,sachet
-8999999052212,Sabun Lifebuoy Total 10 110g,3800,4800,72,Kebutuhan Rumah,pcs
-8991234567890,Beras Pandan Wangi Premium 5kg,68000,78000,25,Sembako,karung`;
+const SAMPLE_CSV = `barcode,nama_produk,harga_beli,harga_jual,stok,kategori
+8999999190112,Indomie Goreng Spesial 80g,2700,3100,120,Makanan
+8992775211029,Bimoli Minyak Goreng 2L,33500,38500,36,Sembako
+8991001100223,Kopi Kapal Api Special Mix 24g,1100,1500,200,Minuman
+8999999052212,Sabun Lifebuoy Total 10 110g,3800,4800,72,Kebutuhan Rumah
+8991234567890,Beras Pandan Wangi Premium 5kg,68000,78000,25,Sembako`;
 
 export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
   isOpen,
@@ -45,15 +46,10 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Parse lines purely AS-IS without any spelling or typo alteration
+  // Parse lines directly AS-IS with robust CSV quote, delimiter, and header support
   const parsedItems: ParsedItem[] = useMemo(() => {
     if (!rawText.trim()) return [];
-    return rawText
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0)
-      .map((l, idx) => parseRetailLineRaw(l, idx, minProfitPoints))
-      .filter((it): it is ParsedItem => it !== null);
+    return parseFullCSVText(rawText, { minProfitPoints, rawMode: true });
   }, [rawText, minProfitPoints]);
 
   const [itemsState, setItemsState] = useState<ParsedItem[]>([]);
@@ -239,7 +235,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                   <span>Format Kolom File</span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-mono">
-                  Barcode, Nama Produk, Harga Beli, Harga Jual, Stok, Kategori, Satuan
+                  Barcode, Nama Produk, Harga Beli, Harga Jual, Stok, Kategori
                 </p>
               </div>
 
@@ -252,6 +248,26 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                   <Download className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Unduh Contoh CSV</span>
                 </button>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={downloadCategoryGuideCSV}
+                    className="py-1.5 px-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 flex items-center justify-center gap-1 cursor-pointer transition"
+                    title="Simpan tabel format kategori resmi sebagai berkas CSV"
+                  >
+                    <Download className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    <span>Format Kategori (CSV)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={downloadCategoryGuideTXT}
+                    className="py-1.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center gap-1 cursor-pointer transition"
+                    title="Simpan panduan teks kategori dan kata kunci sebagai berkas TXT"
+                  >
+                    <FileText className="w-3 h-3 text-slate-500" />
+                    <span>Panduan Kategori (TXT)</span>
+                  </button>
+                </div>
                 <button
                   type="button"
                   onClick={handleLoadSample}
@@ -325,7 +341,6 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                       <th className="py-2.5 px-3">Harga Beli</th>
                       <th className="py-2.5 px-3">Harga Jual</th>
                       <th className="py-2.5 px-3">Stok</th>
-                      <th className="py-2.5 px-3">Satuan</th>
                       <th className="py-2.5 px-3 w-10 text-center">Aksi</th>
                     </tr>
                   </thead>
@@ -388,14 +403,6 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                             value={item.stock}
                             onChange={(e) => handleFieldChange(item.id, 'stock', Number(e.target.value))}
                             className="w-16 bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 py-0.5 focus:outline-emerald-500 font-mono text-right"
-                          />
-                        </td>
-                        <td className="py-2 px-3 text-slate-500">
-                          <input
-                            type="text"
-                            value={item.unit || 'pcs'}
-                            onChange={(e) => handleFieldChange(item.id, 'unit', e.target.value)}
-                            className="w-16 bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 py-0.5 focus:outline-emerald-500"
                           />
                         </td>
                         <td className="py-2 px-3 text-center">

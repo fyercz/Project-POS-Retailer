@@ -18,6 +18,7 @@ import {
 import { Product } from '../types';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
+import { splitCSVLine, detectDelimiter, normalizeScientificBarcode } from '../utils/retailNormalizer';
 
 export interface StockTakeCSVModalProps {
   isOpen: boolean;
@@ -75,7 +76,10 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
   const parsedRows: ParsedStockRow[] = useMemo(() => {
     if (!rawText.trim()) return [];
 
-    const lines = rawText.split(/\r?\n/);
+    const cleanText = rawText.replace(/^\uFEFF/, '').trim();
+    if (!cleanText) return [];
+
+    const lines = cleanText.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
     const results: ParsedStockRow[] = [];
 
     // Map products for fast O(1) lookup
@@ -91,63 +95,109 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
       if (p.name) nameMap.set(p.name.trim().toLowerCase(), p);
     });
 
-    let currentLineNumber = 0;
+    // Detect delimiter
+    const delimiter = detectDelimiter(lines.slice(0, 10).join('\n'));
 
-    for (const rawLine of lines) {
+    // Check if line 0 is a header line
+    let idColIdx = 0;
+    let stockColIdx = -1;
+    let expiryColIdx = -1;
+    let hasHeader = false;
+
+    if (lines.length > 0) {
+      const headerTokens = splitCSVLine(lines[0], delimiter).map((t) =>
+        t.toLowerCase().replace(/[^a-z0-9_]/g, '')
+      );
+
+      headerTokens.forEach((t, idx) => {
+        if (t === 'barcode' || t === 'sku' || t === 'kode' || t === 'kode_barang' || t === 'code') {
+          idColIdx = idx;
+          hasHeader = true;
+        } else if (
+          t === 'stok_fisik_hitung' ||
+          t === 'stok_fisik' ||
+          t === 'fisik' ||
+          t === 'stok' ||
+          t === 'stock' ||
+          t === 'qty' ||
+          t === 'jumlah'
+        ) {
+          // If we see stok_fisik_hitung, always prefer it
+          if (stockColIdx === -1 || t.includes('hitung') || t.includes('fisik')) {
+            stockColIdx = idx;
+            hasHeader = true;
+          }
+        } else if (t.includes('kadaluarsa') || t.includes('expiry') || t.includes('exp')) {
+          expiryColIdx = idx;
+          hasHeader = true;
+        }
+      });
+    }
+
+    const startIndex = hasHeader ? 1 : 0;
+    let currentLineNumber = startIndex;
+
+    for (let i = startIndex; i < lines.length; i++) {
       currentLineNumber++;
-      const trimmedLine = rawLine.trim();
+      const trimmedLine = lines[i];
       if (!trimmedLine || trimmedLine.startsWith('#') || trimmedLine.startsWith('//')) {
         continue;
       }
 
-      // Detect delimiter: comma, tab, semicolon, pipe
-      let delimiter = ',';
-      if (trimmedLine.includes('\t')) delimiter = '\t';
-      else if (trimmedLine.includes(';')) delimiter = ';';
-      else if (trimmedLine.includes('|')) delimiter = '|';
-      else if (trimmedLine.includes(',')) delimiter = ',';
-
-      // Split while respecting optional quotes
-      const rawTokens = trimmedLine.split(delimiter).map((col) => {
-        let cleaned = col.trim();
-        if (
-          (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
-          (cleaned.startsWith("'") && cleaned.endsWith("'"))
-        ) {
-          cleaned = cleaned.slice(1, -1).trim();
-        }
-        return cleaned;
-      });
-
+      const rawTokens = splitCSVLine(trimmedLine, delimiter);
       if (rawTokens.length === 0 || !rawTokens[0]) continue;
 
-      const firstToken = rawTokens[0];
-      const firstLower = firstToken.toLowerCase();
+      let rawIdentifier = '';
+      let rawQtyStr = '';
+      let rawExpiryStr = '';
 
-      // Check if this is a header line (e.g. "barcode,stok" or "sku,qty")
-      if (
-        firstLower === 'barcode' ||
-        firstLower === 'sku' ||
-        firstLower === 'kode' ||
-        firstLower === 'kode_barang' ||
-        firstLower === 'nama' ||
-        firstLower === 'nama_barang' ||
-        firstLower === 'id' ||
-        firstLower === 'product'
-      ) {
-        continue; // skip header
+      if (hasHeader && stockColIdx >= 0) {
+        rawIdentifier = rawTokens[idColIdx] || rawTokens[0] || '';
+        rawQtyStr = rawTokens[stockColIdx] || '';
+        if (expiryColIdx >= 0) {
+          rawExpiryStr = rawTokens[expiryColIdx] || '';
+        }
+      } else if (rawTokens.length >= 5) {
+        // Standard full template: barcode, sku, nama_produk, stok_tercatat, stok_fisik_hitung, [tanggal_kadaluarsa]
+        rawIdentifier = rawTokens[0] || rawTokens[1] || '';
+        rawQtyStr = rawTokens[4] || rawTokens[3] || '';
+        rawExpiryStr = rawTokens[5] || '';
+      } else if (rawTokens.length === 3) {
+        // Could be (barcode, nama, stok) OR (barcode, stok, tanggal)
+        const token1 = rawTokens[1];
+        const token2 = rawTokens[2];
+        const token1IsNumber = /^-?\d+(?:\.\d+)?$/.test(token1.replace(/\s/g, ''));
+        const token2IsNumber = /^-?\d+(?:\.\d+)?$/.test(token2.replace(/\s/g, ''));
+
+        if (token2IsNumber && !token1IsNumber) {
+          // (barcode, nama, stok)
+          rawIdentifier = rawTokens[0];
+          rawQtyStr = token2;
+        } else if (token1IsNumber) {
+          // (barcode, stok, tanggal/nama)
+          rawIdentifier = rawTokens[0];
+          rawQtyStr = token1;
+          rawExpiryStr = token2;
+        } else {
+          rawIdentifier = rawTokens[0];
+          rawQtyStr = token2;
+        }
+      } else {
+        // 2 tokens: barcode, stok
+        rawIdentifier = rawTokens[0];
+        rawQtyStr = rawTokens[1] || '';
+        rawExpiryStr = rawTokens[2] || '';
       }
 
-      const secondToken = rawTokens[1] || '';
-      const thirdToken = rawTokens[2] || '';
+      const cleanIdentifier = normalizeScientificBarcode(rawIdentifier);
+      const queryKey = cleanIdentifier.toLowerCase();
 
       // Parse quantity
-      const parsedQty = parseFloat(secondToken.replace(/[^0-9.-]/g, ''));
-      const isQtyValid = !isNaN(parsedQty);
+      const parsedQty = parseFloat(rawQtyStr.replace(/[^0-9.-]/g, ''));
+      const isQtyValid = !isNaN(parsedQty) && rawQtyStr.trim().length > 0;
       const inputQty = isQtyValid ? Math.round(parsedQty) : 0;
 
       // Find matching product
-      const queryKey = firstToken.toLowerCase();
       let matchedProd =
         barcodeMap.get(queryKey) ||
         skuMap.get(queryKey) ||
@@ -189,8 +239,8 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
 
       // Parse expiry date if supplied (YYYY-MM-DD or DD/MM/YYYY)
       let newExpiry: string | undefined = undefined;
-      if (thirdToken) {
-        const cleanDate = thirdToken.trim();
+      if (rawExpiryStr) {
+        const cleanDate = rawExpiryStr.trim();
         if (/^\d{4}-\d{2}-\d{2}$/.test(cleanDate)) {
           newExpiry = cleanDate;
         } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(cleanDate)) {
@@ -200,10 +250,10 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
       }
 
       results.push({
-        id: `row-${currentLineNumber}-${firstToken}`,
+        id: `row-${currentLineNumber}-${rawIdentifier}`,
         rawLine: trimmedLine,
         lineNumber: currentLineNumber,
-        identifier: firstToken,
+        identifier: rawIdentifier,
         inputQty,
         newExpiry,
         status,

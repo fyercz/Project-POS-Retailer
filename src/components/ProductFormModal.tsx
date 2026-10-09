@@ -531,13 +531,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
           </div>
 
-          {/* Section 2: Barcode, SKU & Satuan */}
+          {/* Section 2: Barcode & SKU */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
               <Barcode className="w-3.5 h-3.5 text-blue-500" />
-              <span>Kode SKU, Barcode & Satuan</span>
+              <span>Kode SKU & Barcode</span>
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -611,28 +611,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
                   Bisa berupa angka murni (EAN-13/UPC) atau kombinasi huruf &amp; angka (Code-128).
                 </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Satuan Kemasan
-                </label>
-                <select
-                  value={unit}
-                  onChange={(e) => setUnit(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"
-                >
-                  <option value="pcs">Pcs / Buah</option>
-                  <option value="botol">Botol</option>
-                  <option value="kaleng">Kaleng</option>
-                  <option value="bungkus">Bungkus / Sachet</option>
-                  <option value="sak">Sak (5kg/10kg/25kg)</option>
-                  <option value="pouch">Pouch (Refill)</option>
-                  <option value="dus">Dus / Karton</option>
-                  <option value="pack">Pack / Multipack</option>
-                  <option value="kg">Kilogram (Kg)</option>
-                  <option value="liter">Liter (L)</option>
-                </select>
               </div>
             </div>
           </div>

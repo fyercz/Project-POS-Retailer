@@ -63,7 +63,7 @@ export const ProductCustomizerModal: React.FC<ProductCustomizerModalProps> = ({
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">{product.name}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Stok: {product.stock} {product.unit} {product.brand && `• Brand: ${product.brand}`}
+              Stok: {product.stock} {product.brand && `• Brand: ${product.brand}`}
             </p>
           </div>
           <button

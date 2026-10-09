@@ -1040,7 +1040,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                           <div className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">
                             {formatCurrency(sug.product.price, settings.currency)}
                             <span className="text-[10px] font-normal text-slate-400 ml-1">
-                              • Stok: {sug.product.stock} {sug.product.unit}
+                              • Stok: {sug.product.stock}
                             </span>
                           </div>
                         </div>
@@ -1746,7 +1746,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                 <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800 flex-wrap">
                                   <div className="flex items-center gap-3 text-xs font-mono text-slate-600 dark:text-slate-400">
                                     <span>
-                                      Sisa: <strong className="text-slate-900 dark:text-white">{fc.currentStock}</strong> {fc.unit || 'pcs'}
+                                      Sisa: <strong className="text-slate-900 dark:text-white">{fc.currentStock}</strong>
                                     </span>
                                     <span>
                                       Min: <strong className="text-slate-900 dark:text-white">{fc.minStock}</strong>

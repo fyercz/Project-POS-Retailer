@@ -25,13 +25,15 @@ import {
   Info,
   DollarSign,
   Package,
+  Download,
 } from 'lucide-react';
 import { Product, WholesaleUnit } from '../types';
 import { usePOS } from '../context/POSContext';
 import { INITIAL_PRODUCTS } from '../data/mockData';
 import { formatCurrency } from '../utils/formatters';
 import { getImageForCategory } from '../data/importHelpers';
-import { parseRetailLine, parseRetailLineRaw, ParsedItem } from '../utils/retailNormalizer';
+import { parseRetailLine, parseRetailLineRaw, parseFullCSVText, ParsedItem } from '../utils/retailNormalizer';
+import { downloadCategoryGuideCSV } from '../data/categoryGuide';
 
 interface DataImportModalProps {
   isOpen: boolean;
@@ -100,19 +102,13 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
     [products, initialProductIds]
   );
 
-  // Parse raw text into items (supports direct AS-IS or auto-correction mode)
+  // Parse raw text into items (supports direct AS-IS or auto-correction mode with full CSV engine)
   const autoParsedItems: ParsedItem[] = useMemo(() => {
     if (!rawInput.trim()) return [];
-    return rawInput
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0)
-      .map((l, idx) =>
-        importMode === 'direct'
-          ? parseRetailLineRaw(l, idx, minProfitPoints)
-          : parseRetailLine(l, idx, minProfitPoints)
-      )
-      .filter((it): it is ParsedItem => it !== null);
+    return parseFullCSVText(rawInput, {
+      minProfitPoints,
+      rawMode: importMode === 'direct',
+    });
   }, [rawInput, minProfitPoints, importMode]);
 
   // Sync state whenever autoParsedItems changes
@@ -424,6 +420,15 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                   <FileUp className="w-3.5 h-3.5" />
                   <span>Upload CSV/TXT</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={downloadCategoryGuideCSV}
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Unduh format daftar kategori resmi sistem (CSV)"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Unduh Format Kategori</span>
+                </button>
               </div>
             </div>
 
@@ -627,7 +632,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                                     {item.brand}
                                   </span>
                                   <span className="text-[10px] text-slate-400 font-mono">
-                                    (Stok: {item.stock} {item.unit})
+                                    (Stok: {item.stock})
                                   </span>
                                 </div>
 

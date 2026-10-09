@@ -320,7 +320,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                               : 'bg-slate-100 dark:bg-slate-850 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                           }`}
                         >
-                          Eceran ({item.product.unit || 'pcs'})
+                          Eceran
                         </button>
                         {item.product.wholesaleUnits?.map((wu) => (
                           <button
@@ -381,7 +381,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     </div>
                     <div className="text-[10px] text-slate-400 font-mono">
                       @{formatCurrency(item.unitPrice, settings.currency)}
-                      {item.selectedUnit ? `/${item.selectedUnit.name}` : `/${item.product.unit || 'pcs'}`}
+                      {item.selectedUnit ? `/${item.selectedUnit.name}` : ''}
                     </div>
                   </div>
                 </div>

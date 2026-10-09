@@ -1181,6 +1181,365 @@ export function parseRetailLine(
 }
 
 /**
+ * Splits a CSV line into tokens, respecting quotes (both " and ') and escaped quotes ("").
+ */
+export function splitCSVLine(line: string, delimiter: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  let quoteChar = '';
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if ((char === '"' || char === "'") && (!inQuotes || char === quoteChar)) {
+      if (inQuotes && i + 1 < line.length && line[i + 1] === quoteChar) {
+        current += quoteChar;
+        i++; // skip next escaped quote
+      } else if (inQuotes) {
+        inQuotes = false;
+        quoteChar = '';
+      } else {
+        inQuotes = true;
+        quoteChar = char;
+      }
+    } else if (char === delimiter && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+/**
+ * Normalizes scientific notation (e.g. 8.99E+12 or 8,99E+12) back to clean numeric barcode string
+ */
+export function normalizeScientificBarcode(token: string): string {
+  if (!token) return '';
+  let cleaned = token.replace(/^["']|["']$/g, '').trim();
+  const formatted = cleaned.replace(',', '.');
+  if (/^[\d.]+[eE][+]?\d+$/.test(formatted)) {
+    try {
+      const num = Number(formatted);
+      if (!isNaN(num) && num > 0) {
+        return BigInt(Math.round(num)).toString();
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return extractCleanBarcode(cleaned);
+}
+
+/**
+ * Detect delimiter across sample lines
+ */
+export function detectDelimiter(text: string): string {
+  const sampleLines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0)
+    .slice(0, 10);
+
+  if (sampleLines.length === 0) return ',';
+
+  const counts: Record<string, number> = { '\t': 0, ';': 0, '|': 0, ',': 0 };
+  for (const line of sampleLines) {
+    if (line.includes('\t')) counts['\t'] += (line.match(/\t/g) || []).length;
+    if (line.includes(';')) counts[';'] += (line.match(/;/g) || []).length;
+    if (line.includes('|')) counts['|'] += (line.match(/\|/g) || []).length;
+    if (line.includes(',')) counts[','] += (line.match(/,/g) || []).length;
+  }
+
+  let best = ',';
+  let max = -1;
+  for (const [delim, count] of Object.entries(counts)) {
+    if (count > max) {
+      max = count;
+      best = delim;
+    }
+  }
+  return max > 0 ? best : ',';
+}
+
+export interface DetectedCSVHeaders {
+  hasHeader: boolean;
+  barcodeIdx: number;
+  nameIdx: number;
+  costIdx: number;
+  priceIdx: number;
+  stockIdx: number;
+  categoryIdx: number;
+  unitIdx: number;
+  brandIdx: number;
+}
+
+/**
+ * Detects whether the first row is a header row and maps indices dynamically
+ */
+export function detectCSVHeaders(firstLineTokens: string[]): DetectedCSVHeaders {
+  const lowers = firstLineTokens.map((t) =>
+    t.toLowerCase().replace(/[^a-z0-9_]/g, '')
+  );
+
+  let barcodeIdx = -1;
+  let nameIdx = -1;
+  let costIdx = -1;
+  let priceIdx = -1;
+  let stockIdx = -1;
+  let categoryIdx = -1;
+  let unitIdx = -1;
+  let brandIdx = -1;
+
+  let matchedCount = 0;
+
+  lowers.forEach((t, idx) => {
+    // Barcode / Code / SKU
+    if (
+      t.includes('barcode') ||
+      t === 'kode' ||
+      t === 'kodebarang' ||
+      t === 'kodeproduk' ||
+      t === 'code' ||
+      t === 'ean' ||
+      t === 'upc' ||
+      t === 'sku'
+    ) {
+      if (barcodeIdx === -1) {
+        barcodeIdx = idx;
+        matchedCount++;
+      }
+    }
+    // Name / Product
+    else if (
+      t.includes('nama') ||
+      t.includes('name') ||
+      t.includes('produk') ||
+      t.includes('product') ||
+      t === 'item' ||
+      t === 'barang' ||
+      t === 'deskripsi'
+    ) {
+      if (nameIdx === -1) {
+        nameIdx = idx;
+        matchedCount++;
+      }
+    }
+    // Cost / Harga Beli / Modal / HPP
+    else if (
+      t.includes('beli') ||
+      t.includes('modal') ||
+      t.includes('hpp') ||
+      t.includes('cost') ||
+      t.includes('perolehan') ||
+      t === 'hbeli'
+    ) {
+      if (costIdx === -1) {
+        costIdx = idx;
+        matchedCount++;
+      }
+    }
+    // Price / Harga Jual / Retail
+    else if (
+      t.includes('jual') ||
+      t.includes('retail') ||
+      t.includes('price') ||
+      t === 'harga' ||
+      t === 'hjual' ||
+      t === 'tarif'
+    ) {
+      if (priceIdx === -1) {
+        priceIdx = idx;
+        matchedCount++;
+      }
+    }
+    // Stock / Qty / Fisik
+    else if (
+      t.includes('stok') ||
+      t.includes('stock') ||
+      t.includes('qty') ||
+      t.includes('jumlah') ||
+      t.includes('kuantitas') ||
+      t.includes('fisik') ||
+      t === 'sisa'
+    ) {
+      if (stockIdx === -1) {
+        stockIdx = idx;
+        matchedCount++;
+      }
+    }
+    // Category
+    else if (
+      t.includes('kategori') ||
+      t.includes('category') ||
+      t.includes('dept') ||
+      t.includes('kelompok') ||
+      t.includes('jenis')
+    ) {
+      if (categoryIdx === -1) {
+        categoryIdx = idx;
+        matchedCount++;
+      }
+    }
+    // Unit
+    else if (
+      t.includes('satuan') ||
+      t.includes('unit') ||
+      t.includes('kemasan') ||
+      t.includes('uom')
+    ) {
+      if (unitIdx === -1) {
+        unitIdx = idx;
+        matchedCount++;
+      }
+    }
+    // Brand
+    else if (t.includes('brand') || t.includes('merk') || t.includes('merek')) {
+      if (brandIdx === -1) {
+        brandIdx = idx;
+        matchedCount++;
+      }
+    }
+  });
+
+  const hasHeader = matchedCount >= 2;
+  return {
+    hasHeader,
+    barcodeIdx,
+    nameIdx,
+    costIdx,
+    priceIdx,
+    stockIdx,
+    categoryIdx,
+    unitIdx,
+    brandIdx,
+  };
+}
+
+/**
+ * Intelligent full CSV/TSV document parser with BOM stripping, quote handling,
+ * scientific notation fix, and dynamic header column mapping.
+ */
+export function parseFullCSVText(
+  csvText: string,
+  options: { minProfitPoints?: number; rawMode?: boolean } = {}
+): ParsedItem[] {
+  const minProfitPoints = options.minProfitPoints ?? 15;
+  const rawMode = options.rawMode ?? true;
+
+  // 1. Strip UTF-8 BOM
+  const cleanText = csvText.replace(/^\uFEFF/, '').trim();
+  if (!cleanText) return [];
+
+  const rawLines = cleanText.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+  if (rawLines.length === 0) return [];
+
+  // Detect delimiter across first 10 lines
+  const delimiter = detectDelimiter(rawLines.slice(0, 10).join('\n'));
+
+  // Tokenize line 0 to test for headers
+  const firstTokens = splitCSVLine(rawLines[0], delimiter);
+  const headerInfo = detectCSVHeaders(firstTokens);
+
+  const startLineIndex = headerInfo.hasHeader ? 1 : 0;
+  const items: ParsedItem[] = [];
+
+  for (let i = startLineIndex; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    if (!line || line.startsWith('#') || line.startsWith('//')) continue;
+
+    if (headerInfo.hasHeader) {
+      const tokens = splitCSVLine(line, delimiter);
+      if (tokens.length === 0 || tokens.every((t) => !t)) continue;
+
+      let rawBarcode = headerInfo.barcodeIdx >= 0 ? tokens[headerInfo.barcodeIdx] || '' : '';
+      let rawName = headerInfo.nameIdx >= 0 ? tokens[headerInfo.nameIdx] || '' : '';
+      let rawCost = headerInfo.costIdx >= 0 ? parsePriceNumber(tokens[headerInfo.costIdx], 0) : 0;
+      let rawPrice = headerInfo.priceIdx >= 0 ? parsePriceNumber(tokens[headerInfo.priceIdx], 0) : 0;
+      let rawStock = headerInfo.stockIdx >= 0 ? parsePriceNumber(tokens[headerInfo.stockIdx], 24) : 24;
+      const rawCat = headerInfo.categoryIdx >= 0 ? tokens[headerInfo.categoryIdx] || '' : '';
+      const rawUnit = headerInfo.unitIdx >= 0 ? tokens[headerInfo.unitIdx] || 'pcs' : 'pcs';
+      const rawBrand = headerInfo.brandIdx >= 0 ? tokens[headerInfo.brandIdx] || '' : '';
+
+      // Normalize barcode scientific notation
+      if (rawBarcode) {
+        rawBarcode = normalizeScientificBarcode(rawBarcode);
+      }
+
+      // If price is missing but cost exists
+      if (rawPrice === 0 && rawCost > 0) {
+        rawPrice = Math.round(rawCost * 1.25);
+      }
+      // If cost is missing but price exists
+      if (rawCost === 0 && rawPrice > 0) {
+        rawCost = Math.round(rawPrice * 0.8);
+      }
+      if (rawPrice === 0 && rawCost === 0) {
+        rawPrice = 5000;
+        rawCost = 4000;
+      }
+
+      if (!rawName) {
+        rawName = `Produk #${items.length + 1}`;
+      }
+
+      if (!rawBarcode) {
+        rawBarcode = `899${Math.floor(100000000 + Math.random() * 900000000)}`;
+      }
+
+      const categoryId = rawCat ? mapCategory(rawCat) : mapCategory(rawName);
+      const marginNominal = Math.max(0, rawPrice - rawCost);
+      const profitMarginPercent = rawPrice > 0 ? (marginNominal / rawPrice) * 100 : 0;
+      const isPointsEligible = profitMarginPercent >= minProfitPoints;
+      const sku = `SKU-${categoryId.slice(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+
+      if (rawMode) {
+        items.push({
+          id: `raw-${i}-${Date.now()}-${rawBarcode}`,
+          originalText: line,
+          name: rawName.trim(),
+          brand: rawBrand,
+          gramasi: '',
+          categoryId,
+          unit: rawUnit || 'pcs',
+          costPrice: rawCost,
+          price: rawPrice,
+          stock: rawStock,
+          sku,
+          barcode: rawBarcode,
+          aisle: 'Lorong Toko',
+          wholesaleUnits: [],
+          corrections: [],
+          profitMarginPercent,
+          isPointsEligible,
+          selected: true,
+        });
+      } else {
+        // Run smart normalizer
+        const smartItem = parseRetailLine(
+          `${rawBarcode}, ${rawName}, ${rawCost}, ${rawPrice}, ${rawStock}`,
+          i,
+          minProfitPoints
+        );
+        if (smartItem) {
+          items.push(smartItem);
+        }
+      }
+    } else {
+      // Fallback to line-by-line parsing
+      const item = rawMode
+        ? parseRetailLineRaw(line, i, minProfitPoints)
+        : parseRetailLine(line, i, minProfitPoints);
+      if (item) items.push(item);
+    }
+  }
+
+  return items;
+}
+
+/**
  * Parses a raw line directly AS-IS WITHOUT any auto-correction,
  * spelling substitution, or AI normalizer modifications.
  */

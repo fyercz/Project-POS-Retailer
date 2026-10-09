@@ -1107,7 +1107,7 @@ export const TransactionsView: React.FC = () => {
                         {item.productName}
                       </h4>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                        Beli: {item.maxQty} pcs • Harga: {formatCurrency(item.unitPrice, settings.currency)}
+                        Beli: {item.maxQty} • Harga: {formatCurrency(item.unitPrice, settings.currency)}
                       </p>
                     </div>
 

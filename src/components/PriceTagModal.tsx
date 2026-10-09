@@ -69,7 +69,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
   const [showBarcode, setShowBarcode] = useState<boolean>(true);
   const [showSku, setShowSku] = useState<boolean>(true);
   const [showAisle, setShowAisle] = useState<boolean>(true);
-  const [showUnit, setShowUnit] = useState<boolean>(true);
+  const [showUnit, setShowUnit] = useState<boolean>(false);
   const [showDate, setShowDate] = useState<boolean>(true);
   const [showCutGuide, setShowCutGuide] = useState<boolean>(true);
   const [customPromoText, setCustomPromoText] = useState<string>('HARGA SPESIAL');
@@ -451,7 +451,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
             </div>
 
             <div style="text-align: right;">
-              <div style="font-size: 8px; color: #64748b; font-weight: 700; text-transform: uppercase;">HARGA PAS / ${product.unit || 'PCS'}</div>
+              <div style="font-size: 8px; color: #64748b; font-weight: 700; text-transform: uppercase;">${showUnit ? `HARGA PAS / ${product.unit || 'PCS'}` : 'HARGA PAS'}</div>
               <div style="font-size: 16px; font-weight: 900; color: ${priceColor}; font-family: ui-monospace, monospace; line-height: 1; margin-top: 2px;">
                 ${formattedPrice}
               </div>
@@ -489,7 +489,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
               <div style="font-size: 20px; font-weight: 900; color: #dc2626; font-family: ui-monospace, monospace; line-height: 1; margin-top: 2px;">
                 ${formattedPrice}
               </div>
-              <div style="font-size: 7.5px; color: #7f1d1d; font-weight: 600; margin-top: 2px;">per ${product.unit || 'pcs'} (Termasuk Pajak)</div>
+              ${showUnit ? `<div style="font-size: 7.5px; color: #7f1d1d; font-weight: 600; margin-top: 2px;">per ${product.unit || 'pcs'} (Termasuk Pajak)</div>` : `<div style="font-size: 7.5px; color: #7f1d1d; font-weight: 600; margin-top: 2px;">(Termasuk Pajak)</div>`}
             </div>
           </div>
         </div>
@@ -1205,7 +1205,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                                 )}
                                 {invoiceItem && (
                                   <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 font-mono">
-                                    Qty Faktur: {invoiceItem.quantity} {p.unit || 'pcs'}
+                                    Qty Faktur: {invoiceItem.quantity}
                                   </span>
                                 )}
                               </div>
@@ -1214,7 +1214,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                                 <span>•</span>
                                 <span>Barcode: {p.barcode}</span>
                                 <span>•</span>
-                                <span>Stok: {p.stock} {p.unit}</span>
+                                <span>Stok: {p.stock}</span>
                               </div>
                             </div>
                           </div>
@@ -1223,9 +1223,6 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                             <div className="text-right">
                               <div className="font-bold font-mono text-xs text-slate-900 dark:text-white">
                                 {formatCurrency(p.price, settings.currency)}
-                              </div>
-                              <div className="text-[10px] text-slate-500">
-                                per {p.unit || 'pcs'}
                               </div>
                             </div>
 
