@@ -50,6 +50,8 @@ import {
   downloadBuatShortcutLogoBat,
   downloadAutorunInf,
   downloadUpdateBat,
+  downloadCleanerBat,
+  downloadCleanerSh,
   fetchGitStatus,
   triggerGitPull,
   configureGitRemote,
@@ -1094,6 +1096,107 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       </p>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Offline Setup & Batch Scripts for Manual Cleaning */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div>
+                      <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200">
+                        Setup Pembersihan Mandiri (.bat &amp; Perintah Terminal)
+                      </h5>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                        Jalankan pembersihan tanpa membuka web browser atau unduh file skrip otomatis.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={downloadCleanerBat}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Download className="w-3.5 h-3.5 text-blue-500" />
+                      <span>Unduh .BAT (Windows)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={downloadCleanerSh}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>Unduh .SH (Linux/Mac)</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs">
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Pembersihan Standar:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText('npm run clean');
+                          setCopiedCmd('clean');
+                          setTimeout(() => setCopiedCmd(null), 2000);
+                        }}
+                        className="text-slate-400 hover:text-emerald-500 cursor-pointer"
+                        title="Salin Perintah"
+                      >
+                        {copiedCmd === 'clean' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded font-mono text-[11px] text-emerald-600 dark:text-emerald-400">
+                      npm run clean
+                    </code>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Pembersihan Penuh (+dist):</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText('npm run clean:all');
+                          setCopiedCmd('clean:all');
+                          setTimeout(() => setCopiedCmd(null), 2000);
+                        }}
+                        className="text-slate-400 hover:text-emerald-500 cursor-pointer"
+                        title="Salin Perintah"
+                      >
+                        {copiedCmd === 'clean:all' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded font-mono text-[11px] text-emerald-600 dark:text-emerald-400">
+                      npm run clean:all
+                    </code>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Klik Ganda Windows:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText('bersihkan-file-usang.bat');
+                          setCopiedCmd('bat');
+                          setTimeout(() => setCopiedCmd(null), 2000);
+                        }}
+                        className="text-slate-400 hover:text-emerald-500 cursor-pointer"
+                        title="Salin Nama File"
+                      >
+                        {copiedCmd === 'bat' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded font-mono text-[11px] text-blue-600 dark:text-blue-400 truncate">
+                      bersihkan-file-usang.bat
+                    </code>
+                  </div>
                 </div>
               </div>
             </div>

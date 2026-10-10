@@ -289,3 +289,58 @@ git pull origin main && npm install && npm run build
 # Opsi C: Skrip shell Linux / macOS
 ./update.sh
 ```
+
+---
+
+## 🧹 SETUP PEMBERSIHAN FILE USANG & SAMPAH SISTEM
+
+Aplikasi kasir Ulilmart dilengkapi sistem pembersihan file usang (*Obsolete & Junk File Cleaner*) yang bertugas membersihkan residu sistem secara aman:
+* **Cache Kompilasi & Build**: `node_modules/.vite`, `node_modules/.cache`, `tsconfig.tsbuildinfo`, `.eslintcache`, folder `dist/` lama.
+* **File Log Debugging**: `*.log`, `npm-debug.log`, `yarn-error.log`.
+* **File Sementara & Backup**: `*.tmp`, `*.temp`, `*.bak`, `*.swp`, `*~`.
+* **Residu Sistem Operasi**: `.DS_Store` (macOS), `Thumbs.db` (Windows), `ehthumbs.db`, `desktop.ini`.
+
+> **🛡️ Proteksi Integritas Data Toko:**
+> Seluruh file penting seperti **`src/`** (kode aplikasi), **`data/pos-master.sqlite`** & **`IndexedDB`** (database produk, transaksi, stok, pelanggan), **`package.json`**, dan konfigurasi toko **100% TERPROTEKSI AMAN dan TIDAK PERNAH DIHAPUS**.
+
+### Cara Menggunakan Setup Pembersihan:
+
+#### 1. Klik Ganda File Skrip Windows (Paling Praktis)
+* Buka folder aplikasi kasir Ulilmart di Windows Explorer.
+* Klik ganda file **`bersihkan-file-usang.bat`** (atau **`clean.bat`**).
+* Pilih mode:
+  * **[1] Pembersihan Standar Aman (Rekomendasi)**: Menghapus log, file temp, cache Vite, dan file sampah OS.
+  * **[2] Pembersihan Penuh**: Standar + menghapus folder `dist/` untuk kompilasi bersih ulang.
+  * **[3] Simulasi Pindai Saja (Dry-Run)**: Menampilkan daftar file usang tanpa menghapus.
+
+#### 2. Perintah Cepat Terminal / Command Prompt
+Jalankan salah satu perintah berikut:
+```bash
+# Pembersihan standar lintas platform (Windows / Linux / Mac)
+npm run clean
+
+# Pembersihan penuh termasuk folder dist lama
+npm run clean:all
+
+# Simulasi cek file sampah tanpa menghapus
+npm run clean:dry
+
+# Melalui launcher terintegrasi
+npm run app:clean
+```
+
+#### 3. Linux / macOS Terminal
+```bash
+# Jalankan skrip shell pembersihan
+chmod +x clean.sh
+./clean.sh
+
+# Atau simulasi dry-run
+./clean.sh --dry-run
+```
+
+#### 4. Pembersihan 1-Klik Langsung dari Layar Kasir (UI)
+* **Melalui Menu Alat di Header**: Klik menu **Alat Tambahan** di header atas -> pilih **"Pembersihan File Usang & Cache"**.
+* **Melalui Modal Pengaturan**: Buka menu **Pengaturan Toko & Struk** -> scroll ke bagian bawah kartu **"Pembersihan File Usang & Cache Sistem"** -> klik **"Bersihkan File Usang Sekarang"**.
+* **Melalui Menu Desktop & Kiosk (`Alt + D`)**: Buka tab **"Bersihkan File Sampah"** -> klik **"Pindai Sampah"** dan **"Bersihkan File Sekarang"**. Anda juga dapat mengunduh file `.bat` atau `.sh` langsung dari tombol di dalam modal ini.
+

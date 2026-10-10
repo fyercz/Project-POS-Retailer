@@ -43,6 +43,10 @@ import {
   kickCashDrawerOnly,
   PrinterConfig,
 } from '../utils/escposPrinter';
+import {
+  executeSystemCleanup,
+  downloadCleanerBat,
+} from '../utils/desktopHelper';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -88,6 +92,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
   const [hardwareSupport, setHardwareSupport] = useState({ hasSerial: false, hasBluetooth: false });
   const [testStatus, setTestStatus] = useState<string | null>(null);
   const [isTesting, setIsTesting] = useState(false);
+  const [isCleaningInSettings, setIsCleaningInSettings] = useState(false);
+  const [settingsCleanupMsg, setSettingsCleanupMsg] = useState<string | null>(null);
 
   useEffect(() => {
     setHardwareSupport(checkPrinterHardwareSupport());
@@ -835,6 +841,56 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 IndexedDB Ultra-Capacity
               </span>
               <span>Kapasitas penyimpanan puluhan GB tanpa batas 5MB LocalStorage.</span>
+            </div>
+          </div>
+
+          {/* Pemeliharaan File Usang & Cache */}
+          <div className="space-y-2 bg-gradient-to-r from-rose-50/50 via-amber-50/30 to-slate-50 dark:from-slate-900/80 dark:to-slate-950 p-3.5 rounded-xl border border-rose-200/60 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                <Trash2 className="w-4 h-4 text-rose-500" />
+                <span>Pembersihan File Usang &amp; Cache Sistem</span>
+              </div>
+              <button
+                type="button"
+                onClick={downloadCleanerBat}
+                className="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+                title="Unduh skrip otomatis untuk Windows"
+              >
+                <Download className="w-3 h-3 text-blue-500" />
+                <span>Unduh .BAT</span>
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400">
+              Pindai dan hapus file sampah, cache build usang (<code>node_modules/.vite</code>), log debugging (<code>*.log</code>), dan file sementara (<code>*.tmp</code>) dengan aman tanpa menghapus database kasir.
+            </p>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsCleaningInSettings(true);
+                  setSettingsCleanupMsg(null);
+                  try {
+                    const res = await executeSystemCleanup();
+                    setSettingsCleanupMsg(res.message);
+                  } catch (e: any) {
+                    setSettingsCleanupMsg('Gagal: ' + e.message);
+                  } finally {
+                    setIsCleaningInSettings(false);
+                  }
+                }}
+                disabled={isCleaningInSettings}
+                className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50 transition"
+              >
+                <Trash2 className={`w-3.5 h-3.5 ${isCleaningInSettings ? 'animate-spin' : ''}`} />
+                <span>{isCleaningInSettings ? 'Sedang Membersihkan...' : 'Bersihkan File Usang Sekarang'}</span>
+              </button>
+              {settingsCleanupMsg && (
+                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  {settingsCleanupMsg}
+                </span>
+              )}
             </div>
           </div>
 

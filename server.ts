@@ -2468,6 +2468,279 @@ Kembalikan JSON:
   }
 });
 
+// Helper for server-side heuristic category mapping fallback
+function serverHeuristicMapCategory(productName: string, categoriesList: any[] = []): {
+  categoryId: string;
+  categoryName: string;
+  confidence: number;
+  reasoning: string;
+  suggestedBrand?: string;
+  suggestedUnit?: string;
+} {
+  const n = (productName || '').toLowerCase().trim();
+  const getCatName = (id: string, fallback: string) => {
+    const f = categoriesList.find((c) => c.id === id);
+    return f ? f.name : fallback;
+  };
+
+  // Instant keyword detection
+  if (n.includes('indomie') || n.includes('mie ') || n.includes('mi ') || n.includes('sedaap goreng') || n.includes('sarimi') || n.includes('pop mie') || n.includes('sarden') || n.includes('kornet') || n.includes('bihun')) {
+    return {
+      categoryId: 'instant',
+      categoryName: getCatName('instant', 'Makanan Instan'),
+      confidence: 0.95,
+      reasoning: 'Kategori makanan instan & olahan siap saji.',
+      suggestedUnit: 'bungkus',
+    };
+  }
+  if (n.includes('beras') || n.includes('minyak') || n.includes('bimoli') || n.includes('filma') || n.includes('sunco') || n.includes('sania') || n.includes('gula') || n.includes('tepung') || n.includes('telur') || n.includes('garam') || n.includes('bango') || n.includes('kecap') || n.includes('santan') || n.includes('royco') || n.includes('masako') || n.includes('blue band')) {
+    return {
+      categoryId: 'groceries',
+      categoryName: getCatName('groceries', 'Sembako & Bahan Pokok'),
+      confidence: 0.95,
+      reasoning: 'Kebutuhan pokok dapur dan sembako rumah tangga.',
+      suggestedUnit: 'pcs',
+    };
+  }
+  if (n.includes('aqua') || n.includes('le minerale') || n.includes('cleo') || n.includes('susu') || n.includes('ultra milk') || n.includes('frisian flag') || n.includes('dancow') || n.includes('kopi') || n.includes('kapal api') || n.includes('good day') || n.includes('teh') || n.includes('pucuk') || n.includes('sosro') || n.includes('pocari') || n.includes('floridina') || n.includes('buavita') || n.includes('coca cola') || n.includes('sprite')) {
+    return {
+      categoryId: 'beverages',
+      categoryName: getCatName('beverages', 'Minuman & Susu'),
+      confidence: 0.95,
+      reasoning: 'Produk minuman cair, air mineral, teh, kopi, dan susu kemasan.',
+      suggestedUnit: 'botol',
+    };
+  }
+  if (n.includes('roti') || n.includes('sari roti') || n.includes('aoka') || n.includes('selai') || n.includes('morin') || n.includes('ceres') || n.includes('meses') || n.includes('donat')) {
+    return {
+      categoryId: 'bakery_ready',
+      categoryName: getCatName('bakery_ready', 'Roti & Selai'),
+      confidence: 0.94,
+      reasoning: 'Produk roti tawar/manis dan olesan sarapan.',
+      suggestedUnit: 'bungkus',
+    };
+  }
+  if (n.includes('nugget') || n.includes('sosis') || n.includes('bakso') || n.includes('fiesta') || n.includes('champ') || n.includes('kanzler') || n.includes('cedea') || n.includes('dimsum') || n.includes('kentang beku') || n.includes('keju') || n.includes('yoghurt')) {
+    return {
+      categoryId: 'fresh',
+      categoryName: getCatName('fresh', 'Frozen Food'),
+      confidence: 0.94,
+      reasoning: 'Olahan makanan beku dingin (frozen food) dan produk segar.',
+      suggestedUnit: 'pak',
+    };
+  }
+  if (n.includes('deterjen') || n.includes('rinso') || n.includes('daia') || n.includes('so klin') || n.includes('molto') || n.includes('downy') || n.includes('sunlight') || n.includes('mama lemon') || n.includes('super pell') || n.includes('wipol') || n.includes('bayclin') || n.includes('baygon') || n.includes('hit ') || n.includes('tisu') || n.includes('paseo') || n.includes('nice')) {
+    return {
+      categoryId: 'home_care',
+      categoryName: getCatName('home_care', 'Kebutuhan Rumah'),
+      confidence: 0.95,
+      reasoning: 'Produk pembersih rumah, sabun cuci, pewangi, dan tisu.',
+      suggestedUnit: 'pcs',
+    };
+  }
+  if (n.includes('sabun mandi') || n.includes('lifebuoy') || n.includes('dettol') || n.includes('biore') || n.includes('lux') || n.includes('sampo') || n.includes('shampoo') || n.includes('pantene') || n.includes('clear') || n.includes('sunsilk') || n.includes('zinc') || n.includes('pepsodent') || n.includes('ciptadent') || n.includes('sikat gigi') || n.includes('rexona') || n.includes('nivea') || n.includes('wardah') || n.includes('garnier') || n.includes('pembalut') || n.includes('popok') || n.includes('zwitsal')) {
+    return {
+      categoryId: 'personal_care',
+      categoryName: getCatName('personal_care', 'Perawatan Tubuh'),
+      confidence: 0.95,
+      reasoning: 'Produk kebersihan tubuh, sabun, sampo, pasta gigi, atau perawatan diri.',
+      suggestedUnit: 'pcs',
+    };
+  }
+  if (n.includes('rokok') || n.includes('sampoerna') || n.includes('a mild') || n.includes('dji sam soe') || n.includes('234') || n.includes('gudang garam') || n.includes('surya') || n.includes('djarum') || n.includes('marlboro') || n.includes('esse') || n.includes('tembakau') || n.includes('korek')) {
+    return {
+      categoryId: 'tobacco',
+      categoryName: getCatName('tobacco', 'Rokok & Tembakau'),
+      confidence: 0.96,
+      reasoning: 'Produk tembakau, rokok kretek/filter, atau pemantik.',
+      suggestedUnit: 'bungkus',
+    };
+  }
+  if (n.includes('buku') || n.includes('pulpen') || n.includes('pensil') || n.includes('spidol') || n.includes('baterai') || n.includes('panadol') || n.includes('bodrex') || n.includes('tolak angin') || n.includes('promag') || n.includes('minyak kayu putih') || n.includes('cap lang') || n.includes('hansaplast') || n.includes('koyo')) {
+    return {
+      categoryId: 'atk_meds',
+      categoryName: getCatName('atk_meds', 'ATK, Obat & Lainnya'),
+      confidence: 0.93,
+      reasoning: 'Alat tulis kantor, perlengkapan, baterai, atau obat-obatan warung.',
+      suggestedUnit: 'pcs',
+    };
+  }
+  if (n.includes('snack') || n.includes('biskuit') || n.includes('wafer') || n.includes('keripik') || n.includes('chitato') || n.includes('tango') || n.includes('nabati') || n.includes('roma') || n.includes('oreo') || n.includes('silverqueen') || n.includes('kitkat') || n.includes('permen') || n.includes('kacang')) {
+    return {
+      categoryId: 'snacks',
+      categoryName: getCatName('snacks', 'Snack & Biskuit'),
+      confidence: 0.94,
+      reasoning: 'Makanan ringan, biskuit, wafer, cokelat, atau permen.',
+      suggestedUnit: 'bungkus',
+    };
+  }
+
+  return {
+    categoryId: 'groceries',
+    categoryName: getCatName('groceries', 'Sembako & Bahan Pokok'),
+    confidence: 0.5,
+    reasoning: 'Dipetakan secara umum ke kategori Sembako & Bahan Pokok.',
+    suggestedUnit: 'pcs',
+  };
+}
+
+// 6. AI Product Category Auto-Mapping Endpoint
+app.post('/api/ai/map-category', async (req, res) => {
+  const { productName, brand, categories: userCategories } = req.body;
+  if (!productName || typeof productName !== 'string' || !productName.trim()) {
+    return res.status(400).json({ success: false, message: 'Nama produk wajib diisi' });
+  }
+
+  const name = productName.trim();
+  const categoriesList = Array.isArray(userCategories) && userCategories.length > 0
+    ? userCategories.filter((c: any) => c.id !== 'all')
+    : [
+        { id: 'groceries', name: 'Sembako & Bahan Pokok', desc: 'Beras, minyak goreng, gula, tepung, telur, garam, bumbu dapur, kecap, santan' },
+        { id: 'beverages', name: 'Minuman & Susu', desc: 'Susu UHT, jus, teh kemasan, kopi, air mineral, minuman berenergi, soda, sirup' },
+        { id: 'snacks', name: 'Snack & Biskuit', desc: 'Keripik, wafer, biskuit, cokelat, permen, kacang, camilan ringan' },
+        { id: 'instant', name: 'Makanan Instan', desc: 'Mie instan, sarden, kornet kaleng, bubur instan, cup noodle' },
+        { id: 'fresh', name: 'Frozen Food', desc: 'Nugget, sosis, bakso, dimsum, kentang beku, daging beku, olahan ikan beku' },
+        { id: 'personal_care', name: 'Perawatan Tubuh', desc: 'Sabun mandi, sampo, pasta gigi, sikat gigi, deodorant, lotion, skincare, bedak' },
+        { id: 'home_care', name: 'Kebutuhan Rumah', desc: 'Deterjen, sabun cuci piring, pembersih lantai, pewangi pakaian, kamper, obat nyamuk' },
+        { id: 'atk_meds', name: 'ATK, Obat & Lainnya', desc: 'Buku, pulpen, baterai, plester luka, paracetamol, tolak angin, obat warung' },
+        { id: 'tobacco', name: 'Rokok & Tembakau', desc: 'Rokok kretek, filter, cerutu, tembakau, korek api' },
+        { id: 'bakery_ready', name: 'Roti & Selai', desc: 'Roti tawar, roti manis, selai, meses, donat, pastry' },
+      ];
+
+  // Try Gemini AI first
+  try {
+    const prompt = `Anda adalah sistem AI klasifikasi & pemetaan kategori produk ritel & minimarket Indonesia (FMCG POS).
+Tugas Anda: Memetakan nama produk berikut ke dalam SATU ID Kategori yang PALING COCOK dari daftar kategori toko agar manajemen inventaris tertata rapi & sistematis.
+
+Nama Produk: "${name}"
+${brand ? `Brand: "${brand}"` : ''}
+
+Daftar Kategori yang Tersedia:
+${categoriesList.map((c: any) => `- ID: "${c.id}" | Nama: "${c.name}"${c.desc || c.description ? ` (${c.desc || c.description})` : ''}`).join('\n')}
+
+Panduan Pemetaan Penting:
+1. "categoryId" HARUS persis salah satu ID dari daftar di atas.
+2. Kenali kebiasaan konsumen & penempatan rak ritel Indonesia (misal: "Mie Sedaap" = instant, "Kecap Sedaap" = groceries, "Aqua/Susu Ultra" = beverages, "Rinso/Sunlight" = home_care, "Biore/Lifebuoy" = personal_care, "Sari Roti" = bakery_ready, "Marlboro" = tobacco, "Fiesta Nugget" = fresh).
+3. Ekstrak nama Brand dan Satuan kemasan standar bila terindikasi dari nama produk.
+
+Kembalikan respon dalam format JSON murni:
+{
+  "categoryId": "ID_kategori_terpilih",
+  "categoryName": "Nama_kategori_terpilih",
+  "confidence": 0.95,
+  "reasoning": "Penjelasan ringkas 1 kalimat dalam bahasa Indonesia.",
+  "suggestedBrand": "Nama brand jika teridentifikasi dari nama",
+  "suggestedUnit": "Satuan lazim: pcs / botol / pouch / bungkus / kaleng / dus / sachet / pak / sak"
+}
+`;
+
+    const rawText = await callGeminiSafe(prompt, 0.1);
+    if (rawText) {
+      const parsed = extractJsonFromText(rawText) || JSON.parse(rawText);
+      if (parsed && parsed.categoryId) {
+        const found = categoriesList.find((c: any) => c.id === parsed.categoryId);
+        return res.json({
+          success: true,
+          data: {
+            categoryId: found ? found.id : parsed.categoryId,
+            categoryName: found ? found.name : (parsed.categoryName || parsed.categoryId),
+            confidence: Number(parsed.confidence) || 0.95,
+            reasoning: parsed.reasoning || `Dipetakan ke ${found?.name || parsed.categoryId} oleh Gemini AI.`,
+            suggestedBrand: parsed.suggestedBrand || '',
+            suggestedUnit: parsed.suggestedUnit || 'pcs',
+            source: 'gemini-ai',
+          },
+        });
+      }
+    }
+  } catch (err: any) {
+    console.warn('AI Category mapping error, using heuristic fallback:', err?.message);
+  }
+
+  // Heuristic rule-based fallback
+  const fallback = serverHeuristicMapCategory(name, categoriesList);
+  return res.json({
+    success: true,
+    data: {
+      ...fallback,
+      source: 'heuristic-engine',
+    },
+  });
+});
+
+// 7. Batch AI Category Mapping for Bulk Inventory
+app.post('/api/ai/batch-map-categories', async (req, res) => {
+  const { items, categories: userCategories } = req.body;
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ success: false, message: 'Daftar produk tidak boleh kosong' });
+  }
+
+  const categoriesList = Array.isArray(userCategories) && userCategories.length > 0
+    ? userCategories.filter((c: any) => c.id !== 'all')
+    : [];
+
+  const validItems = items.slice(0, 50); // limit to 50 items per batch for optimal latency
+
+  // Fast Gemini AI batch prompt
+  try {
+    const prompt = `Anda adalah sistem AI pemetaan kategori inventaris toko ritel Indonesia.
+Petakan setiap produk berikut ke dalam kategori yang paling tepat dari daftar kategori yang tersedia.
+
+Daftar Kategori:
+${categoriesList.map((c: any) => `- ID: "${c.id}" (${c.name})`).join('\n')}
+
+Daftar Produk:
+${validItems.map((p: any, i: number) => `${i + 1}. [ID: "${p.id}"] "${p.name}" (Kategori saat ini: "${p.currentCategoryId || '-'}")`).join('\n')}
+
+Kembalikan format JSON murni:
+{
+  "mappings": [
+    {
+      "id": "ID_produk",
+      "categoryId": "ID_kategori_terpilih",
+      "categoryName": "Nama_kategori",
+      "confidence": 0.95,
+      "reasoning": "Alasan singkat pemetaan"
+    }
+  ]
+}
+`;
+
+    const rawText = await callGeminiSafe(prompt, 0.1);
+    if (rawText) {
+      const parsed = extractJsonFromText(rawText) || JSON.parse(rawText);
+      if (parsed && Array.isArray(parsed.mappings)) {
+        return res.json({
+          success: true,
+          mappings: parsed.mappings,
+          source: 'gemini-ai',
+        });
+      }
+    }
+  } catch (err: any) {
+    console.warn('Batch AI mapping error, using fallback:', err?.message);
+  }
+
+  // Fallback heuristic for batch
+  const mappings = validItems.map((p: any) => {
+    const mapped = serverHeuristicMapCategory(p.name, categoriesList);
+    return {
+      id: p.id,
+      categoryId: mapped.categoryId,
+      categoryName: mapped.categoryName,
+      confidence: mapped.confidence,
+      reasoning: mapped.reasoning,
+      previousCategoryId: p.currentCategoryId,
+    };
+  });
+
+  return res.json({
+    success: true,
+    mappings,
+    source: 'heuristic-engine',
+  });
+});
+
 // ==========================================
 // 8. ONLINE PRODUCT & BARCODE LOOKUP (Google Search Grounding + Gemini AI)
 // ==========================================
@@ -3212,9 +3485,12 @@ function scanUnnecessaryFiles(rootDir: string): JunkFileInfo[] {
     { pattern: /^Thumbs\.db$/i, category: 'OS System Junk', reason: 'Cache thumbnail Windows Explorer' },
     { pattern: /^ehthumbs\.db$/i, category: 'OS System Junk', reason: 'Cache thumbnail media Windows' },
     { pattern: /^desktop\.ini$/i, category: 'OS System Junk', reason: 'Konfigurasi folder Windows Explorer' },
+    { pattern: /\.(log)$/i, category: 'Logs & Debug Files', reason: 'File catatan log sistem/server' },
     { pattern: /(npm-debug|yarn-error|yarn-debug|pnpm-debug)\.log.*/i, category: 'Logs & Debug Files', reason: 'Log error package manager' },
     { pattern: /\.(tmp|temp|swp|bak|old)$/i, category: 'Temporary & Backup Files', reason: 'File sementara / backup editor' },
     { pattern: /~$/i, category: 'Temporary & Backup Files', reason: 'File cadangan sementara teks editor' },
+    { pattern: /^tsconfig\.tsbuildinfo$/i, category: 'Build Cache & Temp Bundles', reason: 'Cache kompilasi incremental TypeScript' },
+    { pattern: /^\.eslintcache$/i, category: 'Build Cache & Temp Bundles', reason: 'Cache validasi ESLint' },
   ];
 
   function traverse(dir: string, depth = 0) {
@@ -3240,6 +3516,20 @@ function scanUnnecessaryFiles(rootDir: string): JunkFileInfo[] {
                   size: viteCacheStat.size || 4096,
                   category: 'Build Cache & Temp Bundles',
                   reason: 'Cache kompilasi pre-bundle Vite lokal',
+                });
+              } catch {}
+            }
+
+            const nmCachePath = path.join(fullPath, '.cache');
+            if (fs.existsSync(nmCachePath)) {
+              try {
+                const nmCacheStat = fs.statSync(nmCachePath);
+                junkList.push({
+                  path: nmCachePath,
+                  relativePath: path.join(relPath, '.cache'),
+                  size: nmCacheStat.size || 4096,
+                  category: 'Build Cache & Temp Bundles',
+                  reason: 'Cache kompilasi package dependensi',
                 });
               } catch {}
             }

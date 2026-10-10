@@ -63,6 +63,7 @@ import { PriceTagModal } from '../PriceTagModal';
 import { DataImportModal } from '../DataImportModal';
 import { DirectFileImportModal } from '../DirectFileImportModal';
 import { OnlineDatabaseMatcherModal } from '../OnlineDatabaseMatcherModal';
+import { AICategoryMapperModal } from '../AICategoryMapperModal';
 import { BulkStockAdjustmentModal } from '../BulkStockAdjustmentModal';
 import { StockTakeCSVModal } from '../StockTakeCSVModal';
 import { ProductPriceHistoryView } from '../ProductPriceHistoryView';
@@ -203,6 +204,7 @@ export const InventoryView: React.FC = () => {
 
   // Online Database & Barcode Matcher Modal State
   const [isOnlineMatcherOpen, setIsOnlineMatcherOpen] = useState(false);
+  const [isAiCategoryMapperOpen, setIsAiCategoryMapperOpen] = useState(false);
 
   // Master Supplier Modal State
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
@@ -1276,6 +1278,25 @@ export const InventoryView: React.FC = () => {
                   <div>
                     <div>Penyesuaian Stok Massal</div>
                     <div className="text-[10px] text-slate-400 font-normal">Ubah stok &amp; expired serentak</div>
+                  </div>
+                </button>
+                <button
+                  id="btn-ai-category-mapper"
+                  onClick={() => {
+                    setIsAuditDropdownOpen(false);
+                    setIsAiCategoryMapperOpen(true);
+                  }}
+                  className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-purple-500 shrink-0" />
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span>Pemetaan Kategori AI</span>
+                      <span className="px-1 py-0.2 text-[9px] font-bold rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+                        Sistematis
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-normal">Selaraskan kategori katalog via AI</div>
                   </div>
                 </button>
                 <button
@@ -3618,6 +3639,12 @@ export const InventoryView: React.FC = () => {
       <OnlineDatabaseMatcherModal
         isOpen={isOnlineMatcherOpen}
         onClose={() => setIsOnlineMatcherOpen(false)}
+      />
+
+      {/* AI Systematic Category Auto-Mapper */}
+      <AICategoryMapperModal
+        isOpen={isAiCategoryMapperOpen}
+        onClose={() => setIsAiCategoryMapperOpen(false)}
       />
 
       {/* Confirmation Modal: Hapus Semua Data Impor */}

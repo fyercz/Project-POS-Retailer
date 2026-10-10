@@ -130,6 +130,16 @@ function run(mode = 'production', asDesktop = false) {
   });
 }
 
+function clean() {
+  console.log('\n==========================================================');
+  console.log('   Point of Sales - System & Obsolete File Cleaner');
+  console.log('==========================================================');
+  const cleanerPath = path.join(__dirname, 'cleaner.mjs');
+  if (fs.existsSync(cleanerPath)) {
+    runStep('Membersihkan file usang & sampah sistem...', `node "${cleanerPath}"`);
+  }
+}
+
 switch (command) {
   case 'install':
   case 'setup':
@@ -137,6 +147,11 @@ switch (command) {
     break;
   case 'update':
     update();
+    break;
+  case 'clean':
+  case 'bersihkan':
+  case 'cleanup':
+    clean();
     break;
   case 'dev':
     run('development');

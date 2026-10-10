@@ -30,6 +30,7 @@ import {
   Rocket,
   GitBranch,
   FileCheck,
+  Trash2,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import {
@@ -500,6 +501,24 @@ export const Header: React.FC = () => {
                     {isDesktop && (
                       <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-bold">Aktif</span>
                     )}
+                  </button>
+
+                  {/* Pembersihan File Usang & Cache Sistem */}
+                  <button
+                    id="btn-tools-system-cleanup"
+                    onClick={() => {
+                      setIsToolsMenuOpen(false);
+                      handleOpenDesktopModal('cleanup');
+                    }}
+                    className="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Trash2 className="w-4 h-4 text-rose-500 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">Pembersihan File Usang &amp; Cache</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Hapus cache, log, dan file sampah sistem</div>
+                      </div>
+                    </div>
                   </button>
 
                   {/* Marketing Promo AI */}
