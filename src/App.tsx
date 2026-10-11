@@ -40,6 +40,7 @@ const POSMainApp: React.FC = () => {
     setIsPaymentModalOpen,
     activeReceipt,
     setActiveReceipt,
+    isReceiptFromNewPayment,
     isBackupRestoreOpen,
     setIsBackupRestoreOpen,
     isEmployeeManagementOpen,
@@ -174,6 +175,7 @@ const POSMainApp: React.FC = () => {
         <ReceiptModal
           transaction={activeReceipt}
           isOpen={Boolean(activeReceipt)}
+          isNewPayment={isReceiptFromNewPayment}
           onClose={() => setActiveReceipt(null)}
         />
       )}

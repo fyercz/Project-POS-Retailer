@@ -28,6 +28,7 @@ import {
   Percent,
   Receipt,
   Camera,
+  ScanBarcode,
   Video,
   Phone,
   Mail,
@@ -43,6 +44,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  EyeOff,
+  ArrowDownToLine,
 } from 'lucide-react';
 import {
   usePOSCatalog,
@@ -58,6 +61,7 @@ import { AIVisualStockOpnameModal } from '../AIVisualStockOpnameModal';
 import { ProductFormModal } from '../ProductFormModal';
 import { SupplierFormModal } from '../SupplierFormModal';
 import { SupplierPurchaseDetailModal } from '../SupplierPurchaseDetailModal';
+import { ReceivingBarcodeCameraModal } from '../ReceivingBarcodeCameraModal';
 import { parsePaymentTermsInfo } from '../../utils/paymentTermsHelper';
 import { PriceTagModal } from '../PriceTagModal';
 import { DataImportModal } from '../DataImportModal';
@@ -68,6 +72,7 @@ import { BulkStockAdjustmentModal } from '../BulkStockAdjustmentModal';
 import { StockTakeCSVModal } from '../StockTakeCSVModal';
 import { ProductPriceHistoryView } from '../ProductPriceHistoryView';
 import { ProductPriceHistoryModal } from '../ProductPriceHistoryModal';
+import { DynamicPricingModule } from '../DynamicPricingModule';
 import {
   InventoryAlertBanner,
   InventoryAlertFilterType,
@@ -80,11 +85,14 @@ import {
   toLocalYMD,
   formatPeriodLabel,
 } from '../../utils/dateFilters';
+import { playScannerSound } from '../../utils/scannerAudio';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface ReceivingItem {
   productId: string;
   quantity: number;
   costPrice: number;
+  subtotal?: number;
   expiryDate?: string;
 }
 
@@ -106,9 +114,11 @@ export const InventoryView: React.FC = () => {
     resetProductsToDefault,
     clearAllProducts,
     recordProductPriceChange,
+    updateProduct,
   } = usePOSCatalog();
 
   const {
+    transactions,
     purchaseReturns,
     processPurchaseReturn,
     supplierPurchases,
@@ -119,6 +129,7 @@ export const InventoryView: React.FC = () => {
 
   const {
     settings,
+    updateSettings,
     openGeminiCopilot,
     triggerRestockPlanAnalysis,
     pendingReceivingFromPO,
@@ -128,7 +139,7 @@ export const InventoryView: React.FC = () => {
     createRestorePoint,
   } = usePOSUI();
 
-  const [activeTab, setActiveTab] = useState<'inventory' | 'price_history' | 'suppliers' | 'purchases' | 'returns'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'price_history' | 'dynamic_pricing' | 'suppliers' | 'purchases' | 'returns'>('inventory');
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [productOriginFilter, setProductOriginFilter] = useState<'all' | 'imported' | 'default'>('all');
@@ -224,11 +235,22 @@ export const InventoryView: React.FC = () => {
   const [invoiceNumber, setInvoiceNumber] = useState(`INV-SUP-${Date.now().toString().slice(-6)}`);
   const [paymentTerms, setPaymentTerms] = useState(suppliers[0]?.paymentTerms || 'Tunai / Cash');
   const [purchaseNotes, setPurchaseNotes] = useState('');
+  const [discountTiming, setDiscountTiming] = useState<'before_ppn' | 'after_ppn'>('before_ppn');
   const [discountType, setDiscountType] = useState<'percentage' | 'nominal'>('percentage');
   const [discountRate, setDiscountRate] = useState<number>(0);
   const [ppnRate, setPpnRate] = useState<number>(11);
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [barcodeFeedback, setBarcodeFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isBarcodeCameraOpen, setIsBarcodeCameraOpen] = useState(false);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
   const [receivingItems, setReceivingItems] = useState<ReceivingItem[]>([
-    { productId: products[0]?.id || '', quantity: 24, costPrice: products[0]?.costPrice || 0, expiryDate: '2027-06-30' },
+    {
+      productId: products[0]?.id || '',
+      quantity: 24,
+      costPrice: products[0]?.costPrice || 0,
+      subtotal: 24 * (products[0]?.costPrice || 0),
+      expiryDate: '2027-06-30',
+    },
   ]);
 
   // Supplier Purchase Return Modal State
@@ -368,7 +390,7 @@ export const InventoryView: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     const query = deferredSearch.trim().toLowerCase();
-    return products.filter((p) => {
+    const base = products.filter((p) => {
       const matchQuery =
         !query ||
         p.name.toLowerCase().includes(query) ||
@@ -405,7 +427,32 @@ export const InventoryView: React.FC = () => {
 
       return true;
     });
-  }, [products, deferredSearch, categoryFilter, productOriginFilter, alertFilter]);
+
+    // Jika pengguna secara spesifik memilih filter 'out-of-stock', tampilkan semua produk habis
+    if (alertFilter === 'out-of-stock') {
+      return base;
+    }
+
+    const mode = settings.outOfStockDisplay ?? 'bottom';
+    if (mode === 'hide') {
+      return base.filter((p) => p.stock > 0);
+    }
+    if (mode === 'bottom') {
+      const inStock: typeof base = [];
+      const outOfStock: typeof base = [];
+      for (let i = 0; i < base.length; i++) {
+        const item = base[i];
+        if (item.stock > 0) {
+          inStock.push(item);
+        } else {
+          outOfStock.push(item);
+        }
+      }
+      return [...inStock, ...outOfStock];
+    }
+
+    return base;
+  }, [products, deferredSearch, categoryFilter, productOriginFilter, alertFilter, settings.outOfStockDisplay]);
 
   const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / productPageSize));
 
@@ -422,7 +469,7 @@ export const InventoryView: React.FC = () => {
         !query ||
         s.name.toLowerCase().includes(query) ||
         (s.contactPerson && s.contactPerson.toLowerCase().includes(query)) ||
-        s.phone.toLowerCase().includes(query) ||
+        (s.phone && s.phone.toLowerCase().includes(query)) ||
         (s.category && s.category.toLowerCase().includes(query)) ||
         (s.address && s.address.toLowerCase().includes(query));
       const matchCat =
@@ -720,11 +767,131 @@ export const InventoryView: React.FC = () => {
   // Goods Receiving Row Helpers
   const handleAddReceivingRow = () => {
     const firstProd = products[0];
+    const cost = firstProd?.costPrice || 0;
     setReceivingItems((prev) => [
       ...prev,
-      { productId: firstProd?.id || '', quantity: 12, costPrice: firstProd?.costPrice || 0, expiryDate: '2027-06-30' },
+      {
+        productId: firstProd?.id || '',
+        quantity: 12,
+        costPrice: cost,
+        subtotal: 12 * cost,
+        expiryDate: '2027-06-30',
+      },
     ]);
   };
+
+  const handleScanBarcode = (rawCode: string) => {
+    const code = rawCode.trim();
+    if (!code) return;
+
+    const clean = code.toLowerCase();
+    // 1. Match product barcode
+    let matched = products.find((p) => (p.barcode || '').toLowerCase() === clean);
+    // 2. Match SKU
+    if (!matched) {
+      matched = products.find((p) => (p.sku || '').toLowerCase() === clean);
+    }
+    // 3. Match Wholesale unit barcode
+    if (!matched) {
+      matched = products.find((p) =>
+        p.wholesaleUnits?.some((u) => (u.barcode || '').toLowerCase() === clean)
+      );
+    }
+    // 4. Exact product name match
+    if (!matched) {
+      matched = products.find((p) => p.name.toLowerCase() === clean);
+    }
+
+    if (matched) {
+      playScannerSound('success');
+      const cost = matched.costPrice || 0;
+      const newRow: ReceivingItem = {
+        productId: matched.id,
+        quantity: 1,
+        costPrice: cost,
+        subtotal: cost,
+        expiryDate: '2027-06-30',
+      };
+      setReceivingItems((prev) => [...prev, newRow]);
+      setBarcodeFeedback({
+        type: 'success',
+        message: `+1 Baris Barang: "${matched.name}" (Barcode/SKU: ${matched.barcode || matched.sku}) berhasil ditambahkan.`,
+      });
+      setBarcodeInput('');
+      setTimeout(() => {
+        barcodeInputRef.current?.focus();
+      }, 50);
+    } else {
+      playScannerSound('error');
+      setBarcodeFeedback({
+        type: 'error',
+        message: `Produk dengan Barcode/SKU "${code}" tidak ditemukan di master katalog toko.`,
+      });
+    }
+  };
+
+  // Auto-dismiss barcode scanner feedback after 4 seconds
+  useEffect(() => {
+    if (!barcodeFeedback) return;
+    const timer = setTimeout(() => setBarcodeFeedback(null), 4000);
+    return () => clearTimeout(timer);
+  }, [barcodeFeedback]);
+
+  // Hardware barcode scanner listener inside receiving modal
+  useEffect(() => {
+    if (!isReceivingOpen) return;
+
+    // Auto-focus barcode input when receiving modal opens
+    const focusTimer = setTimeout(() => {
+      barcodeInputRef.current?.focus();
+    }, 150);
+
+    let buffer = '';
+    let lastKeyTime = Date.now();
+
+    const handleHardwareBarcodeInput = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      // If user is already typing in an input, textarea, or select, let native event handle it
+      if (
+        activeEl &&
+        (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')
+      ) {
+        return;
+      }
+
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+      const currentTime = Date.now();
+      const diff = currentTime - lastKeyTime;
+      lastKeyTime = currentTime;
+
+      if (e.key === 'Enter') {
+        if (buffer.length >= 3 && diff < 120) {
+          e.preventDefault();
+          const scanned = buffer.trim();
+          buffer = '';
+          handleScanBarcode(scanned);
+        } else {
+          buffer = '';
+        }
+        return;
+      }
+
+      if (e.key.length === 1) {
+        if (diff > 120) {
+          buffer = e.key;
+        } else {
+          buffer += e.key;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleHardwareBarcodeInput);
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleHardwareBarcodeInput);
+    };
+  }, [isReceivingOpen, products]);
 
   const handleRemoveReceivingRow = (index: number) => {
     setReceivingItems((prev) => prev.filter((_, i) => i !== index));
@@ -743,11 +910,25 @@ export const InventoryView: React.FC = () => {
         const matched = products.find((p) => p.id === value);
         if (matched) {
           item.costPrice = matched.costPrice;
+          item.subtotal = item.quantity * matched.costPrice;
         }
       } else if (field === 'quantity') {
-        item.quantity = Number(value);
+        const valStr = String(value).trim();
+        const newQty = valStr === '' ? 0 : Math.max(0, Number(valStr));
+        item.quantity = newQty;
+        item.subtotal = Math.round(newQty * item.costPrice * 100) / 100;
       } else if (field === 'costPrice') {
-        item.costPrice = Number(value);
+        const valStr = String(value).trim();
+        const newCost = valStr === '' ? 0 : Math.max(0, Number(valStr));
+        item.costPrice = newCost;
+        item.subtotal = Math.round(item.quantity * newCost * 100) / 100;
+      } else if (field === 'subtotal') {
+        const valStr = String(value).trim();
+        const newSubtotal = valStr === '' ? 0 : Math.max(0, Number(valStr));
+        item.subtotal = newSubtotal;
+        if (item.quantity > 0) {
+          item.costPrice = Math.round((newSubtotal / item.quantity) * 100) / 100;
+        }
       } else if (field === 'expiryDate') {
         item.expiryDate = value as string;
       }
@@ -756,18 +937,37 @@ export const InventoryView: React.FC = () => {
     });
   };
 
-  // Calculate Receiving Totals with Discount and PPN
+  // Calculate Receiving Totals with Discount Timing (Before or After PPN) and Type (Percentage or Nominal Rupiah)
   const receivingSubtotal = receivingItems.reduce(
-    (sum, item) => sum + item.quantity * item.costPrice,
+    (sum, item) => sum + (item.subtotal !== undefined ? item.subtotal : item.quantity * item.costPrice),
     0
   );
-  const discountAmount =
-    discountType === 'percentage'
-      ? (receivingSubtotal * (discountRate || 0)) / 100
-      : Math.min(receivingSubtotal, discountRate || 0);
-  const dppAmount = Math.max(0, receivingSubtotal - discountAmount);
-  const ppnAmount = (dppAmount * (ppnRate || 0)) / 100;
-  const finalReceivingTotal = dppAmount + ppnAmount;
+
+  let discountAmount = 0;
+  let dppAmount = 0;
+  let ppnAmount = 0;
+  let finalReceivingTotal = 0;
+
+  if (discountTiming === 'before_ppn') {
+    // Diskon Sebelum PPN: Mengurangi Dasar Pengenaan Pajak (DPP)
+    discountAmount =
+      discountType === 'percentage'
+        ? (receivingSubtotal * (discountRate || 0)) / 100
+        : Math.min(receivingSubtotal, discountRate || 0);
+    dppAmount = Math.max(0, receivingSubtotal - discountAmount);
+    ppnAmount = (dppAmount * (ppnRate || 0)) / 100;
+    finalReceivingTotal = Math.max(0, dppAmount + ppnAmount);
+  } else {
+    // Diskon Sesudah PPN: PPN dihitung dari Subtotal Bruto penuh, Diskon memotong total faktur akhir
+    dppAmount = receivingSubtotal;
+    ppnAmount = (dppAmount * (ppnRate || 0)) / 100;
+    const grossTotalWithPpn = dppAmount + ppnAmount;
+    discountAmount =
+      discountType === 'percentage'
+        ? (grossTotalWithPpn * (discountRate || 0)) / 100
+        : Math.min(grossTotalWithPpn, discountRate || 0);
+    finalReceivingTotal = Math.max(0, grossTotalWithPpn - discountAmount);
+  }
 
   const handleSubmitReceiving = (e: React.FormEvent) => {
     e.preventDefault();
@@ -779,6 +979,7 @@ export const InventoryView: React.FC = () => {
       paymentTerms,
       notes: purchaseNotes.trim() || undefined,
       subtotal: receivingSubtotal,
+      discountTiming,
       discountType,
       discountRate,
       discountAmount,
@@ -788,13 +989,14 @@ export const InventoryView: React.FC = () => {
       totalAmount: finalReceivingTotal,
       items: receivingItems.map((item) => {
         const prod = products.find((p) => p.id === item.productId);
+        const itemSubtotal = item.subtotal !== undefined ? item.subtotal : item.quantity * item.costPrice;
         return {
           productId: item.productId,
           productName: prod ? prod.name : 'Unknown Product',
           sku: prod ? prod.sku : '-',
           quantity: item.quantity,
           costPrice: item.costPrice,
-          subtotal: item.quantity * item.costPrice,
+          subtotal: itemSubtotal,
           expiryDate: item.expiryDate,
         };
       }),
@@ -1109,6 +1311,21 @@ export const InventoryView: React.FC = () => {
               <span>Riwayat Harga</span>
             </button>
             <button
+              id="tab-btn-dynamic-pricing"
+              onClick={() => setActiveTab('dynamic_pricing')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                activeTab === 'dynamic_pricing'
+                  ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>Harga Dinamis AI</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-400/40">
+                PRO
+              </span>
+            </button>
+            <button
               id="tab-btn-purchases"
               onClick={() => setActiveTab('purchases')}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
@@ -1218,6 +1435,17 @@ export const InventoryView: React.FC = () => {
           >
             <Sparkles className="w-3.5 h-3.5 fill-current text-slate-950" />
             <span>AI Restock Plan</span>
+          </button>
+
+          {/* AI DYNAMIC PRICING BUTTON */}
+          <button
+            id="btn-open-dynamic-pricing"
+            onClick={() => setActiveTab('dynamic_pricing')}
+            className="flex px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-xs items-center gap-1.5 shadow-md shadow-indigo-500/20 cursor-pointer transition-all active:scale-95 border border-indigo-400/40"
+            title="AI Dynamic Pricing: Optimasi harga berdasarkan kompetitor & perputaran stok"
+          >
+            <Sparkles className="w-3.5 h-3.5 fill-current text-amber-300 animate-pulse" />
+            <span>Harga Dinamis AI</span>
           </button>
 
           {/* GROUP 1: Opname & Audit Stok (Dropdown) */}
@@ -1505,6 +1733,19 @@ export const InventoryView: React.FC = () => {
               <option value="default">Katalog Bawaan ({products.length - importedCount})</option>
             </select>
 
+            {/* Filter Posisi & Tampilan Barang Stok Kosong */}
+            <select
+              id="inventory-out-of-stock-filter-select"
+              value={settings.outOfStockDisplay ?? 'bottom'}
+              onChange={(e) => updateSettings({ outOfStockDisplay: e.target.value as any })}
+              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              title="Pengaturan urutan dan visibilitas barang stok kosong / habis"
+            >
+              <option value="bottom">Stok Habis: Di Urutan Bawah ⬇️</option>
+              <option value="hide">Stok Habis: Sembunyikan 👁️‍🗨️</option>
+              <option value="normal">Stok Habis: Urutan Normal 📋</option>
+            </select>
+
             <button
               type="button"
               onClick={() => setIsResetCatalogModalOpen(true)}
@@ -1583,6 +1824,12 @@ export const InventoryView: React.FC = () => {
                 <ShieldAlert className="w-3 h-3 text-rose-600" />
                 {outOfStockCount} Habis (0)
               </button>
+            )}
+            {(settings.outOfStockDisplay ?? 'bottom') === 'hide' && alertFilter !== 'out-of-stock' && outOfStockCount > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
+                <EyeOff className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                {outOfStockCount} Disembunyikan
+              </span>
             )}
             {lowStockCount > 0 && (
               <button
@@ -2175,6 +2422,50 @@ export const InventoryView: React.FC = () => {
               }}
             />
           </div>
+        ) : activeTab === 'dynamic_pricing' ? (
+          <div className="p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-950/50">
+            <DynamicPricingModule
+              products={products}
+              transactions={transactions}
+              categories={categories}
+              currency={settings.currency}
+              onApplyPriceUpdate={(productId, newPrice, historyRecord) => {
+                const prod = products.find((p) => p.id === productId);
+                recordProductPriceChange(
+                  productId,
+                  prod ? prod.costPrice : historyRecord.costPrice,
+                  newPrice,
+                  historyRecord
+                );
+                updateProduct(productId, { price: newPrice });
+                setNotificationMsg({
+                  type: 'success',
+                  text: 'Harga produk berhasil diperbarui via AI Dynamic Pricing.',
+                });
+                setTimeout(() => setNotificationMsg(null), 5000);
+              }}
+              onApplyBatchPriceUpdates={(updates) => {
+                updates.forEach((u) => {
+                  const prod = products.find((p) => p.id === u.productId);
+                  recordProductPriceChange(
+                    u.productId,
+                    prod ? prod.costPrice : u.historyRecord.costPrice,
+                    u.newPrice,
+                    u.historyRecord
+                  );
+                  updateProduct(u.productId, { price: u.newPrice });
+                });
+                setNotificationMsg({
+                  type: 'success',
+                  text: `${updates.length} penyesuaian harga produk berhasil diterapkan secara massal.`,
+                });
+                setTimeout(() => setNotificationMsg(null), 5000);
+              }}
+              onUpdateProductCompetitors={(productId, competitors) => {
+                updateProduct(productId, { competitorPrices: competitors });
+              }}
+            />
+          </div>
         ) : activeTab === 'suppliers' ? (
           /* Master Suppliers Directory Table */
           <div className="p-4 space-y-4">
@@ -2216,10 +2507,17 @@ export const InventoryView: React.FC = () => {
                             </div>
                           )}
 
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{sup.phone}</span>
-                          </div>
+                          {sup.phone ? (
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{sup.phone}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-slate-400 italic text-[11px]">
+                              <Phone className="w-3.5 h-3.5 opacity-50 shrink-0" />
+                              <span>Telepon tidak dicatat</span>
+                            </div>
+                          )}
 
                           {sup.email && (
                             <div className="flex items-center gap-2">
@@ -2914,7 +3212,11 @@ export const InventoryView: React.FC = () => {
               <p className="text-slate-500">
                 Kategori: {supplierToDelete.category || '-'} | PIC: {supplierToDelete.contactPerson || '-'}
               </p>
-              <p className="font-mono text-blue-600 dark:text-blue-400 font-semibold">{supplierToDelete.phone}</p>
+              {supplierToDelete.phone ? (
+                <p className="font-mono text-blue-600 dark:text-blue-400 font-semibold">{supplierToDelete.phone}</p>
+              ) : (
+                <p className="text-slate-400 italic text-xs">Tidak ada nomor telepon</p>
+              )}
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -3060,21 +3362,94 @@ export const InventoryView: React.FC = () => {
                   </span>
                 </div>
 
+                {/* Barcode Scanner Input Bar */}
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-2">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+                    <div className="flex-1 relative flex items-center">
+                      <div className="absolute left-3 text-slate-400 dark:text-slate-500 pointer-events-none">
+                        <ScanBarcode className="w-4 h-4 text-emerald-500" />
+                      </div>
+                      <input
+                        ref={barcodeInputRef}
+                        type="text"
+                        value={barcodeInput}
+                        onChange={(e) => setBarcodeInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleScanBarcode(barcodeInput);
+                          }
+                        }}
+                        placeholder="Scan barcode fisik produk / ketik SKU lalu tekan Enter..."
+                        className="w-full pl-9 pr-24 py-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                      />
+                      <div className="absolute right-1.5 flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleScanBarcode(barcodeInput)}
+                          className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer transition shadow-2xs active:scale-95"
+                        >
+                          + Tambah
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsBarcodeCameraOpen(true)}
+                        className="px-3 py-2 rounded-lg bg-teal-50 dark:bg-teal-950/60 border border-teal-300 dark:border-teal-700 text-teal-800 dark:text-teal-200 hover:bg-teal-100 dark:hover:bg-teal-900/60 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-2xs shrink-0"
+                        title="Scan barcode produk menggunakan kamera komputer / HP"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                        <span>Scan Kamera</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleAddReceivingRow}
+                        className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 dark:hover:bg-emerald-500 dark:hover:text-slate-950 text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1.5 cursor-pointer transition-colors text-xs border border-slate-200 dark:border-slate-700 shadow-2xs shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Tambah Manual</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Barcode Feedback Alert */}
+                  {barcodeFeedback && (
+                    <div
+                      className={`p-2 rounded-lg text-xs flex items-center justify-between font-medium animate-in fade-in ${
+                        barcodeFeedback.type === 'success'
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                          : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <ScanBarcode className="w-3.5 h-3.5 shrink-0" />
+                        <span>{barcodeFeedback.message}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setBarcodeFeedback(null)}
+                        className="p-0.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 {/* Items Table */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
                       <FileText className="w-4 h-4 text-emerald-500" />
-                      <span>Daftar Barang Yang Dibeli dari Supplier</span>
+                      <span>Daftar Barang Yang Dibeli dari Supplier ({receivingItems.length} Baris)</span>
                     </span>
-                    <button
-                      type="button"
-                      onClick={handleAddReceivingRow}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 dark:hover:bg-emerald-500 dark:hover:text-slate-950 text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1 cursor-pointer transition-colors text-xs"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Tambah Baris Barang</span>
-                    </button>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Subtotal dapat diedit langsung (HPP per pcs akan dihitung otomatis)
+                    </span>
                   </div>
 
                   <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
@@ -3085,25 +3460,25 @@ export const InventoryView: React.FC = () => {
                           <th className="py-2 px-3 text-center w-28">Jumlah (Qty)</th>
                           <th className="py-2 px-3 text-right w-32">Harga Beli / Pcs</th>
                           <th className="py-2 px-3 text-center w-36">Tgl Expired (FEFO)</th>
-                          <th className="py-2 px-3 text-right w-32">Subtotal</th>
+                          <th className="py-2 px-3 text-right w-36">Subtotal (Rp)</th>
                           <th className="py-2 px-2 w-10 text-center"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                         {receivingItems.map((item, idx) => {
-                          const subtotal = item.quantity * item.costPrice;
+                          const itemSubtotal = item.subtotal !== undefined ? item.subtotal : item.quantity * item.costPrice;
                           const calculatedMin = Math.max(1, Math.ceil((item.quantity || 0) * 0.5));
                           return (
-                            <tr key={idx} className="bg-white dark:bg-slate-900">
+                            <tr key={idx} className="bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
                               <td className="py-2 px-3">
                                 <select
                                   value={item.productId}
                                   onChange={(e) => handleReceivingItemChange(idx, 'productId', e.target.value)}
-                                  className="w-full p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs cursor-pointer"
+                                  className="w-full p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs cursor-pointer font-medium"
                                 >
                                   {products.map((p) => (
                                     <option key={p.id} value={p.id}>
-                                      {p.name} ({p.sku}) - Stok Toko: {p.stock}
+                                      {p.name} ({p.sku}) {p.barcode ? `• Barcode: ${p.barcode}` : ''} - Stok: {p.stock}
                                     </option>
                                   ))}
                                 </select>
@@ -3115,7 +3490,7 @@ export const InventoryView: React.FC = () => {
                                   required
                                   value={item.quantity || ''}
                                   onChange={(e) => handleReceivingItemChange(idx, 'quantity', Number(e.target.value))}
-                                  className="w-full p-1.5 text-center font-mono font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                                  className="w-full p-1.5 text-center font-mono font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
                                 />
                                 <span className="text-[9px] text-blue-600 dark:text-blue-400 font-mono block text-center mt-0.5" title="Batas minimal stok baru (50% dari order)">
                                   Min baru: {calculatedMin}
@@ -3126,9 +3501,9 @@ export const InventoryView: React.FC = () => {
                                   type="number"
                                   min={0}
                                   required
-                                  value={item.costPrice || ''}
-                                  onChange={(e) => handleReceivingItemChange(idx, 'costPrice', Number(e.target.value))}
-                                  className="w-full p-1.5 text-right font-mono font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                                  value={item.costPrice !== undefined ? (item.costPrice === 0 ? '' : item.costPrice) : ''}
+                                  onChange={(e) => handleReceivingItemChange(idx, 'costPrice', e.target.value)}
+                                  className="w-full p-1.5 text-right font-mono font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
                                 />
                               </td>
                               <td className="py-2 px-3">
@@ -3139,15 +3514,28 @@ export const InventoryView: React.FC = () => {
                                   className="w-full p-1.5 text-center text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 cursor-pointer"
                                 />
                               </td>
-                              <td className="py-2 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                                {formatCurrency(subtotal, settings.currency)}
+                              <td className="py-2 px-3">
+                                <div className="relative">
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    value={item.subtotal !== undefined ? (item.subtotal === 0 ? '' : item.subtotal) : (item.quantity * item.costPrice || '')}
+                                    onChange={(e) => handleReceivingItemChange(idx, 'subtotal', e.target.value)}
+                                    className="w-full p-1.5 text-right font-mono font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-emerald-50/50 dark:bg-emerald-950/20 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-900 text-xs"
+                                    placeholder="0"
+                                    title="Subtotal barang ini (dapat diedit langsung)"
+                                  />
+                                  <span className="text-[9px] text-slate-400 dark:text-slate-500 block text-right font-mono mt-0.5">
+                                    @ {formatCurrency(item.costPrice, settings.currency)}/pcs
+                                  </span>
+                                </div>
                               </td>
                               <td className="py-2 px-2 text-center">
                                 {receivingItems.length > 1 && (
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveReceivingRow(idx)}
-                                    className="text-rose-400 hover:text-rose-600 p-1 cursor-pointer"
+                                    className="text-rose-400 hover:text-rose-600 p-1 cursor-pointer transition-colors"
                                     title="Hapus baris"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -3168,36 +3556,85 @@ export const InventoryView: React.FC = () => {
                   <div className="space-y-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 text-xs">
                     <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       <Percent className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Potongan Diskon Faktur & Pajak PPN</span>
+                      <span>Pengaturan Potongan Diskon Faktur & Pajak PPN</span>
                     </span>
 
-                    {/* Diskon Dagang */}
+                    {/* Waktu Pemotongan Diskon: Sebelum vs Sesudah PPN */}
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Posisi Perhitungan Diskon Faktur:
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setDiscountTiming('before_ppn')}
+                          className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer ${
+                            discountTiming === 'before_ppn'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/70 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-2xs'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span className={`w-2 h-2 rounded-full ${discountTiming === 'before_ppn' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                            <span>Sebelum PPN (DPP)</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
+                            Diskon mengurangi DPP dulu, baru dihitung PPN {ppnRate}%.
+                          </p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setDiscountTiming('after_ppn')}
+                          className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer ${
+                            discountTiming === 'after_ppn'
+                              ? 'bg-blue-50 dark:bg-blue-950/70 border-blue-500 text-blue-900 dark:text-blue-200 font-bold shadow-2xs'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span className={`w-2 h-2 rounded-full ${discountTiming === 'after_ppn' ? 'bg-blue-500' : 'bg-slate-400'}`}></span>
+                            <span>Sesudah PPN (Total)</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
+                            PPN dihitung dari subtotal bruto, diskon memotong total akhir faktur.
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Diskon Dagang: Tipe & Nilai */}
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                          Tipe Diskon
+                          Bentuk Nilai Diskon
                         </label>
                         <select
                           value={discountType}
                           onChange={(e) => setDiscountType(e.target.value as 'percentage' | 'nominal')}
-                          className="w-full p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                          className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium cursor-pointer"
                         >
                           <option value="percentage">Persentase (%)</option>
-                          <option value="nominal">Nominal (Rp)</option>
+                          <option value="nominal">Angka Rupiah (Rp)</option>
                         </select>
                       </div>
                       <div>
                         <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                          Nilai Diskon
+                          {discountType === 'percentage' ? 'Besaran Diskon (%)' : 'Nilai Diskon (Rp)'}
                         </label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={discountRate || ''}
-                          onChange={(e) => setDiscountRate(Number(e.target.value))}
-                          placeholder={discountType === 'percentage' ? '5%' : '50000'}
-                          className="w-full p-1.5 font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
-                        />
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={0}
+                            value={discountRate || ''}
+                            onChange={(e) => setDiscountRate(Math.max(0, Number(e.target.value)))}
+                            placeholder={discountType === 'percentage' ? 'Contoh: 5' : 'Contoh: 50000'}
+                            className="w-full p-2 pr-8 font-mono font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                          />
+                          <span className="absolute right-2.5 top-2.5 text-xs font-bold text-slate-400">
+                            {discountType === 'percentage' ? '%' : 'Rp'}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -3209,11 +3646,11 @@ export const InventoryView: React.FC = () => {
                       <select
                         value={ppnRate}
                         onChange={(e) => setPpnRate(Number(e.target.value))}
-                        className="w-full p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                        className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white cursor-pointer font-medium"
                       >
-                        <option value={11}>PPN 11% (Standar Nasional)</option>
+                        <option value={11}>PPN 11% (Standar Nasional UU HPP)</option>
                         <option value={12}>PPN 12% (Kenaikan Tarif)</option>
-                        <option value={0}>Non-PPN / 0% (Bebas Pajak)</option>
+                        <option value={0}>Non-PPN / 0% (Bebas Pajak / Toko Non-PKP)</option>
                       </select>
                     </div>
                   </div>
@@ -3225,7 +3662,7 @@ export const InventoryView: React.FC = () => {
                         Catatan Khusus Pembelian
                       </label>
                       <textarea
-                        rows={4}
+                        rows={5}
                         placeholder="Contoh: Barang diterima kurir Indofood plat B 1234 CD, kemasan utuh bersegel..."
                         value={purchaseNotes}
                         onChange={(e) => setPurchaseNotes(e.target.value)}
@@ -3236,7 +3673,7 @@ export const InventoryView: React.FC = () => {
                 </div>
 
                 {/* Total Summary Footer Box */}
-                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/80 space-y-1.5">
+                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/80 space-y-2">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs border-b border-emerald-200 dark:border-emerald-900 pb-2">
                     <div>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Subtotal Kotor:</span>
@@ -3245,9 +3682,17 @@ export const InventoryView: React.FC = () => {
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Diskon Dagang:</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <span>Diskon Faktur:</span>
+                        <span className="text-[9px] px-1 py-0.2 rounded font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          {discountTiming === 'before_ppn' ? 'Sblm PPN' : 'Ssdh PPN'}
+                        </span>
+                      </span>
                       <span className="font-bold text-rose-600 dark:text-rose-400">
                         -{formatCurrency(discountAmount, settings.currency)}
+                        {discountType === 'percentage' && discountRate > 0 && (
+                          <span className="text-[10px] font-normal text-slate-500 ml-1">({discountRate}%)</span>
+                        )}
                       </span>
                     </div>
                     <div>
@@ -3270,7 +3715,7 @@ export const InventoryView: React.FC = () => {
                         Total Tagihan Faktur Pembelian (Bersih):
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                        {receivingItems.reduce((sum, item) => sum + item.quantity, 0)} total pcs barang akan ditambahkan ke inventaris toko
+                        {receivingItems.reduce((sum, item) => sum + item.quantity, 0)} total pcs barang ({receivingItems.length} baris barang)
                       </span>
                     </div>
                     <div className="text-xl font-black font-mono text-emerald-700 dark:text-emerald-300">
@@ -3300,6 +3745,17 @@ export const InventoryView: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Camera Barcode Scanner Modal for Goods Receiving */}
+      {isBarcodeCameraOpen && (
+        <ReceivingBarcodeCameraModal
+          isOpen={isBarcodeCameraOpen}
+          onClose={() => setIsBarcodeCameraOpen(false)}
+          onScan={(scannedCode) => {
+            handleScanBarcode(scannedCode);
+          }}
+        />
       )}
 
       {/* Supplier Purchase Return Modal */}

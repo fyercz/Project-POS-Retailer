@@ -39,6 +39,60 @@ export interface PriceHistoryRecord {
   recordedBy?: string;
 }
 
+export interface CompetitorPrice {
+  competitorName: string; // e.g. 'Indomaret', 'Alfamart', 'Superindo', 'Toko Grosir Magetan', 'Pasar Tradisional'
+  price: number;
+  lastUpdated?: string;
+  notes?: string;
+}
+
+export type TurnoverSpeed = 'fast' | 'moderate' | 'slow' | 'dead_stock';
+
+export type DynamicPricingStrategy =
+  | 'balanced' // Seimbang Otomatis (Rekomendasi AI)
+  | 'maximize_profit' // Maksimalkan Laba
+  | 'accelerate_turnover' // Percepat Perputaran Stok
+  | 'competitive_match'; // Selaraskan dengan Pasar
+
+export interface DynamicPricingSuggestion {
+  productId: string;
+  productName: string;
+  categoryName: string;
+  brand?: string;
+  currentPrice: number;
+  costPrice: number;
+  currentMarginPercent: number;
+  stock: number;
+  
+  // Turnover metrics
+  unitsSold30d: number;
+  dailyVelocity: number;
+  daysOfInventory: number; // DSI
+  turnoverSpeed: TurnoverSpeed;
+  
+  // Competitor metrics
+  competitors: CompetitorPrice[];
+  competitorAvgPrice: number;
+  competitorMinPrice: number;
+  competitorMaxPrice: number;
+  priceVsMarketPercent: number; // Positive = we are higher, negative = we are cheaper
+  
+  // Suggested Price
+  suggestedPrice: number;
+  suggestedMarginPercent: number;
+  priceDelta: number; // suggested - current
+  priceDeltaPercent: number;
+  
+  // Action recommendation & Reasoning
+  actionType: 'increase' | 'decrease' | 'maintain';
+  strategyTag: 'Peluang Margin' | 'Percepat Stok' | 'Penyelarasan Pasar' | 'Cuci Gudang' | 'Harga Optimal';
+  aiReasoning: string;
+  projectedProfitImpact: number; // Estimasi kenaikan laba bulanan (Rp)
+  projectedTurnoverImpactDays: number; // Estimasi perubahan DSI (hari)
+  confidenceScore: number; // 0 - 100
+  isApproved?: boolean;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -61,6 +115,7 @@ export interface Product {
   isPopular?: boolean;
   promoBadge?: string;
   description?: string;
+  competitorPrices?: CompetitorPrice[];
   priceHistory?: PriceHistoryRecord[];
   options?: {
     name: string;
@@ -268,7 +323,7 @@ export interface Supplier {
   id: string;
   name: string;
   contactPerson?: string;
-  phone: string;
+  phone?: string; // Opsional: nomor telepon / WhatsApp kontak distributor
   email?: string;
   address?: string;
   category?: string; // e.g. 'Distributor Makanan & Minuman', 'Sembako', 'Personal Care'
@@ -287,6 +342,7 @@ export interface SupplierPurchase {
   items: SupplierPurchaseItem[];
   subtotal?: number;
   grossAmount?: number;
+  discountTiming?: 'before_ppn' | 'after_ppn'; // 'before_ppn': Diskon sebelum PPN (mengurangi DPP), 'after_ppn': Diskon sesudah PPN (potongan total faktur)
   discountType?: 'nominal' | 'percentage';
   discountRate?: number;
   discountAmount?: number;
@@ -312,6 +368,8 @@ export interface StoreSettings {
   currency: CurrencyType;
   enableThermal58mm: boolean;
   showLogoOnReceipt?: boolean; // Tampilkan logo ULIL Mart di header struk kasir
+  autoPrintReceipt?: boolean; // Otomatis picu dialog cetak struk thermal kasir segera setelah pembayaran sukses
+  outOfStockDisplay?: 'bottom' | 'hide' | 'normal'; // 'bottom': Taruh barang stok kosong di paling bawah, 'hide': Sembunyikan barang stok kosong, 'normal': Urutan normal
   googleMapsUrl?: string; // Tautan Google Maps lokasi toko fisik
   operatingHours?: string; // Jam operasional toko (misal: '06.00 – 21.00 WIB')
   pointsRatio: number; // 1 point per 10,000 IDR belanja

@@ -20,6 +20,7 @@ export interface PrinterConfig {
   baudRate: number;
   autoCut: boolean;
   kickCashDrawer: boolean;
+  autoPrintReceipt?: boolean;
   printerName?: string;
 }
 
@@ -29,6 +30,7 @@ export const DEFAULT_PRINTER_CONFIG: PrinterConfig = {
   baudRate: 9600,
   autoCut: true,
   kickCashDrawer: true,
+  autoPrintReceipt: true,
   printerName: 'Default System Thermal',
 };
 

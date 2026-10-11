@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   X,
   Printer,
@@ -38,10 +38,16 @@ interface ReceiptModalProps {
   transaction: Transaction | null;
   isOpen: boolean;
   onClose: () => void;
+  isNewPayment?: boolean;
 }
 
-export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen, onClose }) => {
-  const { settings, setActiveReceipt } = usePOS();
+export const ReceiptModal: React.FC<ReceiptModalProps> = ({
+  transaction,
+  isOpen,
+  onClose,
+  isNewPayment,
+}) => {
+  const { settings, updateSettings, setActiveReceipt, isReceiptFromNewPayment } = usePOS();
   const [paperSize, setPaperSize] = useState<ThermalPaperWidth>('58mm');
   const [copied, setCopied] = useState(false);
   const [whatsappSent, setWhatsappSent] = useState(false);
@@ -50,6 +56,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
 
   const [hardwareSupport, setHardwareSupport] = useState({ hasSerial: false, hasBluetooth: false });
   const [printMode, setPrintMode] = useState<'serial' | 'bluetooth' | 'browser'>('browser');
+  const autoPrintedTxIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const support = checkPrinterHardwareSupport();
@@ -63,9 +70,46 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
     }
   }, []);
 
-  if (!isOpen || !transaction) return null;
+  const handleDirectRawPrint = useCallback(
+    async (mode: 'serial' | 'bluetooth') => {
+      if (!transaction) return;
+      setDirectPrinting(true);
+      setPrinterFeedback(null);
 
-  const handlePrint = () => {
+      try {
+        const printerConfig = getSavedPrinterConfig();
+        const bytes = buildTransactionReceiptEscPos(
+          transaction,
+          settings,
+          paperSize,
+          printerConfig.autoCut,
+          printerConfig.kickCashDrawer
+        );
+
+        let res;
+        if (mode === 'serial') {
+          res = await printViaWebSerial(bytes, 9600);
+        } else {
+          res = await printViaWebBluetooth(bytes);
+        }
+
+        if (res.success) {
+          setPrinterFeedback({ type: 'success', message: res.message });
+        } else {
+          setPrinterFeedback({ type: 'error', message: res.message });
+        }
+      } catch (err: any) {
+        setPrinterFeedback({ type: 'error', message: err?.message || 'Gagal cetak thermal langsung.' });
+      } finally {
+        setDirectPrinting(false);
+        setTimeout(() => setPrinterFeedback(null), 5000);
+      }
+    },
+    [transaction, settings, paperSize]
+  );
+
+  const handlePrint = useCallback(() => {
+    if (!transaction) return;
     if (printMode === 'serial' || printMode === 'bluetooth') {
       handleDirectRawPrint(printMode);
       return;
@@ -77,41 +121,30 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
     } else {
       window.print();
     }
-  };
+  }, [printMode, transaction, paperSize, handleDirectRawPrint]);
 
-  const handleDirectRawPrint = async (mode: 'serial' | 'bluetooth') => {
-    setDirectPrinting(true);
-    setPrinterFeedback(null);
+  // Automatically trigger the thermal receipt print dialog immediately after a successful payment transaction completes
+  useEffect(() => {
+    if (!isOpen || !transaction) return;
 
-    try {
-      const printerConfig = getSavedPrinterConfig();
-      const bytes = buildTransactionReceiptEscPos(
-        transaction,
-        settings,
-        paperSize,
-        printerConfig.autoCut,
-        printerConfig.kickCashDrawer
-      );
+    const isNewTx = isNewPayment ?? isReceiptFromNewPayment;
+    const isAutoPrintConfigured = settings.autoPrintReceipt !== false;
 
-      let res;
-      if (mode === 'serial') {
-        res = await printViaWebSerial(bytes, 9600);
-      } else {
-        res = await printViaWebBluetooth(bytes);
-      }
+    if (isNewTx && isAutoPrintConfigured && autoPrintedTxIdRef.current !== transaction.id) {
+      autoPrintedTxIdRef.current = transaction.id;
 
-      if (res.success) {
-        setPrinterFeedback({ type: 'success', message: res.message });
-      } else {
-        setPrinterFeedback({ type: 'error', message: res.message });
-      }
-    } catch (err: any) {
-      setPrinterFeedback({ type: 'error', message: err?.message || 'Gagal cetak thermal langsung.' });
-    } finally {
-      setDirectPrinting(false);
-      setTimeout(() => setPrinterFeedback(null), 5000);
+      // Wait 250ms for thermal receipt DOM element and font styling to fully render in the DOM
+      const autoPrintTimer = setTimeout(() => {
+        setPrinterFeedback({
+          type: 'success',
+          message: 'Memicu dialog cetak struk thermal kasir secara otomatis...',
+        });
+        handlePrint();
+      }, 250);
+
+      return () => clearTimeout(autoPrintTimer);
     }
-  };
+  }, [isOpen, transaction, isNewPayment, isReceiptFromNewPayment, settings.autoPrintReceipt, handlePrint]);
 
   const handleKickDrawer = async () => {
     setDirectPrinting(true);
@@ -157,6 +190,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
     setActiveReceipt(null);
     onClose();
   };
+
+  if (!isOpen || !transaction) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
@@ -260,6 +295,30 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
               80mm
             </button>
           </div>
+
+          {/* User-configurable auto-print toggle */}
+          <label
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[11px] font-medium cursor-pointer transition select-none ${
+              settings.autoPrintReceipt !== false
+                ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+            title="Otomatis picu dialog cetak thermal saat transaksi pembayaran selesai"
+          >
+            <input
+              type="checkbox"
+              id="toolbar-auto-print-receipt-toggle"
+              checked={settings.autoPrintReceipt !== false}
+              onChange={(e) => {
+                const val = e.target.checked;
+                updateSettings({ autoPrintReceipt: val });
+                savePrinterConfig({ ...getSavedPrinterConfig(), autoPrintReceipt: val });
+              }}
+              className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+            />
+            <Zap className="w-3 h-3 text-amber-500" />
+            <span>Auto-Cetak</span>
+          </label>
         </div>
 
         {/* Feedback Alert Banner */}
@@ -515,6 +574,30 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, isOpen,
             >
               <ExternalLink className="w-4 h-4" />
             </button>
+
+            {/* Quick Auto-Print Checkbox */}
+            <label
+              className={`px-2.5 py-2 rounded-xl text-xs border flex items-center gap-1.5 cursor-pointer select-none transition-colors ${
+                settings.autoPrintReceipt !== false
+                  ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-850'
+              }`}
+              title="Picu dialog cetak thermal secara otomatis setelah transaksi pembayaran sukses"
+            >
+              <input
+                type="checkbox"
+                id="footer-auto-print-receipt-toggle"
+                checked={settings.autoPrintReceipt !== false}
+                onChange={(e) => {
+                  const val = e.target.checked;
+                  updateSettings({ autoPrintReceipt: val });
+                  savePrinterConfig({ ...getSavedPrinterConfig(), autoPrintReceipt: val });
+                }}
+                className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              />
+              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden md:inline font-semibold">Auto-Cetak</span>
+            </label>
 
             <button
               onClick={handleSendWhatsApp}

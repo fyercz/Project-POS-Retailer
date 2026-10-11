@@ -275,7 +275,20 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
 
                 {purchase.discountAmount && purchase.discountAmount > 0 ? (
                   <div className="flex justify-between text-rose-600 dark:text-rose-400">
-                    <span>Diskon Supplier ({purchase.discountRate || 0}%):</span>
+                    <span className="flex items-center gap-1.5">
+                      <span>
+                        Diskon Supplier (
+                        {purchase.discountType === 'percentage'
+                          ? `${purchase.discountRate || 0}%`
+                          : formatCurrency(purchase.discountAmount, settings.currency)}
+                        ):
+                      </span>
+                      {purchase.discountTiming && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+                          {purchase.discountTiming === 'before_ppn' ? 'Sebelum PPN' : 'Sesudah PPN'}
+                        </span>
+                      )}
+                    </span>
                     <span className="font-mono font-semibold">
                       -{formatCurrency(purchase.discountAmount, settings.currency)}
                     </span>

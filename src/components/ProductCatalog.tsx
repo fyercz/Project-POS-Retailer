@@ -11,6 +11,9 @@ import {
   Package,
   AlertTriangle,
   Flame,
+  ArrowDownToLine,
+  EyeOff,
+  Eye,
   X,
   ChevronDown,
   Database,
@@ -63,6 +66,7 @@ export const ProductCatalog: React.FC = () => {
   const {
     setActiveView,
     settings,
+    updateSettings,
     setIsBarcodeScannerOpen,
     setIsBackupRestoreOpen,
     openUnregisteredBarcodePrompt,
@@ -158,14 +162,54 @@ export const ProductCatalog: React.FC = () => {
     return products.filter((p) => p.stock <= p.minStock).length;
   }, [products]);
 
+  // Count of out-of-stock products in the catalog
+  const outOfStockCount = useMemo(() => {
+    return products.filter((p) => p.stock <= 0).length;
+  }, [products]);
+
+  const outOfStockMode = settings.outOfStockDisplay ?? 'bottom';
+
+  const cycleOutOfStockMode = () => {
+    const nextMode: 'bottom' | 'hide' | 'normal' =
+      outOfStockMode === 'bottom' ? 'hide' : outOfStockMode === 'hide' ? 'normal' : 'bottom';
+    updateSettings({ outOfStockDisplay: nextMode });
+  };
+
   // Scored typo-tolerant fuzzy search results
   const scoredProducts: ScoredProduct[] = useMemo(() => {
     return searchProductsFuzzy(products, searchQuery, selectedCategory, filterLowStock);
   }, [products, selectedCategory, searchQuery, filterLowStock]);
 
   const filteredProducts = useMemo(() => {
-    return scoredProducts.map((sp) => sp.product);
-  }, [scoredProducts]);
+    const list = scoredProducts.map((sp) => sp.product);
+
+    if (outOfStockMode === 'hide') {
+      return list.filter((p) => p.stock > 0);
+    }
+
+    if (outOfStockMode === 'bottom') {
+      // Stable partition: In-stock items stay in top relevance order, out-of-stock items move to bottom
+      const inStock: typeof list = [];
+      const outOfStock: typeof list = [];
+      for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (item.stock > 0) {
+          inStock.push(item);
+        } else {
+          outOfStock.push(item);
+        }
+      }
+      return [...inStock, ...outOfStock];
+    }
+
+    return list;
+  }, [scoredProducts, outOfStockMode]);
+
+  // Count how many out-of-stock products are hidden in the current view
+  const hiddenOutOfStockCount = useMemo(() => {
+    if (outOfStockMode !== 'hide') return 0;
+    return scoredProducts.filter((sp) => sp.product.stock <= 0).length;
+  }, [scoredProducts, outOfStockMode]);
 
   const hasFuzzyMatch = useMemo(() => {
     return Boolean(searchQuery.trim()) && scoredProducts.some((sp) => sp.matchType === 'fuzzy');
@@ -301,6 +345,53 @@ export const ProductCatalog: React.FC = () => {
               {lowStockCount}
             </span>
           </button>
+
+          {/* Quick-chip: Pengaturan Tampilan Stok Kosong/Habis (Di Bawah / Sembunyi / Normal) */}
+          <button
+            type="button"
+            id="quick-chip-out-of-stock-toggle"
+            onClick={cycleOutOfStockMode}
+            className={`group px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shrink-0 min-h-[36px] active:scale-95 select-none ${
+              outOfStockMode === 'bottom'
+                ? 'bg-slate-800 text-slate-100 hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-100 border border-slate-700 shadow-2xs'
+                : outOfStockMode === 'hide'
+                ? 'bg-purple-600 text-white hover:bg-purple-700 border border-purple-600 shadow-sm shadow-purple-600/20'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800'
+            }`}
+            title={
+              outOfStockMode === 'bottom'
+                ? 'Mode: Stok Habis Diletakkan di Paling Bawah (Klik untuk ganti ke Sembunyikan)'
+                : outOfStockMode === 'hide'
+                ? 'Mode: Stok Habis Disembunyikan (Klik untuk ganti ke Tampilkan Normal)'
+                : 'Mode: Tampilkan Sesuai Urutan Asli (Klik untuk ganti ke Stok Habis di Bawah)'
+            }
+          >
+            {outOfStockMode === 'bottom' ? (
+              <ArrowDownToLine className="w-3.5 h-3.5 text-amber-400 shrink-0 transition-transform group-hover:translate-y-0.5" />
+            ) : outOfStockMode === 'hide' ? (
+              <EyeOff className="w-3.5 h-3.5 text-white shrink-0" />
+            ) : (
+              <Eye className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            )}
+            <span className="tracking-tight">
+              {outOfStockMode === 'bottom'
+                ? 'Stok 0: Di Bawah'
+                : outOfStockMode === 'hide'
+                ? 'Stok 0: Sembunyi'
+                : 'Stok 0: Normal'}
+            </span>
+            <span
+              className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold leading-none shrink-0 ${
+                outOfStockMode === 'bottom'
+                  ? 'bg-slate-700 text-amber-300'
+                  : outOfStockMode === 'hide'
+                  ? 'bg-purple-800/80 text-purple-100'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+              }`}
+            >
+              {outOfStockCount}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -396,6 +487,34 @@ export const ProductCatalog: React.FC = () => {
 
       {/* Product Grid Area */}
       <div className="flex-1 p-3 overflow-y-auto bg-slate-100/60 dark:bg-slate-950">
+        {/* Banner pemberitahuan jika ada barang stok kosong yang disembunyikan */}
+        {hiddenOutOfStockCount > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 mb-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-xs text-purple-900 dark:text-purple-200 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <EyeOff className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+              <span>
+                <strong>{hiddenOutOfStockCount} produk stok kosong (0)</strong> saat ini disembunyikan dari layar kasir.
+              </span>
+            </div>
+            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+              <button
+                type="button"
+                onClick={() => updateSettings({ outOfStockDisplay: 'bottom' })}
+                className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700 font-bold text-[11px] text-purple-700 dark:text-purple-300 hover:bg-purple-100/60 cursor-pointer shadow-2xs transition"
+              >
+                Pindahkan ke Bawah ⬇️
+              </button>
+              <button
+                type="button"
+                onClick={() => updateSettings({ outOfStockDisplay: 'normal' })}
+                className="text-[11px] text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+              >
+                Tampilkan Semua
+              </button>
+            </div>
+          </div>
+        )}
+
         {filteredProducts.length > 0 ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">

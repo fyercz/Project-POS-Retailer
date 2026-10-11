@@ -582,6 +582,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
               />
             </div>
+
+            {/* User-configurable setting to automatically trigger thermal receipt print dialog */}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+              <label className="flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-850 transition">
+                <input
+                  type="checkbox"
+                  id="settings-auto-print-receipt"
+                  checked={formData.autoPrintReceipt !== false}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setFormData({ ...formData, autoPrintReceipt: checked });
+                    setPrinterConfig({ ...printerConfig, autoPrintReceipt: checked });
+                  }}
+                  className="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
+                      Otomatis Cetak Struk Thermal Setelah Pembayaran Sukses
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      Auto-Print Dialog
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    Memicu jendela dialog cetak struk thermal kasir secara otomatis begitu transaksi pembayaran berhasil diproses, sehingga kasir tidak perlu menekan tombol cetak manual secara berulang.
+                  </p>
+                </div>
+              </label>
+            </div>
           </div>
 
           {/* Hardware Direct Thermal Printer & Cash Drawer (ESC/POS) */}
@@ -647,7 +677,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
               <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                 <input
                   type="checkbox"
@@ -669,6 +699,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 />
                 <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Auto-Cut Kertas Struk Selesai Cetak
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <input
+                  type="checkbox"
+                  checked={printerConfig.autoPrintReceipt !== false}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setPrinterConfig({ ...printerConfig, autoPrintReceipt: checked });
+                    setFormData({ ...formData, autoPrintReceipt: checked });
+                  }}
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                />
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Auto-Print Struk saat Transaksi Selesai
                 </span>
               </label>
             </div>
@@ -775,6 +821,65 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   ✓ {syncMessage}
                 </span>
               )}
+            </div>
+
+            {/* Pengaturan Tampilan Barang Stok Kosong / Habis (0 Pcs) */}
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+              <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1.5 text-xs">
+                Tampilan Barang Stok Kosong / Habis (0 Pcs) di Katalog &amp; Inventaris
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, outOfStockDisplay: 'bottom' })}
+                  className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer ${
+                    (formData.outOfStockDisplay ?? 'bottom') === 'bottom'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/70 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-2xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <span>⬇️ Di Paling Bawah</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
+                    Barang stok 0 otomatis digeser ke urutan paling bawah setelah produk yang tersedia.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, outOfStockDisplay: 'hide' })}
+                  className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer ${
+                    formData.outOfStockDisplay === 'hide'
+                      ? 'bg-purple-50 dark:bg-purple-950/70 border-purple-500 text-purple-900 dark:text-purple-200 font-bold shadow-2xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <span>👁️‍🗨️ Sembunyikan</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
+                    Barang stok 0 disembunyikan sepenuhnya dari katalog kasir agar hanya menampilkan barang siap jual.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, outOfStockDisplay: 'normal' })}
+                  className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer ${
+                    formData.outOfStockDisplay === 'normal'
+                      ? 'bg-slate-100 dark:bg-slate-800 border-slate-500 text-slate-900 dark:text-white font-bold shadow-2xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <span>📋 Urutan Normal</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
+                    Barang ditampilkan apa adanya sesuai urutan asli kategori tanpa pemisahan stok.
+                  </p>
+                </button>
+              </div>
             </div>
           </div>
 

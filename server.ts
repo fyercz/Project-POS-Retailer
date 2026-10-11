@@ -1503,6 +1503,97 @@ Kembalikan format JSON murni dengan format array objek:
   }
 });
 
+// AI Dynamic Pricing & Margin Optimizer (Competitor Analysis & Inventory Turnover)
+app.post('/api/ai/dynamic-pricing', async (req, res) => {
+  const {
+    products = [],
+    turnoverMetrics = [],
+    strategy = 'balanced',
+    targetCategory = 'all',
+  } = req.body;
+
+  try {
+    const turnoverMap = new Map((turnoverMetrics || []).map((t: any) => [t.productId, t]));
+
+    // Prepare rich compact dataset for Gemini
+    const itemData = products.slice(0, 30).map((p: any) => {
+      const tm: any = turnoverMap.get(p.id) || {};
+      const competitors = p.competitors || [];
+      const compSummary = competitors.map((c: any) => `${c.competitorName}: Rp ${c.price}`).join(', ');
+      return {
+        id: p.id,
+        name: p.name,
+        category: p.categoryName || p.categoryId,
+        currentPrice: p.price,
+        costPrice: p.costPrice,
+        stock: p.stock,
+        expiryDate: p.expiryDate || 'N/A',
+        turnoverSpeed: tm.turnoverSpeed || 'moderate',
+        daysOfInventory: tm.daysOfInventory || 30,
+        unitsSold30d: tm.unitsSold30d || 0,
+        competitors: compSummary || 'N/A',
+      };
+    });
+
+    const strategyDescriptions: Record<string, string> = {
+      balanced: 'Seimbang: Naikkan margin barang laris yang lebih murah dari kompetitor; pangkas harga barang lambat/mati di atas kompetitor untuk cairkan modal.',
+      maximize_profit: 'Maksimalkan Laba: Dongkrak harga mendekati batas atas kompetitor untuk barang perputaran cepat & inelastis.',
+      accelerate_turnover: 'Percepat Perputaran Stok: Pangkas harga sedikit di bawah kompetitor untuk melikuidasi stok lambat dan mendongkrak cash flow.',
+      competitive_match: 'Penyelarasan Kompetitif: Samakan harga secara presisi dengan rata-rata ritel modern sekitar (Indomaret/Alfamart).',
+    };
+
+    const prompt = `Anda adalah Direktur Pricing & Merchandising Retail FMCG Senior di Indonesia.
+Analisis data produk ritel modern berikut yang mencakup:
+1. Harga Jual & HPP (Cost Price)
+2. Kecepatan Perputaran Stok (Inventory Turnover Rate / DSI - Days Sales of Inventory)
+3. Harga Kompetitor Lokal (Indomaret, Alfamart, Pasar Tradisional, Toko Grosir)
+
+Strategi Terpilih: "${strategy}" (${strategyDescriptions[strategy] || strategyDescriptions.balanced}).
+
+Daftar Produk Toko:
+${JSON.stringify(itemData, null, 2)}
+
+Prinsip Retail Wajib:
+- Jangan pernah menetapkan harga di bawah HPP (Cost Price) kecuali stok darurat kadaluarsa (<35 hari).
+- Bulatkan harga akhir ke angka psikologis Rupiah yang praktis bagi kasir dan pembeli (misal kelipatan Rp 100, Rp 500, atau Rp 1.000; misal Rp 3.500, Rp 14.500, Rp 125.000).
+- Jika barang FAST-MOVING dan harga toko lebih murah dari Indomaret/Alfamart: naikkan harga sedikit (Peluang Margin).
+- Jika barang SLOW-MOVING / DEAD STOCK dan harga lebih mahal dari kompetitor: turunkan harga (Percepat Stok).
+- Berikan alasan strategis dalam Bahasa Indonesia yang tajam dan profesional yang menyebutkan data DSI, selisih kompetitor, dan dampak margin.
+
+Kembalikan format JSON murni array objek:
+[
+  {
+    "productId": "id_produk",
+    "suggestedPrice": 3500,
+    "strategyTag": "Peluang Margin" | "Percepat Stok" | "Penyelarasan Pasar" | "Cuci Gudang" | "Harga Optimal",
+    "aiReasoning": "Penjelasan komprehensif Bahasa Indonesia alasan penyesuaian harga berdasarkan selisih kompetitor dan kecepatan perputaran stok",
+    "confidenceScore": 92
+  }
+]`;
+
+    const rawText = await callGeminiSafe(prompt, 0.2);
+    if (!rawText) {
+      return res.json({ suggestions: [], isAiGenerated: false, note: 'Menggunakan Mesin Pricing Aturan Baku' });
+    }
+
+    let parsed: any[] = [];
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      parsed = [];
+    }
+
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return res.json({ suggestions: parsed, isAiGenerated: true, modelUsed: 'gemini-3.8-flash' });
+    }
+
+    res.json({ suggestions: [], isAiGenerated: false });
+  } catch (err: any) {
+    console.error('Error in /api/ai/dynamic-pricing:', err);
+    res.json({ suggestions: [], isAiGenerated: false });
+  }
+});
+
 // 2. AI Retail Restock & Inventory Demand Forecasting (Purchase Order Plan)
 app.post('/api/ai/inventory-forecast', async (req, res) => {
   const {

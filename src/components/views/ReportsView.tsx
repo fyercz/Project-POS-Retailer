@@ -61,9 +61,13 @@ import {
   exportJournalToCSV,
   computeIncomeStatement,
 } from '../../utils/accountingLedger';
+import { ProjectedSalesWidget } from '../ProjectedSalesWidget';
+import { DynamicPricingModule } from '../DynamicPricingModule';
+import { usePOSCatalog } from '../../context/POSContext';
 
 export const ReportsView: React.FC = () => {
-  const { transactions, salesReturns, setActiveReceipt } = usePOSTransactions();
+  const { products, categories, recordProductPriceChange, updateProduct } = usePOSCatalog();
+  const { transactions, salesReturns, setActiveReceipt, loadSampleTransactions } = usePOSTransactions();
   const {
     settings,
     openGeminiCopilot,
@@ -77,8 +81,8 @@ export const ReportsView: React.FC = () => {
     chartOfAccounts,
   } = usePOSUI();
 
-  // Tab State: payments, performance, accounting (Neraca & Laba Rugi), journal (Jurnal Umum)
-  const [activeTab, setActiveTab] = useState<'payments' | 'performance' | 'accounting' | 'journal'>('payments');
+  // Tab State: performance (Omzet & Proyeksi), payments, forecast (Proyeksi 7 Hari), pricing (Harga Dinamis AI), accounting (Neraca & Laba Rugi), journal (Jurnal Umum)
+  const [activeTab, setActiveTab] = useState<'performance' | 'payments' | 'forecast' | 'pricing' | 'accounting' | 'journal'>('performance');
   const [accountingSubTab, setAccountingSubTab] = useState<'balance_sheet' | 'income_statement'>('balance_sheet');
   const [journalSourceFilter, setJournalSourceFilter] = useState<string>('all');
   const [journalSearch, setJournalSearch] = useState<string>('');
@@ -463,7 +467,7 @@ export const ReportsView: React.FC = () => {
             </>
           )}
 
-          {activeTab === 'performance' && (
+          {(activeTab === 'performance' || activeTab === 'forecast') && (
             <button
               onClick={() => openPrintWith('summary')}
               className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
@@ -505,8 +509,21 @@ export const ReportsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Primary Sub-Tab Switcher (4 Tabs) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-1.5 shadow-2xs gap-1.5">
+      {/* Primary Sub-Tab Switcher (6 Tabs) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-1.5 shadow-2xs gap-1.5">
+        <button
+          type="button"
+          onClick={() => setActiveTab('performance')}
+          className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            activeTab === 'performance'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4 shrink-0" />
+          <span className="truncate">Omzet &amp; Produk</span>
+        </button>
+
         <button
           type="button"
           onClick={() => setActiveTab('payments')}
@@ -531,15 +548,34 @@ export const ReportsView: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => setActiveTab('performance')}
+          onClick={() => setActiveTab('forecast')}
           className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-            activeTab === 'performance'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            activeTab === 'forecast'
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-700'
           }`}
         >
-          <BarChart3 className="w-4 h-4 shrink-0" />
-          <span className="truncate">Omzet &amp; Produk</span>
+          <TrendingUp className="w-4 h-4 shrink-0 text-indigo-500" />
+          <span className="truncate">Proyeksi 7 Hari</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 shrink-0">
+            AI Forecast
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('pricing')}
+          className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            activeTab === 'pricing'
+              ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-700'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />
+          <span className="truncate">Harga Dinamis</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 shrink-0">
+            AI PRO
+          </span>
         </button>
 
         <button
@@ -616,6 +652,36 @@ export const ReportsView: React.FC = () => {
               </div>
             }
           />
+
+          {/* Quick Projected Sales Insight Banner */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-white to-blue-50/60 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-900/60 flex items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-xl bg-indigo-600 text-white shrink-0 shadow-xs">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-slate-900 dark:text-slate-100">
+                    Proyeksi Penjualan 7 Hari Mendatang (AI Forecasting)
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300">
+                    Next 7 Days
+                  </span>
+                </div>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] truncate">
+                  Visualisasi tren omzet, estimasi struk, dan pola hari ramai (Day-of-Week) berbasis data transaksi historis.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('forecast')}
+              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1 shrink-0 cursor-pointer transition shadow-2xs active:scale-95"
+            >
+              <span>Buka Proyeksi</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
           {/* 4 Summary Cards: Cash, QRIS EDC BRI, Card EDC, and GRAND TOTAL EDC SETTLEMENT */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -998,6 +1064,43 @@ export const ReportsView: React.FC = () => {
             </div>
           </div>
 
+          {/* Projected Sales Dashboard Widget (Next 7 Days) */}
+          <ProjectedSalesWidget
+            transactions={transactions}
+            currency={settings.currency}
+            onLoadSampleData={loadSampleTransactions}
+          />
+
+          {/* Quick AI Dynamic Pricing Banner */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-white to-blue-50/60 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                    AI Dynamic Pricing &amp; Margin Optimizer
+                  </h4>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                    Gemini AI
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Rekomendasi penyesuaian harga jual retail otomatis berbasis riset kompetitor (Indomaret, Alfamart) dan perputaran stok (DSI).
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('pricing')}
+              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer self-start sm:self-auto shrink-0"
+            >
+              <span>Buka Modul Harga Dinamis</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           {/* Grid: Payment Method Breakdown & Top Sellers */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Top 6 Products Leaderboard */}
@@ -1080,6 +1183,58 @@ export const ReportsView: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* TAB: PROYEKSI PENJUALAN 7 HARI (AI SALES FORECASTING)          */}
+      {/* ============================================================== */}
+      {activeTab === 'forecast' && (
+        <div className="space-y-4">
+          <ProjectedSalesWidget
+            transactions={transactions}
+            currency={settings.currency}
+            onLoadSampleData={loadSampleTransactions}
+          />
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* TAB: AI DYNAMIC PRICING & MARGIN OPTIMIZER                     */}
+      {/* ============================================================== */}
+      {activeTab === 'pricing' && (
+        <div className="space-y-4">
+          <DynamicPricingModule
+            products={products}
+            transactions={transactions}
+            categories={categories}
+            currency={settings.currency}
+            onApplyPriceUpdate={(productId, newPrice, historyRecord) => {
+              const prod = products.find((p) => p.id === productId);
+              recordProductPriceChange(
+                productId,
+                prod ? prod.costPrice : historyRecord.costPrice,
+                newPrice,
+                historyRecord
+              );
+              updateProduct(productId, { price: newPrice });
+            }}
+            onApplyBatchPriceUpdates={(updates) => {
+              updates.forEach((u) => {
+                const prod = products.find((p) => p.id === u.productId);
+                recordProductPriceChange(
+                  u.productId,
+                  prod ? prod.costPrice : u.historyRecord.costPrice,
+                  u.newPrice,
+                  u.historyRecord
+                );
+                updateProduct(u.productId, { price: u.newPrice });
+              });
+            }}
+            onUpdateProductCompetitors={(productId, competitors) => {
+              updateProduct(productId, { competitorPrices: competitors });
+            }}
+          />
         </div>
       )}
 

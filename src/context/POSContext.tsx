@@ -47,6 +47,7 @@ import {
   INITIAL_EXPENSES,
 } from '../data/mockData';
 import { generateInvoiceNumber } from '../utils/formatters';
+import { generate14DaysSampleTransactions } from '../utils/salesForecaster';
 import { offlineSyncManager } from '../utils/offlineSyncManager';
 import {
   getLANConfig,
@@ -165,7 +166,9 @@ export interface POSTransactionsContextType {
   processPayment: (payment: PaymentDetails) => Transaction;
   transactions: Transaction[];
   activeReceipt: Transaction | null;
-  setActiveReceipt: (tx: Transaction | null) => void;
+  setActiveReceipt: (tx: Transaction | null, isNewPayment?: boolean) => void;
+  isReceiptFromNewPayment: boolean;
+  setIsReceiptFromNewPayment: (isNew: boolean) => void;
   voidTransaction: (txId: string) => void;
   salesReturns: SalesReturn[];
   processSalesReturn: (returnData: Omit<SalesReturn, 'id' | 'createdAt'>) => SalesReturn;
@@ -184,6 +187,7 @@ export interface POSTransactionsContextType {
   vouchers: Voucher[];
   addVoucher: (v: Voucher) => void;
   clearAllTransactions: () => void;
+  loadSampleTransactions: (sampleTx?: Transaction[]) => void;
 }
 
 export interface POSAuthShiftContextType {
@@ -691,7 +695,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Modal States
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [activeReceipt, setActiveReceipt] = useState<Transaction | null>(null);
+  const [activeReceipt, setActiveReceiptState] = useState<Transaction | null>(null);
+  const [isReceiptFromNewPayment, setIsReceiptFromNewPayment] = useState<boolean>(false);
+
+  const setActiveReceipt = useCallback((tx: Transaction | null, isNewPayment: boolean = false) => {
+    setActiveReceiptState(tx);
+    setIsReceiptFromNewPayment(Boolean(tx && isNewPayment));
+  }, []);
 
   // Gemini AI Copilot States
   const [isGeminiCopilotOpen, setIsGeminiCopilotOpen] = useState(false);
@@ -1994,7 +2004,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     // 5. Open receipt & reset cart
-    setActiveReceipt(newTx);
+    setActiveReceipt(newTx, true);
     clearCart();
     setTableNumber('');
     setSelectedCustomer(null);
@@ -2346,6 +2356,15 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem('pos_active_cart');
     localStorage.removeItem('pos_held_orders');
     posStorage.setItem('pos_retail_tx_v3', []).catch(console.warn);
+  };
+
+  const loadSampleTransactions = (customSample?: Transaction[]) => {
+    const list = customSample || generate14DaysSampleTransactions();
+    setTransactions((prev) => {
+      const existingIds = new Set(prev.map((t) => t.id));
+      const newItems = list.filter((t) => !existingIds.has(t.id));
+      return [...newItems, ...prev];
+    });
   };
 
   const resetToRetailDefaults = () => {
@@ -3031,6 +3050,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       transactions,
       activeReceipt,
       setActiveReceipt,
+      isReceiptFromNewPayment,
+      setIsReceiptFromNewPayment,
       voidTransaction,
       salesReturns,
       processSalesReturn,
@@ -3049,11 +3070,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       vouchers,
       addVoucher,
       clearAllTransactions,
+      loadSampleTransactions,
     }),
     [
       isPaymentModalOpen,
       transactions,
       activeReceipt,
+      isReceiptFromNewPayment,
+      setActiveReceipt,
       salesReturns,
       purchaseReturns,
       supplierPurchases,
