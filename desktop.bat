@@ -27,12 +27,24 @@ if %ERRORLEVEL% neq 0 (
         set "PATH=%ProgramFiles(x86)%\nodejs;%APPDATA%\npm;%PATH%"
     ) else if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" (
         set "PATH=%LOCALAPPDATA%\Programs\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%USERPROFILE%\AppData\Local\Programs\nodejs\node.exe" (
+        set "PATH=%USERPROFILE%\AppData\Local\Programs\nodejs;%APPDATA%\npm;%PATH%"
     ) else if exist "%ProgramW6432%\nodejs\node.exe" (
         set "PATH=%ProgramW6432%\nodejs;%APPDATA%\npm;%PATH%"
     ) else if exist "C:\nvm\nodejs\node.exe" (
         set "PATH=C:\nvm\nodejs;%PATH%"
     ) else if exist "%NVM_SYMLINK%\node.exe" (
         set "PATH=%NVM_SYMLINK%;%PATH%"
+    ) else if exist "%USERPROFILE%\AppData\Roaming\nvm\current\node.exe" (
+        set "PATH=%USERPROFILE%\AppData\Roaming\nvm\current;%PATH%"
+    ) else if exist "C:\ProgramData\chocolatey\bin\node.exe" (
+        set "PATH=C:\ProgramData\chocolatey\bin;%PATH%"
+    ) else if exist "C:\nodejs\node.exe" (
+        set "PATH=C:\nodejs;%PATH%"
+    ) else if exist "D:\nodejs\node.exe" (
+        set "PATH=D:\nodejs;%PATH%"
+    ) else if exist "D:\Program Files\nodejs\node.exe" (
+        set "PATH=D:\Program Files\nodejs;%PATH%"
     )
 )
 
@@ -45,12 +57,10 @@ if %ERRORLEVEL% neq 0 (
     echo  Aplikasi POS membutuhkan runtime Node.js LTS untuk berjalan.
     echo.
     echo  Jika Node.js SUDAH diinstal:
-    echo  - Kemungkinan lokasi instalasi belum masuk ke PATH sistem Windows.
     echo  - Jalankan script "perbaiki-path-nodejs.bat" untuk memperbaiki PATH otomatis.
     echo.
     echo  Jika Node.js BELUM diinstal:
     echo  - Buka https://nodejs.org/ dan unduh versi LTS.
-    echo  - Pastikan centang opsi "Add to PATH" saat instalasi.
     echo ==============================================================================
     echo.
     pause
@@ -66,7 +76,7 @@ echo.
 
 REM Pasang shortcut desktop jika belum ada
 if exist "%~dp0ulilmart.ico" (
-    powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [System.Environment]::GetFolderPath('Desktop'); $deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; if (-not (Test-Path $deskLnk)) { $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0desktop.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir'; $s1.Save(); };" >nul 2>&1
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [System.Environment]::GetFolderPath('Desktop'); $deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; if (-not (Test-Path $deskLnk)) { $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0desktop.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir'; $s1.Save(); };" >nul 2>&1
 )
 
 REM 1. Cek dan siapkan file .env jika belum ada
@@ -80,7 +90,7 @@ if not exist .env (
 )
 
 REM 2. Cek apakah node_modules dan dist sudah ada
-if not exist node_modules (
+if not exist "node_modules\express" (
     echo [INFO] Menginstal dependensi pertama kali (npm install)...
     call npm install
     if %ERRORLEVEL% neq 0 (
@@ -90,7 +100,7 @@ if not exist node_modules (
     )
 )
 
-if not exist dist (
+if not exist "dist\server.cjs" (
     echo [INFO] Mengompilasi aplikasi kasir (npm run build)...
     call npm run build
     if %ERRORLEVEL% neq 0 (
@@ -100,35 +110,44 @@ if not exist dist (
     )
 )
 
-echo [INFO] Menyalakan Server Kasir Lokal (Port 3000)...
-start /b "" npm start
-
-echo [INFO] Menunggu server siap...
-timeout /t 2 /nobreak >nul
+REM Periksa apakah port 3000 sudah aktif
+set "PORT_IN_USE=0"
+netstat -ano | findstr /R /C:":3000 .*LISTENING" >nul 2>nul
+if %ERRORLEVEL% equ 0 set "PORT_IN_USE=1"
 
 set "TARGET_URL=http://localhost:3000"
 
-REM Buka jendela aplikasi via Edge App Mode atau Chrome App Mode
-where msedge >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    echo [INFO] Meluncurkan aplikasi via Microsoft Edge App Mode...
-    start "" msedge --app=%TARGET_URL%
-    goto SELESAI
+if "%PORT_IN_USE%"=="1" (
+    echo [INFO] Server kasir port 3000 sudah aktif di komputer ini.
+    echo [INFO] Membuka jendela kasir desktop...
+    where msedge >nul 2>nul
+    if %ERRORLEVEL% equ 0 (
+        start "" msedge --app=%TARGET_URL%
+    ) else (
+        start "" %TARGET_URL%
+    )
+    echo Tekan tombol apa saja untuk menutup...
+    pause >nul
+    exit /b 0
 )
 
-where chrome >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    echo [INFO] Meluncurkan aplikasi via Google Chrome App Mode...
-    start "" chrome --app=%TARGET_URL%
-    goto SELESAI
+echo [INFO] Menyalakan Server Kasir Lokal (Port 3000)...
+
+REM Buka jendela browser / Edge app setelah 2 detik
+start /b cmd /c "timeout /t 2 /nobreak >nul & (where msedge >nul 2>nul && start msedge --app=%TARGET_URL% || (where chrome >nul 2>nul && start chrome --app=%TARGET_URL% || start %TARGET_URL%))"
+
+REM Jalankan server di jendela ini
+if exist "dist\server.cjs" (
+    node dist\server.cjs
+) else (
+    call npm start
 )
 
-echo [INFO] Meluncurkan di browser default...
-start "" %TARGET_URL%
-
-:SELESAI
+set "SERVER_EXIT_CODE=%ERRORLEVEL%"
 echo.
 echo ==============================================================================
-echo  [OK] Aplikasi Desktop Berjalan! Jangan tutup jendela ini saat kasir aktif.
+echo  [INFO] Sesi aplikasi kasir telah berakhir.
 echo ==============================================================================
-exit /b 0
+echo Tekan tombol apa saja untuk menutup jendela ini...
+pause >nul
+exit /b %SERVER_EXIT_CODE%

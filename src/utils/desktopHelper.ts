@@ -397,10 +397,27 @@ echo.
 
 set "TARGET_URL=http://localhost:3000"
 
-start /b cmd /c "timeout /t 2 /nobreak >nul & (where msedge >nul 2>nul && start msedge --app=%TARGET_URL% || (where chrome >nul 2>nul && start chrome --app=%TARGET_URL% || start %TARGET_URL%))"
+REM Jalankan server produksi
+if exist "dist\\server.cjs" (
+    node dist\\server.cjs
+) else (
+    call npm start
+)
 
-call npm start
-exit /b 0
+set "SERVER_EXIT_CODE=%ERRORLEVEL%"
+echo.
+echo ==========================================================
+if %SERVER_EXIT_CODE% neq 0 (
+    echo  [PERINGATAN] Server kasir berhenti dengan kode status: %SERVER_EXIT_CODE%
+    echo  Jika port 3000 sedang terkunci, tutup jendela lain atau buka: http://localhost:3000
+) else (
+    echo  [INFO] Server kasir telah dinonaktifkan secara normal.
+)
+echo ==========================================================
+echo.
+echo Tekan tombol apa saja untuk menutup jendela ini...
+pause >nul
+exit /b %SERVER_EXIT_CODE%
 
 :SETUP_STARTUP
 cls

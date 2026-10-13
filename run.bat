@@ -26,12 +26,22 @@ if %ERRORLEVEL% neq 0 (
         set "PATH=%ProgramFiles(x86)%\nodejs;%APPDATA%\npm;%PATH%"
     ) else if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" (
         set "PATH=%LOCALAPPDATA%\Programs\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%USERPROFILE%\AppData\Local\Programs\nodejs\node.exe" (
+        set "PATH=%USERPROFILE%\AppData\Local\Programs\nodejs;%APPDATA%\npm;%PATH%"
     ) else if exist "%ProgramW6432%\nodejs\node.exe" (
         set "PATH=%ProgramW6432%\nodejs;%APPDATA%\npm;%PATH%"
     ) else if exist "C:\nvm\nodejs\node.exe" (
         set "PATH=C:\nvm\nodejs;%PATH%"
     ) else if exist "%NVM_SYMLINK%\node.exe" (
         set "PATH=%NVM_SYMLINK%;%PATH%"
+    ) else if exist "%USERPROFILE%\AppData\Roaming\nvm\current\node.exe" (
+        set "PATH=%USERPROFILE%\AppData\Roaming\nvm\current;%PATH%"
+    ) else if exist "C:\ProgramData\chocolatey\bin\node.exe" (
+        set "PATH=C:\ProgramData\chocolatey\bin;%PATH%"
+    ) else if exist "C:\nodejs\node.exe" (
+        set "PATH=C:\nodejs;%PATH%"
+    ) else if exist "D:\nodejs\node.exe" (
+        set "PATH=D:\nodejs;%PATH%"
     )
 )
 
@@ -43,13 +53,7 @@ if %ERRORLEVEL% neq 0 (
     echo ==============================================================================
     echo  Aplikasi POS membutuhkan runtime Node.js LTS untuk berjalan.
     echo.
-    echo  Jika Node.js SUDAH diinstal:
-    echo  - Kemungkinan lokasi instalasi belum masuk ke PATH sistem Windows.
-    echo  - Jalankan script "perbaiki-path-nodejs.bat" untuk memperbaiki PATH otomatis.
-    echo.
-    echo  Jika Node.js BELUM diinstal:
-    echo  - Buka https://nodejs.org/ dan unduh versi LTS.
-    echo  - Pastikan centang opsi "Add to PATH" saat instalasi.
+    echo  Jalankan "perbaiki-path-nodejs.bat" untuk memperbaiki PATH otomatis.
     echo ==============================================================================
     echo.
     pause
@@ -74,7 +78,7 @@ if not exist .env (
 )
 
 REM 2. Cek apakah node_modules dan dist sudah ada
-if not exist node_modules (
+if not exist "node_modules\express" (
     echo [INFO] Menginstal dependensi pertama kali (npm install)...
     call npm install
     if %ERRORLEVEL% neq 0 (
@@ -84,7 +88,7 @@ if not exist node_modules (
     )
 )
 
-if not exist dist (
+if not exist "dist\server.cjs" (
     echo [INFO] Mengompilasi aplikasi kasir (npm run build)...
     call npm run build
     if %ERRORLEVEL% neq 0 (
@@ -92,6 +96,17 @@ if not exist dist (
         pause
         exit /b 1
     )
+)
+
+REM Periksa apakah port 3000 sudah aktif
+netstat -ano | findstr /R /C:":3000 .*LISTENING" >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    echo [INFO] Server kasir port 3000 sudah aktif di komputer ini.
+    echo [INFO] Membuka jendela browser kasir...
+    start "" http://localhost:3000
+    echo Tekan tombol apa saja untuk menutup...
+    pause >nul
+    exit /b 0
 )
 
 echo.
@@ -102,4 +117,17 @@ echo ===========================================================================
 echo.
 
 start "" http://localhost:3000
-npm start
+
+if exist "dist\server.cjs" (
+    node dist\server.cjs
+) else (
+    call npm start
+)
+
+set "SERVER_EXIT_CODE=%ERRORLEVEL%"
+echo.
+echo ==============================================================================
+echo  [INFO] Server kasir telah dinonaktifkan.
+echo ==============================================================================
+pause
+exit /b %SERVER_EXIT_CODE%
