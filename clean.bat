@@ -1,18 +1,17 @@
 @echo off
 REM ==============================================================================
-REM Ulilmart POS - Script Pembersihan File Usang & Sampah Sistem (Windows)
+REM Ulilmart POS - Script Pembersihan File Usang dan Sampah Sistem (Windows)
 REM Membersihkan cache build sementara, file log debugging, file temporary (*.tmp),
 REM serta file sampah OS (.DS_Store, Thumbs.db, desktop.ini).
 REM Aman, tidak menghapus database kasir maupun file kode sumber.
 REM ==============================================================================
-chcp 65001 >nul 2>&1
-title Ulilmart POS - Pembersihan File Usang & Sampah
+title Ulilmart POS - Pembersihan File Usang dan Sampah
 color 0E
 
 cd /d "%~dp0"
 
 REM ==============================================================================
-REM Auto-Deteksi & Injeksi PATH: Node.js, npm, dan Windows System32
+REM Auto-Deteksi dan Injeksi PATH: Node.js, npm, dan Windows System32
 REM ==============================================================================
 if exist "%SystemRoot%\System32" (
     set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\;%PATH%"
@@ -55,65 +54,55 @@ if "%1"=="--all" goto FAST_DIST
 
 cls
 echo ==============================================================================
-echo     ┌──────┐
-echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
-echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
-echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
-echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
-echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
-echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
-echo     ┌───────────────────────────────┬───────────────────────────────┐
-echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
-echo     └───────────────────────────────┴───────────────────────────────┘
-echo                   S M A R T   R E T A I L   P O S
-echo            [ PEMBERSIHAN FILE USANG & CACHE SISTEM ]
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ PEMBERSIHAN FILE USANG DAN CACHE SISTEM ]
 echo ==============================================================================
 echo.
 echo  Pembersihan ini akan menghapus:
 echo  1. Cache build Vite lokal (node_modules\.vite, .cache)
 echo  2. File log debugging (*.log, npm-debug.log)
-echo  3. File temporary & backup (*.tmp, *.temp, *.bak, *.swp)
+echo  3. File temporary dan backup (*.tmp, *.temp, *.bak, *.swp)
 echo  4. File sampah OS Windows / Mac (Thumbs.db, desktop.ini, .DS_Store)
 echo.
 echo  [JAMINAN KEAMANAN]:
-echo  - Database kasir (pos-master.sqlite ^& IndexedDB) 100%% AMAN dan TIDAK DIHAPUS.
+echo  - Database kasir (pos-master.sqlite dan IndexedDB) 100%% AMAN dan TIDAK DIHAPUS.
 echo  - Seluruh file kode sumber aplikasi tetap utuh.
 echo ==============================================================================
 echo.
 
-REM Pilihan mode
 echo Pilihan mode pembersihan:
-echo [1] Pembersihan Standar Aman (Rekomendasi - Log, Temp, Cache ^& OS Junk)
-echo [2] Pembersihan Penuh (Standar + Hapus folder build dist/ untuk kompilasi ulang)
+echo [1] Pembersihan Standar Aman (Rekomendasi - Log, Temp, Cache, OS Junk)
+echo [2] Pembersihan Penuh (Standar + Hapus folder build dist untuk build ulang)
 echo [3] Simulasi Pindai Saja (Dry-Run / Tanpa Menghapus)
 echo [4] Batal
 echo.
 set /p PILIHAN="Masukkan pilihan Anda (1/2/3/4) [Default: 1]: "
 
-if "%PILIHAN%"=="" set PILIHAN=1
-if "%PILIHAN%"=="4" (
-    echo.
-    echo Pembersihan dibatalkan.
-    pause
-    exit /b 0
-)
+if "%PILIHAN%"=="" set "PILIHAN=1"
+if "%PILIHAN%"=="4" goto BATAL
+if "%PILIHAN%"=="3" goto FAST_DRY
+if "%PILIHAN%"=="2" goto FAST_DIST
 
 echo.
-if "%PILIHAN%"=="2" goto FAST_DIST
-if "%PILIHAN%"=="3" goto FAST_DRY
-
 echo [EKSEKUSI] Menjalankan Pembersihan Standar...
 node scripts/cleaner.mjs
 goto SELESAI
 
 :FAST_DIST
+echo.
 echo [EKSEKUSI] Menjalankan Pembersihan Penuh (termasuk dist)...
 node scripts/cleaner.mjs --dist
 goto SELESAI
 
 :FAST_DRY
-echo [SIMULASI] Memindai file usang...
+echo.
+echo [SIMULASI] Memindai file usang (Dry-Run)...
 node scripts/cleaner.mjs --dry-run
+goto SELESAI
+
+:BATAL
+echo.
+echo Pembersihan dibatalkan.
 goto SELESAI
 
 :SELESAI

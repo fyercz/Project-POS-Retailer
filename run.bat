@@ -2,14 +2,13 @@
 REM ==============================================================================
 REM Ulilmart POS - Application Runner (Windows)
 REM ==============================================================================
-chcp 65001 >nul 2>&1
 title Ulilmart POS - Cashier Terminal
 color 0A
 
 cd /d "%~dp0"
 
 REM ==============================================================================
-REM Auto-Deteksi & Injeksi PATH: Node.js, npm, dan Windows System32
+REM Auto-Deteksi dan Injeksi PATH: Node.js, npm, dan Windows System32
 REM ==============================================================================
 if exist "%SystemRoot%\System32" (
     set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\;%PATH%"
@@ -46,7 +45,7 @@ if %ERRORLEVEL% neq 0 (
     echo.
     echo  Jika Node.js SUDAH diinstal:
     echo  - Kemungkinan lokasi instalasi belum masuk ke PATH sistem Windows.
-    echo  - Jalankan script "install.bat" untuk memeriksa dan memasang ulang.
+    echo  - Jalankan script "perbaiki-path-nodejs.bat" untuk memperbaiki PATH otomatis.
     echo.
     echo  Jika Node.js BELUM diinstal:
     echo  - Buka https://nodejs.org/ dan unduh versi LTS.
@@ -59,56 +58,48 @@ if %ERRORLEVEL% neq 0 (
 
 cls
 echo ==============================================================================
-echo     ┌──────┐
-echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
-echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
-echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
-echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
-echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
-echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
-echo     ┌───────────────────────────────┬───────────────────────────────┐
-echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
-echo     └───────────────────────────────┴───────────────────────────────┘
-echo                   S M A R T   R E T A I L   P O S
-echo              Lengkap - Hemat - Transaksi Kasir Cepat
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ CASHIER TERMINAL RUNNER ]
 echo ==============================================================================
 echo.
 
-REM Pastikan shortcut berlogo resmi Ulilmart (ulilmart.ico) terpasang di Desktop & Folder
-if exist "%~dp0ulilmart.ico" (
-    powershell -NoProfile -Command ^
-        "$ws = New-Object -ComObject WScript.Shell; " ^
-        "$desk = [System.Environment]::GetFolderPath('Desktop'); " ^
-        "$deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; " ^
-        "if (-not (Test-Path $deskLnk)) { " ^
-        "  $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0run.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir (Lengkap & Hemat)'; $s1.Save(); " ^
-        "}; " ^
-        "$localLnk = '%~dp0Ulilmart POS Kasir.lnk'; " ^
-        "if (-not (Test-Path $localLnk)) { " ^
-        "  $s2 = $ws.CreateShortcut($localLnk); $s2.TargetPath = '%~dp0run.bat'; $s2.WorkingDirectory = '%~dp0'; $s2.IconLocation = '%~dp0ulilmart.ico,0'; $s2.Description = 'Ulilmart POS Kasir (Lengkap & Hemat)'; $s2.Save(); " ^
-        "};" >nul 2>&1
+REM 1. Cek dan siapkan file .env jika belum ada
+if not exist .env (
+    echo [INFO] Menyiapkan file konfigurasi .env...
+    if exist .env.example (
+        copy .env.example .env >nul
+    ) else (
+        echo GEMINI_API_KEY=> .env
+    )
 )
 
-REM 1. Check if node_modules exists
+REM 2. Cek apakah node_modules dan dist sudah ada
 if not exist node_modules (
-    echo [INFO] Folder node_modules belum ditemukan. Menjalankan auto-install...
-    call install.bat
+    echo [INFO] Menginstal dependensi pertama kali (npm install)...
+    call npm install
+    if %ERRORLEVEL% neq 0 (
+        echo [ERROR] Gagal menginstal dependensi.
+        pause
+        exit /b 1
+    )
 )
 
-REM 2. Check if dist exists
 if not exist dist (
-    echo [INFO] Build produksi belum tersedia. Mengompilasi aplikasi...
+    echo [INFO] Mengompilasi aplikasi kasir (npm run build)...
     call npm run build
+    if %ERRORLEVEL% neq 0 (
+        echo [ERROR] Gagal kompilasi aplikasi.
+        pause
+        exit /b 1
+    )
 )
 
 echo.
-echo [STATUS] Menyalakan Server Aplikasi Kasir...
-echo   URL Kasir Lokal: http://localhost:3000
-echo   Tekan Ctrl+C untuk menutup server aplikasi
+echo ==============================================================================
+echo  Menyalakan server kasir di http://localhost:3000...
+echo  Tekan Ctrl+C untuk mematikan server.
+echo ==============================================================================
 echo.
 
-REM Open browser after 2 seconds
 start "" http://localhost:3000
-
-REM Start production server
-call npm start
+npm start

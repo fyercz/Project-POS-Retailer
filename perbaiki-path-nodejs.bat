@@ -1,29 +1,18 @@
 @echo off
 REM ==============================================================================
-REM Ulilmart POS - Diagnostik & Perbaikan PATH Node.js (Windows)
+REM Ulilmart POS - Diagnostik dan Perbaikan PATH Node.js (Windows)
 REM Memeriksa status instalasi Node.js, npm, Git, serta mendaftarkan
 REM lokasi Node.js ke Environment PATH Windows secara otomatis.
 REM ==============================================================================
-chcp 65001 >nul 2>&1
-title Ulilmart POS - Diagnostik & Perbaikan PATH Node.js
+title Ulilmart POS - Diagnostik dan Perbaikan PATH Node.js
 color 0B
 
 cd /d "%~dp0"
 
 cls
 echo ==============================================================================
-echo     ┌──────┐
-echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
-echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
-echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
-echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
-echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
-echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
-echo     ┌───────────────────────────────┬───────────────────────────────┐
-echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
-echo     └───────────────────────────────┴───────────────────────────────┘
-echo                   S M A R T   R E T A I L   P O S
-echo             [ DIAGNOSTIK & PERBAIKAN ENVIRONMENT PATH ]
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ DIAGNOSTIK DAN PERBAIKAN ENVIRONMENT PATH ]
 echo ==============================================================================
 echo.
 
@@ -54,11 +43,11 @@ if exist "C:\Program Files\nodejs\node.exe" (
 )
 
 if not "%FOUND_NODE_DIR%"=="" (
-    echo       ✅ Node.js ditemukan secara fisik di:
-    echo          "%FOUND_NODE_DIR%\node.exe"
+    echo       [OK] Node.js ditemukan secara fisik di:
+    echo            "%FOUND_NODE_DIR%\node.exe"
     set "PATH=%FOUND_NODE_DIR%;%APPDATA%\npm;%PATH%"
 ) else (
-    echo       ⚠️ Node.js belum ditemukan di folder instalasi standar.
+    echo       [!] Node.js belum ditemukan di folder instalasi standar.
 )
 
 echo.
@@ -66,24 +55,24 @@ echo [2/3] Memeriksa ketersediaan perintah via System PATH...
 where node >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     for /f "tokens=*" %%i in ('node -v 2^>nul') do set "CURR_NODE_VER=%%i"
-    echo       ✅ Perintah 'node' aktif: %CURR_NODE_VER%
+    echo       [OK] Perintah 'node' aktif: %CURR_NODE_VER%
 ) else (
-    echo       ❌ Perintah 'node' belum dikenali oleh Windows.
+    echo       [X] Perintah 'node' belum dikenali oleh Windows.
 )
 
 where npm >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     for /f "tokens=*" %%i in ('npm -v 2^>nul') do set "CURR_NPM_VER=%%i"
-    echo       ✅ Perintah 'npm' aktif: v%CURR_NPM_VER%
+    echo       [OK] Perintah 'npm' aktif: v%CURR_NPM_VER%
 ) else (
-    echo       ❌ Perintah 'npm' belum dikenali oleh Windows.
+    echo       [X] Perintah 'npm' belum dikenali oleh Windows.
 )
 
 where git >nul 2>nul
 if %ERRORLEVEL% equ 0 (
-    echo       ✅ Perintah 'git' aktif.
+    echo       [OK] Perintah 'git' aktif.
 ) else (
-    echo       ℹ️ Perintah 'git' tidak terdeteksi (opsional, untuk auto-update).
+    echo       [INFO] Perintah 'git' tidak terdeteksi (opsional, untuk auto-update).
 )
 
 echo.
@@ -101,23 +90,10 @@ if not "%FOUND_NODE_DIR%"=="" (
     echo  [3] Keluar
     echo.
     set /p AKSI="Masukkan pilihan Anda (1/2/3) [Default: 1]: "
-    if "%AKSI%"=="" set AKSI=1
+    if "%AKSI%"=="" set "AKSI=1"
     
-    if "%AKSI%"=="1" (
-        echo.
-        echo [PROSES] Mendaftarkan "%FOUND_NODE_DIR%" ke Environment User...
-        powershell -NoProfile -Command ^
-            "[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', [EnvironmentVariableTarget]::User) + ';%FOUND_NODE_DIR%;%APPDATA%\npm', [EnvironmentVariableTarget]::User)" >nul 2>&1
-        echo       ✅ Selesai! Lokasi Node.js telah didaftarkan ke Windows User Environment.
-        echo       📌 Seluruh file .bat sekarang dapat dijalankan tanpa error!
-        echo.
-        pause
-        exit /b 0
-    )
-    if "%AKSI%"=="2" (
-        call autorun.bat
-        exit /b 0
-    )
+    if "%AKSI%"=="1" goto DAFTAR_PATH
+    if "%AKSI%"=="2" goto JALANKAN_AUTORUN
     exit /b 0
 ) else (
     echo  Software Node.js belum terpasang di komputer ini.
@@ -135,3 +111,17 @@ if not "%FOUND_NODE_DIR%"=="" (
     pause
     exit /b 1
 )
+
+:DAFTAR_PATH
+echo.
+echo [PROSES] Mendaftarkan "%FOUND_NODE_DIR%" ke Environment User...
+powershell -NoProfile -Command "[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', [EnvironmentVariableTarget]::User) + ';%FOUND_NODE_DIR%;%APPDATA%\npm', [EnvironmentVariableTarget]::User)" >nul 2>&1
+echo       [OK] Selesai! Lokasi Node.js telah didaftarkan ke Windows User Environment.
+echo       [*] Seluruh file .bat sekarang dapat dijalankan tanpa error!
+echo.
+pause
+exit /b 0
+
+:JALANKAN_AUTORUN
+call autorun.bat
+exit /b 0

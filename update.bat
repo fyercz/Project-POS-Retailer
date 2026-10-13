@@ -1,72 +1,30 @@
 @echo off
 REM ==============================================================================
-REM Ulilmart POS - Auto-Update, Verification & System Cleaner (Windows)
-REM Menarik pembaruan kode terbaru dari repositori GitHub resmi,
-REM membersihkan file sampah yang tidak perlu, dan mengompilasi ulang aplikasi.
+REM Ulilmart POS - Auto-Update dan Pemeliharaan Sistem (Windows)
 REM ==============================================================================
-chcp 65001 >nul 2>&1
-title Ulilmart POS - Auto-Update & System Cleaner (GitHub)
+title Ulilmart POS - Auto-Update dan Pemeliharaan
 color 0B
 
 cd /d "%~dp0"
-
-REM ==============================================================================
-REM Auto-Deteksi & Injeksi PATH: Node.js, npm, Git, dan Windows System32
-REM ==============================================================================
-if exist "%SystemRoot%\System32" (
-    set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\;%PATH%"
-)
-
-where node >nul 2>nul
-if %ERRORLEVEL% neq 0 (
-    if exist "C:\Program Files\nodejs\node.exe" (
-        set "PATH=C:\Program Files\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "%ProgramFiles%\nodejs\node.exe" (
-        set "PATH=%ProgramFiles%\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "C:\Program Files (x86)\nodejs\node.exe" (
-        set "PATH=C:\Program Files (x86)\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "%ProgramFiles(x86)%\nodejs\node.exe" (
-        set "PATH=%ProgramFiles(x86)%\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" (
-        set "PATH=%LOCALAPPDATA%\Programs\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "%ProgramW6432%\nodejs\node.exe" (
-        set "PATH=%ProgramW6432%\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "C:\nvm\nodejs\node.exe" (
-        set "PATH=C:\nvm\nodejs;%PATH%"
-    ) else if exist "%NVM_SYMLINK%\node.exe" (
-        set "PATH=%NVM_SYMLINK%;%PATH%"
-    )
-)
-
-set REPO_URL=https://github.com/fyercz/Project-POS-Retailer.git
+set "REPO_URL=https://github.com/fyercz/Project-POS-Retailer.git"
 
 cls
 echo ==============================================================================
-echo     ┌──────┐
-echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
-echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
-echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
-echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
-echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
-echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
-echo     ┌───────────────────────────────┬───────────────────────────────┐
-echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
-echo     └───────────────────────────────┴───────────────────────────────┘
-echo                   S M A R T   R E T A I L   P O S
-echo             [ AUTO-UPDATE & PEMELIHARAAN SISTEM ]
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ AUTO-UPDATE DAN PEMELIHARAAN SISTEM ]
 echo ==============================================================================
 echo  Repositori Resmi : %REPO_URL%
 echo.
 echo  Pembaruan ini akan menarik file kode terbaru dari GitHub.
 echo  [CATATAN PENTING KEAMANAN DATA]:
 echo  - Seluruh data transaksi, riwayat kasir, produk, dan stok
-echo    tersimpan di database lokal browser (IndexedDB) sehingga
+echo    tersimpan di database lokal browser (IndexedDB dan SQLite)
 echo    100%% AMAN dan TIDAK AKAN HILANG setelah update!
 echo ==============================================================================
 echo.
 
-REM 1. Pembersihan file sampah dan file yang tidak perlu
-echo [1/4] Membersihkan file-file yang tidak perlu pada sistem...
+REM 1. Pembersihan file sampah dan temporary
+echo [1/4] Membersihkan file-file cache dan temporary...
 echo       - Menghapus file log sementara (*.log)...
 del /f /q /s *.log 2>nul
 echo       - Menghapus file temporary (*.tmp, *.temp, *.bak)...
@@ -79,8 +37,8 @@ echo       [OK] File sampah dan temporary berhasil dibersihkan!
 echo.
 
 REM 2. Cari Git executable
-echo [2/4] Memeriksa koneksi Git & repositori GitHub...
-set GIT_CMD=git
+echo [2/4] Memeriksa koneksi Git dan repositori GitHub...
+set "GIT_CMD=git"
 where git >nul 2>nul
 if %errorlevel% neq 0 (
     if exist "C:\Program Files\Git\cmd\git.exe" (
@@ -131,7 +89,7 @@ echo.
 
 :STEP_NPM
 REM 3. Update dependencies
-echo [3/4] Memeriksa & memperbarui package dependensi (npm install)...
+echo [3/4] Memeriksa dan memperbarui package dependensi (npm install)...
 call npm install
 if %errorlevel% neq 0 (
     echo [ERROR] Gagal memperbarui package dependensi.
@@ -152,20 +110,13 @@ if %errorlevel% neq 0 (
 
 echo.
 echo ==========================================================
-echo    🎉 [SUKSES] Ulilmart POS Berhasil Diperbarui & Dibersihkan!
+echo   [SUKSES] Ulilmart POS Berhasil Diperbarui dan Dibersihkan!
 echo ==========================================================
 echo.
 echo  Aplikasi siap digunakan dengan kode terbaru dari GitHub.
 echo.
 set /p JALANKAN="Nyalakan aplikasi kasir desktop sekarang (Y/T)? "
 if /i "%JALANKAN%"=="Y" (
-    if exist desktop.bat (
-        start "" desktop.bat
-    ) else if exist autorun.bat (
-        start "" autorun.bat
-    ) else (
-        start "" npm start
-    )
+    call autorun.bat
 )
-
 exit /b 0

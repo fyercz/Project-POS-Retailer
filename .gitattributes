@@ -1,0 +1,14 @@
+# Force Windows batch files to use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Force Unix shell scripts to use LF
+*.sh text eol=lf
+
+# Force standard source files to LF
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf

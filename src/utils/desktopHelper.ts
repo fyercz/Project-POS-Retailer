@@ -164,105 +164,94 @@ export async function triggerCashDrawerKick(): Promise<{ success: boolean; messa
 }
 
 /**
- * Generate and download a dedicated 1-Click Desktop App Launcher (.bat) for Windows
+ * Safely trigger download of text/binary files in browser.
+ * For Windows batch files (.bat/.cmd) and configuration files (.inf),
+ * line endings are strictly normalized to Windows CRLF (\r\n) to prevent cmd.exe parser desync.
  */
-export function downloadWindowsDesktopLauncher(options: { kioskMode?: boolean } = {}): void {
-  const kioskFlag = options.kioskMode ? ' --kiosk' : '';
-  const batContent = `@echo off
-chcp 65001 >nul 2>&1
-title Ulilmart POS - Terminal Kasir Desktop
-color 0A
-cd /d "%~dp0"
-
-cls
-echo ==============================================================================
-echo     ┌──────┐
-echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
-echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
-echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
-echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
-echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
-echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
-echo     ┌───────────────────────────────┬───────────────────────────────┐
-echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
-echo     └───────────────────────────────┴───────────────────────────────┘
-echo                   S M A R T   R E T A I L   P O S
-echo               [ MODE APLIKASI DESKTOP KASIR MANDIRI ]
-echo ==============================================================================
-echo.
-
-REM Pasang shortcut berlogo resmi jika file ulilmart.ico ada
-if exist "%~dp0ulilmart.ico" (
-    powershell -NoProfile -Command ^
-        "$ws = New-Object -ComObject WScript.Shell; " ^
-        "$desk = [System.Environment]::GetFolderPath('Desktop'); " ^
-        "$deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; " ^
-        "if (-not (Test-Path $deskLnk)) { " ^
-        "  $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0desktop.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir (Lengkap & Hemat)'; $s1.Save(); " ^
-        "};" >nul 2>&1
-)
-
-REM 1. Pindah ke direktori skrip ini berada
-cd /d "%~dp0"
-
-REM 2. Cek apakah node_modules dan dist sudah ada
-if not exist node_modules (
-    echo [INFO] Menginstal dependensi pertama kali...
-    call npm install
-)
-
-if not exist dist (
-    echo [INFO] Mengompilasi aplikasi kasir...
-    call npm run build
-)
-
-echo [INFO] Menyalakan Server Kasir Lokal...
-start /b "" npm start
-
-echo [INFO] Menunggu server siap...
-timeout /t 2 /nobreak >nul
-
-REM 3. Buka dalam mode Desktop Application Window (Tanpa Address Bar Browser)
-set TARGET_URL=http://localhost:3000
-
-REM Prioritas 1: Microsoft Edge App Mode (Bawaan Windows 10 & 11)
-where msedge >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
-    echo [INFO] Meluncurkan aplikasi via Microsoft Edge App Mode...
-    start "" msedge --app=%TARGET_URL%${kioskFlag}
-    goto selesai
-)
-
-REM Prioritas 2: Google Chrome App Mode
-where chrome >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
-    echo [INFO] Meluncurkan aplikasi via Google Chrome App Mode...
-    start "" chrome --app=%TARGET_URL%${kioskFlag}
-    goto selesai
-)
-
-REM Prioritas 3: Browser Standar
-echo [INFO] Meluncurkan di browser utama...
-start "" %TARGET_URL%
-
-:selesai
-echo.
-echo ==============================================================================
-echo  ✅ Aplikasi Desktop Berjalan! Jangan tutup jendela ini saat kasir aktif.
-echo ==============================================================================
-`;
-
-  const blob = new Blob([batContent], { type: 'text/plain;charset=utf-8' });
+export function downloadBlobFile(filename: string, content: string, mimeType = 'text/plain;charset=utf-8'): void {
+  const isWindowsScript = filename.endsWith('.bat') || filename.endsWith('.cmd') || filename.endsWith('.inf');
+  const normalizedContent = isWindowsScript
+    ? content.replace(/\r?\n/g, '\r\n')
+    : content.replace(/\r\n/g, '\n');
+  const blob = new Blob([normalizedContent], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = options.kioskMode ? 'Buka-Kasir-Kiosk-Desktop.bat' : 'Buka-Kasir-Desktop.bat';
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, 200);
+}
+
+/**
+ * Generate and download a dedicated 1-Click Desktop App Launcher (.bat) for Windows
+ */
+export function downloadWindowsDesktopLauncher(options: { kioskMode?: boolean } = {}): void {
+  const kioskFlag = options.kioskMode ? ' --kiosk' : '';
+  const batContent = `@echo off
+title Ulilmart POS - Terminal Kasir Desktop
+color 0A
+cd /d "%~dp0"
+
+cls
+echo ==============================================================================
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ MODE APLIKASI DESKTOP KASIR MANDIRI ]
+echo ==============================================================================
+echo.
+
+if exist "%~dp0ulilmart.ico" (
+    powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [System.Environment]::GetFolderPath('Desktop'); $deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; if (-not (Test-Path $deskLnk)) { $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0desktop.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir'; $s1.Save(); };" >nul 2>&1
+)
+
+cd /d "%~dp0"
+
+if not exist node_modules (
+    echo [INFO] Menginstal dependensi pertama kali (npm install)...
+    call npm install
+)
+
+if not exist dist (
+    echo [INFO] Mengompilasi aplikasi kasir (npm run build)...
+    call npm run build
+)
+
+echo [INFO] Menyalakan Server Kasir Lokal (Port 3000)...
+start /b "" npm start
+
+echo [INFO] Menunggu server siap...
+timeout /t 2 /nobreak >nul
+
+set "TARGET_URL=http://localhost:3000"
+
+where msedge >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    echo [INFO] Meluncurkan aplikasi via Microsoft Edge App Mode...
+    start "" msedge --app=%TARGET_URL%${kioskFlag}
+    goto SELESAI
+)
+
+where chrome >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    echo [INFO] Meluncurkan aplikasi via Google Chrome App Mode...
+    start "" chrome --app=%TARGET_URL%${kioskFlag}
+    goto SELESAI
+)
+
+echo [INFO] Meluncurkan di browser default...
+start "" %TARGET_URL%
+
+:SELESAI
+echo.
+echo ==============================================================================
+echo  [OK] Aplikasi Desktop Berjalan! Jangan tutup jendela ini saat kasir aktif.
+echo ==============================================================================
+`;
+
+  downloadBlobFile(options.kioskMode ? 'Buka-Kasir-Kiosk-Desktop.bat' : 'Buka-Kasir-Desktop.bat', batContent, 'application/x-bat');
 }
 
 /**
@@ -298,7 +287,6 @@ sleep 2
 
 URL="http://localhost:3000"
 
-# Coba luncurkan dalam App Mode (Google Chrome / Chromium / Brave)
 if command -v google-chrome &> /dev/null; then
     google-chrome --app=$URL${kioskFlag} &
 elif command -v chromium &> /dev/null; then
@@ -319,17 +307,7 @@ trap "kill $SERVER_PID 2>/dev/null" EXIT
 wait $SERVER_PID
 `;
 
-  const blob = new Blob([shContent], { type: 'text/x-sh;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = options.kioskMode ? 'buka-kasir-kiosk.sh' : 'buka-kasir-desktop.sh';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 200);
+  downloadBlobFile(options.kioskMode ? 'buka-kasir-kiosk.sh' : 'buka-kasir-desktop.sh', shContent, 'text/x-sh');
 }
 
 /**
@@ -340,12 +318,13 @@ export function downloadAutorunBat(): void {
 REM ==============================================================================
 REM Ulilmart POS - Universal Auto-Run Launcher (Windows)
 REM ==============================================================================
-chcp 65001 >nul 2>&1
 title Ulilmart POS - Cashier Auto-Run Launcher
 color 0A
 
 cd /d "%~dp0"
 
+if "%1"=="--menu" goto MENU
+if "%1"=="--setup" goto MENU
 if "%1"=="--startup" goto SETUP_STARTUP
 if "%1"=="--install-startup" goto SETUP_STARTUP
 if "%1"=="--remove-startup" goto REMOVE_STARTUP
@@ -353,41 +332,24 @@ if "%1"=="--shortcut" goto CREATE_SHORTCUT
 
 cls
 echo ==============================================================================
-echo     ┌──────┐
-echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
-echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
-echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
-echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
-echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
-echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
-echo     ┌───────────────────────────────┬───────────────────────────────┐
-echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
-echo     └───────────────────────────────┴───────────────────────────────┘
-echo                   S M A R T   R E T A I L   P O S
-echo               [ SISTEM KASIR AUTO-RUN TERMINAL ]
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ SISTEM KASIR AUTO-RUN TERMINAL ]
 echo ==============================================================================
 echo.
 
-REM Pasang shortcut berlogo resmi jika file ulilmart.ico ada
 if exist "%~dp0ulilmart.ico" (
-    powershell -NoProfile -Command ^
-        "$ws = New-Object -ComObject WScript.Shell; " ^
-        "$desk = [System.Environment]::GetFolderPath('Desktop'); " ^
-        "$deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; " ^
-        "if (-not (Test-Path $deskLnk)) { " ^
-        "  $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0autorun.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir (Lengkap & Hemat)'; $s1.Save(); " ^
-        "};" >nul 2>&1
+    powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [System.Environment]::GetFolderPath('Desktop'); $deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; if (-not (Test-Path $deskLnk)) { $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0autorun.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir'; $s1.Save(); };" >nul 2>&1
 )
 
 where node >nul 2>nul
 if %ERRORLEVEL% neq 0 (
-    echo [PERINGATAN] Node.js belum terpasang pada komputer ini!
+    echo [PERINGATAN] Node.js belum terpasang atau belum masuk PATH!
     echo Aplikasi POS membutuhkan runtime Node.js LTS dari: https://nodejs.org/
     pause
     exit /b 1
 )
 
-for /f "tokens=*" %%i in ('node -v') do set NODE_VER=%%i
+for /f "tokens=*" %%i in ('node -v') do set "NODE_VER=%%i"
 echo [1/4] Node.js terdeteksi: %NODE_VER%
 
 if not exist .env (
@@ -427,13 +389,13 @@ if not exist dist (
 
 echo.
 echo ==========================================================
-echo    🚀 Memulai Server Kasir Lokal (Port 3000)
+echo    [*] Memulai Server Kasir Lokal (Port 3000)
 echo ==========================================================
 echo   URL Kasir: http://localhost:3000
 echo ==========================================================
 echo.
 
-set TARGET_URL=http://localhost:3000
+set "TARGET_URL=http://localhost:3000"
 
 start /b cmd /c "timeout /t 2 /nobreak >nul & (where msedge >nul 2>nul && start msedge --app=%TARGET_URL% || (where chrome >nul 2>nul && start chrome --app=%TARGET_URL% || start %TARGET_URL%))"
 
@@ -441,47 +403,104 @@ call npm start
 exit /b 0
 
 :SETUP_STARTUP
-set STARTUP_FOLDER=%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup
-set SHORTCUT_PATH=%STARTUP_FOLDER%\\Ulilmart POS.lnk
-set TARGET_BAT=%~dp0autorun.bat
-set WORKING_DIR=%~dp0
+cls
+echo ==========================================================
+echo    [*] Mendaftarkan Auto-Start Windows (Startup Kasir)
+echo ==========================================================
+echo.
+set "STARTUP_FOLDER=%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
+set "SHORTCUT_PATH=%STARTUP_FOLDER%\\Ulilmart POS.lnk"
+set "TARGET_BAT=%~dp0autorun.bat"
+set "WORKING_DIR=%~dp0"
 
-powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; if (Test-Path '%WORKING_DIR%ulilmart.ico') { $s.IconLocation = '%WORKING_DIR%ulilmart.ico,0' }; $s.Description = 'Ulilmart Point of Sales Kasir'; $s.Save()"
-echo Berhasil mendaftarkan ke Windows Startup dengan logo resmi!
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; if (Test-Path '%WORKING_DIR%ulilmart.ico') { $s.IconLocation = '%WORKING_DIR%ulilmart.ico,0' }; $s.Description = 'Ulilmart Point of Sales Kasir'; $s.Save()"
+echo [OK] Berhasil mendaftarkan ke Windows Startup!
+echo Lokasi shortcut: %SHORTCUT_PATH%
+echo.
 pause
 exit /b 0
 
 :REMOVE_STARTUP
-set STARTUP_FOLDER=%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup
-set SHORTCUT_PATH=%STARTUP_FOLDER%\\Ulilmart POS.lnk
+cls
+echo ==========================================================
+echo    [*] Menghapus Auto-Start dari Windows Startup
+echo ==========================================================
+echo.
+set "STARTUP_FOLDER=%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
+set "SHORTCUT_PATH=%STARTUP_FOLDER%\\Ulilmart POS.lnk"
 if exist "%SHORTCUT_PATH%" del /f /q "%SHORTCUT_PATH%"
-echo Auto-start berhasil dinonaktifkan.
+echo [OK] Auto-Start berhasil dinonaktifkan.
+echo.
 pause
 exit /b 0
 
 :CREATE_SHORTCUT
-set DESKTOP_FOLDER=%USERPROFILE%\\Desktop
-set SHORTCUT_PATH=%DESKTOP_FOLDER%\\Ulilmart POS Kasir.lnk
-set TARGET_BAT=%~dp0autorun.bat
-set WORKING_DIR=%~dp0
+cls
+echo ==========================================================
+echo    [*] Membuat Shortcut Desktop
+echo ==========================================================
+echo.
+set "DESKTOP_FOLDER=%USERPROFILE%\\Desktop"
+set "SHORTCUT_PATH=%DESKTOP_FOLDER%\\Ulilmart POS Kasir.lnk"
+set "TARGET_BAT=%~dp0autorun.bat"
+set "WORKING_DIR=%~dp0"
 
-powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; if (Test-Path '%WORKING_DIR%ulilmart.ico') { $s.IconLocation = '%WORKING_DIR%ulilmart.ico,0' }; $s.Description = 'Ulilmart Point of Sales Kasir (Lengkap & Hemat)'; $s.Save()"
-echo Shortcut desktop dengan logo resmi berhasil dibuat!
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT_PATH%'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; if (Test-Path '%WORKING_DIR%ulilmart.ico') { $s.IconLocation = '%WORKING_DIR%ulilmart.ico,0' }; $s.Description = 'Ulilmart Point of Sales Kasir'; $s.Save()"
+echo [OK] Shortcut desktop dengan logo resmi berhasil dibuat: %SHORTCUT_PATH%
+echo.
 pause
+exit /b 0
+
+:MENU
+cls
+echo ==============================================================================
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ WIZARD KONFIGURASI STARTUP KASIR ]
+echo ==============================================================================
+echo.
+echo  Pilih opsi yang Anda inginkan:
+echo.
+echo  [1] Aktifkan Auto-Run saat Komputer Dinyalakan (Windows Startup)
+echo  [2] Nonaktifkan Auto-Run dari Startup Windows
+echo  [3] Pasang Shortcut Logo Resmi di Desktop
+echo  [4] Jalankan Aplikasi Kasir Sekarang
+echo  [5] Keluar
+echo.
+echo ==============================================================================
+set /p PILIHAN="Masukkan pilihan (1-5): "
+
+if "%PILIHAN%"=="1" goto DO_STARTUP
+if "%PILIHAN%"=="2" goto DO_REMOVE_STARTUP
+if "%PILIHAN%"=="3" goto DO_CREATE_SHORTCUT
+if "%PILIHAN%"=="4" goto DO_RUN_APP
+if "%PILIHAN%"=="5" goto EXIT_SCRIPT
+goto MENU
+
+:DO_STARTUP
+cls
+call "%~dp0autorun.bat" --startup
+goto MENU
+
+:DO_REMOVE_STARTUP
+cls
+call "%~dp0autorun.bat" --remove-startup
+goto MENU
+
+:DO_CREATE_SHORTCUT
+cls
+call "%~dp0autorun.bat" --shortcut
+goto MENU
+
+:DO_RUN_APP
+cls
+call "%~dp0autorun.bat"
+exit /b 0
+
+:EXIT_SCRIPT
 exit /b 0
 `;
 
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'autorun.bat';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 200);
+  downloadBlobFile('autorun.bat', content, 'application/x-bat');
 }
 
 /**
@@ -489,7 +508,6 @@ exit /b 0
  */
 export function downloadSetupStartupBat(): void {
   const content = `@echo off
-chcp 65001 >nul 2>&1
 title Ulilmart POS - Konfigurasi Auto-Run Kasir
 color 0B
 cd /d "%~dp0"
@@ -497,67 +515,72 @@ cd /d "%~dp0"
 :MENU
 cls
 echo ==============================================================================
-echo     ┌──────┐
-echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
-echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
-echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
-echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
-echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
-echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
-echo     ┌───────────────────────────────┬───────────────────────────────┐
-echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
-echo     └───────────────────────────────┴───────────────────────────────┘
-echo                   S M A R T   R E T A I L   P O S
-echo             [ WIZARD KONFIGURASI STARTUP KASIR ]
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ WIZARD KONFIGURASI STARTUP KASIR ]
 echo ==============================================================================
 echo.
 echo  Pilih opsi yang Anda inginkan:
 echo.
 echo  [1] Aktifkan Auto-Run saat Komputer Dinyalakan (Windows Startup)
 echo  [2] Nonaktifkan Auto-Run dari Startup Windows
-echo  [3] Buat Shortcut Ikon Logo Kasir Resmi di Desktop ^& Folder
+echo  [3] Pasang Shortcut Logo Resmi di Desktop
 echo  [4] Jalankan Aplikasi Kasir Sekarang (autorun.bat)
 echo  [5] Keluar
 echo.
 echo ==========================================================
 set /p PILIHAN="Masukkan pilihan (1-5): "
 
-if "%PILIHAN%"=="1" (
-    call autorun.bat --startup
-    goto MENU
-)
-if "%PILIHAN%"=="2" (
-    call autorun.bat --remove-startup
-    goto MENU
-)
-if "%PILIHAN%"=="3" (
-    if exist "%~dp0buat-shortcut-logo.bat" (
-        call buat-shortcut-logo.bat
-    ) else (
-        call autorun.bat --shortcut
-    )
-    goto MENU
-)
-if "%PILIHAN%"=="4" (
-    call autorun.bat
-    goto MENU
-)
-if "%PILIHAN%"=="5" exit /b 0
-
+if "%PILIHAN%"=="1" goto DO_STARTUP
+if "%PILIHAN%"=="2" goto DO_REMOVE_STARTUP
+if "%PILIHAN%"=="3" goto DO_CREATE_SHORTCUT
+if "%PILIHAN%"=="4" goto DO_RUN_APP
+if "%PILIHAN%"=="5" goto EXIT_SCRIPT
 goto MENU
+
+:DO_STARTUP
+cls
+if exist "%~dp0autorun.bat" (
+    call "%~dp0autorun.bat" --startup
+) else (
+    echo [ERROR] autorun.bat tidak ditemukan.
+    pause
+)
+goto MENU
+
+:DO_REMOVE_STARTUP
+cls
+if exist "%~dp0autorun.bat" (
+    call "%~dp0autorun.bat" --remove-startup
+) else (
+    echo [ERROR] autorun.bat tidak ditemukan.
+    pause
+)
+goto MENU
+
+:DO_CREATE_SHORTCUT
+cls
+if exist "%~dp0autorun.bat" (
+    call "%~dp0autorun.bat" --shortcut
+) else (
+    echo [ERROR] autorun.bat tidak ditemukan.
+    pause
+)
+goto MENU
+
+:DO_RUN_APP
+cls
+if exist "%~dp0autorun.bat" (
+    call "%~dp0autorun.bat"
+) else (
+    call npm start
+)
+exit /b 0
+
+:EXIT_SCRIPT
+exit /b 0
 `;
 
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'setup-autorun-startup.bat';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 200);
+  downloadBlobFile('setup-autorun-startup.bat', content, 'application/x-bat');
 }
 
 /**
@@ -565,12 +588,6 @@ goto MENU
  */
 export function downloadBuatShortcutLogoBat(): void {
   const content = `@echo off
-REM ==============================================================================
-REM Ulilmart POS - Generator Shortcut Berlogo Resmi (Windows)
-REM Membuat shortcut aplikasi dengan ikon logo Ulilmart (ulilmart.ico)
-REM di Desktop, Folder Aplikasi, dan Startup Windows.
-REM ==============================================================================
-chcp 65001 >nul 2>&1
 title Ulilmart POS - Generator Shortcut Berlogo Resmi
 color 0B
 
@@ -578,65 +595,31 @@ cd /d "%~dp0"
 
 cls
 echo ==============================================================================
-echo     ┌──────┐
-echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
-echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
-echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
-echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
-echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
-echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
-echo     ┌───────────────────────────────┬───────────────────────────────┐
-echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
-echo     └───────────────────────────────┴───────────────────────────────┘
-echo                   S M A R T   R E T A I L   P O S
-echo          [ PEMBUAT SHORTCUT DENGAN IKON LOGO RESMI ULILMART ]
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ PEMBUAT SHORTCUT DENGAN IKON LOGO RESMI ULILMART ]
 echo ==============================================================================
 echo.
 
 set "ICON_FILE=%~dp0ulilmart.ico"
-set "DESKTOP_BAT=%~dp0desktop.bat"
+set "TARGET_BAT=%~dp0autorun.bat"
+if not exist "%TARGET_BAT%" set "TARGET_BAT=%~dp0desktop.bat"
 set "WORKING_DIR=%~dp0"
 
 echo [1/2] Membuat shortcut di Desktop Windows dengan logo Ulilmart...
-powershell -NoProfile -Command ^
-    "$ws = New-Object -ComObject WScript.Shell; " ^
-    "$desk = [System.Environment]::GetFolderPath('Desktop'); " ^
-    "$s = $ws.CreateShortcut(\"$desk\\Ulilmart POS Kasir.lnk\"); " ^
-    "$s.TargetPath = '%DESKTOP_BAT%'; " ^
-    "$s.WorkingDirectory = '%WORKING_DIR%'; " ^
-    "if (Test-Path '%ICON_FILE%') { $s.IconLocation = '%ICON_FILE%,0' }; " ^
-    "$s.Description = 'Ulilmart POS Kasir Ritel Mandiri (Lengkap & Hemat)'; " ^
-    "$s.Save();"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [System.Environment]::GetFolderPath('Desktop'); $s = $ws.CreateShortcut(\\"$desk\\\\Ulilmart POS Kasir.lnk\\"); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; if (Test-Path '%ICON_FILE%') { $s.IconLocation = '%ICON_FILE%,0' }; $s.Description = 'Ulilmart POS Kasir'; $s.Save();"
 
 echo [2/2] Membuat shortcut di folder aplikasi saat ini dengan logo...
-powershell -NoProfile -Command ^
-    "$ws = New-Object -ComObject WScript.Shell; " ^
-    "$s = $ws.CreateShortcut('%~dp0Ulilmart POS Kasir.lnk'); " ^
-    "$s.TargetPath = '%DESKTOP_BAT%'; " ^
-    "$s.WorkingDirectory = '%WORKING_DIR%'; " ^
-    "if (Test-Path '%ICON_FILE%') { $s.IconLocation = '%ICON_FILE%,0' }; " ^
-    "$s.Description = 'Ulilmart POS Kasir Ritel Mandiri (Lengkap & Hemat)'; " ^
-    "$s.Save();"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%~dp0Ulilmart POS Kasir.lnk'); $s.TargetPath = '%TARGET_BAT%'; $s.WorkingDirectory = '%WORKING_DIR%'; if (Test-Path '%ICON_FILE%') { $s.IconLocation = '%ICON_FILE%,0' }; $s.Description = 'Ulilmart POS Kasir'; $s.Save();"
 
 echo.
 echo ==============================================================================
-echo   🎉 SELESAI! Shortcut berlogo resmi Ulilmart telah terpasang di Desktop & Folder!
+echo   [OK] Selesai! Shortcut berlogo resmi Ulilmart telah terpasang di Desktop!
 echo ==============================================================================
 echo.
 pause
 `;
 
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'buat-shortcut-logo.bat';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 200);
+  downloadBlobFile('buat-shortcut-logo.bat', content, 'application/x-bat');
 }
 
 /**
@@ -656,17 +639,7 @@ shell\\install=Instalasi Lengkap (Auto-Install)
 shell\\install\\command=install.bat
 `;
 
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'autorun.inf';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 200);
+  downloadBlobFile('autorun.inf', content, 'text/plain');
 }
 
 export const DEFAULT_GITHUB_REPO_URL = 'https://github.com/fyercz/Project-POS-Retailer.git';
@@ -676,33 +649,22 @@ export const DEFAULT_GITHUB_REPO_URL = 'https://github.com/fyercz/Project-POS-Re
  */
 export function downloadUpdateBat(): void {
   const content = `@echo off
-chcp 65001 >nul 2>&1
-title Ulilmart POS - Auto-Update & System Cleaner (GitHub)
+title Ulilmart POS - Auto-Update dan Pemeliharaan (GitHub)
 color 0B
 cd /d "%~dp0"
 
 cls
 echo ==============================================================================
-echo     ┌──────┐
-echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
-echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
-echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
-echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
-echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
-echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
-echo     ┌───────────────────────────────┬───────────────────────────────┐
-echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
-echo     └───────────────────────────────┴───────────────────────────────┘
-echo                   S M A R T   R E T A I L   P O S
-echo             [ AUTO-UPDATE & PEMELIHARAAN SISTEM ]
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ AUTO-UPDATE DAN PEMELIHARAAN SISTEM ]
 echo ==============================================================================
 echo  Repositori: https://github.com/fyercz/Project-POS-Retailer.git
 echo  [INFO] Data transaksi dan produk 100%% aman di IndexedDB.
 echo ==============================================================================
 echo.
 
-set REPO_URL=https://github.com/fyercz/Project-POS-Retailer.git
-set GIT_CMD=git
+set "REPO_URL=https://github.com/fyercz/Project-POS-Retailer.git"
+set "GIT_CMD=git"
 where git >nul 2>nul || (if exist "C:\\Program Files\\Git\\cmd\\git.exe" set "GIT_CMD=C:\\Program Files\\Git\\cmd\\git.exe")
 
 REM 1. Bersihkan file sampah dan temporary yang tidak perlu
@@ -735,6 +697,7 @@ if %errorlevel% equ 0 (
         "%GIT_CMD%" branch -M master 2>nul
         "%GIT_CMD%" reset --hard origin/master
     ) else (
+        echo       Mencoba fallback git pull...
         "%GIT_CMD%" pull origin main 2>nul || "%GIT_CMD%" pull
     )
 )
@@ -751,7 +714,7 @@ call npm run build
 echo.
 
 echo ==========================================================
-echo    🎉 Pembaruan & Pembersihan Sistem Berhasil!
+echo   [OK] Pembaruan dan Pembersihan Sistem Berhasil!
 echo ==========================================================
 echo.
 echo [INFO] Versi Commit Aktual Terbaru di Komputer Ini:
@@ -759,336 +722,46 @@ echo [INFO] Versi Commit Aktual Terbaru di Komputer Ini:
 echo.
 set /p RUN_NOW="Nyalakan kasir desktop sekarang (Y/T)? "
 if /i "%RUN_NOW%"=="Y" (
-    if exist desktop.bat (start "" desktop.bat) else (start "" npm start)
+    if exist autorun.bat (call autorun.bat) else (call npm start)
 )
 exit /b 0
 `;
 
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'update.bat';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 200);
-}
-
-export interface GitStatusResponse {
-  isGitRepo: boolean;
-  branch?: string;
-  currentCommit?: string;
-  commitMessage?: string;
-  commitDate?: string;
-  remoteUrl?: string;
-  officialRepoUrl?: string;
-  remoteLatestCommit?: string;
-  remoteCommitMessage?: string;
-  remoteCommitDate?: string;
-  remoteCommitAuthor?: string;
-  remoteHtmlUrl?: string;
-  lastCheckedAt?: string;
-  hasUpdate?: boolean;
-  isUpToDate?: boolean;
-  uncommittedCount?: number;
-  nodeVersion?: string;
-  platform?: string;
-  message?: string;
-  error?: string;
-}
-
-export async function fetchGitStatus(forceRefresh = false): Promise<GitStatusResponse> {
-  try {
-    const url = forceRefresh ? '/api/system/git-status?refresh=true' : '/api/system/git-status';
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`HTTP Error: ${res.status}`);
-    }
-    return await res.json();
-  } catch (err: any) {
-    return {
-      isGitRepo: false,
-      message: 'Gagal terhubung ke server lokal POS.',
-      error: err?.message,
-    };
-  }
-}
-
-export async function configureGitRemote(): Promise<{ success: boolean; message: string; officialRepoUrl?: string }> {
-  try {
-    const res = await fetch('/api/system/git-configure', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    return await res.json();
-  } catch (err: any) {
-    return {
-      success: false,
-      message: 'Gagal mengonfigurasi repositori Git: ' + (err?.message || String(err)),
-    };
-  }
-}
-
-export async function triggerGitPull(): Promise<{
-  success: boolean;
-  message: string;
-  officialRepoUrl?: string;
-  pullOutput?: string;
-  buildOutput?: string;
-  cleanedFilesCount?: number;
-  cleanedBytesFreed?: number;
-  details?: string;
-}> {
-  try {
-    const res = await fetch('/api/system/git-pull', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    return await res.json();
-  } catch (err: any) {
-    return {
-      success: false,
-      message: 'Gagal menghubungi server untuk update.',
-      details: err?.message,
-    };
-  }
-}
-
-export interface VerifiedFileItem {
-  path: string;
-  category: string;
-  critical: boolean;
-  description: string;
-  exists: boolean;
-  size: number;
-  lastModified: string | null;
-  status: 'ok' | 'modified' | 'missing' | 'untracked';
-}
-
-export interface SystemVerificationResponse {
-  success: boolean;
-  overallHealth: 'healthy' | 'warning' | 'critical';
-  checkedAt: string;
-  officialRepoUrl: string;
-  stats: {
-    total: number;
-    intact: number;
-    modified: number;
-    missing: number;
-    missingCritical: number;
-  };
-  envPrerequisites: {
-    nodeVersion: string;
-    platform: string;
-    gitInstalled: boolean;
-    distBuilt: boolean;
-    nodeModulesInstalled: boolean;
-    databaseAccessible: boolean;
-  };
-  files: VerifiedFileItem[];
-  error?: string;
-}
-
-export async function verifySystemFiles(): Promise<SystemVerificationResponse> {
-  try {
-    const res = await fetch('/api/system/verify-files');
-    if (!res.ok) {
-      throw new Error(`HTTP Error: ${res.status}`);
-    }
-    return await res.json();
-  } catch (err: any) {
-    return {
-      success: false,
-      overallHealth: 'critical',
-      checkedAt: new Date().toISOString(),
-      officialRepoUrl: DEFAULT_GITHUB_REPO_URL,
-      stats: { total: 0, intact: 0, modified: 0, missing: 0, missingCritical: 0 },
-      envPrerequisites: {
-        nodeVersion: 'unknown',
-        platform: 'unknown',
-        gitInstalled: false,
-        distBuilt: false,
-        nodeModulesInstalled: false,
-        databaseAccessible: false,
-      },
-      files: [],
-      error: err?.message,
-    };
-  }
-}
-
-export interface CleanupJunkItem {
-  path: string;
-  relativePath: string;
-  size: number;
-  category: string;
-  reason: string;
-}
-
-export interface CleanupScanResponse {
-  success: boolean;
-  totalFiles: number;
-  totalBytes: number;
-  items: CleanupJunkItem[];
-  error?: string;
-}
-
-export async function scanUnnecessaryFiles(): Promise<CleanupScanResponse> {
-  try {
-    const res = await fetch('/api/system/cleanup-scan');
-    if (!res.ok) {
-      throw new Error(`HTTP Error: ${res.status}`);
-    }
-    return await res.json();
-  } catch (err: any) {
-    return {
-      success: false,
-      totalFiles: 0,
-      totalBytes: 0,
-      items: [],
-      error: err?.message,
-    };
-  }
-}
-
-export interface CleanupExecuteResponse {
-  success: boolean;
-  deletedCount: number;
-  bytesFreed: number;
-  deletedList: string[];
-  message: string;
-  error?: string;
-}
-
-export async function executeSystemCleanup(): Promise<CleanupExecuteResponse> {
-  try {
-    const res = await fetch('/api/system/cleanup-execute', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP Error: ${res.status}`);
-    }
-    return await res.json();
-  } catch (err: any) {
-    return {
-      success: false,
-      deletedCount: 0,
-      bytesFreed: 0,
-      deletedList: [],
-      message: 'Gagal menjalankan pembersihan sistem: ' + (err?.message || String(err)),
-      error: err?.message,
-    };
-  }
-}
-
-export interface DatabasePruneResponse {
-  success: boolean;
-  deletedSyncLogs: number;
-  deletedHeldOrders: number;
-  initialSizeKb: number;
-  finalSizeKb: number;
-  freedBytes: number;
-  vacuumExecuted: boolean;
-  walCheckpointExecuted: boolean;
-  integrity: string;
-  message: string;
-  error?: string;
-}
-
-export async function executeDatabasePruning(): Promise<DatabasePruneResponse> {
-  try {
-    const res = await fetch('/api/pos/database/clean-obsolete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP Error: ${res.status}`);
-    }
-    return await res.json();
-  } catch (err: any) {
-    return {
-      success: false,
-      deletedSyncLogs: 0,
-      deletedHeldOrders: 0,
-      initialSizeKb: 0,
-      finalSizeKb: 0,
-      freedBytes: 0,
-      vacuumExecuted: false,
-      walCheckpointExecuted: false,
-      integrity: 'error',
-      message: 'Gagal memangkas database: ' + (err?.message || String(err)),
-      error: err?.message,
-    };
-  }
-}
-
-function downloadBlobFile(filename: string, content: string, mimeType = 'text/plain;charset=utf-8') {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 200);
+  downloadBlobFile('update.bat', content, 'application/x-bat');
 }
 
 export function downloadCleanerBat(): void {
   const batContent = `@echo off
-REM ==============================================================================
-REM Ulilmart POS - Script Pembersihan File Usang & Sampah Sistem (Windows)
-REM Membersihkan cache build sementara, file log debugging, file temporary (*.tmp),
-REM serta file sampah OS (.DS_Store, Thumbs.db, desktop.ini).
-REM Aman, tidak menghapus database kasir maupun file kode sumber.
-REM ==============================================================================
-chcp 65001 >nul 2>&1
-title Ulilmart POS - Pembersihan File Usang & Sampah
+title Ulilmart POS - Pembersihan File Usang dan Sampah
 color 0E
 
 cd /d "%~dp0"
 
 cls
 echo ==============================================================================
-echo     ┌──────┐
-echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
-echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
-echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
-echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
-echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
-echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
-echo     ┌───────────────────────────────┬───────────────────────────────┐
-echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
-echo     └───────────────────────────────┴───────────────────────────────┘
-echo                   S M A R T   R E T A I L   P O S
-echo            [ PEMBERSIHAN FILE USANG & CACHE SISTEM ]
+echo   [ ULILMART POS ]  -  S M A R T   R E T A I L   P O S
+echo   [ PEMBERSIHAN FILE USANG DAN CACHE SISTEM ]
 echo ==============================================================================
 echo.
 echo  Pembersihan ini akan menghapus:
 echo  1. Cache build Vite lokal (node_modules\\.vite, .cache)
 echo  2. File log debugging (*.log, npm-debug.log)
-echo  3. File temporary & backup (*.tmp, *.temp, *.bak, *.swp)
+echo  3. File temporary dan backup (*.tmp, *.temp, *.bak, *.swp)
 echo  4. File sampah OS Windows / Mac (Thumbs.db, desktop.ini, .DS_Store)
 echo.
 echo  [JAMINAN KEAMANAN]:
-echo  - Database kasir (pos-master.sqlite & IndexedDB) 100%% AMAN dan TIDAK DIHAPUS.
+echo  - Database kasir (pos-master.sqlite dan IndexedDB) 100%% AMAN dan TIDAK DIHAPUS.
 echo  - Seluruh file kode sumber aplikasi tetap utuh.
 echo ==============================================================================
 echo.
 echo Pilihan mode pembersihan:
-echo [1] Pembersihan Standar Aman (Rekomendasi - Log, Temp, Cache & OS Junk)
-echo [2] Pembersihan Penuh (Standar + Hapus folder build dist/ untuk kompilasi ulang)
+echo [1] Pembersihan Standar Aman (Rekomendasi - Log, Temp, Cache, OS Junk)
+echo [2] Pembersihan Penuh (Standar + Hapus folder build dist untuk kompilasi ulang)
 echo [3] Simulasi Pindai Saja (Dry-Run / Tanpa Menghapus)
 echo [4] Batal
 echo.
 set /p PILIHAN="Masukkan pilihan Anda (1/2/3/4) [Default: 1]: "
-if "%PILIHAN%"=="" set PILIHAN=1
+if "%PILIHAN%"=="" set "PILIHAN=1"
 if "%PILIHAN%"=="4" (
     echo Pembersihan dibatalkan.
     pause
@@ -1123,7 +796,7 @@ DIR="$(cd "$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
 echo "=============================================================================="
-echo " 🧹 Ulilmart POS - Pembersihan File Usang & Sampah Sistem"
+echo " [OK] Ulilmart POS - Pembersihan File Usang & Sampah Sistem"
 echo "=============================================================================="
 
 if [ "$1" == "--dry-run" ] || [ "$1" == "-d" ]; then
@@ -1137,3 +810,227 @@ fi
   downloadBlobFile('clean.sh', shContent, 'text/x-shellscript');
 }
 
+export interface GitStatusResponse {
+  isGitRepo: boolean;
+  branch?: string;
+  currentCommit?: string;
+  commitMessage?: string;
+  commitDate?: string;
+  remoteUrl?: string;
+  officialRepoUrl?: string;
+  remoteLatestCommit?: string;
+  remoteCommitMessage?: string;
+  remoteCommitDate?: string;
+  remoteCommitAuthor?: string;
+  remoteHtmlUrl?: string;
+  lastCheckedAt?: string;
+  hasUpdate?: boolean;
+  isUpToDate?: boolean;
+  uncommittedCount?: number;
+  nodeVersion?: string;
+  platform?: string;
+  message?: string;
+  error?: string;
+}
+
+export interface SystemVerificationItem {
+  path: string;
+  category: string;
+  critical: boolean;
+  description: string;
+  exists: boolean;
+  size?: number;
+  lastModified?: string;
+  status: 'ok' | 'valid' | 'missing' | 'modified' | 'untracked';
+}
+
+export interface SystemVerificationResponse {
+  success: boolean;
+  overallHealth: 'healthy' | 'warning' | 'critical';
+  checkedAt?: string;
+  officialRepoUrl?: string;
+  stats: {
+    total: number;
+    intact: number;
+    modified: number;
+    missing: number;
+    missingCritical: number;
+  };
+  envPrerequisites: {
+    nodeVersion: string;
+    platform: string;
+    gitInstalled: boolean;
+    distBuilt: boolean;
+    nodeModulesInstalled: boolean;
+    databaseAccessible: boolean;
+  };
+  files: SystemVerificationItem[];
+  error?: string;
+}
+
+export interface CleanupScanItem {
+  path: string;
+  relativePath: string;
+  size: number;
+  category: string;
+  reason?: string;
+  description?: string;
+  safeToDelete?: boolean;
+}
+
+export interface CleanupScanResponse {
+  success: boolean;
+  totalFiles: number;
+  totalBytes: number;
+  items: CleanupScanItem[];
+  error?: string;
+}
+
+export interface CleanupExecuteResponse {
+  success: boolean;
+  deletedCount: number;
+  bytesFreed: number;
+  deletedList?: string[];
+  dbCleanup?: any;
+  message: string;
+  error?: string;
+}
+
+export interface DatabasePruneResponse {
+  success: boolean;
+  deletedSyncLogs: number;
+  deletedHeldOrders: number;
+  initialSizeKb: number;
+  finalSizeKb: number;
+  freedBytes: number;
+  vacuumExecuted: boolean;
+  walCheckpointExecuted: boolean;
+  integrity: string;
+  message: string;
+  error?: string;
+}
+
+export async function fetchGitStatus(forceRefresh = false): Promise<GitStatusResponse> {
+  try {
+    const res = await fetch(`/api/system/git-status${forceRefresh ? '?refresh=true' : ''}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err: any) {
+    return {
+      isGitRepo: false,
+      error: err?.message || String(err),
+      message: 'Gagal menghubungi server status Git',
+    };
+  }
+}
+
+export async function triggerGitPull(): Promise<{ success: boolean; message: string; output?: string; error?: string }> {
+  try {
+    const res = await fetch('/api/system/git-pull', { method: 'POST' });
+    return await res.json();
+  } catch (err: any) {
+    return { success: false, error: err?.message || String(err), message: 'Gagal menjalankan git pull' };
+  }
+}
+
+export async function configureGitRemote(repoUrl = DEFAULT_GITHUB_REPO_URL): Promise<{ success: boolean; message: string; error?: string }> {
+  try {
+    const res = await fetch('/api/system/git-configure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ repoUrl }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    return { success: false, error: err?.message || String(err), message: 'Gagal konfigurasi remote Git' };
+  }
+}
+
+export async function verifySystemFiles(): Promise<SystemVerificationResponse> {
+  try {
+    const res = await fetch('/api/system/verify-files');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      overallHealth: 'critical',
+      stats: {
+        total: 0,
+        intact: 0,
+        modified: 0,
+        missing: 0,
+        missingCritical: 0,
+      },
+      envPrerequisites: {
+        nodeVersion: '',
+        platform: '',
+        gitInstalled: false,
+        distBuilt: false,
+        nodeModulesInstalled: false,
+        databaseAccessible: false,
+      },
+      files: [],
+      error: err?.message || String(err),
+    };
+  }
+}
+
+export async function scanUnnecessaryFiles(): Promise<CleanupScanResponse> {
+  try {
+    const res = await fetch('/api/system/cleanup-scan');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      totalFiles: 0,
+      totalBytes: 0,
+      items: [],
+      error: err?.message || String(err),
+    };
+  }
+}
+
+export async function executeSystemCleanup(): Promise<CleanupExecuteResponse> {
+  try {
+    const res = await fetch('/api/system/cleanup-execute', { method: 'POST' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      deletedCount: 0,
+      bytesFreed: 0,
+      message: 'Gagal menjalankan pembersihan sistem: ' + (err?.message || String(err)),
+      error: err?.message,
+    };
+  }
+}
+
+export async function executeDatabasePruning(): Promise<DatabasePruneResponse> {
+  try {
+    const res = await fetch('/api/pos/database/clean-obsolete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP Error: ${res.status}`);
+    }
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      deletedSyncLogs: 0,
+      deletedHeldOrders: 0,
+      initialSizeKb: 0,
+      finalSizeKb: 0,
+      freedBytes: 0,
+      vacuumExecuted: false,
+      walCheckpointExecuted: false,
+      integrity: 'error',
+      message: 'Gagal memangkas database: ' + (err?.message || String(err)),
+      error: err?.message,
+    };
+  }
+}
