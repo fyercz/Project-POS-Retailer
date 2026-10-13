@@ -46,6 +46,7 @@ import {
   ChevronRight,
   EyeOff,
   ArrowDownToLine,
+  QrCode,
 } from 'lucide-react';
 import {
   usePOSCatalog,
@@ -64,6 +65,8 @@ import { SupplierPurchaseDetailModal } from '../SupplierPurchaseDetailModal';
 import { ReceivingBarcodeCameraModal } from '../ReceivingBarcodeCameraModal';
 import { parsePaymentTermsInfo } from '../../utils/paymentTermsHelper';
 import { PriceTagModal } from '../PriceTagModal';
+import { QRShelfLabelModal } from '../QRShelfLabelModal';
+import { ShelfProductLiveModal } from '../ShelfProductLiveModal';
 import { DataImportModal } from '../DataImportModal';
 import { DirectFileImportModal } from '../DirectFileImportModal';
 import { OnlineDatabaseMatcherModal } from '../OnlineDatabaseMatcherModal';
@@ -200,6 +203,11 @@ export const InventoryView: React.FC = () => {
   const [isPriceTagModalOpen, setIsPriceTagModalOpen] = useState(false);
   const [productForPriceTag, setProductForPriceTag] = useState<Product | null>(null);
   const [purchaseForPriceTag, setPurchaseForPriceTag] = useState<SupplierPurchase | null>(null);
+
+  // Dynamic QR Shelf Label Modal State
+  const [isQRShelfLabelModalOpen, setIsQRShelfLabelModalOpen] = useState(false);
+  const [selectedProductForQR, setSelectedProductForQR] = useState<Product | null>(null);
+  const [liveShelfProductId, setLiveShelfProductId] = useState<string | null>(null);
 
   // Supplier Purchase Detail & Receipt Modal State
   const [selectedPurchaseForDetail, setSelectedPurchaseForDetail] = useState<SupplierPurchase | null>(null);
@@ -1448,6 +1456,20 @@ export const InventoryView: React.FC = () => {
             <span>Harga Dinamis AI</span>
           </button>
 
+          {/* DYNAMIC QR SHELF LABELS BUTTON */}
+          <button
+            id="btn-open-qr-shelf-labels"
+            onClick={() => {
+              setSelectedProductForQR(null);
+              setIsQRShelfLabelModalOpen(true);
+            }}
+            className="flex px-3 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs items-center gap-1.5 shadow-md shadow-slate-900/20 cursor-pointer transition-all active:scale-95 border border-slate-700"
+            title="Cetak Label Rak QR Dinamis: Link real-time stok & tanggal update harga"
+          >
+            <QrCode className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Label Rak QR</span>
+          </button>
+
           {/* GROUP 1: Opname & Audit Stok (Dropdown) */}
           <div className="relative hidden md:block" ref={auditDropdownRef}>
             <button
@@ -2007,6 +2029,18 @@ export const InventoryView: React.FC = () => {
             </button>
             <button
               type="button"
+              onClick={() => {
+                setSelectedProductForQR(null);
+                setIsQRShelfLabelModalOpen(true);
+              }}
+              className="px-3.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
+              title="Cetak label rak QR dinamis untuk produk yang dipilih"
+            >
+              <QrCode className="w-3.5 h-3.5 text-indigo-200" />
+              <span>Cetak Label QR ({selectedProductIds.length})</span>
+            </button>
+            <button
+              type="button"
               onClick={handleOpenBulkAdjustSelected}
               className="px-3.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
               title="Perbarui kuantitas stok fisik dan tanggal kadaluarsa produk terpilih secara massal"
@@ -2272,6 +2306,18 @@ export const InventoryView: React.FC = () => {
                               className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-amber-500 dark:hover:text-slate-950 text-amber-700 dark:text-amber-300 text-xs font-semibold cursor-pointer transition-colors"
                             >
                               <Tag className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Print Dynamic QR Shelf Label */}
+                            <button
+                              onClick={() => {
+                                setSelectedProductForQR(prod);
+                                setIsQRShelfLabelModalOpen(true);
+                              }}
+                              title="Cetak Label Rak QR Dinamis (Real-Time Stok & Tgl Update Harga)"
+                              className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 dark:hover:text-white text-indigo-700 dark:text-indigo-300 text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+                            >
+                              <QrCode className="w-3.5 h-3.5" />
                             </button>
 
                             {/* Price History Button */}
@@ -4003,6 +4049,11 @@ export const InventoryView: React.FC = () => {
           setProductForPriceTag(prod);
           setIsPriceTagModalOpen(true);
         }}
+        onPrintQRShelfLabel={(prod) => {
+          setIsProductModalOpen(false);
+          setSelectedProductForQR(prod);
+          setIsQRShelfLabelModalOpen(true);
+        }}
         onSuccess={(savedProduct, isEdit) => {
           setNotificationMsg({
             type: 'success',
@@ -4078,6 +4129,30 @@ export const InventoryView: React.FC = () => {
         initialSelectedProduct={productForPriceTag}
         initialPurchaseInvoice={purchaseForPriceTag}
       />
+
+      {/* Dynamic QR Shelf Label Studio Modal */}
+      <QRShelfLabelModal
+        isOpen={isQRShelfLabelModalOpen}
+        onClose={() => {
+          setIsQRShelfLabelModalOpen(false);
+          setSelectedProductForQR(null);
+        }}
+        initialSelectedProduct={selectedProductForQR}
+        initialSelectedProductIds={selectedProductIds}
+      />
+
+      {/* Real-time Shelf Item Live Modal */}
+      {liveShelfProductId && (
+        <ShelfProductLiveModal
+          productId={liveShelfProductId}
+          isOpen={Boolean(liveShelfProductId)}
+          onClose={() => setLiveShelfProductId(null)}
+          onOpenPrintLabel={(prod) => {
+            setSelectedProductForQR(prod);
+            setIsQRShelfLabelModalOpen(true);
+          }}
+        />
+      )}
 
       {/* Direct File Import (As-Is / No Auto-Correction) */}
       <DirectFileImportModal

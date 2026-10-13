@@ -23,6 +23,7 @@ import {
   TrendingUp,
   ShieldCheck,
   CheckCircle2,
+  QrCode,
 } from 'lucide-react';
 import { Product, WholesaleUnit } from '../types';
 import { usePOS } from '../context/POSContext';
@@ -40,6 +41,7 @@ interface ProductFormModalProps {
   } | null;
   onSuccess?: (product: Product, isEdit: boolean) => void;
   onPrintPriceTag?: (product: Product) => void;
+  onPrintQRShelfLabel?: (product: Product) => void;
   onViewPriceHistory?: (product: Product) => void;
 }
 
@@ -66,6 +68,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   authorizationInfo,
   onSuccess,
   onPrintPriceTag,
+  onPrintQRShelfLabel,
   onViewPriceHistory,
 }) => {
   const { categories, addProduct, updateProduct, settings } = usePOS();
@@ -1154,7 +1157,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {/* Footer Actions */}
           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 sticky bottom-0 bg-white dark:bg-slate-900 py-2">
-            <div>
+            <div className="flex items-center gap-2">
               {isEditMode && productToEdit && onPrintPriceTag && (
                 <button
                   type="button"
@@ -1162,7 +1165,18 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   className="px-3.5 py-2 text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/60 rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
                 >
                   <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  <span>Cetak Pricetag (A4/F4)</span>
+                  <span>Pricetag A4</span>
+                </button>
+              )}
+              {isEditMode && productToEdit && onPrintQRShelfLabel && (
+                <button
+                  type="button"
+                  onClick={() => onPrintQRShelfLabel(productToEdit)}
+                  className="px-3.5 py-2 text-xs font-bold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-300 dark:border-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                  title="Cetak Label Rak QR Dinamis (Link Real-Time Stok & Update Harga)"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                  <span>Label Rak QR</span>
                 </button>
               )}
             </div>

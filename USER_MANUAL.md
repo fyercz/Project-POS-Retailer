@@ -307,7 +307,7 @@ Aplikasi kasir Ulilmart dilengkapi sistem pembersihan file usang (*Obsolete & Ju
 
 #### 1. Klik Ganda File Skrip Windows (Paling Praktis)
 * Buka folder aplikasi kasir Ulilmart di Windows Explorer.
-* Klik ganda file **`bersihkan-file-usang.bat`** (atau **`clean.bat`**).
+* Klik ganda file **`clean.bat`**.
 * Pilih mode:
   * **[1] Pembersihan Standar Aman (Rekomendasi)**: Menghapus log, file temp, cache Vite, dan file sampah OS.
   * **[2] Pembersihan Penuh**: Standar + menghapus folder `dist/` untuk kompilasi bersih ulang.

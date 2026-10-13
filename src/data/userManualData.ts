@@ -643,7 +643,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         summary: 'Membuka POS tanpa bilah browser, tanpa tab, dan langsung terintegrasi dengan hardware toko.',
         steps: [
           'Di komputer Windows, cukup klik ganda file "autorun.bat" (atau "desktop.bat"). Script akan otomatis mendeteksi, menginstal, mengompilasi, dan langsung membuka kasir.',
-          'Untuk menyalakan kasir otomatis setiap kali PC dinyalakan di pagi hari, klik ganda file "setup-autorun-startup.bat" lalu pilih opsi [1].',
+          'Untuk menyalakan kasir otomatis setiap kali PC dinyalakan di pagi hari, jalankan file "autorun.bat --startup" atau buka wizard menu dengan "autorun.bat --menu".',
           'Media USB / Flashdisk juga dilengkapi file "autorun.inf" standar untuk instalasi cepat.',
           'Aplikasi akan membuka jendela desktop mandiri menggunakan Chrome/Edge App Mode.',
           'Tekan F11 untuk masuk ke Mode Kiosk Layar Penuh (tanpa tombol minimize/close).',

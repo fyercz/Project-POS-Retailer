@@ -27,6 +27,7 @@ import { UnregisteredBarcodeModal } from './components/UnregisteredBarcodeModal'
 import { ProductFormModal } from './components/ProductFormModal';
 import { AccessDeniedView } from './components/AccessDeniedView';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { ShelfProductLiveModal } from './components/ShelfProductLiveModal';
 import { isViewAllowed, getDefaultView } from './utils/permissions';
 import { formatCurrency } from './utils/formatters';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
@@ -70,6 +71,41 @@ const POSMainApp: React.FC = () => {
     barcode: '',
     authorizer: null,
   });
+
+  // Dynamic QR Shelf Scanned Product ID (detects ?shelf=... in URL)
+  const [scannedShelfProductId, setScannedShelfProductId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('shelf') || params.get('qr_product') || null;
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const handleUrlCheck = () => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const shelfId = params.get('shelf') || params.get('qr_product');
+        if (shelfId) {
+          setScannedShelfProductId(shelfId);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handleUrlCheck);
+    return () => window.removeEventListener('popstate', handleUrlCheck);
+  }, []);
+
+  const handleCloseShelfModal = () => {
+    setScannedShelfProductId(null);
+    if (typeof window !== 'undefined' && window.history) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('shelf');
+      url.searchParams.delete('qr_product');
+      const cleanPath = url.pathname + (url.search ? url.search : '');
+      window.history.replaceState({}, '', cleanPath);
+    }
+  };
 
   // If the logged-in employee role cannot view the activeView, automatically shift to their default view
   useEffect(() => {
@@ -247,6 +283,15 @@ const POSMainApp: React.FC = () => {
             });
             addToCart(savedProduct);
           }}
+        />
+      )}
+
+      {/* Scanned QR Shelf Product Live Verification Modal */}
+      {scannedShelfProductId && (
+        <ShelfProductLiveModal
+          productId={scannedShelfProductId}
+          isOpen={Boolean(scannedShelfProductId)}
+          onClose={handleCloseShelfModal}
         />
       )}
     </div>

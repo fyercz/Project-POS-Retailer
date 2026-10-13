@@ -8,6 +8,55 @@ color 0A
 
 cd /d "%~dp0"
 
+REM ==============================================================================
+REM Auto-Deteksi & Injeksi PATH: Node.js, npm, dan Windows System32
+REM ==============================================================================
+if exist "%SystemRoot%\System32" (
+    set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\;%PATH%"
+)
+
+where node >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    if exist "C:\Program Files\nodejs\node.exe" (
+        set "PATH=C:\Program Files\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramFiles%\nodejs\node.exe" (
+        set "PATH=%ProgramFiles%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "C:\Program Files (x86)\nodejs\node.exe" (
+        set "PATH=C:\Program Files (x86)\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramFiles(x86)%\nodejs\node.exe" (
+        set "PATH=%ProgramFiles(x86)%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" (
+        set "PATH=%LOCALAPPDATA%\Programs\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramW6432%\nodejs\node.exe" (
+        set "PATH=%ProgramW6432%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "C:\nvm\nodejs\node.exe" (
+        set "PATH=C:\nvm\nodejs;%PATH%"
+    ) else if exist "%NVM_SYMLINK%\node.exe" (
+        set "PATH=%NVM_SYMLINK%;%PATH%"
+    )
+)
+
+where node >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    cls
+    echo ==============================================================================
+    echo  [PERINGATAN] Runtime Node.js Belum Terdeteksi di Komputer Ini!
+    echo ==============================================================================
+    echo  Aplikasi POS membutuhkan runtime Node.js LTS untuk berjalan.
+    echo.
+    echo  Jika Node.js SUDAH diinstal:
+    echo  - Kemungkinan lokasi instalasi belum masuk ke PATH sistem Windows.
+    echo  - Jalankan script "install.bat" untuk memeriksa dan memasang ulang.
+    echo.
+    echo  Jika Node.js BELUM diinstal:
+    echo  - Buka https://nodejs.org/ dan unduh versi LTS.
+    echo  - Pastikan centang opsi "Add to PATH" saat instalasi.
+    echo ==============================================================================
+    echo.
+    pause
+    exit /b 1
+)
+
 cls
 echo ==============================================================================
 echo     ┌──────┐

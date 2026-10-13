@@ -1183,7 +1183,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          navigator.clipboard.writeText('bersihkan-file-usang.bat');
+                          navigator.clipboard.writeText('clean.bat');
                           setCopiedCmd('bat');
                           setTimeout(() => setCopiedCmd(null), 2000);
                         }}
@@ -1194,7 +1194,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       </button>
                     </div>
                     <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded font-mono text-[11px] text-blue-600 dark:text-blue-400 truncate">
-                      bersihkan-file-usang.bat
+                      clean.bat
                     </code>
                   </div>
                 </div>

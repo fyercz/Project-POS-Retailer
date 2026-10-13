@@ -1,0 +1,6 @@
+{
+  "summary": "Rencana perbaikan menyeluruh untuk mengatasi error 'is not recognized as an internal or external command' pada file .bat di Windows akibat Node.js/npm belum terdaftar di environment PATH sistem. Solusi mencakup auto-deteksi jalur instalasi Node.js (C:\\Program Files\\nodejs, AppData, NVM), auto-inject PATH ke sesi command prompt, fallback panduan instalasi, dan penyelarasan di semua skrip .bat.",
+  "updatedAt": "2026-10-13T11:08:06.181408067Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

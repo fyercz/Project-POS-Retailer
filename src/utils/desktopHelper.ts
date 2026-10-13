@@ -985,6 +985,47 @@ export async function executeSystemCleanup(): Promise<CleanupExecuteResponse> {
   }
 }
 
+export interface DatabasePruneResponse {
+  success: boolean;
+  deletedSyncLogs: number;
+  deletedHeldOrders: number;
+  initialSizeKb: number;
+  finalSizeKb: number;
+  freedBytes: number;
+  vacuumExecuted: boolean;
+  walCheckpointExecuted: boolean;
+  integrity: string;
+  message: string;
+  error?: string;
+}
+
+export async function executeDatabasePruning(): Promise<DatabasePruneResponse> {
+  try {
+    const res = await fetch('/api/pos/database/clean-obsolete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP Error: ${res.status}`);
+    }
+    return await res.json();
+  } catch (err: any) {
+    return {
+      success: false,
+      deletedSyncLogs: 0,
+      deletedHeldOrders: 0,
+      initialSizeKb: 0,
+      finalSizeKb: 0,
+      freedBytes: 0,
+      vacuumExecuted: false,
+      walCheckpointExecuted: false,
+      integrity: 'error',
+      message: 'Gagal memangkas database: ' + (err?.message || String(err)),
+      error: err?.message,
+    };
+  }
+}
+
 function downloadBlobFile(filename: string, content: string, mimeType = 'text/plain;charset=utf-8') {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -1071,7 +1112,7 @@ echo Tekan tombol apa saja untuk menutup jendela ini...
 pause >nul
 exit /b 0
 `;
-  downloadBlobFile('bersihkan-file-usang.bat', batContent, 'application/x-bat');
+  downloadBlobFile('clean.bat', batContent, 'application/x-bat');
 }
 
 export function downloadCleanerSh(): void {

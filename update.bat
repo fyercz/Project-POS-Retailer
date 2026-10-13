@@ -10,6 +10,34 @@ color 0B
 
 cd /d "%~dp0"
 
+REM ==============================================================================
+REM Auto-Deteksi & Injeksi PATH: Node.js, npm, Git, dan Windows System32
+REM ==============================================================================
+if exist "%SystemRoot%\System32" (
+    set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\;%PATH%"
+)
+
+where node >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    if exist "C:\Program Files\nodejs\node.exe" (
+        set "PATH=C:\Program Files\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramFiles%\nodejs\node.exe" (
+        set "PATH=%ProgramFiles%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "C:\Program Files (x86)\nodejs\node.exe" (
+        set "PATH=C:\Program Files (x86)\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramFiles(x86)%\nodejs\node.exe" (
+        set "PATH=%ProgramFiles(x86)%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" (
+        set "PATH=%LOCALAPPDATA%\Programs\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramW6432%\nodejs\node.exe" (
+        set "PATH=%ProgramW6432%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "C:\nvm\nodejs\node.exe" (
+        set "PATH=C:\nvm\nodejs;%PATH%"
+    ) else if exist "%NVM_SYMLINK%\node.exe" (
+        set "PATH=%NVM_SYMLINK%;%PATH%"
+    )
+)
+
 set REPO_URL=https://github.com/fyercz/Project-POS-Retailer.git
 
 cls

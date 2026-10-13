@@ -49,6 +49,7 @@ import { usePOS } from '../context/POSContext';
 import { BackupPayload, RestorePoint } from '../types';
 import { formatRupiah } from '../utils/formatters';
 import { validateBackupFile, BackupValidationReport } from '../utils/backupValidator';
+import { executeDatabasePruning, DatabasePruneResponse } from '../utils/desktopHelper';
 
 interface BackupRestoreModalProps {
   isOpen: boolean;
@@ -85,6 +86,8 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
     speedComparison: string;
   } | null>(null);
   const [isRefreshingStorage, setIsRefreshingStorage] = useState(false);
+  const [isPruningDb, setIsPruningDb] = useState(false);
+  const [pruneDbResult, setPruneDbResult] = useState<DatabasePruneResponse | null>(null);
 
   // Export Customization State
   const [exportCustomName, setExportCustomName] = useState('');
@@ -336,6 +339,26 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
       .catch(() => {
         showToast('error', 'Gagal menyalin teks ke clipboard.');
       });
+  };
+
+  const handlePruneDb = async () => {
+    setIsPruningDb(true);
+    setPruneDbResult(null);
+    try {
+      const res = await executeDatabasePruning();
+      // Also prune old local restore points if more than 3
+      if (restorePoints.length > 3) {
+        const excess = restorePoints.slice(3);
+        excess.forEach((p) => deleteRestorePoint(p.id));
+      }
+      setPruneDbResult(res);
+      refreshStorageDiagnostics().catch(() => {});
+      showToast('success', res.message || 'Database berhasil dipangkas & dirampingkan!');
+    } catch (err: any) {
+      showToast('error', 'Gagal memangkas database: ' + (err?.message || 'Error'));
+    } finally {
+      setIsPruningDb(false);
+    }
   };
 
   const handleResetUploadedFile = () => {
@@ -1738,6 +1761,67 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
 
                     <p className="text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-850 p-2 rounded-lg">
                       {benchmarkResult.speedComparison}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Database & Obsolete Files Pruner */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h5 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Trash2 className="w-4 h-4 text-rose-500" />
+                      <span>Pemangkasan File &amp; Data Usang Database</span>
+                    </h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Pangkas snapshot titik pulih usang, bersihkan log audit lama, checkpoint &amp; potong WAL, serta jalankan SQLite VACUUM untuk merampingkan database.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isPruningDb}
+                    onClick={handlePruneDb}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer transition active:scale-95 disabled:opacity-50"
+                  >
+                    <Trash2 className={`w-3.5 h-3.5 ${isPruningDb ? 'animate-spin' : ''}`} />
+                    <span>{isPruningDb ? 'Memangkas Database...' : 'Pangkas File Usang & Padatkan DB'}</span>
+                  </button>
+                </div>
+
+                {pruneDbResult && (
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/60 space-y-2 animate-in fade-in">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="w-4 h-4" /> Hasil Pemangkasan Database
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        Integritas: {pruneDbResult.integrity}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[11px]">
+                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <div className="text-[10px] text-slate-400">Log Audit Dihapus:</div>
+                        <div className="font-bold text-slate-800 dark:text-slate-200 text-sm">{pruneDbResult.deletedSyncLogs}</div>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <div className="text-[10px] text-slate-400">Pesanan Tertunda:</div>
+                        <div className="font-bold text-slate-800 dark:text-slate-200 text-sm">{pruneDbResult.deletedHeldOrders}</div>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <div className="text-[10px] text-slate-400">Ukuran Awal:</div>
+                        <div className="font-bold text-slate-700 dark:text-slate-300 text-sm">{pruneDbResult.initialSizeKb} KB</div>
+                      </div>
+                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50">
+                        <div className="text-[10px] text-emerald-700 dark:text-emerald-400">Ukuran Setelah VACUUM:</div>
+                        <div className="font-bold text-emerald-900 dark:text-emerald-200 text-sm">{pruneDbResult.finalSizeKb} KB</div>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 bg-emerald-50/50 dark:bg-emerald-950/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                      {pruneDbResult.message}
                     </p>
                   </div>
                 )}

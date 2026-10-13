@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import {
   Sparkles,
   TrendingUp,
@@ -17,6 +17,12 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  LayoutGrid,
+  List,
   Info,
   Building2,
   Percent,
@@ -80,6 +86,12 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [filterAction, setFilterAction] = useState<'all' | 'increase' | 'decrease' | 'clearance' | 'maintain'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  // Performance View & Pagination states (prevents UI freeze on large datasets)
+  const [viewMode, setViewMode] = useState<'compact' | 'cards'>('compact');
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Suggestions state
   const [suggestions, setSuggestions] = useState<DynamicPricingSuggestion[]>([]);
@@ -138,12 +150,12 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
     }, 4000);
   };
 
-  // Filtered list
+  // Filtered list with deferred search to prevent render blocking
   const filteredSuggestions = useMemo(() => {
     return suggestions.filter((item) => {
       // Search
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
+      if (deferredSearchQuery.trim()) {
+        const q = deferredSearchQuery.toLowerCase();
         const matchName = item.productName.toLowerCase().includes(q);
         const matchBrand = (item.brand || '').toLowerCase().includes(q);
         if (!matchName && !matchBrand) return false;
@@ -155,7 +167,20 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
       if (filterAction === 'maintain') return item.actionType === 'maintain';
       return true;
     });
-  }, [suggestions, searchQuery, filterAction]);
+  }, [suggestions, deferredSearchQuery, filterAction]);
+
+  // Reset to page 1 on filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [deferredSearchQuery, filterAction, selectedCategory, strategy, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSuggestions.length / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const paginatedSuggestions = useMemo(() => {
+    const start = (safeCurrentPage - 1) * pageSize;
+    return filteredSuggestions.slice(start, start + pageSize);
+  }, [filteredSuggestions, safeCurrentPage, pageSize]);
 
   // KPI Calculations
   const kpis = useMemo(() => {
@@ -248,6 +273,54 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
     });
 
     showToast(`Berhasil menerapkan ${updates.length} penyesuaian harga produk secara massal!`);
+  };
+
+  // Apply pending recommendations on current page only
+  const handleApplyCurrentPagePending = () => {
+    const pendingItems = paginatedSuggestions.filter(
+      (s) => s.actionType !== 'maintain' && !appliedProductIds.has(s.productId)
+    );
+
+    if (pendingItems.length === 0) {
+      showToast('Tidak ada penyesuaian harga pending pada halaman ini');
+      return;
+    }
+
+    const updates = pendingItems.map((item) => {
+      const historyRecord: PriceHistoryRecord = {
+        id: `price-hist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        productId: item.productId,
+        date: new Date().toISOString(),
+        costPrice: item.costPrice,
+        sellingPrice: item.suggestedPrice,
+        previousCostPrice: item.costPrice,
+        previousSellingPrice: item.currentPrice,
+        changeType: 'bulk_adjust',
+        sourceReference: `AI Dynamic Pricing Hal ${safeCurrentPage} (${strategy})`,
+        notes: item.aiReasoning,
+        recordedBy: 'AI Pricing Optimizer',
+      };
+
+      return {
+        productId: item.productId,
+        newPrice: item.suggestedPrice,
+        historyRecord,
+      };
+    });
+
+    if (onApplyBatchPriceUpdates) {
+      onApplyBatchPriceUpdates(updates);
+    } else {
+      updates.forEach((u) => onApplyPriceUpdate(u.productId, u.newPrice, u.historyRecord));
+    }
+
+    setAppliedProductIds((prev) => {
+      const next = new Set(prev);
+      pendingItems.forEach((i) => next.add(i.productId));
+      return next;
+    });
+
+    showToast(`Berhasil menerapkan ${updates.length} harga produk pada halaman ini!`);
   };
 
   // Open Simulator
@@ -515,12 +588,57 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
           </div>
         </div>
 
-        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          Menampilkan <span className="font-bold text-slate-800 dark:text-white">{filteredSuggestions.length}</span> dari {suggestions.length} produk
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+            <button
+              onClick={() => setViewMode('compact')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === 'compact'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+              title="Tabel Ringkas (Cepat & Ringan)"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>Tabel Ringkas</span>
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === 'cards'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+              title="Kartu Analisis Mendalam"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Kartu Detail</span>
+            </button>
+          </div>
+
+          {/* Page Size Selector */}
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <span>Baris:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-hidden"
+            >
+              <option value={8}>8</option>
+              <option value={15}>15</option>
+              <option value={30}>30</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Hal <span className="font-bold text-slate-800 dark:text-white">{safeCurrentPage}</span>/{totalPages} ({filteredSuggestions.length} produk)
+          </div>
         </div>
       </div>
 
-      {/* PRODUCT PRICING MATRIX TABLE */}
+      {/* PRODUCT PRICING MATRIX TABLE / CARDS */}
       <div className="p-4 sm:p-6 overflow-x-auto">
         {isLoading ? (
           <div className="py-20 text-center flex flex-col items-center justify-center">
@@ -538,9 +656,190 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
             <p className="text-sm font-semibold">Tidak ada produk yang cocok dengan filter yang dipilih</p>
             <p className="text-xs text-slate-400 mt-0.5">Ubah kata kunci pencarian atau ganti filter kategori.</p>
           </div>
+        ) : viewMode === 'compact' ? (
+          /* FAST COMPACT TABLE MODE (Zero-lag, ultra lightweight) */
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-900 shadow-xs">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-750 bg-slate-50/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-wider">
+                  <th className="py-3 px-3.5">Produk</th>
+                  <th className="py-3 px-3">Kecepatan Stok (DSI)</th>
+                  <th className="py-3 px-3">Harga Toko Saat Ini</th>
+                  <th className="py-3 px-3">Rata-Rata Pasar</th>
+                  <th className="py-3 px-3">Saran Harga AI</th>
+                  <th className="py-3 px-3">Delta & Margin Baru</th>
+                  <th className="py-3 px-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                {paginatedSuggestions.map((item) => {
+                  const isApplied = appliedProductIds.has(item.productId);
+                  const isIncrease = item.actionType === 'increase';
+                  const isDecrease = item.actionType === 'decrease';
+
+                  return (
+                    <tr
+                      key={item.productId}
+                      className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/50 transition-colors ${
+                        isApplied
+                          ? 'bg-emerald-50/30 dark:bg-emerald-950/10'
+                          : isIncrease
+                          ? 'bg-indigo-50/20 dark:bg-indigo-950/10'
+                          : isDecrease
+                          ? 'bg-amber-50/20 dark:bg-amber-950/10'
+                          : ''
+                      }`}
+                    >
+                      {/* PRODUCT */}
+                      <td className="py-3 px-3.5">
+                        <div className="font-bold text-slate-900 dark:text-white max-w-[220px] truncate" title={item.productName}>
+                          {item.productName}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400">
+                          <span>{item.categoryName}</span>
+                          <span>•</span>
+                          <span>Stok: <strong className="text-slate-600 dark:text-slate-300">{item.stock}</strong></span>
+                        </div>
+                      </td>
+
+                      {/* VELOCITY */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                            item.turnoverSpeed === 'fast'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                              : item.turnoverSpeed === 'moderate'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                              : item.turnoverSpeed === 'slow'
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                              : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
+                          }`}
+                        >
+                          {item.turnoverSpeed === 'fast' && '🔥 Cepat'}
+                          {item.turnoverSpeed === 'moderate' && '⚡ Normal'}
+                          {item.turnoverSpeed === 'slow' && '🐢 Lambat'}
+                          {item.turnoverSpeed === 'dead_stock' && '⚠️ Macet'}
+                        </span>
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          DSI: {item.daysOfInventory > 100 ? '>90' : item.daysOfInventory} hari ({item.unitsSold30d} terjual)
+                        </div>
+                      </td>
+
+                      {/* CURRENT PRICE */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <div className="font-extrabold text-slate-900 dark:text-white">
+                          {formatCurrency(item.currentPrice, currency)}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          HPP: {formatCurrency(item.costPrice, currency)} (Margin {item.currentMarginPercent}%)
+                        </div>
+                      </td>
+
+                      {/* COMPETITOR MARKET */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <div className="font-bold text-slate-800 dark:text-slate-200">
+                          {formatCurrency(item.competitorAvgPrice, currency)}
+                        </div>
+                        <div className="text-[10px] flex items-center gap-1 mt-0.5">
+                          <span
+                            className={`font-bold px-1 rounded ${
+                              item.priceVsMarketPercent > 0
+                                ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                            }`}
+                          >
+                            {item.priceVsMarketPercent > 0 ? `+${item.priceVsMarketPercent}% mahal` : `${item.priceVsMarketPercent}% murah`}
+                          </span>
+                          <button
+                            onClick={() => handleOpenCompetitors(item)}
+                            className="text-indigo-600 dark:text-indigo-400 hover:underline text-[10px] cursor-pointer"
+                          >
+                            Riset
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* AI SUGGESTION */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <div className="font-black text-indigo-600 dark:text-indigo-400 text-sm">
+                          {formatCurrency(item.suggestedPrice, currency)}
+                        </div>
+                        <span
+                          className={`inline-block px-1.5 py-0.2 rounded text-[10px] font-bold mt-0.5 ${
+                            item.strategyTag === 'Peluang Margin'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
+                              : item.strategyTag === 'Percepat Stok'
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300'
+                              : item.strategyTag === 'Cuci Gudang'
+                              ? 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300'
+                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300'
+                          }`}
+                        >
+                          {item.strategyTag}
+                        </span>
+                      </td>
+
+                      {/* DELTA & MARGIN */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <div
+                          className={`font-bold ${
+                            item.priceDelta > 0
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : item.priceDelta < 0
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-slate-400'
+                          }`}
+                        >
+                          {item.priceDelta > 0 ? `+${formatCurrency(item.priceDelta, currency)}` : item.priceDelta < 0 ? formatCurrency(item.priceDelta, currency) : 'Sama'}
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          Margin: <strong className="text-indigo-600 font-bold">{item.suggestedMarginPercent}%</strong>
+                        </div>
+                      </td>
+
+                      {/* ACTIONS */}
+                      <td className="py-3 px-3 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {isApplied ? (
+                            <span className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[11px] flex items-center gap-1">
+                              <Check className="w-3 h-3" />
+                              Diterapkan
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleApplySingle(item)}
+                              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-xs cursor-pointer"
+                            >
+                              <Check className="w-3 h-3" />
+                              Terapkan
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleOpenSimulator(item)}
+                            title="Simulasi Elastisitas"
+                            className="p-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
+                          >
+                            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenCustomEdit(item)}
+                            title="Edit Harga Manual"
+                            className="p-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
+                          >
+                            <Edit2 className="w-3.5 h-3.5 text-slate-500" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         ) : (
+          /* CARD MODE (Only renders paginated items to eliminate DOM freeze) */
           <div className="space-y-3.5">
-            {filteredSuggestions.map((item) => {
+            {paginatedSuggestions.map((item) => {
               const isApplied = appliedProductIds.has(item.productId);
               const isIncrease = item.actionType === 'increase';
               const isDecrease = item.actionType === 'decrease';
@@ -761,6 +1060,86 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* BOTTOM PAGINATION & BATCH BAR */}
+        {filteredSuggestions.length > 0 && !isLoading && (
+          <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Menampilkan <strong className="text-slate-700 dark:text-slate-200">{(safeCurrentPage - 1) * pageSize + 1}</strong> - <strong className="text-slate-700 dark:text-slate-200">{Math.min(safeCurrentPage * pageSize, filteredSuggestions.length)}</strong> dari <strong className="text-slate-700 dark:text-slate-200">{filteredSuggestions.length}</strong> produk
+              </span>
+
+              {/* Page action: apply current page */}
+              <button
+                onClick={handleApplyCurrentPagePending}
+                className="px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-semibold border border-indigo-200 dark:border-indigo-800 transition cursor-pointer flex items-center gap-1"
+              >
+                <Check className="w-3 h-3" />
+                Terapkan Hal Ini ({paginatedSuggestions.filter((s) => s.actionType !== 'maintain' && !appliedProductIds.has(s.productId)).length})
+              </button>
+            </div>
+
+            {/* Pagination controls */}
+            <div className="flex items-center gap-1 self-center sm:self-auto">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={safeCurrentPage <= 1}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                title="Halaman Pertama"
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safeCurrentPage <= 1}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                title="Halaman Sebelumnya"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {/* Page numbers around current */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - safeCurrentPage) <= 2)
+                .map((p, idx, arr) => {
+                  const prev = arr[idx - 1];
+                  const showEllipsis = prev && p - prev > 1;
+                  return (
+                    <React.Fragment key={p}>
+                      {showEllipsis && <span className="px-1 text-slate-400 text-xs">...</span>}
+                      <button
+                        onClick={() => setCurrentPage(p)}
+                        className={`w-7 h-7 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          safeCurrentPage === p
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage >= totalPages}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                title="Halaman Berikutnya"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={safeCurrentPage >= totalPages}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                title="Halaman Terakhir"
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>

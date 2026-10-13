@@ -87,28 +87,56 @@ export function getEffectiveCompetitors(product: Product): CompetitorPrice[] {
 }
 
 /**
- * Calculate inventory turnover metrics from transactions
+ * Fast single-pass pre-indexer for transaction sales to prevent O(N*T*M) blocking loops
+ */
+export function buildProductSalesMap(transactions: Transaction[], windowDays = 30): Map<string, number> {
+  const map = new Map<string, number>();
+  const cutoffTime = Date.now() - windowDays * 24 * 60 * 60 * 1000;
+
+  for (const tx of transactions) {
+    if (tx.status === 'completed' && Array.isArray(tx.items)) {
+      const txTime = new Date(tx.createdAt).getTime();
+      if (!isNaN(txTime) && txTime >= cutoffTime) {
+        for (const item of tx.items) {
+          const pId = item.product?.id || (item as any).productId;
+          if (pId) {
+            map.set(pId, (map.get(pId) || 0) + (item.quantity || 1));
+          }
+        }
+      }
+    }
+  }
+  return map;
+}
+
+/**
+ * Calculate inventory turnover metrics from transactions (with optional fast cachedSalesMap)
  */
 export function calculateProductTurnover(
   product: Product,
   transactions: Transaction[],
-  windowDays = 30
+  windowDays = 30,
+  cachedSalesMap?: Map<string, number>
 ): {
   unitsSold30d: number;
   dailyVelocity: number;
   daysOfInventory: number;
   turnoverSpeed: TurnoverSpeed;
 } {
-  const cutoffTime = Date.now() - windowDays * 24 * 60 * 60 * 1000;
   let unitsSold = 0;
 
-  for (const tx of transactions) {
-    if (tx.status === 'completed') {
-      const txTime = new Date(tx.createdAt).getTime();
-      if (!isNaN(txTime) && txTime >= cutoffTime) {
-        for (const item of tx.items) {
-          if (item.product?.id === product.id || (item as any).productId === product.id) {
-            unitsSold += item.quantity || 1;
+  if (cachedSalesMap) {
+    unitsSold = cachedSalesMap.get(product.id) || 0;
+  } else {
+    const cutoffTime = Date.now() - windowDays * 24 * 60 * 60 * 1000;
+    for (const tx of transactions) {
+      if (tx.status === 'completed' && Array.isArray(tx.items)) {
+        const txTime = new Date(tx.createdAt).getTime();
+        if (!isNaN(txTime) && txTime >= cutoffTime) {
+          for (const item of tx.items) {
+            if (item.product?.id === product.id || (item as any).productId === product.id) {
+              unitsSold += item.quantity || 1;
+            }
           }
         }
       }
@@ -171,6 +199,8 @@ export function generateDynamicPricingSuggestions(
     : products.filter((p) => p.categoryId === targetCategory);
 
   const suggestions: DynamicPricingSuggestion[] = [];
+  // Pre-index sales once in O(T*M) to keep turnover calculation instantaneous
+  const salesMap = buildProductSalesMap(transactions, 30);
 
   for (const product of filteredProducts) {
     const costPrice = product.costPrice || 0;
@@ -191,7 +221,7 @@ export function generateDynamicPricingSuggestions(
       ? Number((((currentPrice - competitorAvgPrice) / competitorAvgPrice) * 100).toFixed(1))
       : 0;
 
-    const turnover = calculateProductTurnover(product, transactions, 30);
+    const turnover = calculateProductTurnover(product, transactions, 30, salesMap);
     const categoryName = categoriesMap.get(product.categoryId) || 'Umum';
 
     // Check expiry

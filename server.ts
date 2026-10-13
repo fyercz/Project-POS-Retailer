@@ -9,6 +9,7 @@ import { createServer as createViteServer } from 'vite';
 import {
   initSqliteMasterDatabase,
   getAllProducts as getSqliteProducts,
+  getProductByIdOrBarcode as getSqliteProductByIdOrBarcode,
   upsertProducts as upsertSqliteProducts,
   deductProductStock as deductSqliteStock,
   getAllTransactions as getSqliteTransactions,
@@ -23,6 +24,7 @@ import {
   deleteHeldOrder as deleteSqliteHeldOrder,
   getDatabaseStatus as getSqliteDatabaseStatus,
   checkDatabaseIntegrity as checkSqliteIntegrity,
+  cleanAndPruneDatabase as cleanSqliteDatabase,
 } from './src/server/sqliteMasterDb.ts';
 
 const execPromise = util.promisify(exec);
@@ -914,6 +916,86 @@ app.post('/api/lan/data/sync-products', (req, res) => {
   }
 });
 
+// Dynamic QR Shelf Tag Live Verification Endpoint
+// Returns real-time inventory level, last price update date, and product info
+app.get('/api/shelf/:productId', async (req, res) => {
+  try {
+    const rawId = req.params.productId;
+    if (!rawId) {
+      return res.status(400).json({ success: false, error: 'Product ID required' });
+    }
+
+    // 1. Check in-memory store first
+    let product: any = lanProductsStore.get(rawId);
+
+    // If not found by direct ID, search in-memory by barcode or SKU
+    if (!product) {
+      for (const p of lanProductsStore.values()) {
+        if (p.barcode === rawId || p.sku === rawId) {
+          product = p;
+          break;
+        }
+      }
+    }
+
+    // 2. If not found in memory, check SQLite database
+    if (!product) {
+      const sqliteProd = await getSqliteProductByIdOrBarcode(rawId);
+      if (sqliteProd) {
+        product = sqliteProd;
+      }
+    }
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        error: 'Produk tidak ditemukan dalam katalog',
+        productId: rawId,
+      });
+    }
+
+    // Determine stock status
+    const stock = Number(product.stock) || 0;
+    const minStock = Number(product.minStock) || 5;
+    let stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock' = 'in_stock';
+    if (stock <= 0) stockStatus = 'out_of_stock';
+    else if (stock <= minStock) stockStatus = 'low_stock';
+
+    // Determine last price update date
+    let lastPriceUpdateDate = product.updatedAt || product.createdAt || new Date().toISOString();
+    let previousSellingPrice: number | undefined = undefined;
+    let changeType = 'catalog_sync';
+
+    if (Array.isArray(product.priceHistory) && product.priceHistory.length > 0) {
+      const sorted = [...product.priceHistory].sort(
+        (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      lastPriceUpdateDate = sorted[0].date;
+      previousSellingPrice = sorted[0].previousSellingPrice;
+      changeType = sorted[0].changeType;
+    }
+
+    res.json({
+      success: true,
+      product,
+      currentStock: stock,
+      minStock,
+      stockStatus,
+      price: Number(product.price) || 0,
+      costPrice: Number(product.costPrice) || 0,
+      lastPriceUpdate: {
+        date: lastPriceUpdateDate,
+        previousPrice: previousSellingPrice,
+        changeType,
+      },
+      aisle: product.aisle || null,
+      serverTime: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 7. Seed or Overwrite Master Database from Client State
 app.post('/api/lan/database/seed', (req, res) => {
   try {
@@ -1057,6 +1139,19 @@ app.post('/api/pos/database/check-integrity', async (req, res) => {
     res.json({
       success: true,
       ...check,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Prune obsolete database records, truncate WAL file, and run VACUUM
+app.post('/api/pos/database/clean-obsolete', async (req, res) => {
+  try {
+    const result = await cleanSqliteDatabase();
+    res.json({
+      success: true,
+      ...result,
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -4054,16 +4149,27 @@ app.get('/api/system/cleanup-scan', async (req, res) => {
   }
 });
 
-// Safely execute cleanup of unnecessary files
+// Safely execute cleanup of unnecessary files and prune database
 app.post('/api/system/cleanup-execute', async (req, res) => {
   try {
     const cleanup = cleanUnnecessaryFilesInternal(process.cwd());
+    let dbCleanup: any = null;
+    try {
+      dbCleanup = await cleanSqliteDatabase();
+    } catch (e: any) {
+      console.warn('DB cleanup warning in system cleanup:', e?.message);
+    }
+
+    const totalFreed = cleanup.bytesFreed + (dbCleanup?.freedBytes || 0);
+    const dbMsg = dbCleanup ? ` Database SQLite dipangkas (${dbCleanup.deletedSyncLogs} log lama dihapus, VACUUM berhasil).` : '';
+
     res.json({
       success: true,
       deletedCount: cleanup.count,
-      bytesFreed: cleanup.bytesFreed,
+      bytesFreed: totalFreed,
       deletedList: cleanup.deleted,
-      message: `Pembersihan selesai! ${cleanup.count} file tidak perlu berhasil dihapus (${(cleanup.bytesFreed / 1024).toFixed(1)} KB dibebaskan).`,
+      dbCleanup,
+      message: `Pembersihan selesai! ${cleanup.count} file usang dihapus (${(cleanup.bytesFreed / 1024).toFixed(1)} KB dibebaskan).${dbMsg}`,
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });

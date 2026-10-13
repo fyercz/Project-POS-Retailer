@@ -73,11 +73,11 @@ Cukup klik ganda **`autorun.bat`**:
 - Berkas autorun standar Windows saat flashdisk atau installer dicolokkan ke PC.
 - Mengarahkan aksi *Open* langsung ke `autorun.bat`.
 
-### 3. `setup-autorun-startup.bat` (Otomatis Buka Kasir Saat Komputer Dinyalakan)
+### 3. Auto-Start & Wizard Konfigurasi (`autorun.bat --menu`)
 Ingin agar PC kasir langsung membuka aplikasi kasir setiap kali komputer dinyalakan di pagi hari?
-- Klik ganda **`setup-autorun-startup.bat`**.
+- Jalankan **`autorun.bat --menu`** (atau jalankan langsung **`autorun.bat --startup`**).
 - Tekan **`1`** untuk mendaftarkan Ulilmart POS ke folder **Windows Startup**.
-- Tekan **`3`** untuk membuat shortcut ikon kasir langsung di layar Desktop kasir.
+- Tekan **`3`** untuk membuat shortcut ikon logo kasir langsung di layar Desktop.
 - Tekan **`2`** jika sewaktu-waktu ingin menonaktifkan auto-start.
 
 ### 4. `autorun.sh` (Auto-Runner Linux / Raspberry Pi / macOS)

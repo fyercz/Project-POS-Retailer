@@ -9,7 +9,46 @@ color 0A
 
 cd /d "%~dp0"
 
+REM ==============================================================================
+REM Auto-Deteksi & Injeksi PATH: Node.js, npm, Git, dan Windows System32
+REM ==============================================================================
+if exist "%SystemRoot%\System32" (
+    set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\;%PATH%"
+)
+
+where node >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    if exist "C:\Program Files\nodejs\node.exe" (
+        set "PATH=C:\Program Files\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramFiles%\nodejs\node.exe" (
+        set "PATH=%ProgramFiles%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "C:\Program Files (x86)\nodejs\node.exe" (
+        set "PATH=C:\Program Files (x86)\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramFiles(x86)%\nodejs\node.exe" (
+        set "PATH=%ProgramFiles(x86)%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" (
+        set "PATH=%LOCALAPPDATA%\Programs\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramW6432%\nodejs\node.exe" (
+        set "PATH=%ProgramW6432%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "C:\nvm\nodejs\node.exe" (
+        set "PATH=C:\nvm\nodejs;%PATH%"
+    ) else if exist "%NVM_SYMLINK%\node.exe" (
+        set "PATH=%NVM_SYMLINK%;%PATH%"
+    )
+)
+
+where git >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    if exist "C:\Program Files\Git\cmd\git.exe" (
+        set "PATH=C:\Program Files\Git\cmd;%PATH%"
+    ) else if exist "%LOCALAPPDATA%\Programs\Git\cmd\git.exe" (
+        set "PATH=%LOCALAPPDATA%\Programs\Git\cmd;%PATH%"
+    )
+)
+
 REM Periksa Argumen Khusus
+if "%1"=="--menu" goto MENU
+if "%1"=="--setup" goto MENU
 if "%1"=="--startup" goto SETUP_STARTUP
 if "%1"=="--install-startup" goto SETUP_STARTUP
 if "%1"=="--remove-startup" goto REMOVE_STARTUP
@@ -185,3 +224,55 @@ if %ERRORLEVEL% equ 0 (
 echo.
 pause
 exit /b 0
+
+:MENU
+cls
+echo ==============================================================================
+echo     ┌──────┐
+echo     │ 🛒   │  ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗
+echo     │ ───┐ │  ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝
+echo     │ O  O │  ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   
+echo     └──────┘  ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   
+echo     [LOGO]    ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   
+echo     ULILMART   ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   
+echo     ┌───────────────────────────────┬───────────────────────────────┐
+echo     │   🛍️  L E N G K A P           │   💰  ^&   H E M A T           │
+echo     └───────────────────────────────┴───────────────────────────────┘
+echo                   S M A R T   R E T A I L   P O S
+echo             [ WIZARD KONFIGURASI STARTUP KASIR ]
+echo ==============================================================================
+echo.
+echo  Pilih opsi yang Anda inginkan:
+echo.
+echo  [1] Aktifkan Auto-Run saat Komputer Dinyalakan (Windows Startup)
+echo  [2] Nonaktifkan Auto-Run dari Startup Windows
+echo  [3] Pasang Shortcut Logo Resmi di Desktop
+echo  [4] Jalankan Aplikasi Kasir Sekarang
+echo  [5] Keluar
+echo.
+echo ==========================================================
+set /p PILIHAN="Masukkan pilihan (1-5): "
+
+if "%PILIHAN%"=="1" (
+    cls
+    call "%~dp0autorun.bat" --startup
+    goto MENU
+)
+if "%PILIHAN%"=="2" (
+    cls
+    call "%~dp0autorun.bat" --remove-startup
+    goto MENU
+)
+if "%PILIHAN%"=="3" (
+    cls
+    call "%~dp0autorun.bat" --shortcut
+    goto MENU
+)
+if "%PILIHAN%"=="4" (
+    cls
+    call "%~dp0autorun.bat"
+    exit /b 0
+)
+if "%PILIHAN%"=="5" exit /b 0
+
+goto MENU

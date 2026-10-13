@@ -390,6 +390,44 @@ export async function getAllProducts(): Promise<any[]> {
   });
 }
 
+export async function getProductByIdOrBarcode(identifier: string): Promise<any | null> {
+  if (!identifier) return null;
+  const db = getSqliteClient();
+  const res = await db.execute({
+    sql: `SELECT * FROM products WHERE id = ? OR barcode = ? OR sku = ? LIMIT 1;`,
+    args: [identifier, identifier, identifier],
+  });
+
+  if (res.rows.length === 0) return null;
+  const r: any = res.rows[0];
+  let units: any = undefined;
+  if (r.units_json) {
+    try {
+      units = JSON.parse(r.units_json);
+    } catch {}
+  }
+  return {
+    id: r.id,
+    name: r.name,
+    brand: r.brand,
+    sku: r.sku,
+    barcode: r.barcode,
+    categoryId: r.category_id,
+    price: Number(r.price),
+    costPrice: Number(r.cost_price),
+    stock: Number(r.stock),
+    minStock: Number(r.min_stock),
+    unit: r.unit || 'pcs',
+    units,
+    hasExpiry: Boolean(r.has_expiry),
+    expiryDate: r.expiry_date,
+    imageUrl: r.image_url,
+    isActive: Boolean(r.is_active),
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
 export async function upsertProducts(products: any[]): Promise<number> {
   if (!Array.isArray(products) || products.length === 0) return 0;
   const db = getSqliteClient();
@@ -1076,6 +1114,108 @@ export async function checkDatabaseIntegrity(): Promise<any> {
     checkedAt: databaseEngineInfo.lastHealthCheck,
     journalMode: databaseEngineInfo.journalMode,
     engine: databaseEngineInfo.engine,
+  };
+}
+
+/**
+ * Prune obsolete records from the relational database:
+ * - Purges stale sync audit logs keeping only newest 50
+ * - Purges stale held orders (> 7 days)
+ * - Checkpoints & truncates WAL file (wal_checkpoint TRUNCATE)
+ * - Executes SQLite VACUUM and PRAGMA optimize to defragment and reclaim disk space
+ */
+export async function cleanAndPruneDatabase(): Promise<{
+  success: boolean;
+  deletedSyncLogs: number;
+  deletedHeldOrders: number;
+  initialSizeKb: number;
+  finalSizeKb: number;
+  freedBytes: number;
+  vacuumExecuted: boolean;
+  walCheckpointExecuted: boolean;
+  integrity: string;
+  message: string;
+}> {
+  const db = getSqliteClient();
+  let initialSize = 0;
+  try {
+    if (fs.existsSync(SQLITE_FILE)) {
+      initialSize += fs.statSync(SQLITE_FILE).size;
+    }
+    const walFile = `${SQLITE_FILE}-wal`;
+    if (fs.existsSync(walFile)) {
+      initialSize += fs.statSync(walFile).size;
+    }
+  } catch {}
+
+  // 1. Delete sync audit logs keeping latest 50
+  const countBeforeLogs = await db.execute('SELECT COUNT(*) as c FROM sync_audit_logs;');
+  const totalLogs = Number(countBeforeLogs.rows[0]?.c || 0);
+
+  await db.execute(`
+    DELETE FROM sync_audit_logs 
+    WHERE id NOT IN (
+      SELECT id FROM sync_audit_logs ORDER BY created_at DESC LIMIT 50
+    );
+  `);
+  const countAfterLogs = await db.execute('SELECT COUNT(*) as c FROM sync_audit_logs;');
+  const deletedSyncLogs = Math.max(0, totalLogs - Number(countAfterLogs.rows[0]?.c || 0));
+
+  // 2. Delete stale held orders older than 7 days
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const countBeforeHeld = await db.execute('SELECT COUNT(*) as c FROM held_orders WHERE created_at < ?;', [sevenDaysAgo]);
+  const deletedHeldOrders = Number(countBeforeHeld.rows[0]?.c || 0);
+  if (deletedHeldOrders > 0) {
+    await db.execute('DELETE FROM held_orders WHERE created_at < ?;', [sevenDaysAgo]);
+  }
+
+  // 3. PRAGMA wal_checkpoint(TRUNCATE) to flush WAL to main db and truncate WAL file
+  let walCheckpointExecuted = false;
+  try {
+    await db.execute('PRAGMA wal_checkpoint(TRUNCATE);');
+    walCheckpointExecuted = true;
+  } catch (e) {
+    console.warn('[SQLite Server] WAL checkpoint warning:', e);
+  }
+
+  // 4. PRAGMA optimize & VACUUM to reclaim free space
+  let vacuumExecuted = false;
+  try {
+    await db.execute('PRAGMA optimize;');
+    await db.execute('VACUUM;');
+    vacuumExecuted = true;
+  } catch (e) {
+    console.warn('[SQLite Server] VACUUM warning:', e);
+  }
+
+  // 5. Check integrity
+  const integrityRes = await db.execute('PRAGMA integrity_check;');
+  const integrity = String(integrityRes.rows[0]?.[0] || 'ok');
+
+  let finalSize = 0;
+  try {
+    if (fs.existsSync(SQLITE_FILE)) {
+      finalSize += fs.statSync(SQLITE_FILE).size;
+    }
+    const walFile = `${SQLITE_FILE}-wal`;
+    if (fs.existsSync(walFile)) {
+      finalSize += fs.statSync(walFile).size;
+    }
+  } catch {}
+
+  const freedBytes = Math.max(0, initialSize - finalSize);
+
+  return {
+    success: true,
+    deletedSyncLogs,
+    deletedHeldOrders,
+    initialSizeKb: Math.round(initialSize / 1024),
+    finalSizeKb: Math.round(finalSize / 1024),
+    freedBytes,
+    vacuumExecuted,
+    walCheckpointExecuted,
+    integrity,
+    message: `Database berhasil dipangkas & dirampingkan: ${deletedSyncLogs} log audit usang dan ${deletedHeldOrders} pesanan tertunda usang dihapus. WAL checkpoint & VACUUM memadatkan database dari ${Math.round(initialSize / 1024)} KB menjadi ${Math.round(finalSize / 1024)} KB (Integritas: ${integrity}).`,
   };
 }
 

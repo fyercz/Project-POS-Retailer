@@ -50,7 +50,9 @@ const PROTECTED_PATHS = new Set([
   'desktop.sh',
   'autorun.bat',
   'autorun.sh',
-  'buka-kasir.bat',
+  'clean.bat',
+  'clean.sh',
+  'perbaiki-path-nodejs.bat',
   'ulilmart.ico',
 ]);
 

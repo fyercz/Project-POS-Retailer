@@ -26,12 +26,14 @@ import {
   AlertCircle,
   Truck,
   Package,
+  QrCode,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { Product, SupplierPurchase } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { generateBarcodeSvgString } from '../utils/barcodeGenerator';
 import { printViaIframe, openPrintWindow } from '../utils/printHelper';
+import { QRShelfLabelModal } from './QRShelfLabelModal';
 
 export type PaperSize = 'a4' | 'f4';
 
@@ -63,6 +65,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
   const [paperSize, setPaperSize] = useState<PaperSize>('a4');
   const [template, setTemplate] = useState<TagTemplate>('standard_shelf');
   const [themeStyle, setThemeStyle] = useState<TagThemeStyle>('classic');
+  const [isQrShelfOpen, setIsQrShelfOpen] = useState(false);
 
   // Customization Toggles
   const [showStoreHeader, setShowStoreHeader] = useState<boolean>(true);
@@ -617,6 +620,17 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Quick Switcher to QR Shelf Label Mode */}
+            <button
+              type="button"
+              onClick={() => setIsQrShelfOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition active:scale-95"
+              title="Beralih ke format Label Rak QR Dinamis (Link Real-Time Stok & Update Harga)"
+            >
+              <QrCode className="w-3.5 h-3.5 text-indigo-200" />
+              <span>Label Rak QR Pintar</span>
+            </button>
+
             {/* Quick Tab Switcher */}
             <div className="flex bg-slate-200 dark:bg-slate-800 p-0.5 rounded-xl text-xs font-semibold">
               <button
@@ -1294,6 +1308,16 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Dynamic QR Shelf Label Modal */}
+      {isQrShelfOpen && (
+        <QRShelfLabelModal
+          isOpen={isQrShelfOpen}
+          onClose={() => setIsQrShelfOpen(false)}
+          initialSelectedProduct={initialSelectedProduct}
+          initialSelectedProductIds={Object.keys(selectedItems)}
+        />
+      )}
     </div>
   );
 };

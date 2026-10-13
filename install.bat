@@ -27,13 +27,55 @@ echo ===========================================================================
 echo  Repositori Resmi : %REPO_URL%
 echo.
 
+REM ==============================================================================
+REM Auto-Deteksi & Injeksi PATH: Node.js, npm, Git, dan Windows System32
+REM ==============================================================================
+if exist "%SystemRoot%\System32" (
+    set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\;%PATH%"
+)
+
+where node >nul 2>nul
+if %errorlevel% neq 0 (
+    if exist "C:\Program Files\nodejs\node.exe" (
+        set "PATH=C:\Program Files\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramFiles%\nodejs\node.exe" (
+        set "PATH=%ProgramFiles%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "C:\Program Files (x86)\nodejs\node.exe" (
+        set "PATH=C:\Program Files (x86)\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramFiles(x86)%\nodejs\node.exe" (
+        set "PATH=%ProgramFiles(x86)%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" (
+        set "PATH=%LOCALAPPDATA%\Programs\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "%ProgramW6432%\nodejs\node.exe" (
+        set "PATH=%ProgramW6432%\nodejs;%APPDATA%\npm;%PATH%"
+    ) else if exist "C:\nvm\nodejs\node.exe" (
+        set "PATH=C:\nvm\nodejs;%PATH%"
+    ) else if exist "%NVM_SYMLINK%\node.exe" (
+        set "PATH=%NVM_SYMLINK%;%PATH%"
+    )
+)
+
 REM 1. Check Node.js
 echo [1/5] Memeriksa instalasi Node.js dan npm...
 where node >nul 2>nul
 if %errorlevel% neq 0 (
-    echo [ERROR] Node.js belum terpasang di komputer ini!
-    echo Silakan unduh dan pasang Node.js LTS dari: https://nodejs.org/
-    echo Setelah instalasi selesai, jalankan kembali script ini.
+    echo.
+    echo ==============================================================================
+    echo  [PERINGATAN] Runtime Node.js Belum Terdeteksi di Komputer Ini!
+    echo ==============================================================================
+    echo  Aplikasi POS membutuhkan runtime Node.js LTS untuk berjalan.
+    echo.
+    echo  Jika Node.js SUDAH diinstal:
+    echo  - Kemungkinan lokasi instalasi belum masuk ke PATH sistem Windows.
+    echo  - Silakan restart Command Prompt atau komputer Anda.
+    echo.
+    echo  Jika Node.js BELUM diinstal:
+    echo  - Kunjungi https://nodejs.org/ dan unduh versi LTS.
+    echo  - Pastikan mencentang opsi "Add to PATH" saat instalasi.
+    echo ==============================================================================
+    echo.
+    set /p BUKA_NODE="Apakah Anda ingin membuka situs unduhan Node.js sekarang (Y/T)? "
+    if /i "%BUKA_NODE%"=="Y" start "" https://nodejs.org/
     pause
     exit /b 1
 )
@@ -104,16 +146,17 @@ echo [SUKSES] Instalasi Selesai!
 echo ==========================================================
 echo.
 REM Otomatis buat shortcut berlogo Ulilmart di Desktop & Folder
-if exist "%~dp0buat-shortcut-logo.bat" (
+if exist "%~dp0autorun.bat" (
     echo [INFO] Menyiapkan shortcut dengan logo resmi Ulilmart...
-    call buat-shortcut-logo.bat
+    call autorun.bat --shortcut
 )
 
 echo.
 echo Untuk menjalankan aplikasi:
+echo   - Mode Auto-Run Kasir: autorun.bat
 echo   - Mode Desktop Kasir : desktop.bat (atau klik ikon Ulilmart POS Kasir.lnk)
 echo   - Mode Server Kasir  : run.bat
-echo   - Generator Shortcut : buat-shortcut-logo.bat
+echo   - Pembersihan Sampah : clean.bat
 echo   - Auto-Update GitHub : update.bat
 echo.
 echo URL Akses Kasir: http://localhost:3000
