@@ -187,6 +187,22 @@ export function downloadBlobFile(filename: string, content: string, mimeType = '
 }
 
 /**
+ * Download native compiled Windows .EXE launcher (UlilmartPOS.exe)
+ * Runs cleanly without CMD window crashes and auto-discovers Node.js
+ */
+export function downloadWindowsNativeExe(options: { kioskMode?: boolean } = {}): void {
+  const filename = options.kioskMode ? 'UlilmartPOS-Kiosk.exe' : 'UlilmartPOS.exe';
+  const a = document.createElement('a');
+  a.href = `/download/${filename}`;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+  }, 200);
+}
+
+/**
  * Generate and download a dedicated 1-Click Desktop App Launcher (.bat) for Windows
  */
 export function downloadWindowsDesktopLauncher(options: { kioskMode?: boolean } = {}): void {

@@ -1,10 +1,12 @@
 [AutoRun]
-open=autorun.bat
+open=UlilmartPOS.exe
 icon=ulilmart.ico
 label=Ulilmart POS Kasir
 action=Jalankan Aplikasi Kasir Ulilmart
-shell\open=Buka Ulilmart POS Kasir
-shell\open\command=autorun.bat
+shell\open=Buka Ulilmart POS Kasir (.EXE)
+shell\open\command=UlilmartPOS.exe
+shell\kiosk=Buka Mode Kiosk Layar Penuh (.EXE)
+shell\kiosk\command=UlilmartPOS-Kiosk.exe
 shell\desktop=Jalankan Mode Desktop Kasir
 shell\desktop\command=desktop.bat
 shell\install=Instalasi Lengkap (Auto-Install)

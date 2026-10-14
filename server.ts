@@ -4176,8 +4176,37 @@ app.post('/api/system/cleanup-execute', async (req, res) => {
   }
 });
 
+// Direct download endpoints for Windows .EXE Binaries
+app.get('/download/UlilmartPOS.exe', (req, res) => {
+  const exePath = path.join(process.cwd(), 'UlilmartPOS.exe');
+  if (fs.existsSync(exePath)) {
+    res.setHeader('Content-Disposition', 'attachment; filename="UlilmartPOS.exe"');
+    res.setHeader('Content-Type', 'application/vnd.microsoft.portable-executable');
+    res.sendFile(exePath);
+  } else {
+    res.status(404).json({ success: false, error: 'UlilmartPOS.exe belum dikompilasi.' });
+  }
+});
+
+app.get('/download/UlilmartPOS-Kiosk.exe', (req, res) => {
+  const exePath = path.join(process.cwd(), 'UlilmartPOS-Kiosk.exe');
+  if (fs.existsSync(exePath)) {
+    res.setHeader('Content-Disposition', 'attachment; filename="UlilmartPOS-Kiosk.exe"');
+    res.setHeader('Content-Type', 'application/vnd.microsoft.portable-executable');
+    res.sendFile(exePath);
+  } else {
+    res.status(404).json({ success: false, error: 'UlilmartPOS-Kiosk.exe belum dikompilasi.' });
+  }
+});
+
 // Vite Middleware for development & Static Serving for production
 async function setupViteOrStatic() {
+  // Serve public folder assets
+  const publicDir = path.join(process.cwd(), 'public');
+  if (fs.existsSync(publicDir)) {
+    app.use(express.static(publicDir));
+  }
+
   const distAssets = path.join(process.cwd(), 'dist', 'assets');
   if (fs.existsSync(distAssets)) {
     app.use('/assets', express.static(distAssets));

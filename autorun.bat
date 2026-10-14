@@ -15,48 +15,72 @@ if exist "%SystemRoot%\System32" (
     set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\;%PATH%"
 )
 
+set "FOUND_NODE_DIR="
+
+REM Metode 1: Periksa apakah node sudah ada di PATH aktif
 where node >nul 2>nul
-if %ERRORLEVEL% neq 0 (
-    if exist "C:\Program Files\nodejs\node.exe" (
-        set "PATH=C:\Program Files\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "%ProgramFiles%\nodejs\node.exe" (
-        set "PATH=%ProgramFiles%\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "C:\Program Files (x86)\nodejs\node.exe" (
-        set "PATH=C:\Program Files (x86)\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "%ProgramFiles(x86)%\nodejs\node.exe" (
-        set "PATH=%ProgramFiles(x86)%\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" (
-        set "PATH=%LOCALAPPDATA%\Programs\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "%USERPROFILE%\AppData\Local\Programs\nodejs\node.exe" (
-        set "PATH=%USERPROFILE%\AppData\Local\Programs\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "%ProgramW6432%\nodejs\node.exe" (
-        set "PATH=%ProgramW6432%\nodejs;%APPDATA%\npm;%PATH%"
-    ) else if exist "C:\nvm\nodejs\node.exe" (
-        set "PATH=C:\nvm\nodejs;%PATH%"
-    ) else if exist "%NVM_SYMLINK%\node.exe" (
-        set "PATH=%NVM_SYMLINK%;%PATH%"
-    ) else if exist "%USERPROFILE%\AppData\Roaming\nvm\current\node.exe" (
-        set "PATH=%USERPROFILE%\AppData\Roaming\nvm\current;%PATH%"
-    ) else if exist "C:\ProgramData\chocolatey\bin\node.exe" (
-        set "PATH=C:\ProgramData\chocolatey\bin;%PATH%"
-    ) else if exist "C:\nodejs\node.exe" (
-        set "PATH=C:\nodejs;%PATH%"
-    ) else if exist "D:\nodejs\node.exe" (
-        set "PATH=D:\nodejs;%PATH%"
-    ) else if exist "D:\Program Files\nodejs\node.exe" (
-        set "PATH=D:\Program Files\nodejs;%PATH%"
+if %ERRORLEVEL% equ 0 (
+    for /f "delims=" %%i in ('where node 2^>nul') do (
+        if not defined FOUND_NODE_DIR set "FOUND_NODE_DIR=%%~dpi"
     )
 )
 
+REM Metode 2: Cek Registry Windows (Official Installer Node.js)
+if not defined FOUND_NODE_DIR (
+    for /f "tokens=2*" %%a in ('reg query "HKLM\SOFTWARE\Node.js" /v InstallPath 2^>nul') do (
+        if exist "%%~bnode.exe" set "FOUND_NODE_DIR=%%~b"
+    )
+)
+if not defined FOUND_NODE_DIR (
+    for /f "tokens=2*" %%a in ('reg query "HKLM\SOFTWARE\WOW6432Node\Node.js" /v InstallPath 2^>nul') do (
+        if exist "%%~bnode.exe" set "FOUND_NODE_DIR=%%~b"
+    )
+)
+if not defined FOUND_NODE_DIR (
+    for /f "tokens=2*" %%a in ('reg query "HKCU\SOFTWARE\Node.js" /v InstallPath 2^>nul') do (
+        if exist "%%~bnode.exe" set "FOUND_NODE_DIR=%%~b"
+    )
+)
+
+REM Metode 3: Cek Folder Instalasi Standar & Non-Standar di Berbagai Drive
+if not defined FOUND_NODE_DIR if exist "C:\Program Files\nodejs\node.exe" set "FOUND_NODE_DIR=C:\Program Files\nodejs"
+if not defined FOUND_NODE_DIR if exist "%ProgramFiles%\nodejs\node.exe" set "FOUND_NODE_DIR=%ProgramFiles%\nodejs"
+if not defined FOUND_NODE_DIR if exist "C:\Program Files (x86)\nodejs\node.exe" set "FOUND_NODE_DIR=C:\Program Files (x86)\nodejs"
+if not defined FOUND_NODE_DIR if exist "%ProgramFiles(x86)%\nodejs\node.exe" set "FOUND_NODE_DIR=%ProgramFiles(x86)%\nodejs"
+if not defined FOUND_NODE_DIR if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" set "FOUND_NODE_DIR=%LOCALAPPDATA%\Programs\nodejs"
+if not defined FOUND_NODE_DIR if exist "%USERPROFILE%\AppData\Local\Programs\nodejs\node.exe" set "FOUND_NODE_DIR=%USERPROFILE%\AppData\Local\Programs\nodejs"
+if not defined FOUND_NODE_DIR if exist "%APPDATA%\npm\node.exe" set "FOUND_NODE_DIR=%APPDATA%\npm"
+if not defined FOUND_NODE_DIR if exist "%ProgramW6432%\nodejs\node.exe" set "FOUND_NODE_DIR=%ProgramW6432%\nodejs"
+if not defined FOUND_NODE_DIR if exist "C:\nvm\nodejs\node.exe" set "FOUND_NODE_DIR=C:\nvm\nodejs"
+if not defined FOUND_NODE_DIR if exist "%NVM_SYMLINK%\node.exe" set "FOUND_NODE_DIR=%NVM_SYMLINK%"
+if not defined FOUND_NODE_DIR if exist "%USERPROFILE%\AppData\Roaming\nvm\current\node.exe" set "FOUND_NODE_DIR=%USERPROFILE%\AppData\Roaming\nvm\current"
+if not defined FOUND_NODE_DIR if exist "C:\ProgramData\chocolatey\bin\node.exe" set "FOUND_NODE_DIR=C:\ProgramData\chocolatey\bin"
+if not defined FOUND_NODE_DIR if exist "C:\nodejs\node.exe" set "FOUND_NODE_DIR=C:\nodejs"
+if not defined FOUND_NODE_DIR if exist "D:\nodejs\node.exe" set "FOUND_NODE_DIR=D:\nodejs"
+if not defined FOUND_NODE_DIR if exist "D:\Program Files\nodejs\node.exe" set "FOUND_NODE_DIR=D:\Program Files\nodejs"
+if not defined FOUND_NODE_DIR if exist "D:\Program Files (x86)\nodejs\node.exe" set "FOUND_NODE_DIR=D:\Program Files (x86)\nodejs"
+if not defined FOUND_NODE_DIR if exist "E:\nodejs\node.exe" set "FOUND_NODE_DIR=E:\nodejs"
+
+REM Metode 4: PowerShell Deep Scan Uninstall Registry
+if not defined FOUND_NODE_DIR (
+    for /f "delims=" %%p in ('powershell -NoProfile -ExecutionPolicy Bypass -Command "$loc = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like '*Node.js*' -and $_.InstallLocation } | Select-Object -First 1 -ExpandProperty InstallLocation); if ($loc -and (Test-Path \"$loc\node.exe\")) { Write-Output $loc }" 2^>nul') do (
+        set "FOUND_NODE_DIR=%%p"
+    )
+)
+
+REM Jika ditemukan, bersihkan trailing slash dan injeksikan ke PATH sesi aktif
+if defined FOUND_NODE_DIR (
+    if "%FOUND_NODE_DIR:~-1%"=="\" set "FOUND_NODE_DIR=%FOUND_NODE_DIR:~0,-1%"
+    set "PATH=%FOUND_NODE_DIR%;%FOUND_NODE_DIR%\node_modules\npm\bin;%APPDATA%\npm;%PATH%"
+)
+
+REM Auto-Deteksi Git
 where git >nul 2>nul
 if %ERRORLEVEL% neq 0 (
-    if exist "C:\Program Files\Git\cmd\git.exe" (
-        set "PATH=C:\Program Files\Git\cmd;%PATH%"
-    ) else if exist "%LOCALAPPDATA%\Programs\Git\cmd\git.exe" (
-        set "PATH=%LOCALAPPDATA%\Programs\Git\cmd;%PATH%"
-    ) else if exist "C:\Program Files (x86)\Git\cmd\git.exe" (
-        set "PATH=C:\Program Files (x86)\Git\cmd;%PATH%"
-    )
+    if exist "C:\Program Files\Git\cmd\git.exe" set "PATH=C:\Program Files\Git\cmd;%PATH%"
+    if exist "%LOCALAPPDATA%\Programs\Git\cmd\git.exe" set "PATH=%LOCALAPPDATA%\Programs\Git\cmd;%PATH%"
+    if exist "C:\Program Files (x86)\Git\cmd\git.exe" set "PATH=C:\Program Files (x86)\Git\cmd;%PATH%"
+    if exist "D:\Program Files\Git\cmd\git.exe" set "PATH=D:\Program Files\Git\cmd;%PATH%"
 )
 
 REM Periksa Argumen Khusus
@@ -74,40 +98,109 @@ echo   Sistem Kasir Auto-Run Terminal (Lengkap dan Hemat)
 echo ==============================================================================
 echo.
 
-REM Pastikan shortcut berlogo resmi Ulilmart (ulilmart.ico) terpasang di Desktop
+REM Pasang shortcut berlogo resmi jika belum ada
 if exist "%~dp0ulilmart.ico" (
     powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $desk = [System.Environment]::GetFolderPath('Desktop'); $deskLnk = Join-Path $desk 'Ulilmart POS Kasir.lnk'; if (-not (Test-Path $deskLnk)) { $s1 = $ws.CreateShortcut($deskLnk); $s1.TargetPath = '%~dp0autorun.bat'; $s1.WorkingDirectory = '%~dp0'; $s1.IconLocation = '%~dp0ulilmart.ico,0'; $s1.Description = 'Ulilmart POS Kasir'; $s1.Save(); };" >nul 2>&1
 )
 
-REM 1. Periksa ketersediaan Node.js
+REM Verifikasi ketersediaan Node.js
 where node >nul 2>nul
-if %ERRORLEVEL% neq 0 (
-    echo [PERINGATAN] Node.js belum terdeteksi di System PATH maupun folder default!
-    echo.
-    echo Aplikasi POS membutuhkan runtime Node.js LTS untuk berjalan.
-    echo.
-    echo Pilihan:
-    echo [1] Buka panduan perbaikan otomatis (perbaiki-path-nodejs.bat)
-    echo [2] Buka situs resmi Node.js (https://nodejs.org/)
-    echo [3] Keluar
-    echo.
-    set /p PILIH_NODE="Masukkan pilihan (1/2/3) [Default: 1]: "
-    if "%PILIH_NODE%"=="" set "PILIH_NODE=1"
-    if "%PILIH_NODE%"=="1" (
-        if exist "%~dp0perbaiki-path-nodejs.bat" (
-            call "%~dp0perbaiki-path-nodejs.bat"
-            exit /b 0
-        )
+if %ERRORLEVEL% neq 0 goto NODE_NOT_FOUND
+goto NODE_READY
+
+:NODE_NOT_FOUND
+cls
+echo ==============================================================================
+echo   [PERINGATAN] Runtime Node.js Belum Terdeteksi Otomatis
+echo ==============================================================================
+echo   Aplikasi kasir membutuhkan runtime Node.js LTS untuk berjalan.
+echo   Jika Node.js SUDAH diinstal di komputer Anda, Anda dapat langsung
+echo   menentukan lokasinya di bawah agar kasir dapat segera berjalan!
+echo ==============================================================================
+echo.
+echo   Pilihan:
+echo   [1] Masukkan / Ketik lokasi folder Node.js Anda (Contoh: C:\Program Files\nodejs)
+echo   [2] Pindai seluruh drive komputer secara mendalam untuk mencari node.exe
+echo   [3] Jalankan wizard diagnostik (perbaiki-path-nodejs.bat)
+echo   [4] Buka situs resmi untuk mengunduh Node.js LTS (https://nodejs.org/)
+echo   [5] Keluar
+echo.
+set /p PILIH_NODE="Masukkan pilihan (1-5) [Default: 1]: "
+if "%PILIH_NODE%"=="" set "PILIH_NODE=1"
+
+if "%PILIH_NODE%"=="1" goto MANUAL_NODE_PATH
+if "%PILIH_NODE%"=="2" goto SCAN_ALL_DRIVES
+if "%PILIH_NODE%"=="3" (
+    if exist "%~dp0perbaiki-path-nodejs.bat" (
+        call "%~dp0perbaiki-path-nodejs.bat"
+        exit /b 0
     )
-    if "%PILIH_NODE%"=="2" (
-        start "" https://nodejs.org/
-    )
+)
+if "%PILIH_NODE%"=="4" (
+    start "" https://nodejs.org/
     echo.
-    echo Tekan tombol apa saja untuk menutup jendela ini...
-    pause >nul
+    echo Silakan unduh dan jalankan installer Node.js LTS.
+    echo Setelah selesai, buka kembali file autorun.bat ini.
+    echo.
+    pause
     exit /b 1
 )
+if "%PILIH_NODE%"=="5" exit /b 0
+goto NODE_NOT_FOUND
 
+:MANUAL_NODE_PATH
+echo.
+echo Masukkan path folder tempat Node.js terpasang di komputer Anda.
+echo (Contoh: C:\Program Files\nodejs atau D:\nodejs atau seret file node.exe ke sini)
+set /p USER_NODE_DIR="Lokasi folder: "
+if "%USER_NODE_DIR%"=="" goto NODE_NOT_FOUND
+
+REM Bersihkan tanda kutip jika pengguna menyeret file
+set "USER_NODE_DIR=%USER_NODE_DIR:"=%"
+if exist "%USER_NODE_DIR%\node.exe" (
+    set "FOUND_NODE_DIR=%USER_NODE_DIR%"
+    goto SAVE_AND_CONTINUE_NODE
+)
+if exist "%USER_NODE_DIR%" (
+    for %%f in ("%USER_NODE_DIR%") do (
+        if "%%~nxf"=="node.exe" (
+            set "FOUND_NODE_DIR=%%~dpf"
+            goto SAVE_AND_CONTINUE_NODE
+        )
+    )
+)
+echo.
+echo [ERROR] Tidak ditemukan node.exe di folder "%USER_NODE_DIR%".
+pause
+goto NODE_NOT_FOUND
+
+:SCAN_ALL_DRIVES
+echo.
+echo [PROSES] Memindai drive C: dan D: untuk mencari node.exe (mohon tunggu)...
+for /f "delims=" %%f in ('powershell -NoProfile -ExecutionPolicy Bypass -Command "$found = Get-ChildItem -Path @('C:\Program Files', 'C:\Users', 'D:\', 'C:\') -Filter 'node.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1; if ($found) { Write-Output $found.DirectoryName }" 2^>nul') do (
+    set "FOUND_NODE_DIR=%%f"
+)
+if defined FOUND_NODE_DIR (
+    echo [OK] Node.js berhasil ditemukan di: "%FOUND_NODE_DIR%"
+    goto SAVE_AND_CONTINUE_NODE
+)
+echo.
+echo [!] Node.js belum ditemukan di drive C: atau D:.
+pause
+goto NODE_NOT_FOUND
+
+:SAVE_AND_CONTINUE_NODE
+if "%FOUND_NODE_DIR:~-1%"=="\" set "FOUND_NODE_DIR=%FOUND_NODE_DIR:~0,-1%"
+set "PATH=%FOUND_NODE_DIR%;%FOUND_NODE_DIR%\node_modules\npm\bin;%APPDATA%\npm;%PATH%"
+
+echo.
+echo [INFO] Mendaftarkan lokasi Node.js ke Environment User Windows...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', [EnvironmentVariableTarget]::User) + ';%FOUND_NODE_DIR%;%APPDATA%\npm', [EnvironmentVariableTarget]::User)" >nul 2>&1
+echo [OK] Lokasi Node.js berhasil didaftarkan secara permanen!
+timeout /t 1 /nobreak >nul
+goto NODE_READY
+
+:NODE_READY
 for /f "tokens=*" %%i in ('node -v 2^>nul') do set "NODE_VER=%%i"
 echo [1/4] Node.js terdeteksi: %NODE_VER%
 
@@ -195,7 +288,7 @@ if "%PORT_IN_USE%"=="1" (
     )
     
     echo Pilih tindakan:
-    echo [1] Buka tab baru di browser default
+    echo [1] Buka kasir di tab browser baru
     echo [2] Matikan proses port 3000 lalu mulai ulang server
     echo [3] Selesai / Biarkan server tetap berjalan
     echo.
@@ -251,7 +344,7 @@ if %SERVER_EXIT_CODE% neq 0 (
 )
 echo ==============================================================================
 echo.
-echo Jendela ini ditahan agar Anda dapat membaca pesan error di atas.
+echo Jendela ini ditahan agar Anda dapat membaca status di atas.
 echo Tekan tombol apa saja untuk menutup jendela ini...
 pause >nul
 exit /b %SERVER_EXIT_CODE%

@@ -6,6 +6,26 @@ Aplikasi **Ulilmart Point of Sales** dilengkapi dengan suite otomatisasi lengkap
 
 ---
 
+## ⚡ 1-Klik Jalankan Kasir dengan File .EXE (Tanpa CMD & Tanpa Force-Close)
+
+Kini Anda dapat langsung menyalakan terminal kasir menggunakan program biner Windows asli (**`.EXE`**) tanpa perlu membuka Command Prompt (CMD) atau mengatur variabel PATH secara manual:
+
+1. **`UlilmartPOS.exe` (Mode Jendela Kasir Desktop Mandiri)**
+   - Cukup **klik ganda (double-click)** file `UlilmartPOS.exe` di folder root aplikasi.
+   - Program akan otomatis mendeteksi instalasi Node.js di komputer Anda (memeriksa semua drive `C:`, `D:`, Program Files, AppData, hingga Registry).
+   - Server kasir langsung berjalan di latar belakang (tanpa jendela hitam CMD yang mengganggu).
+   - Jendela kasir terbuka otomatis menggunakan Microsoft Edge / Google Chrome dalam mode aplikasi mandiri (*frameless app mode*).
+
+2. **`UlilmartPOS-Kiosk.exe` (Mode Layar Penuh / Fullscreen Kiosk)**
+   - Khusus untuk terminal kasir toko fisik dan monitor *touchscreen*.
+   - Mengunci layar penuh (*kiosk mode*) agar kasir fokus pada transaksi dan antrean pelanggan.
+
+> 💡 **Unduh Langsung dari Web:** Jika Anda mengakses kasir via web, Anda dapat mengunduh file `.exe` ini langsung melalui menu **Aplikasi Desktop** &rarr; **Program Eksekusi Windows Asli (.EXE)** atau via URL:
+> - `http://localhost:3000/download/UlilmartPOS.exe`
+> - `http://localhost:3000/download/UlilmartPOS-Kiosk.exe`
+
+---
+
 ## 🔄 Pembaruan Kode Otomatis & Pemeliharaan Sistem (GitHub Auto-Update)
 
 ### Repositori Kode Sumber Resmi:

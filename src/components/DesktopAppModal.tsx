@@ -43,6 +43,7 @@ import {
   promptPWAInstall,
   subscribeToInstallPrompt,
   triggerCashDrawerKick,
+  downloadWindowsNativeExe,
   downloadWindowsDesktopLauncher,
   downloadUnixDesktopLauncher,
   downloadAutorunBat,
@@ -1251,11 +1252,49 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   Pilihan Menjalankan sebagai Aplikasi Desktop
                 </h4>
 
+                {/* Primary Choice: Windows Native .EXE */}
+                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border-2 border-emerald-500/30 dark:border-emerald-500/40 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
+                      <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-xs">
+                        1
+                      </span>
+                      <span>Program Eksekusi Windows Asli (.EXE)</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] uppercase tracking-wide border border-emerald-300 dark:border-emerald-800">
+                        Paling Direkomendasikan
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                    Aplikasi biner 64-bit Windows asli (<strong>.exe</strong>) dengan ikon resmi Ulilmart POS. <strong>Tinggal klik 2x langsung jalan tanpa membuka Command Prompt (CMD)</strong>. Bebas dari masalah <em>force-close</em> dan otomatis mendeteksi Node.js di komputer kasir Anda meski belum terdaftar di PATH Windows!
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      onClick={() => downloadWindowsNativeExe({ kioskMode: false })}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Unduh UlilmartPOS.exe (Desktop)</span>
+                    </button>
+                    <button
+                      onClick={() => downloadWindowsNativeExe({ kioskMode: true })}
+                      className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-all"
+                    >
+                      <Maximize2 className="w-4 h-4 text-emerald-400" />
+                      <span>Unduh UlilmartPOS-Kiosk.exe (Fullscreen)</span>
+                    </button>
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 pt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>File <code className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">UlilmartPOS.exe</code> juga sudah tersedia langsung di folder utama (root) aplikasi Anda.</span>
+                  </div>
+                </div>
+
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
                       <span className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 flex items-center justify-center text-xs">
-                        1
+                        2
                       </span>
                       <span>Instal PWA Desktop (Chrome, Edge, Brave, Safari)</span>
                     </div>
@@ -1282,7 +1321,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
                       <span className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center text-xs">
-                        2
+                        3
                       </span>
                       <span>Peluncur Berkas Desktop Mandiri (.BAT / .SH)</span>
                     </div>
@@ -1319,7 +1358,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
                       <span className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-xs">
-                        3
+                        4
                       </span>
                       <span>Autorun Kasir (Saat Komputer Dinyalakan)</span>
                     </div>
