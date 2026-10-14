@@ -110,25 +110,34 @@ if not exist "dist\server.cjs" (
     )
 )
 
-REM Periksa apakah port 3000 sudah aktif
+REM Periksa apakah port 3000 sudah aktif dan merespons normal
 set "PORT_IN_USE=0"
-netstat -ano | findstr /R /C:":3000 .*LISTENING" >nul 2>nul
-if %ERRORLEVEL% equ 0 set "PORT_IN_USE=1"
-
+set "PORT_HEALTHY=0"
 set "TARGET_URL=http://localhost:3000"
 
+netstat -ano | findstr /R /C:":3000 .*LISTENING" >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    set "PORT_IN_USE=1"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $req = [System.Net.WebRequest]::Create('http://127.0.0.1:3000/api/health'); $req.Timeout = 1500; $res = $req.GetResponse(); $res.Close(); exit 0 } catch { exit 1 }" >nul 2>&1
+    if %ERRORLEVEL% equ 0 set "PORT_HEALTHY=1"
+)
+
 if "%PORT_IN_USE%"=="1" (
-    echo [INFO] Server kasir port 3000 sudah aktif di komputer ini.
-    echo [INFO] Membuka jendela kasir desktop...
-    where msedge >nul 2>nul
-    if %ERRORLEVEL% equ 0 (
-        start "" msedge --app=%TARGET_URL%
+    if "%PORT_HEALTHY%"=="1" (
+        echo [INFO] Server kasir port 3000 sudah aktif dan merespons.
+        echo [INFO] Membuka antarmuka kasir desktop...
+        where msedge >nul 2>nul
+        if %ERRORLEVEL% equ 0 (
+            start "" msedge --app=%TARGET_URL%
+        ) else (
+            start "" %TARGET_URL%
+        )
+        exit /b 0
     ) else (
-        start "" %TARGET_URL%
+        echo [INFO] Menutup proses port 3000 yang tidak merespons...
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+        timeout /t 2 /nobreak >nul
     )
-    echo Tekan tombol apa saja untuk menutup...
-    pause >nul
-    exit /b 0
 )
 
 echo [INFO] Menyalakan Server Kasir Lokal (Port 3000)...

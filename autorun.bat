@@ -257,54 +257,72 @@ if %ERRORLEVEL% neq 0 (
 echo [4/4] Paket produksi siap digunakan.
 
 REM ==============================================================================
-REM Periksa apakah Server Port 3000 sudah aktif sebelumnya
+REM Periksa apakah Server Port 3000 aktif dan benar-benar merespons HTTP
 REM ==============================================================================
 set "PORT_IN_USE=0"
-netstat -ano | findstr /R /C:":3000 .*LISTENING" >nul 2>nul
-if %ERRORLEVEL% equ 0 set "PORT_IN_USE=1"
-
+set "PORT_HEALTHY=0"
 set "TARGET_URL=http://localhost:3000"
 
-if "%PORT_IN_USE%"=="1" (
-    echo.
-    echo ==============================================================================
-    echo   [INFO] Server Kasir Ulilmart SUDAH AKTIF di port 3000!
-    echo ==============================================================================
-    echo   Aplikasi kasir sudah berjalan di latar belakang komputer Anda.
-    echo   Membuka antarmuka kasir sekarang...
-    echo ==============================================================================
-    echo.
-    
-    where msedge >nul 2>nul
+netstat -ano | findstr /R /C:":3000 .*LISTENING" >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    set "PORT_IN_USE=1"
+    REM Uji apakah port 3000 benar-benar merespons HTTP dengan normal
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $req = [System.Net.WebRequest]::Create('http://127.0.0.1:3000/api/health'); $req.Timeout = 1500; $res = $req.GetResponse(); $res.Close(); exit 0 } catch { exit 1 }" >nul 2>&1
     if %ERRORLEVEL% equ 0 (
-        start "" msedge --app=%TARGET_URL%
-    ) else (
-        where chrome >nul 2>nul
+        set "PORT_HEALTHY=1"
+    )
+)
+
+if "%PORT_IN_USE%"=="1" (
+    if "%PORT_HEALTHY%"=="1" (
+        echo.
+        echo ==============================================================================
+        echo   [INFO] Server Kasir Ulilmart SUDAH AKTIF dan SIAP di port 3000!
+        echo ==============================================================================
+        echo   Membuka jendela kasir sekarang...
+        echo ==============================================================================
+        echo.
+        
+        where msedge >nul 2>nul
         if %ERRORLEVEL% equ 0 (
-            start "" chrome --app=%TARGET_URL%
+            start "" msedge --app=%TARGET_URL%
         ) else (
-            start "" %TARGET_URL%
+            where chrome >nul 2>nul
+            if %ERRORLEVEL% equ 0 (
+                start "" chrome --app=%TARGET_URL%
+            ) else (
+                start "" %TARGET_URL%
+            )
         )
-    )
-    
-    echo Pilih tindakan:
-    echo [1] Buka kasir di tab browser baru
-    echo [2] Matikan proses port 3000 lalu mulai ulang server
-    echo [3] Selesai / Biarkan server tetap berjalan
-    echo.
-    set /p ACT_PORT="Masukkan pilihan (1/2/3) [Default: 3]: "
-    if "%ACT_PORT%"=="" set "ACT_PORT=3"
-    if "%ACT_PORT%"=="1" (
-        start "" %TARGET_URL%
+        
+        echo Pilih tindakan:
+        echo [1] Buka kasir di tab browser baru
+        echo [2] Mulai ulang / Bersihkan proses port 3000
+        echo [3] Tetap aktif (Tutup menu ini)
+        echo.
+        set /p ACT_PORT="Masukkan pilihan (1/2/3) [Default: 1]: "
+        if "%ACT_PORT%"=="" set "ACT_PORT=1"
+        if "%ACT_PORT%"=="1" (
+            start "" %TARGET_URL%
+            exit /b 0
+        )
+        if "%ACT_PORT%"=="2" (
+            echo [PROSES] Menghentikan proses port 3000...
+            powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+            timeout /t 2 /nobreak >nul
+            goto START_SERVER
+        )
         exit /b 0
-    )
-    if "%ACT_PORT%"=="2" (
-        echo [PROSES] Menghentikan proses yang menggunakan port 3000...
+    ) else (
+        echo.
+        echo ==============================================================================
+        echo   [PERBAIKAN OTOMATIS] Port 3000 terdeteksi terkunci oleh proses lama/zombie.
+        echo   Membersihkan port 3000 agar server kasir dapat menyala normal...
+        echo ==============================================================================
         powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
-        timeout /t 1 /nobreak >nul
+        timeout /t 2 /nobreak >nul
         goto START_SERVER
     )
-    exit /b 0
 )
 
 :START_SERVER
