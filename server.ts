@@ -5,7 +5,6 @@ import fs from 'fs';
 import { exec } from 'child_process';
 import util from 'util';
 import { GoogleGenAI } from '@google/genai';
-import { createServer as createViteServer } from 'vite';
 import {
   initSqliteMasterDatabase,
   getAllProducts as getSqliteProducts,
@@ -27,6 +26,8 @@ import {
   cleanAndPruneDatabase as cleanSqliteDatabase,
 } from './src/server/sqliteMasterDb.ts';
 
+import { adminOnly, sameOriginApi, createRateLimiter, validateTransaction } from './src/server/security.ts';
+
 const execPromise = util.promisify(exec);
 
 const app = express();
@@ -35,16 +36,17 @@ const PORT = 3000;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Enable CORS for LAN Multi-Device and Cross-Origin Access
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// Pembatasan origin: hanya halaman dari server ini sendiri yang boleh memakai API
+// (perangkat LAN lain memuat aplikasi dari server yang sama, jadi tetap same-origin).
+app.use(sameOriginApi);
+
+// Endpoint administratif (git-pull, git-configure, verify-files, cleanup-*, seed database):
+// hanya dari komputer server (localhost) atau dengan ADMIN_TOKEN di .env.
+// GET /api/system/git-status (hanya baca) tetap terbuka untuk semua perangkat.
+
+// Endpoint AI memakai kuota Gemini: batasi laju per perangkat
+app.use('/api/ai', createRateLimiter(40, 60_000));
+app.use('/api/online', createRateLimiter(60, 60_000));
 
 // Lazy initialization of Gemini Client
 let geminiClient: GoogleGenAI | null = null;
@@ -808,8 +810,28 @@ app.post('/api/lan/data/push-transaction', (req, res) => {
       return res.status(400).json({ success: false, error: 'Transaksi tidak valid' });
     }
 
+    const validationError = validateTransaction(transaction);
+    if (validationError) {
+      return res.status(400).json({ success: false, error: validationError });
+    }
+
     const txKey = transaction.id || transaction.invoiceNumber;
     const now = new Date().toISOString();
+
+    // Idempotensi: transaksi yang sama (mis. dikirim ulang oleh sinkronisasi offline)
+    // tidak boleh memotong stok atau menambah poin/total belanja pelanggan dua kali.
+    const alreadyProcessed = lanTransactionsStore.get(txKey);
+    if (alreadyProcessed && alreadyProcessed.lanProcessedAt) {
+      return res.json({
+        success: true,
+        duplicate: true,
+        message: 'Transaksi ini sudah pernah diproses; stok tidak dipotong lagi.',
+        transaction: alreadyProcessed,
+        updatedStocks: [],
+        serverTime: now,
+      });
+    }
+
     const enriched = {
       ...transaction,
       id: txKey,
@@ -997,7 +1019,7 @@ app.get('/api/shelf/:productId', async (req, res) => {
 });
 
 // 7. Seed or Overwrite Master Database from Client State
-app.post('/api/lan/database/seed', (req, res) => {
+app.post('/api/lan/database/seed', adminOnly, async (req, res) => {
   try {
     const { products, customers, suppliers, transactions } = req.body;
 
@@ -1018,15 +1040,28 @@ app.post('/api/lan/database/seed', (req, res) => {
     }
 
     scheduleLanDbSave();
-    if (Array.isArray(products) && products.length > 0) upsertSqliteProducts(products).catch(() => {});
-    if (Array.isArray(customers) && customers.length > 0) upsertSqliteCustomers(customers).catch(() => {});
-    if (Array.isArray(suppliers) && suppliers.length > 0) upsertSqliteSuppliers(suppliers).catch(() => {});
-    if (Array.isArray(transactions) && transactions.length > 0) upsertSqliteTransactions(transactions, 'seed-client', 'Admin').catch(() => {});
+    const persistErrors: string[] = [];
+    const persist = async (label: string, run: () => Promise<unknown>) => {
+      try {
+        await run();
+      } catch (e: any) {
+        persistErrors.push(`${label}: ${e?.message || e}`);
+        console.error(`[SQLite Server] Gagal menyimpan ${label} saat seed:`, e?.message || e);
+      }
+    };
+    if (Array.isArray(products) && products.length > 0) await persist('produk', () => upsertSqliteProducts(products));
+    if (Array.isArray(customers) && customers.length > 0) await persist('member', () => upsertSqliteCustomers(customers));
+    if (Array.isArray(suppliers) && suppliers.length > 0) await persist('supplier', () => upsertSqliteSuppliers(suppliers));
+    if (Array.isArray(transactions) && transactions.length > 0) await persist('transaksi', () => upsertSqliteTransactions(transactions, 'seed-client', 'Admin'));
     addLanLog('warn', `Master Server Database di-seed ulang (SQLite Relational WAL): ${lanProductsStore.size} produk, ${lanCustomersStore.size} member, ${lanTransactionsStore.size} transaksi.`);
 
-    res.json({
-      success: true,
-      message: 'Master database server berhasil diperbarui dari data kasir lokal.',
+    res.status(persistErrors.length === 0 ? 200 : 500).json({
+      success: persistErrors.length === 0,
+      persisted: persistErrors.length === 0,
+      persistErrors,
+      message: persistErrors.length === 0
+        ? 'Master database server berhasil diperbarui dari data kasir lokal.'
+        : 'Data masuk ke memori server, tetapi sebagian GAGAL disimpan ke database: ' + persistErrors.join('; '),
       stats: {
         products: lanProductsStore.size,
         customers: lanCustomersStore.size,
@@ -1133,7 +1168,7 @@ app.get('/api/pos/database/status', async (req, res) => {
   }
 });
 
-app.post('/api/pos/database/check-integrity', async (req, res) => {
+app.post('/api/pos/database/check-integrity', adminOnly, async (req, res) => {
   try {
     const check = await checkSqliteIntegrity();
     res.json({
@@ -1146,7 +1181,7 @@ app.post('/api/pos/database/check-integrity', async (req, res) => {
 });
 
 // Prune obsolete database records, truncate WAL file, and run VACUUM
-app.post('/api/pos/database/clean-obsolete', async (req, res) => {
+app.post('/api/pos/database/clean-obsolete', adminOnly, async (req, res) => {
   try {
     const result = await cleanSqliteDatabase();
     res.json({
@@ -1168,9 +1203,17 @@ app.post('/api/pos/transactions/sync', async (req, res) => {
     const now = new Date().toISOString();
     const syncedIds: string[] = [];
 
+    const rejected: Array<{ id: string; error: string }> = [];
+    const validTransactions: any[] = [];
     for (const tx of transactions) {
       if (!tx || (!tx.id && !tx.invoiceNumber)) continue;
       const key = tx.id || tx.invoiceNumber;
+      const txError = validateTransaction(tx);
+      if (txError) {
+        rejected.push({ id: String(key), error: txError });
+        continue;
+      }
+      validTransactions.push(tx);
       lanTransactionsStore.set(key, {
         ...tx,
         syncStatus: 'synced',
@@ -1183,7 +1226,7 @@ app.post('/api/pos/transactions/sync', async (req, res) => {
 
     // Persist to SQLite Master DB with ACID transaction guarantees
     try {
-      await upsertSqliteTransactions(transactions, deviceId || 'pos-terminal', cashierName || 'Kasir');
+      await upsertSqliteTransactions(validTransactions, deviceId || 'pos-terminal', cashierName || 'Kasir');
     } catch (e: any) {
       console.warn('[SQLite Server] Error syncing transactions to SQLite:', e?.message || e);
     }
@@ -1193,6 +1236,7 @@ app.post('/api/pos/transactions/sync', async (req, res) => {
       success: true,
       syncedCount: syncedIds.length,
       syncedIds,
+      rejected,
       serverTime: now,
       database: 'SQLite Relational (WAL Mode)',
       totalCloudTransactions: lanTransactionsStore.size,
@@ -1207,6 +1251,10 @@ app.post('/api/pos/transactions', async (req, res) => {
     const tx = req.body;
     if (!tx || (!tx.id && !tx.invoiceNumber)) {
       return res.status(400).json({ success: false, error: 'Transaksi tidak valid' });
+    }
+    const txError = validateTransaction(tx);
+    if (txError) {
+      return res.status(400).json({ success: false, error: txError });
     }
     const key = tx.id || tx.invoiceNumber;
     lanTransactionsStore.set(key, tx);
@@ -3866,13 +3914,44 @@ app.get('/api/system/git-status', async (req, res) => {
   }
 });
 
+/**
+ * Lindungi data toko (folder data/) sebelum `git reset --hard`.
+ * 1) Salin data/ ke data-backup/<waktu>/ (simpan 5 cadangan terakhir).
+ * 2) Lepas data/ dari index Git supaya reset tidak menghapus/menimpa database yang sedang dipakai
+ *    pada instalasi lama yang masih melacak data/ di Git.
+ */
+async function protectStoreDataBeforeReset(): Promise<string | null> {
+  const root = process.cwd();
+  const dataDir = path.join(root, 'data');
+  let backupPath: string | null = null;
+  try {
+    if (fs.existsSync(dataDir)) {
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupRoot = path.join(root, 'data-backup');
+      backupPath = path.join(backupRoot, stamp);
+      fs.mkdirSync(backupRoot, { recursive: true });
+      fs.cpSync(dataDir, backupPath, { recursive: true });
+      const old = fs.readdirSync(backupRoot).sort();
+      for (const name of old.slice(0, Math.max(0, old.length - 5))) {
+        fs.rmSync(path.join(backupRoot, name), { recursive: true, force: true });
+      }
+    }
+  } catch (e: any) {
+    // Jika cadangan gagal, jangan lanjutkan operasi yang bisa menimpa data.
+    throw new Error('Gagal membuat cadangan data toko sebelum update: ' + (e?.message || e));
+  }
+  await execPromise('git rm -r --cached --ignore-unmatch -q data', { cwd: root }).catch(() => {});
+  return backupPath;
+}
+
 // Explicitly configure or re-initialize git remote to official repository
-app.post('/api/system/git-configure', async (req, res) => {
+app.post('/api/system/git-configure', adminOnly, async (req, res) => {
   try {
     const gitDir = path.join(process.cwd(), '.git');
     const isGitRepo = fs.existsSync(gitDir);
 
     if (!isGitRepo) {
+      await protectStoreDataBeforeReset();
       await execPromise(`git init && git remote add origin ${OFFICIAL_GITHUB_REPO_URL} && git fetch origin main --depth=10 && git branch -M main && git reset --hard origin/main`, {
         cwd: process.cwd(),
         timeout: 35000,
@@ -3899,7 +3978,7 @@ app.post('/api/system/git-configure', async (req, res) => {
   }
 });
 
-app.post('/api/system/git-pull', async (req, res) => {
+app.post('/api/system/git-pull', adminOnly, async (req, res) => {
   try {
     const gitDir = path.join(process.cwd(), '.git');
     if (!fs.existsSync(gitDir)) {
@@ -3926,6 +4005,17 @@ app.post('/api/system/git-pull', async (req, res) => {
     }
 
     // 3. Bulletproof update: fetch & hard reset to origin/main (prevents untracked merge conflict aborts)
+    //    Data toko (data/) dicadangkan dan dilepas dari Git dulu agar tidak tertimpa.
+    let dataBackupPath: string | null = null;
+    try {
+      dataBackupPath = await protectStoreDataBeforeReset();
+    } catch (backupErr: any) {
+      return res.status(500).json({
+        success: false,
+        step: 'backup data',
+        message: 'Update dibatalkan: ' + backupErr.message,
+      });
+    }
     let pullOutput = '';
     try {
       const { stdout: fetchOut, stderr: fetchErr } = await execPromise('git fetch origin main --depth=10 || git fetch origin main', {
@@ -3933,10 +4023,18 @@ app.post('/api/system/git-pull', async (req, res) => {
         timeout: 45000,
       });
       await execPromise('git branch -M main', { cwd: process.cwd(), timeout: 10000 }).catch(() => {});
+      // Jika commit tujuan MASIH melacak data/ (versi lama), reset akan menimpa database toko.
+      const { stdout: trackedData } = await execPromise('git ls-tree -r origin/main --name-only -- data', {
+        cwd: process.cwd(),
+      }).catch(() => ({ stdout: '' }));
       const { stdout: resetOut, stderr: resetErr } = await execPromise('git reset --hard origin/main', {
         cwd: process.cwd(),
         timeout: 30000,
       });
+      if (trackedData.trim() && dataBackupPath) {
+        fs.cpSync(dataBackupPath, path.join(process.cwd(), 'data'), { recursive: true, force: true });
+        console.warn('[Update] Commit tujuan melacak data/; database toko dipulihkan dari cadangan:', dataBackupPath);
+      }
       pullOutput = [fetchOut, fetchErr, resetOut, resetErr].filter(Boolean).join('\n').trim();
     } catch (pullErr: any) {
       try {
@@ -3986,6 +4084,7 @@ app.post('/api/system/git-pull', async (req, res) => {
       newCommit,
       pullOutput,
       buildOutput,
+      dataBackupPath,
       cleanedFilesCount: cleanupResult.count,
       cleanedBytesFreed: cleanupResult.bytesFreed,
     });
@@ -3995,7 +4094,7 @@ app.post('/api/system/git-pull', async (req, res) => {
 });
 
 // Comprehensive system file integrity verification endpoint
-app.get('/api/system/verify-files', async (req, res) => {
+app.get('/api/system/verify-files', adminOnly, async (req, res) => {
   try {
     const rootDir = process.cwd();
 
@@ -4133,7 +4232,7 @@ app.get('/api/system/verify-files', async (req, res) => {
 });
 
 // Scan for unnecessary files (temp, logs, OS junk, caches)
-app.get('/api/system/cleanup-scan', async (req, res) => {
+app.get('/api/system/cleanup-scan', adminOnly, async (req, res) => {
   try {
     const items = scanUnnecessaryFiles(process.cwd());
     const totalBytes = items.reduce((acc, curr) => acc + curr.size, 0);
@@ -4150,7 +4249,7 @@ app.get('/api/system/cleanup-scan', async (req, res) => {
 });
 
 // Safely execute cleanup of unnecessary files and prune database
-app.post('/api/system/cleanup-execute', async (req, res) => {
+app.post('/api/system/cleanup-execute', adminOnly, async (req, res) => {
   try {
     const cleanup = cleanUnnecessaryFilesInternal(process.cwd());
     let dbCleanup: any = null;
@@ -4212,7 +4311,16 @@ async function setupViteOrStatic() {
     app.use('/assets', express.static(distAssets));
   }
 
-  if (process.env.NODE_ENV !== 'production') {
+  // Mode produksi: NODE_ENV=production, atau menjalankan bundel hasil build (dist/server.cjs)
+  // yang sudah punya dist/index.html. Sebelumnya `node dist/server.cjs` tanpa NODE_ENV
+  // diam-diam menjalankan server dev Vite.
+  const runningBundle = typeof __filename !== 'undefined' && path.basename(__filename) === 'server.cjs';
+  const isProduction =
+    process.env.NODE_ENV === 'production' ||
+    (runningBundle && fs.existsSync(path.join(process.cwd(), 'dist', 'index.html')));
+
+  if (!isProduction) {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',

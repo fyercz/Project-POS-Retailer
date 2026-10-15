@@ -251,3 +251,13 @@ npm run desktop:electron
    - Silakan baca berkas [`USER_MANUAL.md`](./USER_MANUAL.md) untuk panduan teks lengkap dan riwayat seluruh versi rilis aplikasi.
 
 
+
+---
+
+## 🔒 Keamanan & Keamanan Data
+
+- **Data toko tidak lagi disimpan di Git.** Folder `data/` (database SQLite) masuk `.gitignore`. Sebelum "Tarik Update", server otomatis mencadangkan `data/` ke `data-backup/<waktu>/` (5 cadangan terakhir). Tetap disarankan menyalin folder `data/` secara berkala.
+- **Fitur administratif** (`/api/system/*` seperti update GitHub dan pembersihan sistem, serta seed database) hanya bisa dipakai dari **komputer server kasir itu sendiri**. Dari perangkat lain di jaringan, set `ADMIN_TOKEN` di file `.env` dan kirim lewat header `X-Admin-Token`.
+- **PIN master tersembunyi (`9999`) sudah dihapus.** Gunakan PIN karyawan masing-masing. Ganti PIN bawaan (1234, 2345, 3456, 7890, 9999) di menu Kelola Karyawan sebelum dipakai di toko.
+- Endpoint AI dibatasi lajunya per perangkat untuk melindungi kuota Gemini.
+- Menjalankan tes: `npm test`.

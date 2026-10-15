@@ -1705,7 +1705,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!activeEmployee) {
       return loginWithPin(pin);
     }
-    if (activeEmployee.pin === pin || pin === '9999') {
+    if (activeEmployee.pin === pin) {
       setIsLocked(false);
       return { success: true, message: 'Layar berhasil dibuka.' };
     }

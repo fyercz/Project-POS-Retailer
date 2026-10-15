@@ -94,7 +94,7 @@ export const EmployeeLockScreen: React.FC = () => {
 
     // Auto submit on 4-digit PIN for selected employee
     if (newPin.length === 4 && selectedEmp) {
-      if (selectedEmp.pin === newPin || newPin === '9999') {
+      if (selectedEmp.pin === newPin) {
         setTimeout(() => {
           quickSwitchEmployee(selectedEmp);
           setPinInput('');
@@ -121,7 +121,7 @@ export const EmployeeLockScreen: React.FC = () => {
     }
 
     if (selectedEmp) {
-      if (selectedEmp.pin === pinInput || pinInput === '9999') {
+      if (selectedEmp.pin === pinInput) {
         quickSwitchEmployee(selectedEmp);
         setPinInput('');
         setErrorMessage('');
@@ -382,7 +382,7 @@ export const EmployeeLockScreen: React.FC = () => {
 
           <div className="w-full max-w-xs text-center mt-4">
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Butuh bantuan akses? Hubungi Supervisor atau gunakan Master PIN (9999).
+              Butuh bantuan akses? Hubungi Supervisor atau Owner untuk bantuan akses.
             </p>
           </div>
         </div>

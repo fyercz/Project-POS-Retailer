@@ -41,7 +41,7 @@ export const AuthorityModal: React.FC<AuthorityModalProps> = ({
           ? emp.role === 'owner'
           : emp.role === 'supervisor' || emp.role === 'owner';
 
-      const isPinCorrect = emp.pin === pin.trim() || pin.trim() === '9999';
+      const isPinCorrect = emp.pin === pin.trim();
       return isAuthorizedRole && isPinCorrect;
     });
 
