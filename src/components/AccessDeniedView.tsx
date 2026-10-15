@@ -40,7 +40,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
       (emp) =>
         emp.isActive &&
         (emp.role === 'supervisor' || emp.role === 'owner') &&
-        (emp.pin === pinInput.trim() || pinInput.trim() === '9999')
+        emp.pin === pinInput.trim()
     );
 
     if (authorityEmp) {

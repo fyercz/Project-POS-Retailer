@@ -17,7 +17,7 @@ import {
   UserX,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
-import { Employee, EmployeeRole } from '../types';
+import { Employee } from '../types';
 
 interface UnregisteredBarcodeModalProps {
   isOpen: boolean;
@@ -104,26 +104,10 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
       return;
     }
 
-    // Emergency master PIN 9999 or match selected/any authority employee PIN
+    // Cocokkan PIN dengan karyawan otoritas yang dipilih (atau karyawan otoritas lain)
     let matchedAuthorizer: Employee | undefined;
 
-    if (pin === '9999') {
-      matchedAuthorizer =
-        authorityEmployees.find((e) => e.role === 'owner') ||
-        authorityEmployees[0] || {
-          id: 'master-owner',
-          employeeCode: 'OWNER-01',
-          name: 'Pemilik Toko (Master Owner)',
-          role: 'owner' as EmployeeRole,
-          roleTitle: 'Pemilik Toko (Master Owner)',
-          pin: '9999',
-          avatar: 'OW',
-          avatarColor: 'bg-indigo-600',
-          isActive: true,
-          assignedShift: 'Master Access',
-          registeredAt: new Date().toISOString(),
-        };
-    } else if (selectedAuthorizerId) {
+    if (selectedAuthorizerId) {
       const selected = authorityEmployees.find((e) => e.id === selectedAuthorizerId);
       if (selected && selected.pin === pin) {
         matchedAuthorizer = selected;
