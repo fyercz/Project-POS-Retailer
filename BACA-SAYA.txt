@@ -1,0 +1,8 @@
+CARA PAKAI ULILMART POS
+=======================
+1. Klik ganda  MULAI-KASIR.bat  (pertama kali butuh internet, 1-3 menit).
+2. Jendela kasir terbuka otomatis. Selanjutnya langsung terbuka dalam beberapa detik.
+3. Mau ikon di Desktop? Klik ganda  BUAT-SHORTCUT-DESKTOP.bat.
+4. Untuk mematikan server: BERHENTI-KASIR.bat (menutup jendela kasir saja tidak mematikan server).
+
+Perlu: Windows + Node.js LTS (nodejs.org). Jika bermasalah, lihat file server.log.

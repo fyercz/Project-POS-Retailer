@@ -1,6 +1,6 @@
-# Force Windows batch files to use CRLF
-*.bat text eol=crlf
-*.cmd text eol=crlf
+# Windows batch files are stored with CRLF as-is (so ZIP downloads from GitHub also work)
+*.bat -text
+*.cmd -text
 
 # Force Unix shell scripts to use LF
 *.sh text eol=lf
