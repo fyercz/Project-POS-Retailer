@@ -58,6 +58,19 @@ if command -v git >/dev/null 2>&1; then
         git remote set-url origin "$REPO_URL" 2>/dev/null || git remote add origin "$REPO_URL" 2>/dev/null
     fi
 
+    # Lindungi data toko (folder data) sebelum git reset --hard: cadangkan dan lepas dari index Git
+    STAMP=""
+    if [ -d data ]; then
+        STAMP="$(date +%Y%m%d-%H%M%S)"
+        mkdir -p data-backup
+        if ! cp -R data "data-backup/$STAMP"; then
+            echo "❌ Gagal mencadangkan folder data. Update dibatalkan agar data toko aman."
+            exit 1
+        fi
+        echo "      Data toko dicadangkan ke data-backup/$STAMP"
+        git rm -r --cached --ignore-unmatch -q data 2>/dev/null || true
+    fi
+
     echo "      Mengambil rilis aktual dari GitHub (git fetch)..."
     if git fetch origin main --depth=10 2>/dev/null || git fetch origin main; then
         echo "      Menyelaraskan seluruh file proyek ke rilis GitHub terbaru (origin/main)..."
@@ -70,6 +83,11 @@ if command -v git >/dev/null 2>&1; then
         git reset --hard origin/master 2>/dev/null || git pull origin main 2>/dev/null || git pull || echo "⚠️ Peringatan: Gagal pull, melanjutkan dengan kode lokal."
     fi
     
+    # Jika database toko tertimpa/hilang oleh update, pulihkan dari cadangan
+    if [ -n "$STAMP" ] && [ ! -f data/pos-master.sqlite ]; then
+        mkdir -p data && cp -R "data-backup/$STAMP/." data/
+    fi
+
     echo ""
     echo "[INFO] Versi Commit Aktual Terbaru di Komputer Ini:"
     git log -1 --pretty=format:"  Commit : %h%n  Pesan  : %s%n  Waktu  : %cd%n" 2>/dev/null || true

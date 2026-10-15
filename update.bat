@@ -64,6 +64,16 @@ if not exist .git (
     "%GIT_CMD%" remote set-url origin %REPO_URL% 2>nul || "%GIT_CMD%" remote add origin %REPO_URL% 2>nul
 )
 
+REM Lindungi data toko (folder data) sebelum git reset --hard: cadangkan dan lepas dari index Git
+set "STAMP="
+if not exist "data" goto SKIP_BACKUP
+for /f %%t in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set "STAMP=%%t"
+xcopy /e /i /y /q "data" "data-backup\%STAMP%" >nul
+if errorlevel 1 goto BACKUP_GAGAL
+echo [OK] Data toko dicadangkan ke data-backup\%STAMP%
+"%GIT_CMD%" rm -r --cached --ignore-unmatch -q data 2>nul
+:SKIP_BACKUP
+
 echo [INFO] Mengambil pembaruan kode aktual dari server GitHub (git fetch)...
 "%GIT_CMD%" fetch origin main --depth=10 2>nul || "%GIT_CMD%" fetch origin main
 if %errorlevel% equ 0 (
@@ -81,6 +91,9 @@ if %errorlevel% equ 0 (
         "%GIT_CMD%" pull origin main 2>nul || "%GIT_CMD%" pull
     )
 )
+
+REM Jika database toko tertimpa/hilang oleh update, pulihkan dari cadangan
+if defined STAMP if not exist "data\pos-master.sqlite" xcopy /e /i /y /q "data-backup\%STAMP%" "data" >nul
 
 echo.
 echo [INFO] Versi Commit Aktual Terbaru di Komputer Ini:
@@ -120,3 +133,8 @@ if /i "%JALANKAN%"=="Y" (
     call autorun.bat
 )
 exit /b 0
+
+:BACKUP_GAGAL
+echo [ERROR] Gagal mencadangkan folder data. Update dibatalkan agar data toko aman.
+pause
+exit /b 1
