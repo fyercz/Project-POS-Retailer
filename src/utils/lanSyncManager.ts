@@ -15,6 +15,16 @@ function createTimeoutSignal(ms: number): AbortSignal | undefined {
   return undefined;
 }
 
+/** Header standar untuk request ke server LAN, termasuk Kunci LAN bila diisi. */
+function lanHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  try {
+    const key = getLANConfig().lanKey;
+    if (key) headers['X-LAN-Key'] = key;
+  } catch {}
+  return headers;
+}
+
 function generateClientId(): string {
   if (typeof window === 'undefined') return 'node-client';
   let id = localStorage.getItem(STORAGE_KEY_CLIENT_ID);
@@ -80,7 +90,7 @@ export async function fetchLANServerStatus(customUrl?: string): Promise<LANServe
   try {
     const res = await fetch(`${baseUrl}/api/lan/status`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       signal: createTimeoutSignal(4000),
     });
     if (!res.ok) return null;
@@ -102,7 +112,7 @@ export async function testLANConnection(
   try {
     const res = await fetch(`${cleanUrl}/api/lan/status`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       signal: createTimeoutSignal(5000),
     });
     const latencyMs = Math.round(performance.now() - startTime);
@@ -132,7 +142,7 @@ export async function registerLANClient(): Promise<boolean> {
   try {
     const res = await fetch(`${baseUrl}/api/lan/client/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       body: JSON.stringify({
         clientId: config.clientId,
         clientName: config.clientName,
@@ -158,7 +168,7 @@ export async function sendLANHeartbeat(transactionsCount = 0): Promise<{ activeC
   try {
     const res = await fetch(`${baseUrl}/api/lan/client/heartbeat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       body: JSON.stringify({
         clientId: config.clientId,
         clientName: config.clientName,
@@ -192,7 +202,7 @@ export async function pullLANMasterData(): Promise<{
   try {
     const res = await fetch(`${baseUrl}/api/lan/data/pull`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       signal: createTimeoutSignal(8000),
     });
     if (res.ok) {
@@ -219,17 +229,17 @@ export async function pullLANMasterData(): Promise<{
  */
 export async function pushTransactionToLANServer(
   transaction: Transaction
-): Promise<{ success: boolean; updatedStocks?: Array<{ productId: string; newStock: number }>; error?: string }> {
+): Promise<LANPushResult> {
   const config = getLANConfig();
   if (config.role === 'STANDALONE') {
-    return { success: false, error: 'Mode Standalone lokal aktif' };
+    return { success: false, skipped: true, error: 'Mode Standalone lokal aktif' };
   }
 
   const baseUrl = config.serverUrl.replace(/\/+$/, '');
   try {
     const res = await fetch(`${baseUrl}/api/lan/data/push-transaction`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       body: JSON.stringify({
         transaction,
         clientId: config.clientId,
@@ -250,11 +260,146 @@ export async function pushTransactionToLANServer(
       return { success: true, updatedStocks: data.updatedStocks };
     } else {
       const errData = await res.json().catch(() => ({}));
-      return { success: false, error: errData.error || `HTTP ${res.status}` };
+      return { success: false, status: res.status, error: errData.error || `HTTP ${res.status}` };
     }
   } catch (err: any) {
     return { success: false, error: err.message || 'Gagal mengirim transaksi ke server LAN' };
   }
+}
+
+export interface LANPushResult {
+  success: boolean;
+  /** true bila tidak dikirim karena mode Standalone (bukan kegagalan). */
+  skipped?: boolean;
+  /** Kode HTTP bila server menolak (4xx = data ditolak, tidak perlu dikirim ulang). */
+  status?: number;
+  duplicate?: boolean;
+  updatedStocks?: Array<{ productId: string; newStock: number }>;
+  error?: string;
+}
+
+export interface LANStockReturnPayload {
+  /** Kunci unik retur/void (mis. id retur atau id transaksi) agar tidak diproses dua kali. */
+  key: string;
+  kind: 'return' | 'void';
+  items: Array<{ productId: string; quantity: number; unitMultiplier?: number }>;
+  transactionId?: string;
+  transactionUpdate?: { status?: string; returnedAmount?: number; returnReason?: string; returnedAt?: string };
+}
+
+/** Kirim retur/void ke server LAN: stok dikembalikan di server dan status transaksi diperbarui. */
+export async function pushStockReturnToLANServer(payload: LANStockReturnPayload): Promise<LANPushResult> {
+  const config = getLANConfig();
+  if (config.role === 'STANDALONE') return { success: false, skipped: true };
+  const baseUrl = config.serverUrl.replace(/\/+$/, '');
+  try {
+    const res = await fetch(`${baseUrl}/api/lan/data/stock-return`, {
+      method: 'POST',
+      headers: lanHeaders(),
+      body: JSON.stringify({ ...payload, clientId: config.clientId, clientName: config.clientName }),
+      signal: createTimeoutSignal(6000),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) return { success: true, duplicate: data.duplicate, updatedStocks: data.updatedStocks };
+    return { success: false, status: res.status, error: data.error || `HTTP ${res.status}` };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Gagal mengirim retur ke server LAN' };
+  }
+}
+
+// -------------------------------------------------------------
+// Antrean kirim ulang: penjualan / retur yang gagal terkirim ke server LAN (mis. jaringan putus)
+// disimpan di perangkat dan dikirim ulang otomatis. Aman diulang karena server idempoten.
+// -------------------------------------------------------------
+const STORAGE_KEY_RETRY_QUEUE = 'pos_lan_retry_queue_v1';
+
+type LANRetryEntry =
+  | { type: 'sale'; id: string; transaction: Transaction; attempts: number; queuedAt: string }
+  | { type: 'stock-return'; id: string; payload: LANStockReturnPayload; attempts: number; queuedAt: string };
+
+function readRetryQueue(): LANRetryEntry[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_RETRY_QUEUE);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRetryQueue(list: LANRetryEntry[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(STORAGE_KEY_RETRY_QUEUE, JSON.stringify(list));
+  } catch (err) {
+    console.error('[LAN] Gagal menyimpan antrean kirim ulang:', err);
+  }
+}
+
+export function getLANRetryQueueSize(): number {
+  return readRetryQueue().length;
+}
+
+export function queueLANSale(transaction: Transaction): void {
+  const list = readRetryQueue();
+  const id = `sale:${transaction.id || transaction.invoiceNumber}`;
+  if (list.some((e) => e.id === id)) return;
+  list.push({ type: 'sale', id, transaction, attempts: 0, queuedAt: new Date().toISOString() });
+  writeRetryQueue(list);
+}
+
+export function queueLANStockReturn(payload: LANStockReturnPayload): void {
+  const list = readRetryQueue();
+  const id = `${payload.kind}:${payload.key}`;
+  if (list.some((e) => e.id === id)) return;
+  list.push({ type: 'stock-return', id, payload, attempts: 0, queuedAt: new Date().toISOString() });
+  writeRetryQueue(list);
+}
+
+let isFlushingRetryQueue = false;
+
+/**
+ * Kirim ulang antrean. Mengembalikan stok terbaru dari server untuk diterapkan di layar.
+ * Entri dihapus bila berhasil, atau bila server menolak datanya (HTTP 4xx) agar tidak macet selamanya.
+ */
+export async function flushLANRetryQueue(): Promise<Array<{ productId: string; newStock: number }>> {
+  if (isFlushingRetryQueue) return [];
+  const config = getLANConfig();
+  if (config.role === 'STANDALONE') return [];
+  isFlushingRetryQueue = true;
+  const updatedStocks: Array<{ productId: string; newStock: number }> = [];
+  try {
+    const list = readRetryQueue();
+    if (list.length === 0) return [];
+    const remaining: LANRetryEntry[] = [];
+    for (let i = 0; i < list.length; i++) {
+      const entry = list[i];
+      const result =
+        entry.type === 'sale'
+          ? await pushTransactionToLANServer(entry.transaction)
+          : await pushStockReturnToLANServer(entry.payload);
+      if (result.success) {
+        updatedStocks.push(...(result.updatedStocks || []));
+      } else if (result.status && result.status >= 400 && result.status < 500 && result.status !== 401 && result.status !== 429) {
+        console.error(`[LAN] Server menolak ${entry.id}, dihapus dari antrean:`, result.error);
+      } else {
+        remaining.push({ ...entry, attempts: entry.attempts + 1 });
+        // Server belum bisa dihubungi: simpan sisanya, coba lagi nanti.
+        if (!result.status) {
+          remaining.push(...list.slice(i + 1));
+          break;
+        }
+      }
+    }
+    // Gabungkan dengan entri baru yang mungkin masuk selama proses kirim ulang
+    const latest = readRetryQueue();
+    const handledIds = new Set(list.map((e) => e.id));
+    writeRetryQueue([...remaining, ...latest.filter((e) => !handledIds.has(e.id))]);
+  } finally {
+    isFlushingRetryQueue = false;
+  }
+  return updatedStocks;
 }
 
 /**
@@ -268,7 +413,7 @@ export async function pushProductsToLANServer(products: Product[], auditNote?: s
   try {
     const res = await fetch(`${baseUrl}/api/lan/data/sync-products`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       body: JSON.stringify({ products, auditNote }),
       signal: createTimeoutSignal(8000),
     });
@@ -292,7 +437,7 @@ export async function seedLANServerDatabase(payload: {
   try {
     const res = await fetch(`${baseUrl}/api/lan/database/seed`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       body: JSON.stringify(payload),
       signal: createTimeoutSignal(10000),
     });
@@ -317,7 +462,7 @@ export async function fetchLANSharedHeldOrders(): Promise<any[]> {
   try {
     const res = await fetch(`${baseUrl}/api/lan/orders/held`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       signal: createTimeoutSignal(3000),
     });
     if (res.ok) {
@@ -341,7 +486,7 @@ export async function pushLANSharedHeldOrder(heldOrder: any): Promise<boolean> {
   try {
     const res = await fetch(`${baseUrl}/api/lan/orders/held`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       body: JSON.stringify({ heldOrder, clientName: config.clientName }),
       signal: createTimeoutSignal(4000),
     });
@@ -362,7 +507,7 @@ export async function deleteLANSharedHeldOrder(orderId: string): Promise<boolean
   try {
     const res = await fetch(`${baseUrl}/api/lan/orders/held/${orderId}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: lanHeaders(),
       signal: createTimeoutSignal(4000),
     });
     return res.ok;

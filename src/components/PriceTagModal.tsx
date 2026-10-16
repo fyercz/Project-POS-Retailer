@@ -34,6 +34,7 @@ import { formatCurrency, formatDate } from '../utils/formatters';
 import { generateBarcodeSvgString } from '../utils/barcodeGenerator';
 import { printViaIframe, openPrintWindow } from '../utils/printHelper';
 import { QRShelfLabelModal } from './QRShelfLabelModal';
+import { escapeHtml, escapeTextFields } from '../utils/escapeHtml';
 
 export type PaperSize = 'a4' | 'f4';
 
@@ -349,7 +350,13 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
     });
 
     const categoryObj = categories.find((c) => c.id === product.categoryId);
-    const categoryName = categoryObj ? categoryObj.name : product.categoryId;
+    const categoryName = escapeHtml(categoryObj ? categoryObj.name : product.categoryId);
+    // Semua teks dari data (nama produk, merek, toko) di-escape sebelum masuk HTML.
+    product = escapeTextFields(product);
+    const safeBarcodeCode = escapeHtml(barcodeCode);
+    const safeStoreName = escapeHtml(settings.storeName);
+    const safeBranchName = escapeHtml(settings.branchName || 'OFFICIAL');
+    const safePromoText = escapeHtml(customPromoText || 'PROMO SPESIAL');
 
     const formattedPrice = formatCurrency(product.price, settings.currency);
 
@@ -387,7 +394,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
             showStoreHeader
               ? `
             <div style="background: ${themeHeaderBg}; color: ${themeHeaderColor}; padding: 1.5px 4px; display: flex; justify-content: space-between; align-items: center; font-size: 7.5px; font-weight: 800; text-transform: uppercase; border-radius: 2px; line-height: 1;">
-              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">${settings.storeName}</span>
+              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">${safeStoreName}</span>
               ${showDate ? `<span style="font-size: 6.5px; opacity: 0.85;">${todayStr}</span>` : ''}
             </div>`
               : ''
@@ -407,7 +414,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 2px; border-top: 1px dotted #e2e8f0; padding-top: 2px;">
               <div style="max-width: 48%;">
                 ${barcodeSvg}
-                <div style="font-family: monospace; font-size: 6.5px; text-align: center; color: #475569; letter-spacing: 0.5px; margin-top: -1px;">${barcodeCode}</div>
+                <div style="font-family: monospace; font-size: 6.5px; text-align: center; color: #475569; letter-spacing: 0.5px; margin-top: -1px;">${safeBarcodeCode}</div>
               </div>
 
               <div style="text-align: right; line-height: 1;">
@@ -430,7 +437,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
               showStoreHeader
                 ? `
               <div style="background: ${themeHeaderBg}; color: ${themeHeaderColor}; padding: 2px 6px; display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; font-weight: 800; text-transform: uppercase; border-radius: 3px; line-height: 1.2;">
-                <span>${settings.storeName} - ${settings.branchName || 'OFFICIAL'}</span>
+                <span>${safeStoreName} - ${safeBranchName}</span>
                 ${showDate ? `<span style="font-size: 7.5px;">${todayStr}</span>` : ''}
               </div>`
                 : ''
@@ -450,7 +457,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
           <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #e2e8f0; padding-top: 4px; margin-top: 4px;">
             <div style="max-width: 50%;">
               ${barcodeSvg}
-              <div style="font-family: monospace; font-size: 7.5px; text-align: center; color: #475569; font-weight: bold; margin-top: 1px;">${barcodeCode}</div>
+              <div style="font-family: monospace; font-size: 7.5px; text-align: center; color: #475569; font-weight: bold; margin-top: 1px;">${safeBarcodeCode}</div>
             </div>
 
             <div style="text-align: right;">
@@ -469,8 +476,8 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
         <div style="box-sizing: border-box; width: 100%; height: 100%; padding: 8px; border: 2px solid #dc2626; background: #fffdf5; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: relative;">
           <!-- Promo Banner -->
           <div style="background: #dc2626; color: #ffffff; padding: 3px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; border-radius: 4px;">
-            <span>★ ${customPromoText || 'PROMO SPESIAL'} ★</span>
-            <span style="font-size: 8px; background: #fef08a; color: #854d0e; padding: 1px 4px; border-radius: 2px;">${settings.storeName}</span>
+            <span>★ ${safePromoText} ★</span>
+            <span style="font-size: 8px; background: #fef08a; color: #854d0e; padding: 1px 4px; border-radius: 2px;">${safeStoreName}</span>
           </div>
 
           <div style="margin: 4px 0;">
@@ -484,7 +491,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
           <div style="background: #fef2f2; border: 1px dashed #f87171; border-radius: 6px; padding: 6px; display: flex; justify-content: space-between; align-items: center;">
             <div style="max-width: 45%;">
               ${barcodeSvg}
-              <div style="font-family: monospace; font-size: 8px; text-align: center; color: #475569; font-weight: bold;">${barcodeCode}</div>
+              <div style="font-family: monospace; font-size: 8px; text-align: center; color: #475569; font-weight: bold;">${safeBarcodeCode}</div>
             </div>
 
             <div style="text-align: right;">
@@ -508,11 +515,11 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
 
         <div style="margin: 1px 0; width: 100%;">
           ${barcodeSvg}
-          <div style="font-family: monospace; font-size: 6.5px; color: #334155; font-weight: bold; letter-spacing: 0.5px; line-height: 1;">${barcodeCode}</div>
+          <div style="font-family: monospace; font-size: 6.5px; color: #334155; font-weight: bold; letter-spacing: 0.5px; line-height: 1;">${safeBarcodeCode}</div>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dotted #cbd5e1; padding-top: 1px; font-size: 6.5px; line-height: 1;">
-          <span style="color: #64748b; font-weight: 600;">${settings.storeName.slice(0, 10)}</span>
+          <span style="color: #64748b; font-weight: 600;">${escapeHtml(settings.storeName.slice(0, 10))}</span>
           <span style="font-weight: 900; font-size: 8.5px; color: #0f172a; font-family: monospace;">${formattedPrice}</span>
         </div>
       </div>

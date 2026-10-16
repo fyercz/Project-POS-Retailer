@@ -44,6 +44,7 @@ import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { AIForecastItem, AIDailyInsights, AIPromoResult, AIPurchaseOrderPlan } from '../types';
 import { RestockSalesTrendChart } from './RestockSalesTrendChart';
+import { escapeHtml } from '../utils/escapeHtml';
 
 export const GeminiRetailCopilot: React.FC = () => {
   const {
@@ -547,9 +548,9 @@ export const GeminiRetailCopilot: React.FC = () => {
       : `*RENCANA PURCHASE ORDER (PO) RESTOCK TOKO*\n`;
     text += `Nomor PO: ${poNumber}\n`;
     text += `Tanggal: ${dateStr}\n`;
-    text += `Pemesan: ${settings.storeName}\n`;
+    text += `Pemesan: ${escapeHtml(settings.storeName)}\n`;
     if (targetSupplierName) {
-      text += `Distributor: *${targetSupplierName}*\n`;
+      text += `Distributor: *${escapeHtml(targetSupplierName)}*\n`;
       if (foundSup?.contactPerson) text += `Kontak: ${foundSup.contactPerson} (${foundSup.phone || '-'})\n`;
       if (foundSup?.paymentTerms) text += `Syarat Pembayaran: *${foundSup.paymentTerms}*\n`;
     }
@@ -564,8 +565,8 @@ export const GeminiRetailCopilot: React.FC = () => {
       totalQty += qty;
       totalBudget += subtotal;
 
-      text += `${idx + 1}. *${item.productName}*\n`;
-      text += `   - Jumlah Pesanan: ${qty} ${item.unit || 'pcs'}\n`;
+      text += `${idx + 1}. *${escapeHtml(item.productName)}*\n`;
+      text += `   - Jumlah Pesanan: ${qty} ${escapeHtml(item.unit || 'pcs')}\n`;
       if (!targetSupplierName && item.suggestedSupplier) {
         text += `   - Distributor: ${item.suggestedSupplier}\n`;
       }
@@ -624,12 +625,12 @@ export const GeminiRetailCopilot: React.FC = () => {
         <tr style="border-bottom: 1px solid #e2e8f0;">
           <td style="padding: 8px; text-align: center;">${idx + 1}</td>
           <td style="padding: 8px;">
-            <strong>${item.productName}</strong><br/>
-            <small style="color: #64748b;">SKU: ${item.sku || '-'} | Barcode: ${item.barcode || '-'}</small>
+            <strong>${escapeHtml(item.productName)}</strong><br/>
+            <small style="color: #64748b;">SKU: ${escapeHtml(item.sku || '-')} | Barcode: ${escapeHtml(item.barcode || '-')}</small>
           </td>
-          ${!targetSupplierName ? `<td style="padding: 8px;">${item.suggestedSupplier || '-'}</td>` : ''}
+          ${!targetSupplierName ? `<td style="padding: 8px;">${escapeHtml(item.suggestedSupplier || '-')}</td>` : ''}
           <td style="padding: 8px; text-align: center;">${item.currentStock}</td>
-          <td style="padding: 8px; text-align: center; font-weight: bold; color: #059669;">+${qty} ${item.unit || 'pcs'}</td>
+          <td style="padding: 8px; text-align: center; font-weight: bold; color: #059669;">+${qty} ${escapeHtml(item.unit || 'pcs')}</td>
           <td style="padding: 8px; text-align: right;">${formatCurrency(cost, settings.currency)}</td>
           <td style="padding: 8px; text-align: right; font-weight: bold;">${formatCurrency(subtotal, settings.currency)}</td>
         </tr>
@@ -657,8 +658,8 @@ export const GeminiRetailCopilot: React.FC = () => {
         <body>
           <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px;">
             <div>
-              <h1>${settings.storeName}</h1>
-              <div class="meta">${settings.address || 'Smart Retail Point of Sale'} | Telp: ${settings.phone || '-'}</div>
+              <h1>${escapeHtml(settings.storeName)}</h1>
+              <div class="meta">${escapeHtml(settings.address || 'Smart Retail Point of Sale')} | Telp: ${escapeHtml(settings.phone || '-')}</div>
             </div>
             <div style="text-align: right;">
               <span style="display: inline-block; background: #dcfce7; color: #166534; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 11px;">PURCHASE ORDER (PO) RESMI</span>
@@ -673,11 +674,11 @@ export const GeminiRetailCopilot: React.FC = () => {
           <div class="supplier-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <strong>Distributor / Supplier:</strong> <span style="font-size: 14px; font-weight: bold;">${targetSupplierName}</span><br/>
-                <span style="color: #64748b;">PIC: ${foundSup?.contactPerson || '-'} | Telp: ${foundSup?.phone || '-'}</span>
+                <strong>Distributor / Supplier:</strong> <span style="font-size: 14px; font-weight: bold;">${escapeHtml(targetSupplierName)}</span><br/>
+                <span style="color: #64748b;">PIC: ${escapeHtml(foundSup?.contactPerson || '-')} | Telp: ${escapeHtml(foundSup?.phone || '-')}</span>
               </div>
               <div style="text-align: right;">
-                <span style="background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">Syarat Pembayaran: ${foundSup?.paymentTerms || 'Tunai'}</span>
+                <span style="background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">Syarat Pembayaran: ${escapeHtml(foundSup?.paymentTerms || 'Tunai')}</span>
               </div>
             </div>
           </div>`
@@ -685,7 +686,7 @@ export const GeminiRetailCopilot: React.FC = () => {
           }
 
           <div style="margin-top: 16px; background: #f8fafc; border-left: 4px solid #10b981; padding: 10px 14px; font-size: 12px; border-radius: 4px;">
-            <strong>Ringkasan Analisis AI:</strong> ${forecastData?.summary || 'Rencana pemesanan restock barang menipis dan fast moving ritel.'}
+            <strong>Ringkasan Analisis AI:</strong> ${escapeHtml(forecastData?.summary || 'Rencana pemesanan restock barang menipis dan fast moving ritel.')}
           </div>
 
           <table>

@@ -1,3 +1,5 @@
+import { escapeHtml } from './escapeHtml';
+
 /**
  * Print & Export Utilities for POS Reports & Receipts
  * Provides iframe-safe printing, thermal & standard layouts, and CSV export.
@@ -53,7 +55,7 @@ export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS
     <html>
       <head>
         <meta charset="utf-8" />
-        <title>${title}</title>
+        <title>${escapeHtml(title)}</title>
         <style>
           @page {
             size: ${pageSizeRule};
@@ -202,7 +204,7 @@ export const openPrintWindow = (contentHtml: string, title: string = 'Laporan PO
     <html>
       <head>
         <meta charset="utf-8" />
-        <title>${title}</title>
+        <title>${escapeHtml(title)}</title>
         <style>
           @page {
             size: ${pageSizeRule};
@@ -283,7 +285,7 @@ export const openPrintWindow = (contentHtml: string, title: string = 'Laporan PO
       </head>
       <body>
         <div class="toolbar">
-          <span style="font-weight: 600; font-size: 14px;">${title}</span>
+          <span style="font-weight: 600; font-size: 14px;">${escapeHtml(title)}</span>
           <div>
             <button onclick="window.print()">🖨️ Cetak Dokumen / Simpan PDF</button>
             <button onclick="window.close()" style="background: #475569; color: white; margin-left: 8px;">Tutup</button>

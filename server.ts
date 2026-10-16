@@ -10,7 +10,8 @@ import {
   getAllProducts as getSqliteProducts,
   getProductByIdOrBarcode as getSqliteProductByIdOrBarcode,
   upsertProducts as upsertSqliteProducts,
-  deductProductStock as deductSqliteStock,
+  applyStockMovement as applySqliteStockMovement,
+  type StockMovementItem,
   getAllTransactions as getSqliteTransactions,
   upsertTransactions as upsertSqliteTransactions,
   queryTransactionsPaginated as querySqliteTransactionsPaginated,
@@ -26,12 +27,22 @@ import {
   cleanAndPruneDatabase as cleanSqliteDatabase,
 } from './src/server/sqliteMasterDb.ts';
 
-import { adminOnly, sameOriginApi, createRateLimiter, validateTransaction } from './src/server/security.ts';
+import {
+  adminOnly,
+  sameOriginApi,
+  createRateLimiter,
+  validateTransaction,
+  lanPairing,
+  lanKeyGuard,
+  toPublicProduct,
+  isLoopbackAddress,
+  getLocalMachineAddresses,
+} from './src/server/security.ts';
 
 const execPromise = util.promisify(exec);
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -39,6 +50,10 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Pembatasan origin: hanya halaman dari server ini sendiri yang boleh memakai API
 // (perangkat LAN lain memuat aplikasi dari server yang sama, jadi tetap same-origin).
 app.use(sameOriginApi);
+
+// Kunci LAN opsional (LAN_KEY di .env): perangkat lain harus dipasangkan dulu.
+app.use(lanPairing);
+app.use('/api', lanKeyGuard);
 
 // Endpoint administratif (git-pull, git-configure, verify-files, cleanup-*, seed database):
 // hanya dari komputer server (localhost) atau dengan ADMIN_TOKEN di .env.
@@ -437,7 +452,7 @@ function getLocalLanIps(): string[] {
 }
 
 // 2. Persistent Storage for Master Database File
-const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_DIR = process.env.POS_DATA_DIR || path.join(process.cwd(), 'data');
 const LAN_DB_FILE = path.join(DATA_DIR, 'lan-database.json');
 
 // Memory Stores for High-Speed LAN Multi-Client Access
@@ -488,7 +503,10 @@ function scheduleLanDbSave() {
         heldOrders: Array.from(lanHeldOrdersStore.values()),
       };
 
-      fs.writeFileSync(LAN_DB_FILE, JSON.stringify(payload, null, 2), 'utf-8');
+      // Tulis ke file sementara lalu rename, agar file tidak rusak bila listrik mati saat menulis.
+      const tmpFile = `${LAN_DB_FILE}.tmp`;
+      fs.writeFileSync(tmpFile, JSON.stringify(payload), 'utf-8');
+      fs.renameSync(tmpFile, LAN_DB_FILE);
     } catch (err: any) {
       console.warn('[LAN Server] Error saving database file:', err?.message || err);
     }
@@ -644,7 +662,13 @@ async function initLanDatabase() {
   addLanLog('info', 'Server Database LAN Toko diinisialisasi dengan master produk ritel.');
 }
 
-initLanDatabase();
+// Server baru menerima request setelah database siap (lihat setupViteOrStatic).
+const dbReady = initLanDatabase();
+
+function isLocalRequest(req: express.Request): boolean {
+  const addr = req.socket.remoteAddress || '';
+  return isLoopbackAddress(addr) || getLocalMachineAddresses().includes(addr.replace(/^::ffff:/i, '').toLowerCase());
+}
 
 // Clean client IP helper
 function getClientIp(req: express.Request): string {
@@ -714,6 +738,11 @@ app.get('/api/lan/status', (req, res) => {
       databaseVersion: lanDatabaseVersion,
     },
     recentLogs: lanServerLogs.slice(0, 20),
+    // Kunci LAN hanya ditunjukkan ke komputer server sendiri (untuk membuat link pairing)
+    pairing: {
+      required: Boolean((process.env.LAN_KEY || '').trim()),
+      key: isLocalRequest(req) ? (process.env.LAN_KEY || '').trim() || undefined : undefined,
+    },
   });
 });
 
@@ -802,10 +831,72 @@ app.get('/api/lan/data/pull', (req, res) => {
   });
 });
 
-// 5. Push Transaction from any LAN Terminal (Auto Deduct Stock in Master DB)
-app.post('/api/lan/data/push-transaction', (req, res) => {
+// -------------------------------------------------------------
+// Pergerakan stok (penjualan, retur, void)
+// Sumber kebenaran stok = SQLite. Setiap pergerakan punya kunci unik (mis. "sale:<id transaksi>")
+// yang dicatat atomik bersama perubahan stok, jadi pengiriman ulang tidak memotong stok dua kali,
+// juga setelah server di-restart.
+// -------------------------------------------------------------
+const memoryAppliedMovements = new Set<string>(); // cadangan bila SQLite tidak tersedia
+
+function saleMovementItems(tx: any): StockMovementItem[] {
+  if (!Array.isArray(tx?.items)) return [];
+  return tx.items
+    .map((it: any) => ({
+      productId: it?.product?.id || it?.productId,
+      delta: -((Number(it?.quantity) || 1) * (Number(it?.selectedUnit?.multiplier) || 1)),
+    }))
+    .filter((i: StockMovementItem) => Boolean(i.productId));
+}
+
+async function applyStockMovement(
+  key: string,
+  kind: string,
+  items: StockMovementItem[]
+): Promise<{ duplicate: boolean; updatedStocks: Array<{ productId: string; newStock: number }> }> {
+  let fromDb = new Map<string, number>();
   try {
-    const { transaction, clientId, clientName } = req.body;
+    const r = await applySqliteStockMovement(key, kind, items);
+    if (r.duplicate) return { duplicate: true, updatedStocks: [] };
+    fromDb = new Map(r.updatedStocks.map((u) => [u.productId, u.newStock]));
+  } catch (err: any) {
+    console.warn('[Stok] SQLite tidak tersedia, memakai stok di memori:', err?.message || err);
+    if (memoryAppliedMovements.has(key)) return { duplicate: true, updatedStocks: [] };
+    memoryAppliedMovements.add(key);
+  }
+
+  const deltas = new Map<string, number>();
+  for (const i of items) deltas.set(i.productId, (deltas.get(i.productId) || 0) + i.delta);
+
+  const updatedStocks: Array<{ productId: string; newStock: number }> = [];
+  for (const [productId, delta] of deltas) {
+    const prod = lanProductsStore.get(productId);
+    const newStock = fromDb.has(productId)
+      ? fromDb.get(productId)!
+      : prod
+        ? Math.max(0, (Number(prod.stock) || 0) + delta)
+        : undefined;
+    if (newStock === undefined) continue;
+    if (prod) prod.stock = newStock;
+    updatedStocks.push({ productId, newStock });
+  }
+  return { duplicate: false, updatedStocks };
+}
+
+/** Simpan transaksi ke memori tanpa menghapus penanda "stok sudah diproses". */
+function putTransaction(key: string, tx: any): any {
+  const existing = lanTransactionsStore.get(key);
+  const merged = existing?.lanProcessedAt
+    ? { ...tx, lanProcessedAt: existing.lanProcessedAt, processedByTerminal: existing.processedByTerminal }
+    : tx;
+  lanTransactionsStore.set(key, merged);
+  return merged;
+}
+
+// 5. Push Transaction from any LAN Terminal (Auto Deduct Stock in Master DB)
+app.post('/api/lan/data/push-transaction', async (req, res) => {
+  try {
+    const { transaction, clientId, clientName } = req.body || {};
     if (!transaction || (!transaction.id && !transaction.invoiceNumber)) {
       return res.status(400).json({ success: false, error: 'Transaksi tidak valid' });
     }
@@ -815,21 +906,28 @@ app.post('/api/lan/data/push-transaction', (req, res) => {
       return res.status(400).json({ success: false, error: validationError });
     }
 
-    const txKey = transaction.id || transaction.invoiceNumber;
+    const txKey = String(transaction.id || transaction.invoiceNumber);
     const now = new Date().toISOString();
-
-    // Idempotensi: transaksi yang sama (mis. dikirim ulang oleh sinkronisasi offline)
-    // tidak boleh memotong stok atau menambah poin/total belanja pelanggan dua kali.
-    const alreadyProcessed = lanTransactionsStore.get(txKey);
-    if (alreadyProcessed && alreadyProcessed.lanProcessedAt) {
-      return res.json({
+    const existing = lanTransactionsStore.get(txKey);
+    const duplicateResponse = () =>
+      res.json({
         success: true,
         duplicate: true,
         message: 'Transaksi ini sudah pernah diproses; stok tidak dipotong lagi.',
-        transaction: alreadyProcessed,
+        transaction: existing || transaction,
         updatedStocks: [],
         serverTime: now,
       });
+
+    if (existing?.lanProcessedAt) return duplicateResponse();
+
+    // Transaksi berstatus retur/void tidak memotong stok (pengembalian stok lewat /stock-return).
+    const isSale = transaction.status !== 'refunded' && transaction.status !== 'void';
+    let updatedStocks: Array<{ productId: string; newStock: number }> = [];
+    if (isSale) {
+      const result = await applyStockMovement(`sale:${txKey}`, 'sale', saleMovementItems(transaction));
+      if (result.duplicate) return duplicateResponse();
+      updatedStocks = result.updatedStocks;
     }
 
     const enriched = {
@@ -840,61 +938,34 @@ app.post('/api/lan/data/push-transaction', (req, res) => {
       lanProcessedAt: now,
       processedByTerminal: clientName || clientId || 'Terminal Kasir',
     };
-
     lanTransactionsStore.set(txKey, enriched);
 
-    // Update active client transaction count
     if (clientId && lanActiveClientsStore.has(clientId)) {
       const client = lanActiveClientsStore.get(clientId);
       client.transactionsCount = (client.transactionsCount || 0) + 1;
       client.lastSeen = now;
     }
 
-    // Automatically deduct product stock on Server Database
-    const updatedStocks: Array<{ productId: string; newStock: number }> = [];
-    if (Array.isArray(transaction.items)) {
-      for (const item of transaction.items) {
-        const pId = item.product?.id || item.productId;
-        if (pId && lanProductsStore.has(pId)) {
-          const prod = lanProductsStore.get(pId);
-          const mult = item.selectedUnit?.multiplier || 1;
-          const qtyDeducted = (item.quantity || 1) * mult;
-          prod.stock = Math.max(0, (prod.stock || 0) - qtyDeducted);
-          lanProductsStore.set(pId, prod);
-          updatedStocks.push({ productId: pId, newStock: prod.stock });
-        }
-      }
-    }
-
-    // Update Customer loyalty points if member was attached
-    if (transaction.customer?.id && lanCustomersStore.has(transaction.customer.id)) {
+    // Poin & total belanja member (hanya untuk penjualan), lalu simpan ke SQLite agar tidak hilang saat restart
+    if (isSale && transaction.customer?.id && lanCustomersStore.has(transaction.customer.id)) {
       const cust = lanCustomersStore.get(transaction.customer.id);
       cust.totalSpent = (cust.totalSpent || 0) + (transaction.finalTotal || 0);
       cust.ordersCount = (cust.ordersCount || 0) + 1;
-      if (transaction.pointsEarned) {
-        cust.points = (cust.points || 0) + transaction.pointsEarned;
-      }
-      if (transaction.pointsRedeemed) {
-        cust.points = Math.max(0, (cust.points || 0) - transaction.pointsRedeemed);
-      }
-      lanCustomersStore.set(cust.id, cust);
+      if (transaction.pointsEarned) cust.points = (cust.points || 0) + transaction.pointsEarned;
+      if (transaction.pointsRedeemed) cust.points = Math.max(0, (cust.points || 0) - transaction.pointsRedeemed);
+      await upsertSqliteCustomers([cust]).catch((e: any) =>
+        console.error('[SQLite Server] Gagal menyimpan poin member:', e?.message || e)
+      );
     }
 
+    await upsertSqliteTransactions([enriched], clientId || 'lan-terminal', clientName || 'Kasir').catch((e: any) =>
+      console.error('[SQLite Server] Gagal menyimpan transaksi LAN:', e?.message || e)
+    );
     scheduleLanDbSave();
-    // Asynchronously persist to SQLite Relational DB
-    upsertSqliteTransactions([enriched], clientId || 'lan-terminal', clientName || 'Kasir').catch(() => {});
-    if (Array.isArray(transaction.items)) {
-      const stockItems = transaction.items.map((it: any) => ({
-        productId: it.product?.id || it.productId,
-        quantity: it.quantity || 1,
-        unitMultiplier: it.selectedUnit?.multiplier || 1,
-      }));
-      deductSqliteStock(stockItems).catch(() => {});
-    }
 
     addLanLog(
       'success',
-      `Transaksi ${transaction.invoiceNumber} (Rp ${(transaction.finalTotal || 0).toLocaleString('id-ID')}) dari ${clientName || 'Kasir'} diproses. Stok ${updatedStocks.length} produk dipotong di Server LAN (SQLite WAL).`
+      `Transaksi ${transaction.invoiceNumber} (Rp ${(transaction.finalTotal || 0).toLocaleString('id-ID')}) dari ${clientName || 'Kasir'} diproses. Stok ${updatedStocks.length} produk dipotong.`
     );
 
     res.json({
@@ -906,6 +977,62 @@ app.post('/api/lan/data/push-transaction', (req, res) => {
     });
   } catch (err: any) {
     console.error('Error processing LAN transaction push:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 5b. Retur penjualan / void: kembalikan stok (idempoten) dan perbarui status transaksi
+app.post('/api/lan/data/stock-return', async (req, res) => {
+  try {
+    const { key, kind, items, transactionId, transactionUpdate, clientName } = req.body || {};
+    if (typeof key !== 'string' || !key.trim() || key.length > 200) {
+      return res.status(400).json({ success: false, error: 'Kunci retur tidak valid.' });
+    }
+    const movementKind = kind === 'void' ? 'void' : 'return';
+    if (!Array.isArray(items) || items.length > 2000) {
+      return res.status(400).json({ success: false, error: 'Daftar barang retur tidak valid.' });
+    }
+
+    const movement: StockMovementItem[] = [];
+    for (const it of items) {
+      const productId = it?.productId;
+      const qty = Number(it?.quantity);
+      const mult = it?.unitMultiplier === undefined ? 1 : Number(it.unitMultiplier);
+      if (typeof productId !== 'string' || !productId) {
+        return res.status(400).json({ success: false, error: 'Produk retur tidak valid.' });
+      }
+      if (!Number.isFinite(qty) || qty <= 0 || qty > 100000 || !Number.isFinite(mult) || mult <= 0 || mult > 100000) {
+        return res.status(400).json({ success: false, error: 'Jumlah barang retur tidak valid.' });
+      }
+      movement.push({ productId, delta: qty * mult });
+    }
+
+    const result = await applyStockMovement(`${movementKind}:${key}`, movementKind, movement);
+
+    let updatedTx: any = undefined;
+    if (!result.duplicate && typeof transactionId === 'string' && transactionUpdate && typeof transactionUpdate === 'object') {
+      const existing = lanTransactionsStore.get(transactionId);
+      if (existing) {
+        const patch: any = {};
+        if (['completed', 'refunded', 'void'].includes(transactionUpdate.status)) patch.status = transactionUpdate.status;
+        if (Number.isFinite(transactionUpdate.returnedAmount)) patch.returnedAmount = transactionUpdate.returnedAmount;
+        if (typeof transactionUpdate.returnReason === 'string') patch.returnReason = transactionUpdate.returnReason.slice(0, 500);
+        if (typeof transactionUpdate.returnedAt === 'string') patch.returnedAt = transactionUpdate.returnedAt;
+        updatedTx = { ...existing, ...patch };
+        lanTransactionsStore.set(transactionId, updatedTx);
+        await upsertSqliteTransactions([updatedTx], 'lan-terminal', clientName || 'Kasir').catch((e: any) =>
+          console.error('[SQLite Server] Gagal menyimpan status retur:', e?.message || e)
+        );
+      }
+    }
+
+    scheduleLanDbSave();
+    if (!result.duplicate) {
+      addLanLog('info', `${movementKind === 'void' ? 'Void' : 'Retur'} ${key} dari ${clientName || 'Kasir'}: stok ${result.updatedStocks.length} produk dikembalikan.`);
+    }
+    res.json({ success: true, duplicate: result.duplicate, updatedStocks: result.updatedStocks, transaction: updatedTx });
+  } catch (err: any) {
+    console.error('Error processing stock return:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -997,14 +1124,14 @@ app.get('/api/shelf/:productId', async (req, res) => {
       changeType = sorted[0].changeType;
     }
 
+    // Halaman ini dibuka pembeli lewat QR rak: jangan kirim harga modal / data internal.
     res.json({
       success: true,
-      product,
+      product: toPublicProduct(product),
       currentStock: stock,
       minStock,
       stockStatus,
       price: Number(product.price) || 0,
-      costPrice: Number(product.costPrice) || 0,
       lastPriceUpdate: {
         date: lastPriceUpdateDate,
         previousPrice: previousSellingPrice,
@@ -1036,7 +1163,7 @@ app.post('/api/lan/database/seed', adminOnly, async (req, res) => {
       suppliers.forEach((s) => lanSuppliersStore.set(s.id, s));
     }
     if (Array.isArray(transactions) && transactions.length > 0) {
-      transactions.forEach((t) => lanTransactionsStore.set(t.id || t.invoiceNumber, t));
+      transactions.forEach((t) => putTransaction(t.id || t.invoiceNumber, t));
     }
 
     scheduleLanDbSave();
@@ -1213,14 +1340,14 @@ app.post('/api/pos/transactions/sync', async (req, res) => {
         rejected.push({ id: String(key), error: txError });
         continue;
       }
-      validTransactions.push(tx);
-      lanTransactionsStore.set(key, {
+      const stored = putTransaction(key, {
         ...tx,
         syncStatus: 'synced',
         syncedAt: now,
         syncedByDevice: deviceId || 'pos-terminal',
         syncedByCashier: cashierName || 'Kasir',
       });
+      validTransactions.push(stored);
       syncedIds.push(key);
     }
 
@@ -1257,11 +1384,11 @@ app.post('/api/pos/transactions', async (req, res) => {
       return res.status(400).json({ success: false, error: txError });
     }
     const key = tx.id || tx.invoiceNumber;
-    lanTransactionsStore.set(key, tx);
+    const stored = putTransaction(key, tx);
 
     // Persist to SQLite Master DB
     try {
-      await upsertSqliteTransactions([tx]);
+      await upsertSqliteTransactions([stored]);
     } catch (e: any) {
       console.warn('[SQLite Server] Error in single transaction insert:', e?.message || e);
     }
@@ -4057,17 +4184,24 @@ app.post('/api/system/git-pull', adminOnly, async (req, res) => {
     cachedRemoteCommit = null;
     lastRemoteFetchTime = 0;
 
-    // 4. Rebuild production bundle
+    // 4. Pasang dependensi baru (bila package.json berubah) lalu build ulang
     let buildOutput = '';
+    let buildOk = true;
+    try {
+      await execPromise('npm install --no-audit --no-fund', { cwd: process.cwd(), timeout: 300000 });
+    } catch (installErr: any) {
+      console.warn('npm install warning after pull:', installErr?.message);
+    }
     try {
       const { stdout, stderr } = await execPromise('npm run build', {
         cwd: process.cwd(),
-        timeout: 90000,
+        timeout: 180000,
       });
       buildOutput = (stdout || stderr || '').trim();
     } catch (buildErr: any) {
-      console.warn('Rebuild warning after pull:', buildErr?.message);
-      buildOutput = 'Kompilasi selesai dengan catatan: ' + buildErr?.message;
+      buildOk = false;
+      console.warn('Build gagal setelah update:', buildErr?.message);
+      buildOutput = 'Build gagal: ' + buildErr?.message;
     }
 
     // Read new commit
@@ -4077,9 +4211,12 @@ app.post('/api/system/git-pull', adminOnly, async (req, res) => {
       newCommit = stdout.trim();
     } catch {}
 
-    res.json({
-      success: true,
-      message: `Kode berhasil ditarik dari GitHub dan diperbarui ke commit ${newCommit || 'terbaru'}!`,
+    res.status(buildOk ? 200 : 500).json({
+      success: buildOk,
+      restartRequired: buildOk,
+      message: buildOk
+        ? `Kode diperbarui ke commit ${newCommit || 'terbaru'}. Tutup aplikasi (BERHENTI-KASIR.bat) lalu jalankan lagi (MULAI-KASIR.bat) agar versi baru aktif.`
+        : 'Kode sudah diunduh, tetapi build gagal. Jalankan update.bat di komputer server untuk melihat detail error.',
       officialRepoUrl: OFFICIAL_GITHUB_REPO_URL,
       newCommit,
       pullOutput,
@@ -4333,6 +4470,7 @@ async function setupViteOrStatic() {
     });
   }
 
+  await dbReady;
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Ulilmart Retail Server running on http://0.0.0.0:${PORT}`);
   });

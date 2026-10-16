@@ -25,6 +25,7 @@ import { usePOS } from '../context/POSContext';
 import { formatCurrency, formatNumber, formatDate } from '../utils/formatters';
 import { printViaIframe, openPrintWindow, exportToCSV } from '../utils/printHelper';
 import { Transaction, Product, SupplierPurchase, PurchaseReturn, SalesReturn } from '../types';
+import { escapeHtml } from '../utils/escapeHtml';
 
 export type ReportType =
   | 'summary'
@@ -206,21 +207,21 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
             <div style="margin-bottom: 4px;">
               <img src="/ulilmart-logo.svg" style="height: 28px; max-width: 160px; filter: grayscale(100%) contrast(200%);" alt="ULIL Mart" />
             </div>
-            <div style="font-size: 13px; font-weight: bold; text-transform: uppercase;">${settings.storeName}</div>
-            <div style="font-size: 10px; font-weight: 600;">${settings.storeTagline || 'Lengkap & Hemat'}</div>
-            <div>${settings.branchName}</div>
-            <div style="font-size: 9px;">${settings.address}</div>
-            <div style="font-size: 9px;">Telp: ${settings.phone}</div>
+            <div style="font-size: 13px; font-weight: bold; text-transform: uppercase;">${escapeHtml(settings.storeName)}</div>
+            <div style="font-size: 10px; font-weight: 600;">${escapeHtml(settings.storeTagline || 'Lengkap & Hemat')}</div>
+            <div>${escapeHtml(settings.branchName)}</div>
+            <div style="font-size: 9px;">${escapeHtml(settings.address)}</div>
+            <div style="font-size: 9px;">Telp: ${escapeHtml(settings.phone)}</div>
           </div>
 
           <div style="text-align: center; font-weight: bold; margin: 6px 0; font-size: 11px;">
-            ${activeReportTitle}
+            ${escapeHtml(activeReportTitle)}
           </div>
 
           <div style="border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 6px; font-size: 10px;">
-            <div>Periode: ${periodLabel}</div>
+            <div>Periode: ${escapeHtml(periodLabel)}</div>
             <div>Dicetak: ${printedAt}</div>
-            <div>Kasir/Petugas: ${activeEmployee?.name || 'Admin'}</div>
+            <div>Kasir/Petugas: ${escapeHtml(activeEmployee?.name || 'Admin')}</div>
           </div>
 
           <!-- Thermal Metrics Summary -->
@@ -302,7 +303,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                   (p, idx) => `
                 <div style="display: flex; justify-content: space-between; font-size: 10px;">
                   <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%;">
-                    ${idx + 1}. ${p.name}
+                    ${idx + 1}. ${escapeHtml(p.name)}
                   </span>
                   <span>${p.quantity}x • ${formatCurrency(p.revenue, settings.currency)}</span>
                 </div>
@@ -330,12 +331,12 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
           <div style="display: flex; align-items: center; gap: 16px;">
             <img src="/ulilmart-logo.svg" style="height: 48px; width: auto;" alt="ULIL Mart" />
             <div>
-              <div style="font-size: 13px; font-weight: 700; color: #0284c7; letter-spacing: 0.5px;">${settings.storeTagline || 'Lengkap & Hemat'}</div>
+              <div style="font-size: 13px; font-weight: 700; color: #0284c7; letter-spacing: 0.5px;">${escapeHtml(settings.storeTagline || 'Lengkap & Hemat')}</div>
               <div style="font-size: 12px; color: #475569; margin-top: 2px;">
-                ${settings.branchName} • ${settings.address}
+                ${escapeHtml(settings.branchName)} • ${escapeHtml(settings.address)}
               </div>
               <div style="font-size: 11px; color: #64748b;">
-                Telp: ${settings.phone} | Email: info@${settings.storeName.toLowerCase().replace(/\s+/g, '')}.com
+                Telp: ${escapeHtml(settings.phone)} | Email: info@${escapeHtml(settings.storeName.toLowerCase().replace(/\s+/g, ''))}.com
               </div>
             </div>
           </div>
@@ -354,15 +355,15 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
           <div>
             <div style="font-size: 14px; font-weight: 700; color: #0f172a;">
-              ${activeReportTitle}
+              ${escapeHtml(activeReportTitle)}
             </div>
             <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-              Periode Analisis: <strong>${periodLabel}</strong>
+              Periode Analisis: <strong>${escapeHtml(periodLabel)}</strong>
             </div>
           </div>
           <div style="text-align: right; font-size: 11px; color: #64748b;">
             <div>Waktu Cetak: <strong>${printedAt}</strong></div>
-            <div>Dicetak Oleh: <strong>${activeEmployee?.name || 'Administrator'} (${activeEmployee?.roleTitle || 'Head POS'})</strong></div>
+            <div>Dicetak Oleh: <strong>${escapeHtml(activeEmployee?.name || 'Administrator')} (${escapeHtml(activeEmployee?.roleTitle || 'Head POS')})</strong></div>
           </div>
         </div>
 
@@ -422,13 +423,13 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                         .map(
                           (t) => `
                     <tr style="border-bottom: 1px solid #f1f5f9;">
-                      <td style="padding: 6px 8px; font-family: monospace; font-weight: bold; color: #0f172a;">${t.invoiceNumber}</td>
+                      <td style="padding: 6px 8px; font-family: monospace; font-weight: bold; color: #0f172a;">${escapeHtml(t.invoiceNumber)}</td>
                       <td style="padding: 6px 8px; color: #475569;">${new Date(t.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</td>
-                      <td style="padding: 6px 8px; color: #475569;">${t.cashierName}</td>
-                      <td style="padding: 6px 8px; color: #475569;">${t.customer?.name || 'Umum'}</td>
+                      <td style="padding: 6px 8px; color: #475569;">${escapeHtml(t.cashierName)}</td>
+                      <td style="padding: 6px 8px; color: #475569;">${escapeHtml(t.customer?.name || 'Umum')}</td>
                       <td style="padding: 6px 8px; text-align: center;">
                         <span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase;">
-                          ${t.payment.method}
+                          ${escapeHtml(t.payment.method)}
                         </span>
                       </td>
                       <td style="padding: 6px 8px; text-align: right; font-family: monospace;">${formatCurrency(t.subtotal, settings.currency)}</td>
@@ -487,9 +488,9 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                         .map(
                           (p) => `
                     <tr style="border-bottom: 1px solid #f1f5f9;">
-                      <td style="padding: 6px 8px; font-weight: 600; color: #0f172a;">${p.name}</td>
-                      <td style="padding: 6px 8px; font-family: monospace; color: #64748b;">${p.sku}</td>
-                      <td style="padding: 6px 8px; color: #64748b;">${p.category}</td>
+                      <td style="padding: 6px 8px; font-weight: 600; color: #0f172a;">${escapeHtml(p.name)}</td>
+                      <td style="padding: 6px 8px; font-family: monospace; color: #64748b;">${escapeHtml(p.sku)}</td>
+                      <td style="padding: 6px 8px; color: #64748b;">${escapeHtml(p.category)}</td>
                       <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold;">${p.quantity}</td>
                       <td style="padding: 6px 8px; text-align: right; font-family: monospace;">${formatCurrency(p.revenue, settings.currency)}</td>
                       <td style="padding: 6px 8px; text-align: right; font-family: monospace; color: #64748b;">${formatCurrency(p.cogs, settings.currency)}</td>
@@ -577,8 +578,8 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                   const share = grossSales > 0 ? ((m.amount / grossSales) * 100).toFixed(1) : '0';
                   return `
                     <tr style="border-bottom: 1px solid #f1f5f9;">
-                      <td style="padding: 6px 8px; font-weight: 600; color: #0f172a;">${m.name}</td>
-                      <td style="padding: 6px 8px; color: #64748b;">${m.type}</td>
+                      <td style="padding: 6px 8px; font-weight: 600; color: #0f172a;">${escapeHtml(m.name)}</td>
+                      <td style="padding: 6px 8px; color: #64748b;">${escapeHtml(m.type)}</td>
                       <td style="padding: 6px 8px; text-align: right; font-family: monospace;">${m.count} Struk</td>
                       <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold; color: #059669;">${formatCurrency(m.amount, settings.currency)}</td>
                       <td style="padding: 6px 8px; text-align: right; font-family: monospace;">${share}%</td>
@@ -629,17 +630,17 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                               : t.payment.method.toUpperCase();
                             return `
                               <tr style="border-bottom: 1px solid #f1f5f9; ${isEdc ? 'background: #fafcff;' : ''}">
-                                <td style="padding: 6px 8px; font-family: monospace; font-weight: bold; color: #0f172a;">${t.invoiceNumber}</td>
+                                <td style="padding: 6px 8px; font-family: monospace; font-weight: bold; color: #0f172a;">${escapeHtml(t.invoiceNumber)}</td>
                                 <td style="padding: 6px 8px; color: #475569;">${new Date(t.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</td>
                                 <td style="padding: 6px 8px;">
                                   <span style="font-weight: 600; color: ${isEdc ? '#1d4ed8' : '#0f172a'};">
-                                    ${methodBadge}
+                                    ${escapeHtml(methodBadge)}
                                   </span>
                                 </td>
                                 <td style="padding: 6px 8px; font-family: monospace; color: #475569;">
-                                  ${t.payment.referenceCode || '-'}
+                                  ${escapeHtml(t.payment.referenceCode || '-')}
                                 </td>
-                                <td style="padding: 6px 8px; color: #475569;">${t.cashierName}</td>
+                                <td style="padding: 6px 8px; color: #475569;">${escapeHtml(t.cashierName)}</td>
                                 <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold; color: #059669;">
                                   ${formatCurrency(t.finalTotal, settings.currency)}
                                 </td>
@@ -666,9 +667,9 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
             <div style="font-size: 11px; color: #64748b;">Dibuat Oleh:</div>
             <div style="margin-top: 55px; border-bottom: 1px solid #64748b;"></div>
             <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-top: 4px;">
-              ${activeEmployee?.name || 'Kasir / Petugas'}
+              ${escapeHtml(activeEmployee?.name || 'Kasir / Petugas')}
             </div>
-            <div style="font-size: 10px; color: #64748b;">${activeEmployee?.roleTitle || 'Petugas Kasir'}</div>
+            <div style="font-size: 10px; color: #64748b;">${escapeHtml(activeEmployee?.roleTitle || 'Petugas Kasir')}</div>
           </div>
 
           <div style="text-align: center; width: 200px;">
@@ -677,12 +678,12 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
             <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-top: 4px;">
               Manager / Pemilik Toko
             </div>
-            <div style="font-size: 10px; color: #64748b;">${settings.branchName}</div>
+            <div style="font-size: 10px; color: #64748b;">${escapeHtml(settings.branchName)}</div>
           </div>
         </div>
 
         <div style="margin-top: 25px; border-top: 1px dashed #cbd5e1; padding-top: 8px; text-align: center; font-size: 10px; color: #94a3b8;">
-          Dokumen ini digenerate secara otomatis oleh Sistem Kasir POS Modern. Hak Cipta © ${new Date().getFullYear()} ${settings.storeName}.
+          Dokumen ini digenerate secara otomatis oleh Sistem Kasir POS Modern. Hak Cipta © ${new Date().getFullYear()} ${escapeHtml(settings.storeName)}.
         </div>
       </div>
     `;

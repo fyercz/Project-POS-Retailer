@@ -270,6 +270,8 @@ export interface SalesReturnItem {
   totalRefund: number;
   reason: string;
   restockToInventory: boolean;
+  /** Isi satuan yang dijual (mis. 12 untuk Dus isi 12). Stok dikembalikan sebesar quantity x unitMultiplier. */
+  unitMultiplier?: number;
 }
 
 export interface SalesReturn {
@@ -713,6 +715,7 @@ export interface LANServerStatus {
   localIps: string[];
   primaryIp: string;
   recommendedUrl: string;
+  pairing?: { required: boolean; key?: string };
   webOrigin?: string;
   isCloudEnvironment?: boolean;
   serverUptime: number;
@@ -736,6 +739,7 @@ export interface LANConfig {
   autoSync: boolean;
   syncInterval: number; // in seconds
   customHostIp?: string; // Optional user-defined local IP (e.g. 192.168.1.15)
+  lanKey?: string; // Kunci LAN (sama dengan LAN_KEY di .env server), kosong bila server tidak memakai kunci
 }
 
 // ============================================================================
