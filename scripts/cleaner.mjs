@@ -43,6 +43,7 @@ const PROTECTED_PATHS = new Set([
   'MULAI-KASIR.bat',
   'BERHENTI-KASIR.bat',
   'BUAT-SHORTCUT-DESKTOP.bat',
+  'HAPUS-APLIKASI.bat',
   'pasang-nodejs.bat',
   'scripts/cari-node.bat',
   'scripts/buat-shortcut.bat',

@@ -199,6 +199,20 @@ node scripts/launcher.mjs dev
 
 ---
 
+## 🗑️ Menghapus Aplikasi (Uninstall)
+
+**Windows:** klik ganda **`HAPUS-APLIKASI.bat`**. Skrip akan:
+1. Mematikan server kasir.
+2. Menawarkan cadangan data toko (folder `data`, `data-backup`, dan `.env`) ke Desktop, di folder `Ulilmart-Backup-<waktu>`.
+3. Menghapus shortcut Desktop dan auto-start Windows.
+4. Menghapus folder aplikasi.
+
+Yang perlu dihapus manual bila diinginkan: data kasir di browser (`edge://settings/siteData` atau `chrome://settings/content/all`, cari `localhost`), aplikasi PWA (`edge://apps`), Node.js (Settings → Apps), dan data situs di HP/kasir lain.
+
+**Linux / macOS:** jalankan `./autorun.sh --remove-autostart`, lalu hapus folder aplikasi.
+
+---
+
 ## ⚙️ Konfigurasi Environment (`.env`)
 
 File `.env` dibuat otomatis saat instalasi. Jika Anda ingin menggunakan fitur AI Copilot dari Google Gemini:
