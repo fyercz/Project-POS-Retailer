@@ -55,7 +55,7 @@ import {
 } from '../../context/POSContext';
 import { INITIAL_PRODUCTS } from '../../data/mockData';
 import { Product, PurchaseReturn, PurchaseReturnItem, SupplierPurchase, SupplierPurchaseItem, Supplier } from '../../types';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatCurrency, formatDate, toLocalDateString } from '../../utils/formatters';
 import { printViaIframe, exportToCSV } from '../../utils/printHelper';
 import { AIInvoiceScannerModal } from '../AIInvoiceScannerModal';
 import { AIVisualStockOpnameModal } from '../AIVisualStockOpnameModal';
@@ -286,7 +286,7 @@ export const InventoryView: React.FC = () => {
           productId: item.productId,
           quantity: item.quantity,
           costPrice: item.costPrice,
-          expiryDate: item.expiryDate || new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
+          expiryDate: item.expiryDate || toLocalDateString(new Date(Date.now() + 180 * 86400000)),
         }))
       );
       setIsReceivingOpen(true);
@@ -1210,7 +1210,7 @@ export const InventoryView: React.FC = () => {
   };
 
   const handleExportStockCSV = () => {
-    const filename = `Katalog_Stok_${settings.storeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}`;
+    const filename = `Katalog_Stok_${settings.storeName.replace(/\s+/g, '_')}_${toLocalDateString()}`;
     const headers = ['SKU', 'Barcode', 'Nama Produk', 'Brand', 'Kategori', 'Stok', 'Satuan', 'Min Stok', 'Harga Modal (HPP)', 'Harga Jual', 'Margin (Rp)', 'Exp Date'];
     const rows = products.map((p) => [
       p.sku,

@@ -12,11 +12,29 @@ export const formatNumber = (val: number): string => {
   return new Intl.NumberFormat().format(val);
 };
 
+/**
+ * Nomor invoice: INV-<tanggal lokal>-<jam:menit:detik>-<5 karakter acak>, mis. INV-20261018-143205-K7QX9.
+ * Versi lama memakai tanggal UTC (salah tanggal pukul 00.00-06.59 WIB) dan hanya 9.000 angka acak
+ * per hari, sehingga nomor kembar sangat mungkin terjadi di toko yang ramai.
+ */
 export const generateInvoiceNumber = (): string => {
-  const date = new Date();
-  const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-  return `INV-${dateStr}-${randomSuffix}`;
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const dateStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+  const timeStr = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // tanpa 0/O dan 1/I agar mudah dibaca
+  let rand = '';
+  const bytes = new Uint32Array(5);
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') crypto.getRandomValues(bytes);
+  else for (let i = 0; i < 5; i++) bytes[i] = Math.floor(Math.random() * 2 ** 32);
+  for (let i = 0; i < 5; i++) rand += alphabet[bytes[i] % alphabet.length];
+  return `INV-${dateStr}-${timeStr}-${rand}`;
+};
+
+/** Tanggal lokal YYYY-MM-DD (bukan UTC). Untuk Indonesia, toISOString() salah tanggal sebelum pukul 07.00 WIB. */
+export const toLocalDateString = (d: Date = new Date()): string => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
 export const formatDate = (dateString?: string): string => {

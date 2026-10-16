@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Product } from '../types';
 import { usePOS } from '../context/POSContext';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, toLocalDateString } from '../utils/formatters';
 import { splitCSVLine, detectDelimiter, normalizeScientificBarcode } from '../utils/retailNormalizer';
 
 export interface StockTakeCSVModalProps {
@@ -362,7 +362,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `template_stock_opname_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `template_stock_opname_${toLocalDateString()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

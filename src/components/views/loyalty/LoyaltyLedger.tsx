@@ -15,7 +15,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { usePOS } from '../../../context/POSContext';
-import { formatCurrency } from '../../../utils/formatters';
+import { formatCurrency, toLocalDateString } from '../../../utils/formatters';
 import { Customer } from '../../../types';
 
 interface LedgerRow {
@@ -191,7 +191,7 @@ export const LoyaltyLedger: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `buku_poin_loyalitas_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `buku_poin_loyalitas_${toLocalDateString()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

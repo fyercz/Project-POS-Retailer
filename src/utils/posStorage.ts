@@ -176,6 +176,28 @@ class POSStorageEngine {
   }
 
   /**
+   * Baca langsung dari IndexedDB (tanpa cadangan localStorage).
+   * Mengembalikan undefined bila kunci tidak ada atau IndexedDB tidak tersedia.
+   * Dipakai saat aplikasi dibuka: IndexedDB adalah sumber data utama, sedangkan
+   * localStorage hanya salinan yang bisa basi bila kuota 5 MB-nya penuh.
+   */
+  public async readFromIndexedDB<T = any>(key: string): Promise<T | undefined> {
+    if (!this.isSupported()) return undefined;
+    try {
+      const db = await this.initDB();
+      return await new Promise<T | undefined>((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).get(key);
+        req.onsuccess = () => resolve(req.result === undefined ? undefined : (req.result as T));
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) {
+      console.warn(`[posStorage] Gagal membaca ${key} dari IndexedDB:`, err);
+      return undefined;
+    }
+  }
+
+  /**
    * Set an item in IndexedDB asynchronously without blocking the UI thread.
    * Also mirrors to LocalStorage if space permits as a fast fallback.
    */
@@ -205,7 +227,11 @@ class POSStorageEngine {
         const stringified = typeof value === 'string' ? value : JSON.stringify(value);
         localStorage.setItem(key, stringified);
       } catch (quotaErr) {
-        // LocalStorage quota (5MB) exceeded! But IndexedDB has safely persisted the data.
+        // Kuota localStorage (5 MB) penuh. Data aman di IndexedDB; hapus salinan lama di localStorage
+        // agar tidak ada salinan basi yang bisa terbaca.
+        try {
+          localStorage.removeItem(key);
+        } catch {}
         console.info(`[posStorage] LocalStorage quota reached for ${key}. Data is safely stored in IndexedDB.`);
       }
     }
@@ -283,7 +309,8 @@ class POSStorageEngine {
 
       for (const key of POS_STORAGE_KEYS) {
         const raw = localStorage.getItem(key);
-        if (raw !== null) {
+        // Jangan pernah menimpa data IndexedDB dengan salinan localStorage (bisa basi).
+        if (raw !== null && (await this.readFromIndexedDB(key)) === undefined) {
           try {
             const parsed = JSON.parse(raw);
             await new Promise<void>((resolve, reject) => {

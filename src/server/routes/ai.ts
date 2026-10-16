@@ -1,6 +1,7 @@
 /** Endpoint /api/ai/* (fitur AI Gemini). Dipindah dari server.ts tanpa perubahan logika. */
 import express from 'express';
 import { callGeminiSafe, callGeminiVisionSafe, extractJsonFromText } from '../gemini.ts';
+import { toLocalDateString } from '../../utils/formatters.ts';
 
 export const aiRouter = express.Router();
 const router = aiRouter;
@@ -27,7 +28,7 @@ router.post('/api/ai/scan-invoice', async (req, res) => {
     return {
       supplierName: 'PT Indomarco Adi Prima (Indofood)',
       invoiceNumber: `INV-SCAN-${Date.now().toString().slice(-6)}`,
-      date: new Date().toISOString().split('T')[0],
+      date: toLocalDateString(),
       items: matchedProducts,
       grossAmount: gross,
       discountAmount: 0,
@@ -500,7 +501,7 @@ router.post('/api/ai/inventory-forecast', async (req, res) => {
   const last14Dates: string[] = [];
   for (let i = 13; i >= 0; i--) {
     const d = new Date(now.getTime() - i * 86400000);
-    last14Dates.push(d.toISOString().slice(0, 10));
+    last14Dates.push(toLocalDateString(d));
   }
 
   // Aggregate sales & returns per product
@@ -517,7 +518,7 @@ router.post('/api/ai/inventory-forecast', async (req, res) => {
   });
 
   (recentTransactions || []).forEach((t: any) => {
-    const txDate = (t.createdAt || '').slice(0, 10);
+    const txDate = t.createdAt ? toLocalDateString(new Date(t.createdAt)) : '';
     (t.items || []).forEach((item: any) => {
       const pId = item.product?.id || item.productId;
       const stat = pId ? productStats.get(pId) : null;
@@ -533,7 +534,7 @@ router.post('/api/ai/inventory-forecast', async (req, res) => {
   });
 
   (salesReturns || []).forEach((ret: any) => {
-    const retDate = (ret.createdAt || '').slice(0, 10);
+    const retDate = ret.createdAt ? toLocalDateString(new Date(ret.createdAt)) : '';
     (ret.items || []).forEach((item: any) => {
       const pId = item.productId;
       const stat = pId ? productStats.get(pId) : null;
@@ -660,7 +661,7 @@ router.post('/api/ai/inventory-forecast', async (req, res) => {
       healthScore: lowItems.length === 0 ? 95 : Math.max(45, 100 - (lowItems.length * 8)),
       totalEstimatedBudget: totalBudget,
       totalItemsToRestock: suggestions.filter((s) => s.recommendedOrderQty > 0).length,
-      targetDate: targetDate || now.toISOString().slice(0, 10),
+      targetDate: targetDate || toLocalDateString(now),
       projectionDays,
       deadstockRule,
       returnRule,
@@ -736,7 +737,7 @@ TUGAS UTAMA:
   "summary": "Ringkasan eksekutif 2 kalimat mencakup target tanggal, kondisi stok per distributor supplier terdaftar, dan penanganan retur/deadstock.",
   "healthScore": 88,
   "totalEstimatedBudget": 1850000,
-  "targetDate": "${targetDate || now.toISOString().slice(0, 10)}",
+  "targetDate": "${targetDate || toLocalDateString(now)}",
   "projectionDays": ${projectionDays},
   "deadstockRule": "${deadstockRule}",
   "returnRule": "${returnRule}",
@@ -842,7 +843,7 @@ TUGAS UTAMA:
 
       parsed.totalEstimatedBudget = parsed.totalEstimatedBudget || calculatedTotal;
       parsed.totalItemsToRestock = parsed.forecasts.filter((f: any) => f.recommendedOrderQty > 0).length;
-      parsed.targetDate = parsed.targetDate || targetDate || now.toISOString().slice(0, 10);
+      parsed.targetDate = parsed.targetDate || targetDate || toLocalDateString(now);
       parsed.projectionDays = parsed.projectionDays || projectionDays;
       parsed.deadstockRule = deadstockRule;
       parsed.returnRule = returnRule;

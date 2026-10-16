@@ -237,3 +237,34 @@ test('penyesuaian stok dikirim sebagai selisih, digabung dengan penjualan kasir 
   const bad = await post('/api/lan/data/stock-adjust', { key: 'adj-3', items: [{ productId: 'p-adj', delta: 'abc' }] });
   assert.equal(bad.status, 400);
 });
+
+test('nomor invoice kembar tidak membuat transaksi hilang, dan server hanya melaporkan yang tersimpan', async () => {
+  await post('/api/pos/transactions/sync', { transactions: [{ id: 'tx-inv-a', invoiceNumber: 'INV-KEMBAR-1', finalTotal: 1000, items: [] }] });
+  const r = await post('/api/pos/transactions/sync', {
+    transactions: [
+      { id: 'tx-inv-c', invoiceNumber: 'INV-UNIK-3', finalTotal: 3000, items: [] },
+      { id: 'tx-inv-d', invoiceNumber: 'INV-KEMBAR-1', finalTotal: 4000, items: [] },
+      { id: 'tx-inv-e', invoiceNumber: 'INV-UNIK-5', finalTotal: 5000, items: [] },
+    ],
+  });
+  assert.deepEqual([...r.data.syncedIds].sort(), ['tx-inv-c', 'tx-inv-d', 'tx-inv-e']);
+
+  const list = await (await fetch(`${BASE}/api/pos/transactions?search=INV-&pageSize=100`)).json();
+  const byId = new Map(list.transactions.map((t: any) => [t.id, t]));
+  for (const id of ['tx-inv-a', 'tx-inv-c', 'tx-inv-d', 'tx-inv-e']) assert.ok(byId.has(id), `${id} harus tersimpan`);
+  // Nomor invoice yang ditampilkan tetap nomor asli
+  assert.equal((byId.get('tx-inv-d') as any).invoiceNumber, 'INV-KEMBAR-1');
+
+  // Kirim ulang transaksi yang sama tetap aman (tidak dobel, tidak gagal)
+  const again = await post('/api/pos/transactions', { id: 'tx-inv-d', invoiceNumber: 'INV-KEMBAR-1', finalTotal: 4000, items: [] });
+  assert.equal(again.status, 200);
+});
+
+test('filter tanggal ke server memakai batas hari lokal (penjualan dini hari WIB tidak pindah hari)', async () => {
+  // 18 Okt 2026 pukul 01.30 WIB = 17 Okt 2026 18.30 UTC
+  await post('/api/pos/transactions', { id: 'tx-dinihari', invoiceNumber: 'INV-DINIHARI', finalTotal: 7000, items: [], createdAt: '2026-10-17T18:30:00.000Z' });
+  const wibStart = '2026-10-17T17:00:00.000Z'; // 18 Okt 00.00 WIB
+  const wibEnd = '2026-10-18T16:59:59.999Z'; // 18 Okt 23.59 WIB
+  const r = await (await fetch(`${BASE}/api/pos/transactions?startDate=${wibStart}&endDate=${wibEnd}&pageSize=100`)).json();
+  assert.ok(r.transactions.some((t: any) => t.id === 'tx-dinihari'));
+});

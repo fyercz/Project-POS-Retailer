@@ -1036,11 +1036,23 @@ app.post('/api/pos/transactions/sync', async (req, res) => {
       syncedIds.push(key);
     }
 
-    // Persist to SQLite Master DB with ACID transaction guarantees
+    // Simpan ke SQLite. Bila sekaligus gagal, coba satu per satu agar satu transaksi
+    // bermasalah tidak menggagalkan yang lain, dan HANYA laporkan yang benar-benar tersimpan.
     try {
       await upsertSqliteTransactions(validTransactions, deviceId || 'pos-terminal', cashierName || 'Kasir');
-    } catch (e: any) {
-      console.warn('[SQLite Server] Error syncing transactions to SQLite:', e?.message || e);
+    } catch (batchErr: any) {
+      console.warn('[SQLite Server] Simpan sekaligus gagal, mencoba satu per satu:', batchErr?.message || batchErr);
+      for (const tx of validTransactions) {
+        const key = String(tx.id || tx.invoiceNumber);
+        try {
+          await upsertSqliteTransactions([tx], deviceId || 'pos-terminal', cashierName || 'Kasir');
+        } catch (e: any) {
+          console.error('[SQLite Server] Gagal menyimpan transaksi', key, e?.message || e);
+          const idx = syncedIds.indexOf(key);
+          if (idx > -1) syncedIds.splice(idx, 1);
+          rejected.push({ id: key, error: 'Gagal disimpan di database server: ' + (e?.message || e) });
+        }
+      }
     }
 
     scheduleLanDbSave();
@@ -1071,11 +1083,13 @@ app.post('/api/pos/transactions', async (req, res) => {
     const key = tx.id || tx.invoiceNumber;
     const stored = putTransaction(key, tx);
 
-    // Persist to SQLite Master DB
+    // Simpan ke SQLite; bila gagal, jawab error agar kasir menyimpannya di antrean offline
     try {
       await upsertSqliteTransactions([stored]);
     } catch (e: any) {
-      console.warn('[SQLite Server] Error in single transaction insert:', e?.message || e);
+      console.error('[SQLite Server] Gagal menyimpan transaksi:', e?.message || e);
+      scheduleLanDbSave();
+      return res.status(500).json({ success: false, error: 'Transaksi gagal disimpan di database server.' });
     }
 
     scheduleLanDbSave();
@@ -1116,9 +1130,10 @@ app.get('/api/pos/transactions', async (req, res) => {
 
     // Handle preset 'today' if explicitly passed
     if (preset === 'today') {
-      const todayStr = new Date().toISOString().split('T')[0];
-      computedStartDate = todayStr;
-      computedEndDate = todayStr;
+      // Hari ini menurut jam komputer server (WIB), bukan UTC
+      const now = new Date();
+      computedStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
+      computedEndDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
     }
 
     const paginated = await querySqliteTransactionsPaginated({

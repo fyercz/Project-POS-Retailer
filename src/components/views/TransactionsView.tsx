@@ -212,8 +212,16 @@ export const TransactionsView: React.FC = () => {
         }
         params.set('pageSize', pageSize.toString());
 
-        if (startDate) params.set('startDate', startDate);
-        if (endDate) params.set('endDate', endDate);
+        // Batas hari dihitung dalam waktu lokal (WIB), lalu dikirim sebagai waktu lengkap.
+        // Dulu tanggal polos diartikan UTC oleh server, sehingga penjualan 00.00-06.59 WIB
+        // masuk ke hari sebelumnya.
+        const localDayBoundary = (ymd: string, endOfDay: boolean) => {
+          const [y, m, d] = ymd.split('-').map(Number);
+          if (!y || !m || !d) return ymd;
+          return (endOfDay ? new Date(y, m - 1, d, 23, 59, 59, 999) : new Date(y, m - 1, d, 0, 0, 0, 0)).toISOString();
+        };
+        if (startDate) params.set('startDate', localDayBoundary(startDate, false));
+        if (endDate) params.set('endDate', localDayBoundary(endDate, true));
         if (methodFilter && methodFilter !== 'all') params.set('paymentMethod', methodFilter);
         if (syncFilter && syncFilter !== 'all') params.set('syncStatus', syncFilter);
         if (deferredSearch.trim()) params.set('search', deferredSearch.trim());

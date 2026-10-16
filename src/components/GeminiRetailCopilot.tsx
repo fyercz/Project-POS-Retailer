@@ -41,7 +41,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, toLocalDateString } from '../utils/formatters';
 import { AIForecastItem, AIDailyInsights, AIPromoResult, AIPurchaseOrderPlan } from '../types';
 import { RestockSalesTrendChart } from './RestockSalesTrendChart';
 import { escapeHtml } from '../utils/escapeHtml';
@@ -335,7 +335,7 @@ export const GeminiRetailCopilot: React.FC = () => {
   // Target date preset calculations
   const datePresets = useMemo(() => {
     const today = new Date();
-    const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+    const formatDate = (d: Date) => toLocalDateString(d);
 
     const nextSat = new Date(today);
     const dayOfWeek = today.getDay();

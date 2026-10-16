@@ -6,6 +6,7 @@ import {
   DynamicPricingStrategy,
   TurnoverSpeed,
 } from '../types';
+import { toLocalDateString } from './formatters';
 
 /**
  * Deterministic hash helper for consistent pseudo-random benchmarks based on product ID
@@ -66,7 +67,7 @@ export function getDefaultCompetitorBenchmarks(product: Product): CompetitorPric
   const pasarVariance = -0.08 + (((seed >> 6) % 11) / 100);
   const pasarPrice = roundToIndonesianRetailPrice(base * (1 + pasarVariance));
 
-  const now = new Date().toISOString().split('T')[0];
+  const now = toLocalDateString();
 
   return [
     { competitorName: 'Indomaret', price: indomaretPrice, lastUpdated: now, notes: 'Harga Toko Fisik' },

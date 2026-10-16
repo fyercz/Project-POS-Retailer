@@ -32,7 +32,7 @@ import {
   usePOSAuthShift,
   usePOSUI,
 } from '../../context/POSContext';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, toLocalDateString } from '../../utils/formatters';
 import { CustomerModal } from '../CustomerModal';
 import { Customer, MemberTier } from '../../types';
 import { LoyaltyCalculator } from './loyalty/LoyaltyCalculator';
@@ -751,7 +751,7 @@ export const CustomersView: React.FC = () => {
                               {tx.invoiceNumber}
                             </span>
                             <span className="text-[10px] text-slate-400">
-                              {tx.createdAt ? tx.createdAt.slice(0, 10) : ''}
+                              {tx.createdAt ? toLocalDateString(new Date(tx.createdAt)) : ''}
                             </span>
                           </div>
                           <span className="text-[11px] text-slate-500">

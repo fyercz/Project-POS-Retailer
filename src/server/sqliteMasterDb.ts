@@ -592,6 +592,8 @@ function mapRowToTransaction(r: any) {
   const columns: any = mapRowToTransactionColumns(r);
   // Objek pelanggan lengkap (tier, poin, dll.) ada di extra_json; kolom hanya id/nama/telepon.
   if (r.extra_json && r.extra_json.includes('"customer"')) delete columns.customer;
+  // Nomor invoice asli (tanpa akhiran anti-kembar) ada di extra_json
+  if (r.extra_json && r.extra_json.includes('"invoiceNumber"')) delete columns.invoiceNumber;
   return mergeWithExtra(r, columns);
 }
 
@@ -800,12 +802,38 @@ export async function upsertTransactions(
 
   const statements: Array<{ sql: string; args: any[] }> = [];
 
+  // Kolom invoice_number bersifat UNIK. Bila nomor invoice sudah dipakai transaksi LAIN
+  // (mis. nomor kembar dari dua kasir), simpan dengan akhiran agar tetap tersimpan;
+  // nomor asli tetap ada di extra_json dan itulah yang ditampilkan.
+  const wanted = transactions
+    .filter((t) => t && (t.id || t.invoiceNumber))
+    .map((t) => String(t.invoiceNumber || `INV-${t.id || t.invoiceNumber}`));
+  const invoiceOwner = new Map<string, string>();
+  for (let i = 0; i < wanted.length; i += 500) {
+    const chunk = wanted.slice(i, i + 500);
+    const existing = await db.execute({
+      sql: `SELECT id, invoice_number FROM transactions WHERE invoice_number IN (${chunk.map(() => '?').join(',')});`,
+      args: chunk,
+    });
+    for (const row of existing.rows as any[]) invoiceOwner.set(String(row.invoice_number), String(row.id));
+  }
+  const uniqueInvoiceFor = (invoice: string, txId: string): string => {
+    let candidate = invoice;
+    let n = 1;
+    while (invoiceOwner.has(candidate) && invoiceOwner.get(candidate) !== txId) {
+      candidate = `${invoice}~${txId.slice(-6)}${n > 1 ? `-${n}` : ''}`;
+      n++;
+    }
+    invoiceOwner.set(candidate, txId);
+    return candidate;
+  };
+
   for (const tx of transactions) {
     if (!tx || (!tx.id && !tx.invoiceNumber)) continue;
-    const txId = tx.id || tx.invoiceNumber;
+    const txId = String(tx.id || tx.invoiceNumber);
     syncedIds.push(txId);
 
-    const invoiceNumber = tx.invoiceNumber || `INV-${txId}`;
+    const invoiceNumber = uniqueInvoiceFor(String(tx.invoiceNumber || `INV-${txId}`), txId);
     const custId = tx.customer?.id || null;
     const custName = tx.customer?.name || null;
     const custPhone = tx.customer?.phone || null;
