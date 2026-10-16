@@ -1,54 +1,27 @@
 #!/usr/bin/env bash
+# Ulilmart POS - jalankan kasir (Linux / macOS).  Pakai: ./run.sh [--dev]
+set -e
+cd "$(dirname "$0")"
+URL="http://localhost:3000"
 
-# ==============================================================================
-# Point of Sales - Application Runner (Linux / macOS)
-# ==============================================================================
+buka_kasir() {
+    for b in google-chrome chromium chromium-browser brave-browser microsoft-edge; do
+        if command -v "$b" >/dev/null; then "$b" --app="$URL" >/dev/null 2>&1 & return; fi
+    done
+    if command -v xdg-open >/dev/null; then xdg-open "$URL"; else open "$URL"; fi >/dev/null 2>&1 &
+}
 
-# 1. Check if node_modules exists
-if [ ! -d "node_modules" ]; then
-    echo "⚠️  Folder node_modules belum ditemukan. Menjalankan auto-install..."
-    ./install.sh
-fi
+command -v node >/dev/null || { echo "Node.js belum terpasang. Unduh versi LTS dari https://nodejs.org"; exit 1; }
 
-MODE="production"
-if [ "$1" == "--dev" ] || [ "$1" == "dev" ]; then
-    MODE="development"
-fi
+# Server sudah jalan? Langsung buka kasir.
+if (echo >/dev/tcp/127.0.0.1/3000) 2>/dev/null; then buka_kasir; exit 0; fi
 
-# 2. Check if build exists if in production mode
-if [ "$MODE" == "production" ] && [ ! -d "dist" ]; then
-    echo "⚠️  Build produksi belum tersedia. Mengompilasi aplikasi..."
-    npm run build
-fi
+# Persiapan (hanya pertama kali)
+[ -f .env ] || cp .env.example .env
+[ -d node_modules/express ] || npm install --no-audit --no-fund
 
-echo ""
-echo "=============================================================================="
-echo "   ██╗   ██╗██╗     ██╗██╗     ███╗   ███╗ █████╗ ██████╗ ████████╗"
-echo "   ██║   ██║██║     ██║██║     ████╗ ████║██╔══██╗██╔══██╗╚══██╔══╝"
-echo "   ██║   ██║██║     ██║██║     ██╔████╔██║███████║██████╔╝   ██║   "
-echo "   ██║   ██║██║     ██║██║     ██║╚██╔╝██║██╔══██║██╔══██╗   ██║   "
-echo "   ╚██████╔╝███████╗██║███████╗██║ ╚═╝ ██║██║  ██║██║  ██║   ██║   "
-echo "    ╚═════╝ ╚══════╝╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   "
-echo "                S M A R T   R E T A I L   P O S"
-echo "             [ Menjalankan Aplikasi Kasir ($MODE) ]"
-echo "=============================================================================="
-echo ""
-echo "  🌐 URL Lokal   : http://localhost:3000"
-echo "  📌 Tekan Ctrl+C untuk menghentikan aplikasi"
-echo ""
-
-# Helper to automatically open browser in background after short delay
-(
-    sleep 2
-    if command -v xdg-open >/dev/null 2>&1; then
-        xdg-open "http://localhost:3000" >/dev/null 2>&1 &
-    elif command -v open >/dev/null 2>&1; then
-        open "http://localhost:3000" >/dev/null 2>&1 &
-    fi
-) &
-
-if [ "$MODE" == "development" ]; then
-    npm run dev
-else
-    npm run start
-fi
+echo "Kasir berjalan di $URL  (Ctrl+C untuk berhenti)"
+(sleep 2; buka_kasir) &
+if [ "$1" = "--dev" ]; then exec npm run dev; fi
+[ -f dist/server.cjs ] || npm run build
+exec node dist/server.cjs
