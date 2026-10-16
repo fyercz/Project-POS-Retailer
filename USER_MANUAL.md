@@ -163,8 +163,8 @@ Fitur ini memungkinkan toko mengoperasikan banyak kasir sekaligus (PC Kasir 1, L
 ## 8. Mode Desktop Mandiri & Multi-Device (HP/LAN)
 
 ### 8.1 Menjalankan sebagai Aplikasi Desktop di Komputer Kasir
-* **Windows:** Klik ganda file `desktop.bat`.
-* **Linux / macOS:** Jalankan perintah `./desktop.sh`.
+* **Windows:** Klik ganda file `MULAI-KASIR.bat`.
+* **Linux / macOS:** Jalankan perintah `./run.sh`.
 * POS akan terbuka dalam jendela desktop aplikasi mandiri tanpa URL bar dan tab browser.
 * Tekan **`F11`** untuk masuk ke **Mode Kiosk Layar Penuh**.
 
@@ -223,7 +223,7 @@ Fitur ini memungkinkan toko mengoperasikan banyak kasir sekaligus (PC Kasir 1, L
 
 ### Versi v2.4.0 (September 2026)
 * **Buku Panduan & Dokumentasi Interaktif (User Manual):** Akses langsung panduan fitur, FAQ, dan shortcut keyboard di dalam aplikasi (tombol Panduan atau tekan `F1`).
-* **Peluncur Desktop 1-Klik (`desktop.bat` & `desktop.sh`):** Menjalankan aplikasi dalam jendela desktop mandiri tanpa address bar browser.
+* **Peluncur Desktop 1-Klik (`MULAI-KASIR.bat` & `run.sh`):** Menjalankan aplikasi dalam jendela desktop mandiri tanpa address bar browser.
 * **Proteksi Konfirmasi Restore ("Are you sure?"):** Dialog verifikasi visual dengan checkbox persetujuan wajib sebelum menimpa database.
 * **Pusat Kontrol Desktop Hub (`Alt + D`):** Pengujian cetak struk thermal, perintah buka laci uang (*Cash Drawer Kick*), dan panduan *Silent Printing*.
 * **Konfigurasi Native Electron (`electron/main.cjs`):** Fondasi paket instalasi desktop `.exe`.

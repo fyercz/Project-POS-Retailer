@@ -36,7 +36,7 @@ for /l %%i in (1,1,60) do (
 )
 echo [GAGAL] Server kasir tidak merespons. Isi server.log:
 type server.log 2>nul
-echo Coba jalankan perbaiki-dan-jalankan.bat
+echo Coba jalankan BERHENTI-KASIR.bat lalu ulangi.
 pause
 exit /b 1
 

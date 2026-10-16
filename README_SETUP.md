@@ -129,9 +129,10 @@ Atau untuk mendaftarkan auto-start saat login di Linux desktop (GNOME/XFCE/Raspb
 ### 2. Menjalankan Aplikasi Kasir
 - Cukup klik ganda file:
   ```bat
-  run.bat
+  MULAI-KASIR.bat
   ```
-- Browser akan terbuka otomatis menuju `http://localhost:3000`.
+- Kasir akan terbuka otomatis sebagai jendela aplikasi di `http://localhost:3000`.
+- Untuk mematikan server: klik ganda `BERHENTI-KASIR.bat`.
 
 ### 3. Pembaruan Aplikasi (Auto-Update)
 - Jika ada update kode terbaru (misalnya dari Git), klik ganda file:
@@ -206,7 +207,7 @@ File `.env` dibuat otomatis saat instalasi. Jika Anda ingin menggunakan fitur AI
    ```env
    GEMINI_API_KEY=AIzaSy...
    ```
-3. Simpan file dan restart aplikasi (`run.bat` atau `./run.sh`).
+3. Simpan file dan restart aplikasi (`BERHENTI-KASIR.bat` lalu `MULAI-KASIR.bat`, atau `./run.sh`).
 
 ---
 
@@ -217,13 +218,13 @@ Aplikasi POS ini dapat dijalankan sebagai **Aplikasi Desktop Mandiri** (tanpa ta
 ### 1. Peluncur Desktop Windows (1-Klik):
 Klik ganda file:
 ```bat
-desktop.bat
+MULAI-KASIR.bat
 ```
 Aplikasi akan langsung meluncurkan jendela aplikasi desktop tersendiri menggunakan Microsoft Edge / Google Chrome App Window Mode.
 
 ### 2. Peluncur Desktop Linux & macOS:
 ```bash
-./desktop.sh
+./run.sh
 ```
 
 ### 3. PWA Desktop Langsung dari Aplikasi:

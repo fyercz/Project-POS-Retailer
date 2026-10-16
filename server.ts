@@ -4127,9 +4127,8 @@ app.get('/api/system/verify-files', adminOnly, async (req, res) => {
       // Desktop Scripts & Auto-Update
       { path: 'update.bat', category: 'Skrip Desktop & Auto-Update', critical: true, description: 'Script auto-update GitHub untuk Windows' },
       { path: 'update.sh', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Script auto-update GitHub untuk Linux/macOS' },
-      { path: 'desktop.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Launcher mode desktop kasir Windows' },
-      { path: 'desktop.sh', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Launcher mode desktop kasir Linux/macOS' },
-      { path: 'run.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Script start server Windows' },
+      { path: 'MULAI-KASIR.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Peluncur kasir Windows' },
+      { path: 'BERHENTI-KASIR.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Mematikan server kasir Windows' },
       { path: 'run.sh', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Script start server Linux/macOS' },
       { path: 'install.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Wizard instalasi Windows' },
       { path: 'install.sh', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Wizard instalasi Linux/macOS' },

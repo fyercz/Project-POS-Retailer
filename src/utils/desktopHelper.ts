@@ -635,7 +635,7 @@ echo.
 
 set "ICON_FILE=%~dp0ulilmart.ico"
 set "TARGET_BAT=%~dp0autorun.bat"
-if not exist "%TARGET_BAT%" set "TARGET_BAT=%~dp0desktop.bat"
+if not exist "%TARGET_BAT%" set "TARGET_BAT=%~dp0MULAI-KASIR.bat"
 set "WORKING_DIR=%~dp0"
 
 echo [1/2] Membuat shortcut di Desktop Windows dengan logo Ulilmart...
@@ -666,8 +666,8 @@ label=Ulilmart POS Kasir
 action=Jalankan Aplikasi Kasir Ulilmart
 shell\\open=Buka Ulilmart POS Kasir
 shell\\open\\command=autorun.bat
-shell\\desktop=Jalankan Mode Desktop Kasir
-shell\\desktop\\command=desktop.bat
+shell\\desktop=Jalankan Kasir (Jendela Aplikasi)
+shell\\desktop\\command=MULAI-KASIR.bat
 shell\\install=Instalasi Lengkap (Auto-Install)
 shell\\install\\command=install.bat
 `;

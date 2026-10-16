@@ -203,7 +203,7 @@ function getFallbackErrorHtml(isTempPath, appDir) {
       ` : `
         <b>Petunjuk Menyalakan Kasir:</b>
         <ol>
-          <li>Pastikan Anda sudah menjalankan <b>UlilmartPOS.exe</b> atau <b>autorun.bat</b> / <b>desktop.bat</b>.</li>
+          <li>Pastikan Anda sudah menjalankan <b>UlilmartPOS.exe</b> atau <b>MULAI-KASIR.bat</b>.</li>
           <li>Server akan menyala dalam beberapa detik di port 3000.</li>
           <li>Jendela ini akan <b>otomatis terbuka</b> begitu server aktif.</li>
         </ol>
