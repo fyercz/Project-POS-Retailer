@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { AIInvoiceScanResult, SupplierPurchaseItem } from '../types';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, toLocalDateString } from '../utils/formatters';
 import { compressImageForAI, formatBytes } from '../utils/imageCompressor';
 import { getResilientCameraStream, getCameraErrorMessage } from '../utils/cameraHelper';
 
@@ -217,7 +217,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
       ctx.fillStyle = '#475569';
       ctx.fillText('SURAT JALAN & FAKTUR PENJUALAN', 40, 75);
       ctx.fillText('No. Faktur: INV/IND-2026/8892', 40, 100);
-      ctx.fillText(`Tanggal: ${new Date().toISOString().split('T')[0]}`, 40, 120);
+      ctx.fillText(`Tanggal: ${toLocalDateString()}`, 40, 120);
       ctx.fillText(`Kepada: ${settings.storeName} - ${settings.branchName}`, 40, 140);
 
       ctx.strokeStyle = '#cbd5e1';

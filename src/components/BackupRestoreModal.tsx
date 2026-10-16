@@ -47,7 +47,7 @@ import {
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { BackupPayload, RestorePoint } from '../types';
-import { formatRupiah } from '../utils/formatters';
+import { formatRupiah, toLocalDateString } from '../utils/formatters';
 import { validateBackupFile, BackupValidationReport } from '../utils/backupValidator';
 import { executeDatabasePruning, DatabasePruneResponse } from '../utils/desktopHelper';
 
@@ -240,7 +240,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
     const jsonStr = JSON.stringify(point.payload, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
     const cleanTitle = point.title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const dateStr = point.createdAt.slice(0, 10);
+    const dateStr = toLocalDateString(new Date(point.createdAt));
     const fileName = `snapshot_${cleanTitle}_${dateStr}.json`;
 
     const url = URL.createObjectURL(blob);
@@ -309,7 +309,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
     const sizeKb = (new Blob([jsonStr]).size / 1024).toFixed(1);
     const cleanStore = (settings.storeName || 'pos_retail').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const now = new Date();
-    const dateStr = now.toISOString().slice(0, 10);
+    const dateStr = toLocalDateString(now);
     const defaultName = `backup_${cleanStore}_${dateStr}.json`;
     const targetName = exportCustomName.trim()
       ? (exportCustomName.toLowerCase().endsWith('.json') ? exportCustomName : exportCustomName + '.json')

@@ -1,5 +1,5 @@
 import { Product, PriceHistoryRecord } from '../types';
-import { formatDate } from './formatters';
+import { formatDate, toLocalDateString } from './formatters';
 
 /**
  * Generates realistic price history data points if a product doesn't have custom history yet.
@@ -332,7 +332,7 @@ export function exportPriceHistoryCSV(product: Product, history: PriceHistoryRec
   const link = document.createElement('a');
   const safeSku = (product.sku || 'produk').replace(/[^a-zA-Z0-9_-]/g, '_');
   link.setAttribute('href', url);
-  link.setAttribute('download', `riwayat_harga_${safeSku}_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('download', `riwayat_harga_${safeSku}_${toLocalDateString()}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

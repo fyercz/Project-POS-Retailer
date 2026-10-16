@@ -46,7 +46,7 @@ import {
   INITIAL_EMPLOYEES,
   INITIAL_EXPENSES,
 } from '../data/mockData';
-import { generateInvoiceNumber } from '../utils/formatters';
+import { generateInvoiceNumber, toLocalDateString } from '../utils/formatters';
 import { generate14DaysSampleTransactions } from '../utils/salesForecaster';
 import { offlineSyncManager } from '../utils/offlineSyncManager';
 import {
@@ -827,6 +827,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Perubahan yang server sudah tahu (penjualan, retur, void, stok dari server)
   // langsung dicatat di baseline sehingga tidak terkirim dua kali.
   // -------------------------------------------------------------
+  // true setelah data dari IndexedDB selesai dimuat (lihat efek pemuatan di bawah)
+  const [isStorageHydrated, setIsStorageHydrated] = useState(false);
   const lanBaselineRef = useRef<Map<string, { stock: number; sig: string; ref?: Product }> | null>(null);
   const [lanConfigTick, setLanConfigTick] = useState(0);
 
@@ -863,6 +865,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   useEffect(() => {
+    if (!isStorageHydrated) return; // tunggu data asli dimuat, jangan bandingkan dengan data basi
     if (getLANConfig().role === 'STANDALONE') {
       lanBaselineRef.current = null;
       return;
@@ -927,7 +930,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 400);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [products, lanConfigTick]);
+  }, [products, lanConfigTick, isStorageHydrated]);
 
   const applyMasterLANData = useCallback(
     (data: {
@@ -953,6 +956,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     []
   );
 
+  // Jumlah transaksi terbaru untuk heartbeat, dibaca lewat ref agar timer tidak dipasang ulang
+  // setiap ada penjualan (dulu timer 10 detik terus ter-reset saat kasir ramai, sehingga
+  // heartbeat dan kirim ulang antrean tidak pernah sempat berjalan).
+  const transactionsCountRef = useRef(transactions.length);
+  transactionsCountRef.current = transactions.length;
+
   // Multi-Client LAN Server Database Heartbeat & Real-Time Sync Listener
   useEffect(() => {
     registerLANClient();
@@ -977,7 +986,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const cfg = getLANConfig();
         if (cfg.role === 'STANDALONE') return;
 
-        await sendLANHeartbeat(transactions.length);
+        await sendLANHeartbeat(transactionsCountRef.current);
 
         // Kirim ulang penjualan/retur yang tadi gagal terkirim ke server LAN
         const retriedStocks = await flushLANRetryQueue();
@@ -1008,7 +1017,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       window.removeEventListener('lan-stock-updated', handleLanStockUpdated);
       clearInterval(interval);
     };
-  }, [transactions.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Debounced Sync to High-Capacity IndexedDB & LocalStorage Fallback
   const pendingStorageSaves = useRef<Record<string, any>>({});
@@ -1066,57 +1076,123 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, [refreshStorageDiagnostics]);
 
+  // -------------------------------------------------------------
+  // Muat data dari IndexedDB saat aplikasi dibuka.
+  // Nilai awal state berasal dari localStorage, yang bisa BASI bila kuotanya (5 MB) penuh
+  // (mis. setelah ribuan transaksi). Karena itu data IndexedDB dimuat dulu, dan penyimpanan
+  // otomatis baru aktif setelahnya, agar salinan basi tidak pernah menimpa data yang benar.
+  // -------------------------------------------------------------
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        await posStorage.autoMigrateFromLocalStorage(); // hanya mengisi kunci yang belum ada di IndexedDB
+        const isArr = (v: unknown): v is any[] => Array.isArray(v);
+        const load = async <T,>(key: string, valid: (v: any) => boolean, apply: (v: T) => void) => {
+          const v = await posStorage.readFromIndexedDB<T>(key);
+          if (!cancelled && v !== undefined && v !== null && valid(v)) apply(v);
+        };
+        await load<Product[]>('pos_retail_products_v3', (v) => isArr(v) && v.length > 0, (v) => {
+          const seen = new Set<string>();
+          setProducts(
+            v.map((p, idx) => {
+              const id = p.id && !seen.has(p.id) ? p.id : `prod-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`;
+              seen.add(id);
+              return { ...p, id };
+            })
+          );
+        });
+        await load<Transaction[]>('pos_retail_tx_v3', isArr, setTransactions);
+        await load<Customer[]>('pos_retail_customers_v3', isArr, setCustomers);
+        await load<CartItem[]>('pos_active_cart', isArr, setCart);
+        await load<any[]>('pos_held_orders', isArr, setHeldOrders as any);
+        await load<any>('pos_retail_settings_v2', (v) => typeof v === 'object' && !isArr(v), (v) =>
+          setSettings((prev) => ({ ...prev, ...v }))
+        );
+        await load<any[]>('pos_vouchers', isArr, setVouchers as any);
+        await load<any[]>('pos_sales_returns', isArr, setSalesReturns as any);
+        await load<any[]>('pos_purchase_returns', isArr, setPurchaseReturns as any);
+        await load<any[]>('pos_supplier_purchases_v2', isArr, setSupplierPurchases as any);
+        await load<any[]>('pos_retail_suppliers_v2', isArr, setSuppliers as any);
+        await load<any[]>('pos_employees_v2', (v) => isArr(v) && v.length > 0, setEmployees as any);
+        await load<any[]>('pos_restore_points_v1', isArr, setRestorePoints as any);
+        await load<any>('pos_current_shift_v1', (v) => typeof v === 'object' && !isArr(v), setCurrentShift as any);
+      } catch (err) {
+        console.warn('[posStorage] Gagal memuat data dari IndexedDB, memakai data localStorage:', err);
+      } finally {
+        if (!cancelled) setIsStorageHydrated(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_retail_products_v3', products);
-  }, [products, scheduleSave]);
+  }, [products, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_active_cart', cart);
-  }, [cart, scheduleSave]);
+  }, [cart, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_held_orders', heldOrders);
-  }, [heldOrders, scheduleSave]);
+  }, [heldOrders, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_retail_tx_v3', transactions);
-  }, [transactions, scheduleSave]);
+  }, [transactions, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_retail_customers_v3', customers);
-  }, [customers, scheduleSave]);
+  }, [customers, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_retail_settings_v2', settings);
-  }, [settings, scheduleSave]);
+  }, [settings, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_vouchers', vouchers);
-  }, [vouchers, scheduleSave]);
+  }, [vouchers, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_sales_returns', salesReturns);
-  }, [salesReturns, scheduleSave]);
+  }, [salesReturns, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_purchase_returns', purchaseReturns);
-  }, [purchaseReturns, scheduleSave]);
+  }, [purchaseReturns, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_supplier_purchases_v2', supplierPurchases);
-  }, [supplierPurchases, scheduleSave]);
+  }, [supplierPurchases, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_retail_suppliers_v2', suppliers);
-  }, [suppliers, scheduleSave]);
+  }, [suppliers, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_employees_v2', employees);
-  }, [employees, scheduleSave]);
+  }, [employees, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     scheduleSave('pos_restore_points_v1', restorePoints);
-  }, [restorePoints, scheduleSave]);
+  }, [restorePoints, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
     if (activeEmployee) {
@@ -1131,10 +1207,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [isLocked]);
 
   useEffect(() => {
+    if (!isStorageHydrated) return;
     if (currentShift) {
       scheduleSave('pos_current_shift_v1', currentShift);
     }
-  }, [currentShift, scheduleSave]);
+  }, [currentShift, scheduleSave, isStorageHydrated]);
 
   // Open Gemini Drawer with specific tab
   const openGeminiCopilot = (tab: 'upsell' | 'forecast' | 'insights' | 'promo' | 'chat' = 'upsell') => {
@@ -1854,7 +1931,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newEmp: Employee = {
       ...empData,
       id: `emp-${Date.now()}`,
-      registeredAt: new Date().toISOString().split('T')[0],
+      registeredAt: toLocalDateString(),
     };
     setEmployees((prev) => [...prev, newEmp]);
     return newEmp;
@@ -2574,7 +2651,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newSupplier: Supplier = {
       ...supplierData,
       id: `sup-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: toLocalDateString(),
     };
     setSuppliers((prev) => [newSupplier, ...prev]);
     return newSupplier;
@@ -2653,7 +2730,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       points: initPoints,
       totalSpent: 0,
       ordersCount: 0,
-      joinedDate: nowIso.slice(0, 10),
+      joinedDate: toLocalDateString(),
       pointsHistory: initPoints > 0 ? [
         {
           id: `pth-${Date.now()}`,
@@ -2826,7 +2903,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
       const now = new Date();
-      const dateStr = now.toISOString().slice(0, 10);
+      const dateStr = toLocalDateString(now);
       const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
       const cleanStore = (settings.storeName || 'ulilmart_pos')
         .replace(/[^a-zA-Z0-9]/g, '_')
@@ -3541,7 +3618,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             <POSAuthShiftContext.Provider value={authShiftValue}>
               <POSUIContext.Provider value={uiValue}>
                 <POSContext.Provider value={contextValue}>
-                  {children}
+                  {isStorageHydrated ? (
+                    children
+                  ) : (
+                    <div className="h-screen w-screen flex items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+                      Memuat data kasir...
+                    </div>
+                  )}
                 </POSContext.Provider>
               </POSUIContext.Provider>
             </POSAuthShiftContext.Provider>

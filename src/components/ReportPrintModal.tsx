@@ -22,7 +22,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
-import { formatCurrency, formatNumber, formatDate } from '../utils/formatters';
+import { formatCurrency, formatNumber, formatDate, toLocalDateString } from '../utils/formatters';
 import { printViaIframe, openPrintWindow, exportToCSV } from '../utils/printHelper';
 import { Transaction, Product, SupplierPurchase, PurchaseReturn, SalesReturn } from '../types';
 import { escapeHtml } from '../utils/escapeHtml';
@@ -705,7 +705,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
   };
 
   const handleExportCSV = () => {
-    const filename = `Laporan_${reportType}_${period}_${new Date().toISOString().slice(0, 10)}`;
+    const filename = `Laporan_${reportType}_${period}_${toLocalDateString()}`;
 
     if (reportType === 'products') {
       const headers = ['SKU', 'Nama Produk', 'Kategori', 'Qty Terjual', 'Omzet Penjualan (Rp)', 'Total HPP (Rp)', 'Laba Kotor (Rp)'];

@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { Product } from '../types';
 import { usePOS } from '../context/POSContext';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, toLocalDateString } from '../utils/formatters';
 
 export interface BulkStockAdjustmentModalProps {
   isOpen: boolean;
@@ -205,7 +205,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
   const getPresetDate = (months: number): string => {
     const d = new Date();
     d.setMonth(d.getMonth() + months);
-    return d.toISOString().split('T')[0];
+    return toLocalDateString(d);
   };
 
   const getEndOfYearDate = (): string => {
