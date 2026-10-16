@@ -58,6 +58,10 @@ import {
   deleteLANSharedHeldOrder,
   fetchLANSharedHeldOrders,
   pushStockReturnToLANServer,
+  pushProductsToLANServer,
+  pushStockAdjustToLANServer,
+  queueLANProducts,
+  queueLANStockAdjust,
   queueLANSale,
   queueLANStockReturn,
   flushLANRetryQueue,
@@ -815,6 +819,116 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSyncNotification(null);
   }, []);
 
+  // -------------------------------------------------------------
+  // Sinkron otomatis edit produk & penyesuaian stok ke server LAN.
+  // "Baseline" = keadaan produk yang sudah diketahui server. Perubahan di luar itu
+  // (edit produk, stock opname, barang masuk, koreksi) dikirim: data produk utuh,
+  // dan stok sebagai SELISIH supaya tidak menimpa penjualan dari kasir lain.
+  // Perubahan yang server sudah tahu (penjualan, retur, void, stok dari server)
+  // langsung dicatat di baseline sehingga tidak terkirim dua kali.
+  // -------------------------------------------------------------
+  const lanBaselineRef = useRef<Map<string, { stock: number; sig: string; ref?: Product }> | null>(null);
+  const [lanConfigTick, setLanConfigTick] = useState(0);
+
+  const productSignature = (p: Product): string => {
+    const { stock: _stock, ...rest } = p as any;
+    try {
+      return JSON.stringify(rest);
+    } catch {
+      return '';
+    }
+  };
+
+  const resetLanBaseline = (list: Product[]) => {
+    lanBaselineRef.current = new Map(
+      list.map((p) => [p.id, { stock: Number(p.stock) || 0, sig: productSignature(p), ref: p }])
+    );
+  };
+
+  /** Catat perubahan stok yang sudah diketahui server (agar tidak dikirim lagi sebagai penyesuaian). */
+  const markStockKnownToServer = (changes: Array<{ productId: string; delta?: number; newStock?: number }>) => {
+    const base = lanBaselineRef.current;
+    if (!base) return;
+    for (const c of changes) {
+      const b = base.get(c.productId);
+      if (!b) continue;
+      b.stock = c.newStock !== undefined ? Number(c.newStock) || 0 : Math.max(0, b.stock + (c.delta || 0));
+    }
+  };
+
+  useEffect(() => {
+    const onConfigChanged = () => setLanConfigTick((t) => t + 1);
+    window.addEventListener('lan-config-changed', onConfigChanged);
+    return () => window.removeEventListener('lan-config-changed', onConfigChanged);
+  }, []);
+
+  useEffect(() => {
+    if (getLANConfig().role === 'STANDALONE') {
+      lanBaselineRef.current = null;
+      return;
+    }
+    if (!lanBaselineRef.current) {
+      resetLanBaseline(products);
+      return;
+    }
+    const timer = setTimeout(() => {
+      const base = lanBaselineRef.current;
+      if (!base) return;
+      const changedProducts: Product[] = [];
+      const stockDeltas: Array<{ productId: string; delta: number }> = [];
+      for (const p of products) {
+        const b = base.get(p.id);
+        if (b && b.ref === p) continue; // objek tidak berubah sejak terakhir dicek
+        const stock = Number(p.stock) || 0;
+        const sig = productSignature(p);
+        if (!b) {
+          changedProducts.push(p); // produk baru: server memakai stok yang dikirim
+          base.set(p.id, { stock, sig, ref: p });
+          continue;
+        }
+        b.ref = p;
+        if (b.sig !== sig) {
+          changedProducts.push(p);
+          b.sig = sig;
+        }
+        if (b.stock !== stock) {
+          stockDeltas.push({ productId: p.id, delta: stock - b.stock });
+          b.stock = stock;
+        }
+      }
+
+      if (changedProducts.length > 0) {
+        pushProductsToLANServer(changedProducts, 'Edit produk dari kasir')
+          .then((res) => {
+            if (!res.success && !res.skipped && !(res.status && res.status >= 400 && res.status < 500 && res.status !== 401 && res.status !== 429)) {
+              queueLANProducts(changedProducts);
+            }
+          })
+          .catch(() => queueLANProducts(changedProducts));
+      }
+
+      if (stockDeltas.length > 0) {
+        const payload = {
+          key: `${getLANConfig().clientId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          items: stockDeltas,
+          reason: 'Penyesuaian stok dari kasir',
+        };
+        pushStockAdjustToLANServer(payload)
+          .then((res) => {
+            if (res.success) {
+              // Tampilkan stok gabungan terbaru dari server (termasuk penjualan kasir lain)
+              window.dispatchEvent(new CustomEvent('lan-stock-updated', { detail: { updatedStocks: res.updatedStocks } }));
+            } else if (!res.skipped && !(res.status && res.status >= 400 && res.status < 500 && res.status !== 401 && res.status !== 429)) {
+              queueLANStockAdjust(payload);
+            }
+          })
+          .catch(() => queueLANStockAdjust(payload));
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products, lanConfigTick]);
+
   const applyMasterLANData = useCallback(
     (data: {
       products: Product[];
@@ -824,6 +938,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }) => {
       if (Array.isArray(data.products) && data.products.length > 0) {
         setProducts(data.products);
+        if (lanBaselineRef.current) resetLanBaseline(data.products);
       }
       if (Array.isArray(data.transactions) && data.transactions.length > 0) {
         setTransactions(data.transactions);
@@ -845,6 +960,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleLanStockUpdated = (e: any) => {
       const { updatedStocks } = e.detail || {};
       if (Array.isArray(updatedStocks) && updatedStocks.length > 0) {
+        markStockKnownToServer(updatedStocks);
         setProducts((prev) =>
           prev.map((p) => {
             const match = updatedStocks.find((u: any) => u.productId === p.id);
@@ -1921,6 +2037,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     // 1. Deduct Product Stock (mengalikan quantity dengan multiplier satuan grosir jika ada)
+    // Server LAN memotong stoknya sendiri dari transaksi ini, jadi bukan "penyesuaian" yang perlu dikirim.
+    markStockKnownToServer(
+      cart.map((item) => ({ productId: item.product.id, delta: -(item.quantity * (item.selectedUnit?.multiplier || 1)) }))
+    );
     setProducts((prevProducts) =>
       prevProducts.map((p) => {
         const cartMatches = cart.filter((item) => item.product.id === p.id);
@@ -2014,6 +2134,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           queueLANSale(newTx);
         }
         if (res.success && res.updatedStocks && res.updatedStocks.length > 0) {
+          markStockKnownToServer(res.updatedStocks);
           setProducts((prev) =>
             prev.map((p) => {
               const match = res.updatedStocks!.find((u) => u.productId === p.id);
@@ -2052,6 +2173,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   /** Terapkan stok terbaru dari server LAN ke daftar produk di layar. */
   const applyServerStocks = (updatedStocks?: Array<{ productId: string; newStock: number }>) => {
     if (!updatedStocks || updatedStocks.length === 0) return;
+    markStockKnownToServer(updatedStocks);
     setProducts((prev) =>
       prev.map((p) => {
         const match = updatedStocks.find((u) => u.productId === p.id);
@@ -2100,6 +2222,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     if (items.length > 0) {
+      markStockKnownToServer(items.map((i) => ({ productId: i.productId, delta: i.quantity * i.unitMultiplier })));
       setProducts((prev) =>
         prev.map((p) => {
           const back = items.filter((i) => i.productId === p.id).reduce((sum, i) => sum + i.quantity * i.unitMultiplier, 0);
@@ -2155,6 +2278,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         unitMultiplier: item.unitMultiplier && item.unitMultiplier > 0 ? item.unitMultiplier : 1,
       }));
     if (restockItems.length > 0) {
+      markStockKnownToServer(restockItems.map((i) => ({ productId: i.productId, delta: i.quantity * i.unitMultiplier })));
       setProducts((prev) =>
         prev.map((p) => {
           const back = restockItems

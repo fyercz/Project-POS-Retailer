@@ -315,7 +315,9 @@ const STORAGE_KEY_RETRY_QUEUE = 'pos_lan_retry_queue_v1';
 
 type LANRetryEntry =
   | { type: 'sale'; id: string; transaction: Transaction; attempts: number; queuedAt: string }
-  | { type: 'stock-return'; id: string; payload: LANStockReturnPayload; attempts: number; queuedAt: string };
+  | { type: 'stock-return'; id: string; payload: LANStockReturnPayload; attempts: number; queuedAt: string }
+  | { type: 'stock-adjust'; id: string; payload: LANStockAdjustPayload; attempts: number; queuedAt: string }
+  | { type: 'product'; id: string; product: Product; attempts: number; queuedAt: string };
 
 function readRetryQueue(): LANRetryEntry[] {
   if (typeof window === 'undefined') return [];
@@ -357,6 +359,27 @@ export function queueLANStockReturn(payload: LANStockReturnPayload): void {
   writeRetryQueue(list);
 }
 
+export function queueLANStockAdjust(payload: LANStockAdjustPayload): void {
+  const list = readRetryQueue();
+  const id = `adjust:${payload.key}`;
+  if (list.some((e) => e.id === id)) return;
+  list.push({ type: 'stock-adjust', id, payload, attempts: 0, queuedAt: new Date().toISOString() });
+  writeRetryQueue(list);
+}
+
+/** Antrekan produk hasil edit; versi yang lebih baru menggantikan versi lama di antrean. */
+export function queueLANProducts(products: Product[]): void {
+  const list = readRetryQueue();
+  for (const product of products) {
+    const id = `product:${product.id}`;
+    const entry = { type: 'product' as const, id, product, attempts: 0, queuedAt: new Date().toISOString() };
+    const idx = list.findIndex((e) => e.id === id);
+    if (idx >= 0) list[idx] = entry;
+    else list.push(entry);
+  }
+  writeRetryQueue(list);
+}
+
 let isFlushingRetryQueue = false;
 
 /**
@@ -378,9 +401,14 @@ export async function flushLANRetryQueue(): Promise<Array<{ productId: string; n
       const result =
         entry.type === 'sale'
           ? await pushTransactionToLANServer(entry.transaction)
-          : await pushStockReturnToLANServer(entry.payload);
+          : entry.type === 'stock-return'
+            ? await pushStockReturnToLANServer(entry.payload)
+            : entry.type === 'stock-adjust'
+              ? await pushStockAdjustToLANServer(entry.payload)
+              : await pushProductsToLANServer([entry.product], 'Kirim ulang edit produk');
       if (result.success) {
-        updatedStocks.push(...(result.updatedStocks || []));
+        // Stok dari kiriman ulang produk tidak dipakai: stok produk lama tidak diubah oleh endpoint itu.
+        if (entry.type !== 'product') updatedStocks.push(...(result.updatedStocks || []));
       } else if (result.status && result.status >= 400 && result.status < 500 && result.status !== 401 && result.status !== 429) {
         console.error(`[LAN] Server menolak ${entry.id}, dihapus dari antrean:`, result.error);
       } else {
@@ -393,9 +421,12 @@ export async function flushLANRetryQueue(): Promise<Array<{ productId: string; n
       }
     }
     // Gabungkan dengan entri baru yang mungkin masuk selama proses kirim ulang
+    // Entri yang ditambahkan/diganti selama proses kirim ulang (mis. produk diedit lagi) tetap disimpan
     const latest = readRetryQueue();
-    const handledIds = new Set(list.map((e) => e.id));
-    writeRetryQueue([...remaining, ...latest.filter((e) => !handledIds.has(e.id))]);
+    const handled = new Map(list.map((e) => [e.id, e.queuedAt]));
+    const changedMeanwhile = latest.filter((e) => !handled.has(e.id) || handled.get(e.id) !== e.queuedAt);
+    const changedIds = new Set(changedMeanwhile.map((e) => e.id));
+    writeRetryQueue([...remaining.filter((e) => !changedIds.has(e.id)), ...changedMeanwhile]);
   } finally {
     isFlushingRetryQueue = false;
   }
@@ -403,11 +434,12 @@ export async function flushLANRetryQueue(): Promise<Array<{ productId: string; n
 }
 
 /**
- * Sync / update products to LAN Server Database
+ * Kirim produk baru / hasil edit produk ke server LAN.
+ * Server tidak menimpa stok produk yang sudah ada (stok dikirim terpisah sebagai selisih).
  */
-export async function pushProductsToLANServer(products: Product[], auditNote?: string): Promise<boolean> {
+export async function pushProductsToLANServer(products: Product[], auditNote?: string): Promise<LANPushResult> {
   const config = getLANConfig();
-  if (config.role === 'STANDALONE') return false;
+  if (config.role === 'STANDALONE') return { success: false, skipped: true };
 
   const baseUrl = config.serverUrl.replace(/\/+$/, '');
   try {
@@ -417,9 +449,38 @@ export async function pushProductsToLANServer(products: Product[], auditNote?: s
       body: JSON.stringify({ products, auditNote }),
       signal: createTimeoutSignal(8000),
     });
-    return res.ok;
-  } catch {
-    return false;
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) return { success: true, updatedStocks: data.updatedStocks };
+    return { success: false, status: res.status, error: data.error || `HTTP ${res.status}` };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Gagal mengirim produk ke server LAN' };
+  }
+}
+
+export interface LANStockAdjustPayload {
+  /** Kunci unik agar penyesuaian yang dikirim ulang tidak diterapkan dua kali. */
+  key: string;
+  items: Array<{ productId: string; delta: number }>;
+  reason?: string;
+}
+
+/** Kirim penyesuaian stok (selisih +/-) ke server LAN, mis. hasil stock opname atau barang masuk. */
+export async function pushStockAdjustToLANServer(payload: LANStockAdjustPayload): Promise<LANPushResult> {
+  const config = getLANConfig();
+  if (config.role === 'STANDALONE') return { success: false, skipped: true };
+  const baseUrl = config.serverUrl.replace(/\/+$/, '');
+  try {
+    const res = await fetch(`${baseUrl}/api/lan/data/stock-adjust`, {
+      method: 'POST',
+      headers: lanHeaders(),
+      body: JSON.stringify({ ...payload, clientId: config.clientId, clientName: config.clientName }),
+      signal: createTimeoutSignal(8000),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) return { success: true, duplicate: data.duplicate, updatedStocks: data.updatedStocks };
+    return { success: false, status: res.status, error: data.error || `HTTP ${res.status}` };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Gagal mengirim penyesuaian stok ke server LAN' };
   }
 }
 

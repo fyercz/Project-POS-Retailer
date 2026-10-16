@@ -459,7 +459,11 @@ export async function getProductByIdOrBarcode(identifier: string): Promise<any |
   return mapRowToProduct(res.rows[0]);
 }
 
-export async function upsertProducts(products: any[]): Promise<number> {
+/**
+ * Simpan produk. Dengan keepExistingStock, stok produk yang SUDAH ada tidak ditimpa
+ * (stok hanya berubah lewat pergerakan stok), sedangkan produk baru memakai stok kiriman.
+ */
+export async function upsertProducts(products: any[], options: { keepExistingStock?: boolean } = {}): Promise<number> {
   if (!Array.isArray(products) || products.length === 0) return 0;
   const db = getSqliteClient();
   const now = new Date().toISOString();
@@ -482,7 +486,7 @@ export async function upsertProducts(products: any[]): Promise<number> {
           category_id = excluded.category_id,
           price = excluded.price,
           cost_price = excluded.cost_price,
-          stock = excluded.stock,
+          ${options.keepExistingStock ? '' : 'stock = excluded.stock,'}
           min_stock = excluded.min_stock,
           unit = excluded.unit,
           units_json = excluded.units_json,

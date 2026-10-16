@@ -201,3 +201,39 @@ test('halaman web lain di jaringan (port berbeda) tidak boleh mengubah data', as
   const terminal = await post('/api/lan/data/sync-products', { products: [] }, { Origin: `http://192.168.1.20:${PORT}` });
   assert.equal(terminal.status, 200);
 });
+
+test('edit produk dari kasir tidak menimpa stok di server (stok lama di kasir diabaikan)', async () => {
+  await post('/api/lan/data/sync-products', { products: [{ id: 'p-edit', name: 'Lama', price: 1000, stock: 20 }] });
+  await post('/api/lan/data/push-transaction', { transaction: { id: 'tx-edit', finalTotal: 1, items: [{ productId: 'p-edit', quantity: 5 }] } });
+  assert.equal(await stockOf('p-edit'), 15);
+
+  // Kasir lain mengedit harga dengan data stok lamanya (20)
+  const r = await post('/api/lan/data/sync-products', { products: [{ id: 'p-edit', name: 'Baru', price: 1200, stock: 20 }] });
+  assert.equal(r.data.updatedStocks[0].newStock, 15);
+  const p = (await pull()).products.find((x: any) => x.id === 'p-edit');
+  assert.equal(p.name, 'Baru');
+  assert.equal(p.price, 1200);
+  assert.equal(p.stock, 15);
+
+  await restartServer();
+  assert.equal(await stockOf('p-edit'), 15);
+});
+
+test('penyesuaian stok dikirim sebagai selisih, digabung dengan penjualan kasir lain, dan idempoten', async () => {
+  await post('/api/lan/data/sync-products', { products: [{ id: 'p-adj', name: 'Opname', price: 1000, stock: 10 }] });
+  // Kasir A menjual 3, kasir B mencatat barang masuk +24 (berdasarkan stok lamanya)
+  await post('/api/lan/data/push-transaction', { transaction: { id: 'tx-adj', finalTotal: 1, items: [{ productId: 'p-adj', quantity: 3 }] } });
+  const adj = { key: 'adj-1', items: [{ productId: 'p-adj', delta: 24 }], reason: 'Barang masuk' };
+  const r1 = await post('/api/lan/data/stock-adjust', adj);
+  assert.equal(r1.data.updatedStocks[0].newStock, 31);
+  const r2 = await post('/api/lan/data/stock-adjust', adj);
+  assert.equal(r2.data.duplicate, true);
+  assert.equal(await stockOf('p-adj'), 31);
+
+  // Koreksi turun (barang rusak) tidak bisa membuat stok negatif
+  await post('/api/lan/data/stock-adjust', { key: 'adj-2', items: [{ productId: 'p-adj', delta: -100 }] });
+  assert.equal(await stockOf('p-adj'), 0);
+
+  const bad = await post('/api/lan/data/stock-adjust', { key: 'adj-3', items: [{ productId: 'p-adj', delta: 'abc' }] });
+  assert.equal(bad.status, 400);
+});

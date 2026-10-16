@@ -173,7 +173,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
 
   // Seed master database from local state
   const handleSeedServer = async () => {
-    if (!confirm('Apakah Anda yakin ingin mengunggah dan menjadikan data produk kasir lokal ini sebagai Master Database Server LAN?')) {
+    if (!confirm('Data produk, STOK, member, dan supplier di server akan DITIMPA dengan data dari kasir ini.\n\nPenjualan dari kasir lain yang belum tercatat di kasir ini akan hilang dari hitungan stok server. Lakukan hanya saat pertama kali menyiapkan server atau saat semua kasir lain sedang tidak berjualan.\n\nLanjutkan?')) {
       return;
     }
     setIsSeeding(true);
@@ -240,17 +240,23 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
   
   // Detect if running in cloud/web environment or local browser
   const isCloudOrWeb = typeof window !== 'undefined' && (
-    window.location.hostname.includes('.run.app') || 
-    window.location.hostname.includes('.app') || 
-    (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && !window.location.hostname.startsWith('192.168.') && !window.location.hostname.startsWith('10.'))
+    window.location.hostname.includes('.run.app') ||
+    window.location.hostname.includes('.app') ||
+    (window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1' &&
+      !window.location.hostname.startsWith('192.168.') &&
+      !window.location.hostname.startsWith('10.') &&
+      !/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(window.location.hostname) &&
+      !window.location.hostname.endsWith('.local') &&
+      window.location.hostname.includes('.'))
   );
 
-  // Fallback public cloud app url
+  // Alamat aplikasi bila dibuka dari internet; tanpa itu pakai alamat yang sedang dibuka
   const publicCloudUrl = isCloudOrWeb
     ? currentOrigin
     : (serverStatus?.webOrigin && !serverStatus.webOrigin.includes('localhost')
       ? serverStatus.webOrigin
-      : 'https://ais-pre-fafdjlqxtxjxzjf3s3mlj2-699502230590.asia-east1.run.app');
+      : currentOrigin);
 
   // Real local Wi-Fi IP detection
   const detectedLanIp = serverStatus?.localIps?.find(
