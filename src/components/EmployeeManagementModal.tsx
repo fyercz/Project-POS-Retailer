@@ -418,7 +418,11 @@ export const EmployeeManagementModal: React.FC = () => {
                             {!isCurrent && emp.isActive && (
                               <button
                                 id={`btn-switch-emp-${emp.id}`}
-                                onClick={() => quickSwitchEmployee(emp)}
+                                onClick={() => {
+                                  if (!quickSwitchEmployee(emp)) {
+                                    setNotification({ type: 'error', message: `Butuh PIN: tidak bisa beralih ke jabatan yang lebih tinggi (${emp.name}) tanpa login PIN.` });
+                                  }
+                                }}
                                 className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-lg transition"
                                 title="Login sebagai karyawan ini"
                               >
@@ -553,7 +557,10 @@ export const EmployeeManagementModal: React.FC = () => {
                             <button
                               id="btn-test-cashier-role"
                               onClick={() => {
-                                quickSwitchEmployee(sampleCashier);
+                                if (!quickSwitchEmployee(sampleCashier)) {
+                                  setNotification({ type: 'error', message: 'Tidak bisa beralih ke jabatan yang lebih tinggi tanpa login PIN.' });
+                                  return;
+                                }
                                 setNotification({
                                   type: 'success',
                                   message: `Berhasil berganti ke ${sampleCashier.name} (Kasir). Menu sekarang dibatasi!`,
@@ -623,7 +630,10 @@ export const EmployeeManagementModal: React.FC = () => {
                             <button
                               id="btn-test-inventory-role"
                               onClick={() => {
-                                quickSwitchEmployee(sampleInv);
+                                if (!quickSwitchEmployee(sampleInv)) {
+                                  setNotification({ type: 'error', message: 'Tidak bisa beralih ke jabatan yang lebih tinggi tanpa login PIN.' });
+                                  return;
+                                }
                                 setNotification({
                                   type: 'success',
                                   message: `Berhasil berganti ke ${sampleInv.name} (Gudang). Menu Kasir & Laporan sekarang terkunci!`,
@@ -693,7 +703,10 @@ export const EmployeeManagementModal: React.FC = () => {
                             <button
                               id="btn-test-spv-role"
                               onClick={() => {
-                                quickSwitchEmployee(sampleSpv);
+                                if (!quickSwitchEmployee(sampleSpv)) {
+                                  setNotification({ type: 'error', message: 'Tidak bisa beralih ke jabatan yang lebih tinggi tanpa login PIN.' });
+                                  return;
+                                }
                                 setNotification({
                                   type: 'success',
                                   message: `Berhasil berganti ke ${sampleSpv.name} (Supervisor). Memiliki izin supervisi & void!`,
@@ -763,7 +776,10 @@ export const EmployeeManagementModal: React.FC = () => {
                             <button
                               id="btn-test-owner-role"
                               onClick={() => {
-                                quickSwitchEmployee(sampleOwner);
+                                if (!quickSwitchEmployee(sampleOwner)) {
+                                  setNotification({ type: 'error', message: 'Tidak bisa beralih ke jabatan yang lebih tinggi tanpa login PIN.' });
+                                  return;
+                                }
                                 setNotification({
                                   type: 'success',
                                   message: `Berhasil berganti ke ${sampleOwner.name} (Owner). Seluruh menu dan pengaturan dapat diakses!`,

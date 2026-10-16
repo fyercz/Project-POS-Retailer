@@ -260,5 +260,7 @@ npm run desktop:electron
 - **Data toko tidak lagi disimpan di Git.** Folder `data/` (database SQLite) masuk `.gitignore`. Sebelum "Tarik Update", server otomatis mencadangkan `data/` ke `data-backup/<waktu>/` (5 cadangan terakhir). Tetap disarankan menyalin folder `data/` secara berkala.
 - **Fitur administratif** (`/api/system/*` seperti update GitHub dan pembersihan sistem, serta seed database) hanya bisa dipakai dari **komputer server kasir itu sendiri**. Dari perangkat lain di jaringan, set `ADMIN_TOKEN` di file `.env` dan kirim lewat header `X-Admin-Token`.
 - **PIN master tersembunyi (`9999`) sudah dihapus.** Gunakan PIN karyawan masing-masing. Ganti PIN bawaan (1234, 2345, 3456, 7890, 9999) di menu Kelola Karyawan sebelum dipakai di toko.
+- **Kunci LAN (`LAN_KEY`)**: tanpa kunci, semua perangkat di jaringan toko bisa membaca dan mengubah data kasir. Jika Wi-Fi toko juga dipakai pembeli/tamu, isi `LAN_KEY` di file `.env`, lalu pasangkan tiap HP/kasir lain sekali lewat link pairing di menu **Server LAN** pada komputer server. Halaman QR rak untuk pembeli tetap bisa dibuka tanpa kunci, dan tidak lagi menampilkan harga modal.
+- Hanya aplikasi kasir (port 3000) di jaringan lokal yang boleh memanggil API; halaman web lain di jaringan (mis. panel router) ditolak. Tambahan origin bisa didaftarkan lewat `ALLOWED_ORIGINS`.
 - Endpoint AI dibatasi lajunya per perangkat untuk melindungi kuota Gemini.
 - Menjalankan tes: `npm test`.

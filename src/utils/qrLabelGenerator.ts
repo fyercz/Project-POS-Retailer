@@ -2,6 +2,7 @@ import QRCode from 'qrcode';
 import { Product } from '../types';
 import { formatCurrency, formatDate } from './formatters';
 import { generateBarcodeSvgString } from './barcodeGenerator';
+import { escapeHtml, escapeTextFields } from './escapeHtml';
 
 export interface LastPriceUpdateInfo {
   formattedDate: string;
@@ -191,6 +192,9 @@ export function generateSingleQrShelfLabelHtml(
     : '';
 
   const borderStyle = options.showCutLines ? '1px dashed #94a3b8' : '1px solid #e2e8f0';
+  // Teks dari data di-escape sebelum masuk HTML (cegah XSS). barcodeSvg & qrSvg dibuat dari data mentah di atas.
+  product = escapeTextFields(product);
+  options = { ...options, storeName: escapeHtml(options.storeName), branchName: options.branchName ? escapeHtml(options.branchName) : options.branchName, customPromoBadge: options.customPromoBadge ? escapeHtml(options.customPromoBadge) : options.customPromoBadge };
 
   // Stock status badge
   let stockBadgeColor = '#059669';

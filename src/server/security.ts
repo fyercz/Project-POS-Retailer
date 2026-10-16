@@ -59,12 +59,25 @@ export function isTrustedHost(hostHeader: string | undefined | null): boolean {
   return extra.includes(h);
 }
 
-/** Origin yang boleh memakai API: host yang sama, atau halaman dari jaringan lokal/toko. */
+/** Port aplikasi kasir. Terminal lain yang menjalankan aplikasi ini memakai port yang sama. */
+export const POS_PORT = String(process.env.PORT || 3000);
+
+/**
+ * Origin yang boleh memakai API:
+ *  - host yang sama (halaman dari server ini), atau
+ *  - aplikasi kasir di perangkat lain dalam jaringan toko (host lokal DAN port aplikasi kasir), atau
+ *  - origin yang didaftarkan di env ALLOWED_ORIGINS (dipisah koma).
+ * Halaman web lain di jaringan (mis. panel router di 192.168.1.1:80) tidak diizinkan.
+ */
 export function isAllowedOrigin(origin: string | undefined, host: string | undefined): boolean {
   if (!origin) return true;
   if (isSameOrigin(origin, host)) return true;
+  const extra = (process.env.ALLOWED_ORIGINS || '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
+  if (extra.includes(origin.toLowerCase())) return true;
   try {
-    return isTrustedHost(new URL(origin).host);
+    const url = new URL(origin);
+    const port = url.port || (url.protocol === 'https:' ? '443' : '80');
+    return port === POS_PORT && isTrustedHost(url.host);
   } catch {
     return false;
   }
@@ -173,7 +186,7 @@ export function sameOriginApi(req: Request, res: Response, next: NextFunction) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Vary', 'Origin');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Admin-Token');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Admin-Token, X-LAN-Key');
   }
   if (req.method === 'OPTIONS') return res.sendStatus(200);
   next();
@@ -233,4 +246,100 @@ export function validateTransaction(tx: any): string | null {
     }
   }
   return null;
+}
+
+// -------------------------------------------------------------
+// Kunci LAN (opsional): isi LAN_KEY di file .env untuk mengunci API dari perangkat lain.
+// - Komputer server sendiri selalu boleh.
+// - Perangkat lain harus mengirim header X-LAN-Key, atau cookie lan_key yang didapat
+//   sekali dengan membuka http://<ip-server>:3000/?pair=<LAN_KEY>.
+// - Jika LAN_KEY kosong, perilaku sama seperti sebelumnya (semua perangkat di jaringan boleh).
+// -------------------------------------------------------------
+export const LAN_KEY_COOKIE = 'lan_key';
+
+function readCookie(header: string | undefined, name: string): string | undefined {
+  if (!header) return undefined;
+  for (const part of header.split(';')) {
+    const idx = part.indexOf('=');
+    if (idx > -1 && part.slice(0, idx).trim() === name) {
+      try {
+        return decodeURIComponent(part.slice(idx + 1).trim());
+      } catch {
+        return undefined;
+      }
+    }
+  }
+  return undefined;
+}
+
+export interface LanKeyCheckInput {
+  lanKey: string | undefined;
+  remoteAddress: string | undefined;
+  localAddresses?: string[];
+  headerKey?: string;
+  cookieKey?: string;
+}
+
+export function checkLanKey(input: LanKeyCheckInput): boolean {
+  const key = (input.lanKey || '').trim();
+  if (!key) return true;
+  if (isLoopbackAddress(input.remoteAddress)) return true;
+  if (input.remoteAddress && input.localAddresses?.includes(normalizeAddress(input.remoteAddress))) return true;
+  if (input.headerKey && safeEqual(input.headerKey, key)) return true;
+  if (input.cookieKey && safeEqual(input.cookieKey, key)) return true;
+  return false;
+}
+
+/** Endpoint yang tetap terbuka tanpa kunci: cek kesehatan dan halaman QR rak untuk pembeli. */
+function isPublicApiPath(p: string): boolean {
+  return p === '/api/health' || p.startsWith('/api/shelf/');
+}
+
+/** Middleware: simpan cookie pairing bila ?pair=<LAN_KEY> cocok (dipasang untuk semua path). */
+export function lanPairing(req: Request, res: Response, next: NextFunction) {
+  const key = (process.env.LAN_KEY || '').trim();
+  const pair = typeof req.query?.pair === 'string' ? req.query.pair : undefined;
+  if (key && pair && safeEqual(pair, key)) {
+    res.setHeader(
+      'Set-Cookie',
+      `${LAN_KEY_COOKIE}=${encodeURIComponent(key)}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax`
+    );
+  }
+  next();
+}
+
+/** Middleware untuk /api: tolak perangkat lain tanpa kunci LAN bila LAN_KEY diisi. */
+export function lanKeyGuard(req: Request, res: Response, next: NextFunction) {
+  if (isPublicApiPath(req.originalUrl.split('?')[0])) return next();
+  const headerKey = req.headers['x-lan-key'];
+  const pair = typeof req.query?.pair === 'string' ? req.query.pair : undefined;
+  const ok = checkLanKey({
+    lanKey: process.env.LAN_KEY,
+    remoteAddress: req.socket.remoteAddress,
+    localAddresses: getLocalMachineAddresses(),
+    headerKey: Array.isArray(headerKey) ? headerKey[0] : headerKey || pair,
+    cookieKey: readCookie(req.headers.cookie, LAN_KEY_COOKIE),
+  });
+  if (!ok) {
+    return res.status(401).json({
+      success: false,
+      error: 'Perangkat ini belum dipasangkan. Buka link pairing dari komputer server kasir, atau isi Kunci LAN di pengaturan LAN.',
+    });
+  }
+  next();
+}
+
+/** Data produk yang aman ditampilkan ke pembeli (halaman QR rak): tanpa harga modal & data internal. */
+export function toPublicProduct(p: any): any {
+  if (!p || typeof p !== 'object') return p;
+  const pick = (o: any, keys: string[]) =>
+    Object.fromEntries(keys.filter((k) => o[k] !== undefined).map((k) => [k, o[k]]));
+  const out: any = pick(p, [
+    'id', 'name', 'brand', 'sku', 'barcode', 'categoryId', 'price', 'stock', 'minStock', 'unit',
+    'aisle', 'image', 'imageUrl', 'description', 'promoBadge', 'isPopular', 'expiryDate', 'updatedAt',
+  ]);
+  if (Array.isArray(p.wholesaleUnits)) {
+    out.wholesaleUnits = p.wholesaleUnits.map((u: any) => pick(u || {}, ['id', 'name', 'multiplier', 'price', 'barcode']));
+  }
+  return out;
 }

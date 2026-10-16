@@ -57,6 +57,11 @@ import {
   pushLANSharedHeldOrder,
   deleteLANSharedHeldOrder,
   fetchLANSharedHeldOrders,
+  pushStockReturnToLANServer,
+  queueLANSale,
+  queueLANStockReturn,
+  flushLANRetryQueue,
+  type LANStockReturnPayload,
 } from '../utils/lanSyncManager';
 import { posStorage, StorageDiagnostics } from '../utils/posStorage';
 import { generateCustomerDiscountSuggestions } from '../utils/customerDiscountRecommender';
@@ -201,7 +206,7 @@ export interface POSAuthShiftContextType {
   setIsShiftModalOpen: (open: boolean) => void;
   currentShift: ShiftSummary | null;
   loginWithPin: (pin: string, employeeId?: string) => { success: boolean; message: string; employee?: Employee };
-  quickSwitchEmployee: (employee: Employee) => void;
+  quickSwitchEmployee: (employee: Employee) => boolean;
   lockScreen: () => void;
   unlockScreen: (pin: string) => { success: boolean; message: string };
   logoutEmployee: () => void;
@@ -857,6 +862,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (cfg.role === 'STANDALONE') return;
 
         await sendLANHeartbeat(transactions.length);
+
+        // Kirim ulang penjualan/retur yang tadi gagal terkirim ke server LAN
+        const retriedStocks = await flushLANRetryQueue();
+        if (retriedStocks.length > 0) {
+          window.dispatchEvent(new CustomEvent('lan-stock-updated', { detail: { updatedStocks: retriedStocks } }));
+        }
 
         if (cfg.role === 'CLIENT' && cfg.autoSync) {
           const sharedOrders = await fetchLANSharedHeldOrders();
@@ -1691,10 +1702,17 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: `Selamat datang, ${matched.name}!`, employee: matched };
   };
 
-  const quickSwitchEmployee = (employee: Employee) => {
-    if (!employee.isActive) return;
+  // Ganti akun tanpa PIN hanya boleh ke jabatan yang setara atau lebih rendah,
+  // supaya Supervisor tidak bisa masuk sebagai Owner tanpa PIN Owner.
+  const ROLE_RANK: Record<string, number> = { cashier: 1, inventory: 1, supervisor: 2, owner: 3 };
+  const quickSwitchEmployee = (employee: Employee): boolean => {
+    if (!employee.isActive) return false;
+    const currentRank = activeEmployee ? ROLE_RANK[activeEmployee.role] ?? 0 : 0;
+    const targetRank = ROLE_RANK[employee.role] ?? 0;
+    if (targetRank > currentRank) return false;
     setActiveEmployee(employee);
     setIsLocked(false);
+    return true;
   };
 
   const lockScreen = () => {
@@ -1865,16 +1883,28 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     } else {
       // Push to cloud; fallback to offline queue if server connection fails
+      // (fetch hanya gagal untuk error jaringan, jadi status HTTP juga harus dicek)
+      const queueOffline = async (reason: unknown) => {
+        console.warn('[POS] Gagal push transaksi instan, beralih ke antrean offline lokal:', reason);
+        newTx.syncStatus = 'pending_sync';
+        newTx.offlineCreated = true;
+        await offlineSyncManager.savePendingTransaction(newTx);
+      };
       fetch('/api/pos/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTx),
-      }).catch(async (err) => {
-        console.warn('[POS] Gagal push transaksi instan, beralih ke antrean offline lokal:', err);
-        newTx.syncStatus = 'pending_sync';
-        newTx.offlineCreated = true;
-        await offlineSyncManager.savePendingTransaction(newTx);
-      });
+      })
+        .then(async (res) => {
+          if (res.ok) return;
+          const data = await res.json().catch(() => ({}));
+          if (res.status >= 400 && res.status < 500 && res.status !== 401 && res.status !== 429) {
+            console.error('[POS] Server menolak transaksi:', newTx.invoiceNumber, data.error || res.status);
+          } else {
+            await queueOffline(data.error || `HTTP ${res.status}`);
+          }
+        })
+        .catch(queueOffline);
     }
 
     // Update Shift Metrics
@@ -1979,6 +2009,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Push transaction to Multi-Client LAN Server Database for centralized ledger & stock auto-deduction
     pushTransactionToLANServer(newTx)
       .then((res) => {
+        if (!res.success && !res.skipped && !(res.status && res.status >= 400 && res.status < 500 && res.status !== 401 && res.status !== 429)) {
+          // Server LAN tidak bisa dihubungi: simpan untuk dikirim ulang agar stok di server tetap terpotong
+          queueLANSale(newTx);
+        }
         if (res.success && res.updatedStocks && res.updatedStocks.length > 0) {
           setProducts((prev) =>
             prev.map((p) => {
@@ -1990,6 +2024,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
       .catch((err) => {
         console.warn('[LAN] Push transaksi LAN offline fallback:', err);
+        queueLANSale(newTx);
       });
 
     // 4. Confetti effect
@@ -2014,10 +2049,72 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newTx;
   };
 
-  const voidTransaction = (txId: string) => {
-    setTransactions((prev) =>
-      prev.map((tx) => (tx.id === txId ? { ...tx, status: 'void' as const } : tx))
+  /** Terapkan stok terbaru dari server LAN ke daftar produk di layar. */
+  const applyServerStocks = (updatedStocks?: Array<{ productId: string; newStock: number }>) => {
+    if (!updatedStocks || updatedStocks.length === 0) return;
+    setProducts((prev) =>
+      prev.map((p) => {
+        const match = updatedStocks.find((u) => u.productId === p.id);
+        return match ? { ...p, stock: match.newStock } : p;
+      })
     );
+  };
+
+  /** Kirim retur/void ke server LAN; bila gagal karena jaringan, masuk antrean kirim ulang. */
+  const sendStockReturnToServer = (payload: LANStockReturnPayload) => {
+    pushStockReturnToLANServer(payload)
+      .then((res) => {
+        if (res.success) {
+          applyServerStocks(res.updatedStocks);
+        } else if (!res.skipped && !(res.status && res.status >= 400 && res.status < 500 && res.status !== 401 && res.status !== 429)) {
+          queueLANStockReturn(payload);
+        } else if (!res.skipped) {
+          console.error('[LAN] Server menolak retur:', payload.key, res.error);
+        }
+      })
+      .catch(() => queueLANStockReturn(payload));
+  };
+
+  const voidTransaction = (txId: string) => {
+    const tx = transactions.find((t) => t.id === txId);
+    if (!tx || tx.status === 'void' || tx.status === 'refunded') return;
+
+    setTransactions((prev) =>
+      prev.map((t) => (t.id === txId ? { ...t, status: 'void' as const } : t))
+    );
+
+    // Barang dari transaksi yang dibatalkan kembali ke stok. Jika sebagian sudah diretur
+    // (returnedAmount > 0), stok tidak dikembalikan otomatis agar tidak terhitung dua kali.
+    const alreadyReturned = (tx.returnedAmount || 0) > 0;
+    const items = alreadyReturned
+      ? []
+      : (tx.items || [])
+          .map((item: any) => ({
+            productId: item.product?.id || item.productId,
+            quantity: Number(item.quantity) || 1,
+            unitMultiplier: Number(item.selectedUnit?.multiplier) || 1,
+          }))
+          .filter((i) => i.productId);
+    if (alreadyReturned) {
+      console.warn('[POS] Void transaksi yang sudah diretur sebagian: stok tidak dikembalikan otomatis.', tx.invoiceNumber);
+    }
+
+    if (items.length > 0) {
+      setProducts((prev) =>
+        prev.map((p) => {
+          const back = items.filter((i) => i.productId === p.id).reduce((sum, i) => sum + i.quantity * i.unitMultiplier, 0);
+          return back > 0 ? { ...p, stock: p.stock + back } : p;
+        })
+      );
+    }
+
+    sendStockReturnToServer({
+      key: tx.id,
+      kind: 'void',
+      items,
+      transactionId: tx.id,
+      transactionUpdate: { status: 'void' },
+    });
   };
 
   const processSalesReturn = (returnData: Omit<SalesReturn, 'id' | 'createdAt'>): SalesReturn => {
@@ -2031,34 +2128,57 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSalesReturns((prev) => [newReturn, ...prev]);
 
     // 2. Update transaction status and metadata
+    const originalTx = transactions.find(
+      (tx) => tx.id === returnData.transactionId || tx.invoiceNumber === returnData.invoiceNumber
+    );
+    const newReturnedAmount = (originalTx?.returnedAmount || 0) + returnData.totalRefundAmount;
+    const transactionUpdate = {
+      status: originalTx && newReturnedAmount >= originalTx.finalTotal ? 'refunded' : originalTx?.status,
+      returnedAmount: newReturnedAmount,
+      returnReason: returnData.note || returnData.items.map((i) => i.reason).join(', '),
+      returnedAt: newReturn.createdAt,
+    };
     setTransactions((prev) =>
-      prev.map((tx) => {
-        if (tx.id === returnData.transactionId || tx.invoiceNumber === returnData.invoiceNumber) {
-          const isFullReturn = returnData.totalRefundAmount >= tx.finalTotal;
-          return {
-            ...tx,
-            status: isFullReturn ? ('refunded' as const) : tx.status,
-            returnedAmount: (tx.returnedAmount || 0) + returnData.totalRefundAmount,
-            returnReason: returnData.note || returnData.items.map((i) => i.reason).join(', '),
-            returnedAt: new Date().toISOString(),
-          };
-        }
-        return tx;
-      })
+      prev.map((tx) =>
+        tx.id === returnData.transactionId || tx.invoiceNumber === returnData.invoiceNumber
+          ? ({ ...tx, ...transactionUpdate } as Transaction)
+          : tx
+      )
     );
 
-    // 3. Restock returned items to inventory if marked
-    returnData.items.forEach((item) => {
-      if (item.restockToInventory) {
-        setProducts((prev) =>
-          prev.map((p) => {
-            if (p.id === item.productId) {
-              return { ...p, stock: p.stock + item.quantity };
-            }
-            return p;
-          })
-        );
-      }
+    // 3. Restock returned items to inventory if marked (dikali isi satuan, mis. 1 Dus = 12 pcs)
+    const restockItems = returnData.items
+      .filter((item) => item.restockToInventory && item.quantity > 0)
+      .map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitMultiplier: item.unitMultiplier && item.unitMultiplier > 0 ? item.unitMultiplier : 1,
+      }));
+    if (restockItems.length > 0) {
+      setProducts((prev) =>
+        prev.map((p) => {
+          const back = restockItems
+            .filter((i) => i.productId === p.id)
+            .reduce((sum, i) => sum + i.quantity * i.unitMultiplier, 0);
+          return back > 0 ? { ...p, stock: p.stock + back } : p;
+        })
+      );
+    }
+
+    // 4. Laporkan ke server: status transaksi (laporan omzet) dan stok yang kembali (server LAN)
+    if (originalTx) {
+      fetch('/api/pos/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...originalTx, ...transactionUpdate }),
+      }).catch((err) => console.warn('[POS] Gagal mengirim status retur ke server:', err));
+    }
+    sendStockReturnToServer({
+      key: newReturn.id,
+      kind: 'return',
+      items: restockItems,
+      transactionId: originalTx?.id || returnData.transactionId,
+      transactionUpdate,
     });
 
     return newReturn;

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkAdminAccess, isAllowedOrigin, isSameOrigin, isTrustedHost, validateTransaction } from '../src/server/security.ts';
+import { checkAdminAccess, checkLanKey, isAllowedOrigin, isSameOrigin, isTrustedHost, toPublicProduct, validateTransaction } from '../src/server/security.ts';
 
 const base = { origin: undefined, host: 'localhost:3000', providedToken: undefined, adminToken: undefined };
 
@@ -93,4 +93,28 @@ test('admin: serangan DNS-rebinding (Host & Origin domain publik dari localhost)
     adminToken: undefined,
   });
   assert.equal(r.allowed, false);
+});
+
+test('isAllowedOrigin: hanya aplikasi kasir (port sama) di jaringan lokal, bukan halaman lain', () => {
+  assert.equal(isAllowedOrigin('http://192.168.1.20:3000', '192.168.1.5:3000'), true);
+  assert.equal(isAllowedOrigin('http://192.168.1.1', '192.168.1.5:3000'), false);
+  assert.equal(isAllowedOrigin('http://192.168.1.99:8080', '192.168.1.5:3000'), false);
+});
+
+test('checkLanKey: tanpa LAN_KEY semua boleh; dengan LAN_KEY perangkat lain wajib kunci', () => {
+  assert.equal(checkLanKey({ lanKey: '', remoteAddress: '192.168.1.20' }), true);
+  assert.equal(checkLanKey({ lanKey: 'abc', remoteAddress: '127.0.0.1' }), true);
+  assert.equal(checkLanKey({ lanKey: 'abc', remoteAddress: '::ffff:192.168.1.5', localAddresses: ['192.168.1.5'] }), true);
+  assert.equal(checkLanKey({ lanKey: 'abc', remoteAddress: '192.168.1.20' }), false);
+  assert.equal(checkLanKey({ lanKey: 'abc', remoteAddress: '192.168.1.20', headerKey: 'salah' }), false);
+  assert.equal(checkLanKey({ lanKey: 'abc', remoteAddress: '192.168.1.20', headerKey: 'abc' }), true);
+  assert.equal(checkLanKey({ lanKey: 'abc', remoteAddress: '192.168.1.20', cookieKey: 'abc' }), true);
+});
+
+test('toPublicProduct: harga modal dan data internal tidak ikut', () => {
+  const p = toPublicProduct({ id: 'a', name: 'X', price: 10, costPrice: 7, supplierId: 's', wholesaleUnits: [{ name: 'Dus', multiplier: 12, price: 100, costPrice: 80 }] });
+  assert.equal(p.costPrice, undefined);
+  assert.equal(p.supplierId, undefined);
+  assert.equal(p.wholesaleUnits[0].costPrice, undefined);
+  assert.equal(p.wholesaleUnits[0].price, 100);
 });

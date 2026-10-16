@@ -3,7 +3,8 @@ import path from 'path';
 import fs from 'fs';
 
 // Database storage configuration
-const DATA_DIR = path.join(process.cwd(), 'data');
+// POS_DATA_DIR bisa diisi untuk tes otomatis; default folder data/ di dalam aplikasi.
+const DATA_DIR = process.env.POS_DATA_DIR || path.join(process.cwd(), 'data');
 const SQLITE_FILE = path.join(DATA_DIR, 'pos-master.sqlite');
 const LEGACY_JSON_FILE = path.join(DATA_DIR, 'lan-database.json');
 
@@ -29,6 +30,48 @@ export function getSqliteClient(): Client {
     });
   }
   return client;
+}
+
+// -------------------------------------------------------------
+// extra_json: salinan lengkap objek dari aplikasi.
+// Kolom tabel hanya memuat sebagian field; tanpa extra_json, field seperti
+// wholesaleUnits, image, aisle, priceHistory, pointsHistory hilang setelah restart.
+// -------------------------------------------------------------
+const TABLES_WITH_EXTRA = ['products', 'customers', 'suppliers', 'transactions', 'held_orders'];
+
+async function ensureExtraJsonColumns(db: Client): Promise<void> {
+  for (const table of TABLES_WITH_EXTRA) {
+    const info = await db.execute(`PRAGMA table_info(${table});`);
+    const hasColumn = info.rows.some((r: any) => r.name === 'extra_json' || r[1] === 'extra_json');
+    if (!hasColumn) await db.execute(`ALTER TABLE ${table} ADD COLUMN extra_json TEXT;`);
+  }
+}
+
+function toExtraJson(obj: any, omit: string[] = []): string | null {
+  if (!obj || typeof obj !== 'object') return null;
+  const copy: any = { ...obj };
+  for (const k of omit) delete copy[k];
+  try {
+    return JSON.stringify(copy);
+  } catch {
+    return null;
+  }
+}
+
+/** Gabungkan objek lengkap (extra_json) dengan nilai kolom; nilai kolom yang terisi selalu menang. */
+function mergeWithExtra(row: any, columns: Record<string, any>): any {
+  let extra: any = {};
+  if (row?.extra_json) {
+    try {
+      extra = JSON.parse(row.extra_json) || {};
+    } catch {}
+  }
+  const out: any = { ...extra };
+  for (const [k, v] of Object.entries(columns)) {
+    if (v !== undefined && v !== null) out[k] = v;
+    else if (!(k in out)) out[k] = v;
+  }
+  return out;
 }
 
 export async function initSqliteMasterDatabase(): Promise<void> {
@@ -195,6 +238,18 @@ export async function initSqliteMasterDatabase(): Promise<void> {
       );
     `);
 
+    // Catatan pergerakan stok (penjualan, retur, void). Kunci unik = pengaman agar
+    // transaksi yang dikirim ulang tidak memotong / menambah stok dua kali.
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS stock_movements (
+        key TEXT PRIMARY KEY,
+        kind TEXT NOT NULL,
+        items_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+    `);
+    await ensureExtraJsonColumns(db);
+
     // 3. Data Migration / Seeding from JSON or Defaults
     const countCheck = await db.execute('SELECT COUNT(*) as count FROM products;');
     const prodCount = Number(countCheck.rows[0]?.count ?? 0);
@@ -354,59 +409,14 @@ async function seedFromLegacyJsonOrDefaults(): Promise<void> {
 // -------------------------------------------------------------
 // PRODUCT OPERATIONS (ACID)
 // -------------------------------------------------------------
-export async function getAllProducts(): Promise<any[]> {
-  const db = getSqliteClient();
-  const res = await db.execute(`
-    SELECT * FROM products ORDER BY name ASC;
-  `);
-
-  return res.rows.map((r: any) => {
-    let units: any = undefined;
-    if (r.units_json) {
-      try {
-        units = JSON.parse(r.units_json);
-      } catch {}
-    }
-    return {
-      id: r.id,
-      name: r.name,
-      brand: r.brand,
-      sku: r.sku,
-      barcode: r.barcode,
-      categoryId: r.category_id,
-      price: Number(r.price),
-      costPrice: Number(r.cost_price),
-      stock: Number(r.stock),
-      minStock: Number(r.min_stock),
-      unit: r.unit || 'pcs',
-      units,
-      hasExpiry: Boolean(r.has_expiry),
-      expiryDate: r.expiry_date,
-      imageUrl: r.image_url,
-      isActive: Boolean(r.is_active),
-      createdAt: r.created_at,
-      updatedAt: r.updated_at,
-    };
-  });
-}
-
-export async function getProductByIdOrBarcode(identifier: string): Promise<any | null> {
-  if (!identifier) return null;
-  const db = getSqliteClient();
-  const res = await db.execute({
-    sql: `SELECT * FROM products WHERE id = ? OR barcode = ? OR sku = ? LIMIT 1;`,
-    args: [identifier, identifier, identifier],
-  });
-
-  if (res.rows.length === 0) return null;
-  const r: any = res.rows[0];
+function mapRowToProduct(r: any): any {
   let units: any = undefined;
   if (r.units_json) {
     try {
       units = JSON.parse(r.units_json);
     } catch {}
   }
-  return {
+  return mergeWithExtra(r, {
     id: r.id,
     name: r.name,
     brand: r.brand,
@@ -418,14 +428,35 @@ export async function getProductByIdOrBarcode(identifier: string): Promise<any |
     stock: Number(r.stock),
     minStock: Number(r.min_stock),
     unit: r.unit || 'pcs',
-    units,
+    units: r.extra_json ? undefined : units,
     hasExpiry: Boolean(r.has_expiry),
     expiryDate: r.expiry_date,
     imageUrl: r.image_url,
     isActive: Boolean(r.is_active),
     createdAt: r.created_at,
     updatedAt: r.updated_at,
-  };
+  });
+}
+
+export async function getAllProducts(): Promise<any[]> {
+  const db = getSqliteClient();
+  const res = await db.execute(`
+    SELECT * FROM products ORDER BY name ASC;
+  `);
+
+  return res.rows.map(mapRowToProduct);
+}
+
+export async function getProductByIdOrBarcode(identifier: string): Promise<any | null> {
+  if (!identifier) return null;
+  const db = getSqliteClient();
+  const res = await db.execute({
+    sql: `SELECT * FROM products WHERE id = ? OR barcode = ? OR sku = ? LIMIT 1;`,
+    args: [identifier, identifier, identifier],
+  });
+
+  if (res.rows.length === 0) return null;
+  return mapRowToProduct(res.rows[0]);
 }
 
 export async function upsertProducts(products: any[]): Promise<number> {
@@ -441,8 +472,8 @@ export async function upsertProducts(products: any[]): Promise<number> {
       sql: `
         INSERT INTO products (
           id, name, brand, sku, barcode, category_id, price, cost_price, stock, min_stock,
-          unit, units_json, has_expiry, expiry_date, image_url, is_active, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          unit, units_json, has_expiry, expiry_date, image_url, is_active, created_at, updated_at, extra_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           brand = excluded.brand,
@@ -459,7 +490,8 @@ export async function upsertProducts(products: any[]): Promise<number> {
           expiry_date = excluded.expiry_date,
           image_url = excluded.image_url,
           is_active = excluded.is_active,
-          updated_at = excluded.updated_at;
+          updated_at = excluded.updated_at,
+          extra_json = excluded.extra_json;
       `,
       args: [
         p.id,
@@ -473,13 +505,14 @@ export async function upsertProducts(products: any[]): Promise<number> {
         Number(p.stock || 0),
         Number(p.minStock ?? 5),
         p.unit || 'pcs',
-        p.units ? JSON.stringify(p.units) : null,
+        p.units ? JSON.stringify(p.units) : p.wholesaleUnits ? JSON.stringify(p.wholesaleUnits) : null,
         p.hasExpiry ? 1 : 0,
         p.expiryDate || null,
         p.imageUrl || null,
         p.isActive !== false ? 1 : 0,
         p.createdAt || now,
         p.updatedAt || now,
+        toExtraJson(p),
       ],
     };
   });
@@ -488,45 +521,77 @@ export async function upsertProducts(products: any[]): Promise<number> {
   return count;
 }
 
-export async function deductProductStock(
-  items: Array<{ productId: string; quantity: number; unitMultiplier?: number }>
-): Promise<Array<{ productId: string; newStock: number }>> {
-  if (!items || items.length === 0) return [];
+export interface StockMovementItem {
+  productId: string;
+  /** Perubahan stok dalam satuan dasar: negatif = keluar (penjualan), positif = masuk (retur/void). */
+  delta: number;
+}
+
+/**
+ * Terapkan pergerakan stok secara atomik dan idempoten.
+ * Kunci `key` dicatat di tabel stock_movements dalam transaksi SQLite yang sama dengan
+ * perubahan stok, sehingga pengiriman ulang dengan kunci yang sama tidak mengubah stok lagi.
+ */
+export async function applyStockMovement(
+  key: string,
+  kind: string,
+  items: StockMovementItem[]
+): Promise<{ duplicate: boolean; updatedStocks: Array<{ productId: string; newStock: number }> }> {
   const db = getSqliteClient();
   const now = new Date().toISOString();
+  const valid = (items || []).filter((i) => i && i.productId && Number.isFinite(i.delta) && i.delta !== 0);
 
-  const updatedStocks: Array<{ productId: string; newStock: number }> = [];
+  const statements: Array<{ sql: string; args: any[] }> = [
+    {
+      sql: 'INSERT INTO stock_movements (key, kind, items_json, created_at) VALUES (?, ?, ?, ?);',
+      args: [key, kind, JSON.stringify(valid), now],
+    },
+    ...valid.map((i) => ({
+      sql: 'UPDATE products SET stock = MAX(0, stock + ?), updated_at = ? WHERE id = ?;',
+      args: [i.delta, now, i.productId],
+    })),
+  ];
 
-  for (const item of items) {
-    const pId = item.productId;
-    const mult = item.unitMultiplier || 1;
-    const deductQty = (item.quantity || 1) * mult;
-
-    const cur = await db.execute({
-      sql: 'SELECT stock FROM products WHERE id = ?;',
-      args: [pId],
-    });
-
-    if (cur.rows.length > 0) {
-      const currentStock = Number(cur.rows[0]?.stock || 0);
-      const newStock = Math.max(0, currentStock - deductQty);
-
-      await db.execute({
-        sql: 'UPDATE products SET stock = ?, updated_at = ? WHERE id = ?;',
-        args: [newStock, now, pId],
-      });
-
-      updatedStocks.push({ productId: pId, newStock });
+  try {
+    await db.batch(statements, 'write');
+  } catch (err: any) {
+    const msg = String(err?.message || err);
+    if (msg.includes('UNIQUE') || msg.includes('PRIMARY KEY') || err?.code === 'SQLITE_CONSTRAINT') {
+      return { duplicate: true, updatedStocks: [] };
     }
+    throw err;
   }
 
-  return updatedStocks;
+  const ids = [...new Set(valid.map((i) => i.productId))];
+  if (ids.length === 0) return { duplicate: false, updatedStocks: [] };
+  const res = await db.execute({
+    sql: `SELECT id, stock FROM products WHERE id IN (${ids.map(() => '?').join(',')});`,
+    args: ids,
+  });
+  return {
+    duplicate: false,
+    updatedStocks: res.rows.map((r: any) => ({ productId: String(r.id), newStock: Number(r.stock) })),
+  };
+}
+
+/** Apakah kunci pergerakan stok ini sudah pernah diterapkan? */
+export async function hasStockMovement(key: string): Promise<boolean> {
+  const db = getSqliteClient();
+  const res = await db.execute({ sql: 'SELECT 1 FROM stock_movements WHERE key = ? LIMIT 1;', args: [key] });
+  return res.rows.length > 0;
 }
 
 // -------------------------------------------------------------
 // TRANSACTION OPERATIONS (ACID)
 // -------------------------------------------------------------
 function mapRowToTransaction(r: any) {
+  const columns: any = mapRowToTransactionColumns(r);
+  // Objek pelanggan lengkap (tier, poin, dll.) ada di extra_json; kolom hanya id/nama/telepon.
+  if (r.extra_json && r.extra_json.includes('"customer"')) delete columns.customer;
+  return mergeWithExtra(r, columns);
+}
+
+function mapRowToTransactionColumns(r: any) {
   let items: any[] = [];
   let payment: any = { method: r.payment_method };
   try {
@@ -755,8 +820,8 @@ export async function upsertTransactions(
           id, invoice_number, order_type, table_number, customer_id, customer_name, customer_phone,
           items_json, subtotal, tax_amount, service_charge_amount, discount_amount, voucher_code,
           points_used, points_discount, points_earned, final_total, payment_method, payment_details_json,
-          cashier_name, branch_name, status, sync_status, synced_at, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          cashier_name, branch_name, status, sync_status, synced_at, created_at, updated_at, extra_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           invoice_number = excluded.invoice_number,
           order_type = excluded.order_type,
@@ -781,7 +846,8 @@ export async function upsertTransactions(
           status = excluded.status,
           sync_status = excluded.sync_status,
           synced_at = excluded.synced_at,
-          updated_at = excluded.updated_at;
+          updated_at = excluded.updated_at,
+          extra_json = excluded.extra_json;
       `,
       args: [
         txId,
@@ -810,6 +876,7 @@ export async function upsertTransactions(
         now,
         tx.createdAt || now,
         now,
+        toExtraJson(tx, ['items']),
       ],
     });
 
@@ -890,20 +957,22 @@ export async function upsertTransactions(
 export async function getAllCustomers(): Promise<any[]> {
   const db = getSqliteClient();
   const res = await db.execute(`SELECT * FROM customers ORDER BY name ASC;`);
-  return res.rows.map((r: any) => ({
-    id: r.id,
-    name: r.name,
-    phone: r.phone,
-    email: r.email,
-    tier: r.tier || 'Silver',
-    points: Number(r.points || 0),
-    totalSpent: Number(r.total_spent || 0),
-    ordersCount: Number(r.orders_count || 0),
-    address: r.address,
-    notes: r.notes,
-    createdAt: r.created_at,
-    updatedAt: r.updated_at,
-  }));
+  return res.rows.map((r: any) =>
+    mergeWithExtra(r, {
+      id: r.id,
+      name: r.name,
+      phone: r.phone,
+      email: r.email,
+      tier: r.tier || 'Silver',
+      points: Number(r.points || 0),
+      totalSpent: Number(r.total_spent || 0),
+      ordersCount: Number(r.orders_count || 0),
+      address: r.address,
+      notes: r.notes,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    })
+  );
 }
 
 export async function upsertCustomers(customers: any[]): Promise<number> {
@@ -913,8 +982,8 @@ export async function upsertCustomers(customers: any[]): Promise<number> {
 
   const statements = customers.map((c) => ({
     sql: `
-      INSERT INTO customers (id, name, phone, email, tier, points, total_spent, orders_count, address, notes, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO customers (id, name, phone, email, tier, points, total_spent, orders_count, address, notes, created_at, updated_at, extra_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         phone = excluded.phone,
@@ -925,7 +994,8 @@ export async function upsertCustomers(customers: any[]): Promise<number> {
         orders_count = excluded.orders_count,
         address = excluded.address,
         notes = excluded.notes,
-        updated_at = excluded.updated_at;
+        updated_at = excluded.updated_at,
+        extra_json = excluded.extra_json;
     `,
     args: [
       c.id,
@@ -940,6 +1010,7 @@ export async function upsertCustomers(customers: any[]): Promise<number> {
       c.notes || null,
       c.createdAt || now,
       c.updatedAt || now,
+      toExtraJson(c),
     ],
   }));
 
@@ -953,18 +1024,20 @@ export async function upsertCustomers(customers: any[]): Promise<number> {
 export async function getAllSuppliers(): Promise<any[]> {
   const db = getSqliteClient();
   const res = await db.execute(`SELECT * FROM suppliers ORDER BY name ASC;`);
-  return res.rows.map((r: any) => ({
-    id: r.id,
-    name: r.name,
-    code: r.code,
-    contactPerson: r.contact_person,
-    phone: r.phone,
-    email: r.email,
-    address: r.address,
-    leadTimeDays: Number(r.lead_time_days || 3),
-    createdAt: r.created_at,
-    updatedAt: r.updated_at,
-  }));
+  return res.rows.map((r: any) =>
+    mergeWithExtra(r, {
+      id: r.id,
+      name: r.name,
+      code: r.code,
+      contactPerson: r.contact_person,
+      phone: r.phone,
+      email: r.email,
+      address: r.address,
+      leadTimeDays: Number(r.lead_time_days || 3),
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    })
+  );
 }
 
 export async function upsertSuppliers(suppliers: any[]): Promise<number> {
@@ -974,8 +1047,8 @@ export async function upsertSuppliers(suppliers: any[]): Promise<number> {
 
   const statements = suppliers.map((s) => ({
     sql: `
-      INSERT INTO suppliers (id, name, code, contact_person, phone, email, address, lead_time_days, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO suppliers (id, name, code, contact_person, phone, email, address, lead_time_days, created_at, updated_at, extra_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         code = excluded.code,
@@ -984,7 +1057,8 @@ export async function upsertSuppliers(suppliers: any[]): Promise<number> {
         email = excluded.email,
         address = excluded.address,
         lead_time_days = excluded.lead_time_days,
-        updated_at = excluded.updated_at;
+        updated_at = excluded.updated_at,
+        extra_json = excluded.extra_json;
     `,
     args: [
       s.id,
@@ -997,6 +1071,7 @@ export async function upsertSuppliers(suppliers: any[]): Promise<number> {
       Number(s.leadTimeDays || 3),
       s.createdAt || now,
       s.updatedAt || now,
+      toExtraJson(s),
     ],
   }));
 
@@ -1015,7 +1090,7 @@ export async function getAllHeldOrders(): Promise<any[]> {
     try {
       if (r.items_json) items = JSON.parse(r.items_json);
     } catch {}
-    return {
+    return mergeWithExtra(r, {
       id: r.id,
       referenceName: r.reference_name,
       cashierName: r.cashier_name,
@@ -1024,7 +1099,7 @@ export async function getAllHeldOrders(): Promise<any[]> {
       subtotal: Number(r.subtotal || 0),
       createdAt: r.created_at,
       updatedAt: r.updated_at,
-    };
+    });
   });
 }
 
@@ -1033,15 +1108,16 @@ export async function saveHeldOrder(order: any): Promise<void> {
   const now = new Date().toISOString();
   await db.execute({
     sql: `
-      INSERT INTO held_orders (id, reference_name, cashier_name, order_type, items_json, subtotal, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO held_orders (id, reference_name, cashier_name, order_type, items_json, subtotal, created_at, updated_at, extra_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         reference_name = excluded.reference_name,
         cashier_name = excluded.cashier_name,
         order_type = excluded.order_type,
         items_json = excluded.items_json,
         subtotal = excluded.subtotal,
-        updated_at = excluded.updated_at;
+        updated_at = excluded.updated_at,
+        extra_json = excluded.extra_json;
     `,
     args: [
       order.id,
@@ -1052,6 +1128,7 @@ export async function saveHeldOrder(order: any): Promise<void> {
       Number(order.subtotal || 0),
       order.createdAt || now,
       now,
+      toExtraJson(order, ['items']),
     ],
   });
 }

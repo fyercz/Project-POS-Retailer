@@ -78,6 +78,7 @@ export const TransactionsView: React.FC = () => {
       productName: string;
       maxQty: number;
       returnQty: number;
+      unitMultiplier: number;
       unitPrice: number;
       reason: string;
       restockToInventory: boolean;
@@ -93,6 +94,7 @@ export const TransactionsView: React.FC = () => {
         productId: i.product?.id || (i as any).productId || '',
         productName: i.product?.name || (i as any).productName || 'Produk',
         maxQty: i.quantity || 1,
+        unitMultiplier: Number(i.selectedUnit?.multiplier) || 1,
         returnQty: 0,
         unitPrice: i.unitPrice ?? i.product?.price ?? (i as any).price ?? 0,
         reason: 'Barang Cacat / Rusak Fisik',
@@ -146,6 +148,7 @@ export const TransactionsView: React.FC = () => {
         totalRefund: i.returnQty * i.unitPrice,
         reason: i.reason,
         restockToInventory: i.restockToInventory,
+        unitMultiplier: i.unitMultiplier,
       }));
 
     if (activeReturnItems.length === 0) return;
