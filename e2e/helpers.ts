@@ -29,3 +29,30 @@ export async function addProduct(
   await page.getByTestId('product-submit').click();
   await expect(page.getByTestId('product-submit')).toBeHidden();
 }
+
+/** Tunggu sampai sebuah daftar (array) dengan panjang minimal tertentu tersimpan di IndexedDB aplikasi. */
+export async function waitForStoredArray(page: Page, key: string, minLength = 0) {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          ([k, min]) =>
+            new Promise<number>((resolve) => {
+              const open = indexedDB.open('ulilmart_pos_main_db', 1);
+              open.onerror = () => resolve(-1);
+              open.onsuccess = () => {
+                try {
+                  const req = open.result.transaction('pos_state_store', 'readonly').objectStore('pos_state_store').get(k as string);
+                  req.onsuccess = () => resolve(Array.isArray(req.result) && req.result.length >= (min as number) ? 1 : 0);
+                  req.onerror = () => resolve(-1);
+                } catch {
+                  resolve(-1);
+                }
+              };
+            }),
+          [key, minLength] as const
+        ),
+      { timeout: 15_000 }
+    )
+    .toBe(1);
+}

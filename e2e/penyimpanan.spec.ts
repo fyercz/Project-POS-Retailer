@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerOwner } from './helpers';
+import { registerOwner, waitForStoredArray } from './helpers';
 
 /**
  * Regresi bug kritis: data dulu hanya dimuat dari localStorage (kuota ~5 MB). Setelah penuh,
@@ -10,6 +10,10 @@ test('muat ulang memakai data IndexedDB, bukan salinan basi di localStorage', as
     window.print = () => {};
   });
   await registerOwner(page);
+  // Pastikan akun Owner & transaksi kosong sudah tersimpan, agar simpanan otomatis aplikasi
+  // tidak menimpa data yang disuntikkan di bawah
+  await waitForStoredArray(page, 'pos_employees_v2', 1);
+  await waitForStoredArray(page, 'pos_retail_tx_v3', 0);
 
   const TOTAL = 2000;
   await page.evaluate(async (total) => {
