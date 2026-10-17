@@ -41,7 +41,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
   const { products, updateProductStock, settings, activeEmployee } = usePOS();
 
   const [scannedType, setScannedType] = useState<'shelf_image' | 'video_stream'>('shelf_image');
-  const [shelfArea, setShelfArea] = useState<string>('Lorong 1 - Rak Sembako & Makanan');
+  const [shelfArea, setShelfArea] = useState<string>('');
   const [capturedFrames, setCapturedFrames] = useState<string[]>([]);
   const [isCapturingVideo, setIsCapturingVideo] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -628,6 +628,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                   onChange={(e) => setShelfArea(e.target.value)}
                   className="px-2.5 py-1 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium"
                 >
+                  <option value="">-- Pilih area (opsional) --</option>
                   <option value="Lorong 1 - Rak Sembako & Makanan">Lorong 1 - Rak Sembako & Makanan</option>
                   <option value="Lorong 2 - Rak Minuman Dingin & Susu">Lorong 2 - Rak Minuman & Susu</option>
                   <option value="Lorong 3 - Rak Snack & Biskuit">Lorong 3 - Rak Snack & Biskuit</option>
@@ -681,7 +682,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                     Kamera AI Siap Memindai Rak
                   </span>
                   <span className="text-[10px] text-white/80 font-mono bg-black/50 px-2 py-0.5 rounded">
-                    Area: {shelfArea}
+                    Area: {shelfArea || '-'}
                   </span>
                 </div>
               </div>

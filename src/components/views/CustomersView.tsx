@@ -61,8 +61,9 @@ export const CustomersView: React.FC = () => {
 
   // Manual point adjustment form states inside detail modal
   const [isAdjustingPoints, setIsAdjustingPoints] = useState(false);
-  const [adjustPointsDelta, setAdjustPointsDelta] = useState<number>(50);
-  const [adjustReason, setAdjustReason] = useState<string>('Bonus Loyalitas Khusus');
+  // Penyesuaian poin dimulai kosong (dulu otomatis 50 poin 'Bonus Loyalitas Khusus')
+  const [adjustPointsDelta, setAdjustPointsDelta] = useState<number>(0);
+  const [adjustReason, setAdjustReason] = useState<string>('');
   const [adjustType, setAdjustType] = useState<'add' | 'subtract'>('add');
 
   const filteredCustomers = customers.filter((c) => {
@@ -132,6 +133,8 @@ export const CustomersView: React.FC = () => {
       setDetailCustomer(updated);
     }
     setIsAdjustingPoints(false);
+    setAdjustPointsDelta(0);
+    setAdjustReason('');
   };
 
   // Tier thresholds for progress bar
@@ -691,10 +694,11 @@ export const CustomersView: React.FC = () => {
                         type="number"
                         min={1}
                         step={1}
-                        value={adjustPointsDelta}
+                        required
+                        value={adjustPointsDelta || ''}
                         onChange={(e) => setAdjustPointsDelta(Number(e.target.value))}
                         className="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-900 dark:text-white"
-                        placeholder="50"
+                        placeholder="0"
                       />
                     </div>
 

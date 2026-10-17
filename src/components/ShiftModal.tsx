@@ -32,6 +32,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
     currentShift,
     closeCurrentShift,
     startNewShift,
+    updateShiftStartingCash,
     settings,
   } = usePOS();
 
@@ -39,6 +40,12 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
   const handleCloseModal = onClose || (() => setIsShiftModalOpen(false));
 
   const [actualCash, setActualCash] = useState<string>('');
+  const [isEditingStartingCash, setIsEditingStartingCash] = useState(false);
+  const [startingCashInput, setStartingCashInput] = useState<string>('');
+  const [startingCashError, setStartingCashError] = useState('');
+  const canEditStartingCash =
+    Boolean(currentShift) &&
+    (activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor' || (currentShift?.totalTransactions || 0) === 0);
   const [notes, setNotes] = useState<string>('');
   const [shiftClosedResult, setShiftClosedResult] = useState<any>(null);
 
@@ -294,12 +301,70 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
               {/* 4 Metric Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
-                  <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                    Modal Kas Awal
-                  </span>
-                  <div className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-1 font-mono">
-                    {formatRupiah(currentShift?.startingCash || 0)}
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                      Modal Kas Awal
+                    </span>
+                    {canEditStartingCash && !isEditingStartingCash && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStartingCashInput(currentShift?.startingCash ? String(currentShift.startingCash) : '');
+                          setStartingCashError('');
+                          setIsEditingStartingCash(true);
+                        }}
+                        className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                      >
+                        Ubah
+                      </button>
+                    )}
                   </div>
+                  {isEditingStartingCash ? (
+                    <div className="mt-1 space-y-1">
+                      <input
+                        type="number"
+                        min={0}
+                        step={1000}
+                        autoFocus
+                        value={startingCashInput}
+                        onChange={(e) => setStartingCashInput(e.target.value)}
+                        placeholder="Uang di laci saat shift dimulai"
+                        className="w-full px-2 py-1 text-xs font-mono font-bold rounded-lg border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                      />
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const value = Number(startingCashInput);
+                            if (startingCashInput.trim() === '' || !Number.isFinite(value) || value < 0) {
+                              setStartingCashError('Isi jumlah uang di laci (boleh 0).');
+                              return;
+                            }
+                            if (!updateShiftStartingCash(value)) {
+                              setStartingCashError('Modal awal hanya bisa diubah sebelum transaksi pertama, atau oleh Supervisor/Owner.');
+                              return;
+                            }
+                            setIsEditingStartingCash(false);
+                          }}
+                          className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold cursor-pointer"
+                        >
+                          Simpan
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingStartingCash(false)}
+                          className="px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-700 text-[10px] font-bold cursor-pointer"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                      {startingCashError && <p className="text-[10px] text-rose-600 dark:text-rose-400">{startingCashError}</p>}
+                    </div>
+                  ) : (
+                    <div className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-1 font-mono">
+                      {formatRupiah(currentShift?.startingCash || 0)}
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-teal-50/60 dark:bg-teal-950/20 border border-teal-200/60 dark:border-teal-900/40">

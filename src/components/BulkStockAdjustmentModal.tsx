@@ -70,10 +70,12 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
   // Batch action presets
   const [uniformExpiryDate, setUniformExpiryDate] = useState('');
   const [uniformQtyMode, setUniformQtyMode] = useState<'add' | 'subtract' | 'set'>('add');
-  const [uniformQtyValue, setUniformQtyValue] = useState<number>(10);
+  const [uniformQtyValue, setUniformQtyValue] = useState<number>(0);
 
   // Audit notes & reason
-  const [selectedReason, setSelectedReason] = useState(ADJUSTMENT_REASONS[0]);
+  // Alasan wajib dipilih sendiri (catatan audit); dulu otomatis 'Stock Opname Rutin'
+  const [selectedReason, setSelectedReason] = useState('');
+  const [reasonError, setReasonError] = useState('');
   const [customNotes, setCustomNotes] = useState('');
 
   // Confirmation state
@@ -305,6 +307,10 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
   // Submit Bulk Adjustments
   const handleConfirmSave = () => {
     if (items.length === 0) return;
+    if (!selectedReason) {
+      setReasonError('Pilih alasan penyesuaian terlebih dahulu (dicatat untuk audit).');
+      return;
+    }
 
     const adjustments = items.map((i) => ({
       id: i.product.id,
@@ -508,10 +514,10 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                   <input
                     type="number"
                     min={0}
-                    value={uniformQtyValue}
+                    value={uniformQtyValue || ''}
                     onChange={(e) => setUniformQtyValue(Number(e.target.value))}
                     className="w-20 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    placeholder="10"
+                    placeholder="0"
                   />
                   <span className="text-[11px] text-slate-500">Unit</span>
                 </div>
@@ -841,15 +847,22 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               </label>
               <select
                 value={selectedReason}
-                onChange={(e) => setSelectedReason(e.target.value)}
+                onChange={(e) => {
+                  setSelectedReason(e.target.value);
+                  setReasonError('');
+                }}
                 className="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium"
               >
+                <option value="" disabled>
+                  -- Pilih alasan --
+                </option>
                 {ADJUSTMENT_REASONS.map((r) => (
                   <option key={r} value={r}>
                     {r}
                   </option>
                 ))}
               </select>
+              {reasonError && <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1">{reasonError}</p>}
             </div>
 
             <div>

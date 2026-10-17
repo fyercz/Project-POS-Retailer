@@ -283,17 +283,19 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
       );
 
       return {
-        productId: found?.id || products[0]?.id || 'prod-1',
+        // Barang yang tidak cocok dengan produk mana pun dibiarkan tanpa produk agar kasir
+        // memilihnya sendiri (dulu otomatis masuk ke produk PERTAMA di katalog, harga Rp 10.000).
+        productId: found?.id || '',
         productName: found?.name || item.productName,
         quantity: item.quantity || 1,
-        costPrice: item.costPrice || found?.costPrice || 10000,
-        subtotal: item.subtotal || (item.quantity * (item.costPrice || 10000)),
-        expiryDate: item.expiryDate || '2027-12-31',
+        costPrice: item.costPrice || found?.costPrice || 0,
+        subtotal: item.subtotal || (item.quantity || 1) * (item.costPrice || found?.costPrice || 0),
+        expiryDate: item.expiryDate || '',
       };
     });
 
     onApplyInvoice({
-      supplierName: scanResult.supplierName || 'PT Indomarco Adi Prima (Indofood)',
+      supplierName: scanResult.supplierName || '',
       invoiceNumber: scanResult.invoiceNumber || `INV-SCAN-${Date.now().toString().slice(-6)}`,
       items: mappedItems,
       discountAmount: scanResult.discountAmount || 0,

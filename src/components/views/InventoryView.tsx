@@ -4150,7 +4150,7 @@ export const InventoryView: React.FC = () => {
                 productId: i.productId,
                 quantity: i.quantity,
                 costPrice: i.costPrice,
-                expiryDate: i.expiryDate || '2027-12-31',
+                expiryDate: i.expiryDate || '',
               }))
             );
           }

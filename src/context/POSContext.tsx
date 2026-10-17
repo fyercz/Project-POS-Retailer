@@ -218,6 +218,7 @@ export interface POSAuthShiftContextType {
   updateEmployee: (id: string, updated: Partial<Employee>) => void;
   deleteEmployee: (id: string) => { success: boolean; message: string };
   startNewShift: (startingCash: number) => ShiftSummary;
+  updateShiftStartingCash: (startingCash: number) => boolean;
   closeCurrentShift: (actualCashEnding: number, notes?: string) => ShiftSummary;
 }
 
@@ -644,7 +645,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       employeeName: INITIAL_EMPLOYEES[0].name,
       role: INITIAL_EMPLOYEES[0].role,
       startTime: new Date().toISOString(),
-      startingCash: 500000, // Default Kas Awal Modal Rp 500.000
+      startingCash: 0, // Modal awal diisi kasir di layar Shift (dulu otomatis Rp 500.000)
       totalSales: 0,
       totalTransactions: 0,
       cashSales: 0,
@@ -1975,6 +1976,19 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newShift;
   };
 
+  /**
+   * Ubah modal awal laci kasir shift yang sedang berjalan. Kasir hanya boleh sebelum transaksi
+   * pertama (mengecilkan modal di tengah shift bisa menyembunyikan kekurangan kas);
+   * Supervisor/Owner boleh kapan saja.
+   */
+  const updateShiftStartingCash = (startingCash: number): boolean => {
+    if (!currentShift || !Number.isFinite(startingCash) || startingCash < 0) return false;
+    const isManager = activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor';
+    if (!isManager && (currentShift.totalTransactions || 0) > 0) return false;
+    setCurrentShift({ ...currentShift, startingCash: Math.round(startingCash) });
+    return true;
+  };
+
   const closeCurrentShift = (actualCashEnding: number, notes?: string): ShiftSummary => {
     const current = currentShift || {
       id: `shift-${Date.now()}`,
@@ -1982,7 +1996,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       employeeName: activeEmployee?.name || 'Kasir',
       role: activeEmployee?.role || 'cashier',
       startTime: new Date().toISOString(),
-      startingCash: 500000,
+      startingCash: 0,
       totalSales: 0,
       totalTransactions: 0,
       cashSales: 0,
@@ -3430,6 +3444,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateEmployee,
       deleteEmployee,
       startNewShift,
+      updateShiftStartingCash,
       closeCurrentShift,
     }),
     [
