@@ -19,6 +19,30 @@ export type { ExpenseCategory };
 // STANDARD CHART OF ACCOUNTS (COA) FOR ULILMART POS
 // ============================================================================
 
+// ----------------------------------------------------------------------------
+// Faktur pembelian: jenis pembayaran & sisa hutang
+// ----------------------------------------------------------------------------
+export function purchasePaymentKind(po: { paymentTerms?: string }): 'cash' | 'credit' | 'consignment' {
+  const termsLower = (po.paymentTerms || '').toLowerCase();
+  if (termsLower.includes('konsinyasi') || termsLower.includes('titip')) return 'consignment';
+  if (termsLower.includes('tempo') || termsLower.includes('kredit') || termsLower.includes('hari')) return 'credit';
+  return 'cash';
+}
+
+export function purchaseTotalOf(po: { finalTotal?: number; totalAmount?: number }): number {
+  return Number(po.finalTotal ?? po.totalAmount) || 0;
+}
+
+export function purchasePaidOf(po: { payments?: Array<{ amount: number }> }): number {
+  return (po.payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+}
+
+/** Sisa hutang faktur tempo/konsinyasi (0 untuk pembelian tunai atau yang sudah lunas). */
+export function purchaseOutstandingOf(po: SupplierPurchase): number {
+  if (purchasePaymentKind(po) === 'cash') return 0;
+  return Math.max(0, purchaseTotalOf(po) - purchasePaidOf(po));
+}
+
 export const STANDARD_CHART_OF_ACCOUNTS: ChartOfAccount[] = [
   // 1000 - ASET LANCAR
   { code: '1010', name: 'Kas di Laci Kasir', category: 'asset', normalBalance: 'debit', description: 'Uang fisik tunai di laci kasir' },
@@ -376,6 +400,34 @@ export function generateJournalEntries(options: {
     });
   }
 
+  // 5b. Jurnal pembayaran / pelunasan hutang supplier (tempo & konsinyasi)
+  for (const po of supplierPurchases) {
+    const kind = purchasePaymentKind(po);
+    if (kind === 'cash') continue;
+    for (const pay of po.payments || []) {
+      const amount = Number(pay.amount) || 0;
+      if (amount <= 0) continue;
+      const liabilityCode = kind === 'consignment' ? '2030' : '2010';
+      const liabilityName = kind === 'consignment' ? 'Utang Titipan / Konsinyasi Supplier' : 'Utang Dagang Supplier';
+      const sourceCode = pay.source === 'bank_transfer' ? '1020' : '1010';
+      const sourceName = pay.source === 'bank_transfer' ? 'Bank & Saldo QRIS' : 'Kas di Laci Kasir';
+      entries.push({
+        id: `jrnl-pay-${pay.id}`,
+        date: pay.date,
+        referenceNumber: po.invoiceNumber,
+        sourceType: 'supplier_payment',
+        description: `Pembayaran hutang ${po.supplierName} (${po.invoiceNumber})`,
+        lines: [
+          { accountCode: liabilityCode, accountName: liabilityName, debit: amount, credit: 0, memo: `Pelunasan ${po.invoiceNumber}` },
+          { accountCode: sourceCode, accountName: sourceName, debit: 0, credit: amount, memo: `Dibayar oleh ${pay.recordedBy}` },
+        ],
+        totalDebit: amount,
+        totalCredit: amount,
+        isBalanced: true,
+      });
+    }
+  }
+
   // 6. Journalize Operational Expenses
   for (const exp of expenses) {
     const amount = Number(exp.amount) || 0;
@@ -633,6 +685,16 @@ export function computeBalanceSheet(options: {
     }
   }
 
+  // Pembayaran hutang supplier mengurangi kas laci / bank sesuai sumber dananya
+  for (const po of supplierPurchases) {
+    if (purchasePaymentKind(po) === 'cash') continue;
+    for (const pay of po.payments || []) {
+      const amt = Number(pay.amount) || 0;
+      if (pay.source === 'bank_transfer') bankAndQris = Math.max(0, bankAndQris - amt);
+      else cashOnHand = Math.max(0, cashOnHand - amt);
+    }
+  }
+
   // Deduct cash purchases of POs (Tunai murni yang mengurangi kas di laci kasir)
   for (const po of supplierPurchases) {
     const total = Number(po.finalTotal ?? po.totalAmount) || 0;
@@ -656,10 +718,12 @@ export function computeBalanceSheet(options: {
     const termsLower = (po.paymentTerms || '').toLowerCase();
     const isConsignment = termsLower.includes('konsinyasi') || termsLower.includes('titip');
     const isCredit = !isConsignment && (termsLower.includes('tempo') || termsLower.includes('kredit') || termsLower.includes('hari'));
+    // Hanya sisa yang belum dibayar (dulu seluruh nilai faktur selamanya tercatat sebagai hutang)
+    const outstanding = Math.max(0, total - purchasePaidOf(po));
     if (isCredit) {
-      accountsPayable += total;
+      accountsPayable += outstanding;
     } else if (isConsignment) {
-      consignmentPayable += total;
+      consignmentPayable += outstanding;
     }
   }
 

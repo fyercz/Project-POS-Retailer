@@ -73,6 +73,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
     storageDiagnostics,
     refreshStorageDiagnostics,
     runStorageBenchmark,
+    activeEmployee,
   } = usePOS();
 
   const [activeTab, setActiveTab] = useState<'points' | 'files' | 'storage' | 'guide'>('points');
@@ -167,6 +168,39 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
   } | null>(null);
 
   if (!isOpen) return null;
+
+  // Hanya Supervisor/Owner. Jendela ini bisa dibuka dari beberapa tombol (termasuk di layar kasir)
+  // yang dulu tidak memeriksa jabatan, padahal restore bisa menimpa seluruh data toko.
+  let authorizedByPin = false;
+  try {
+    authorizedByPin = Number(sessionStorage.getItem('pos_backup_authorized_until') || 0) > Date.now();
+  } catch {}
+  const canManageBackup =
+    activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor' || authorizedByPin;
+  if (!canManageBackup) {
+    return (
+      <div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+        <div
+          className="max-w-sm w-full rounded-2xl bg-white dark:bg-slate-900 p-5 text-center space-y-3 shadow-xl"
+          onClick={(e) => e.stopPropagation()}
+          role="alertdialog"
+        >
+          <div className="font-bold text-slate-900 dark:text-white">Akses Dibatasi</div>
+          <p className="text-xs text-slate-600 dark:text-slate-300">
+            Cadangan &amp; pemulihan data hanya untuk Supervisor atau Owner. Minta Supervisor/Owner login, atau buka lewat
+            menu akun di kanan atas dengan PIN otoritas.
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-xs font-bold cursor-pointer"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const showToast = (type: 'success' | 'error' | 'info', message: string) => {
     setStatusNotification({ type, message });
@@ -380,6 +414,13 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
     setUploadFileName(file.name);
     const sizeStr = `${(file.size / 1024).toFixed(1)} KB`;
     setUploadFileSize(sizeStr);
+
+    if (file.size > 200 * 1024 * 1024) {
+      const msg = 'Berkas terlalu besar (maks. 200 MB). Pastikan ini berkas cadangan Ulilmart POS.';
+      setUploadError(msg);
+      showToast('error', msg);
+      return;
+    }
 
     if (!file.name.toLowerCase().endsWith('.json')) {
       const msg = 'Hanya berkas berformat .json cadangan yang didukung.';

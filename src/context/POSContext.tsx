@@ -77,6 +77,7 @@ import {
 } from '../utils/accountingLedger';
 import { playScannerSound } from '../utils/scannerAudio';
 import { pinLockSecondsLeft, registerPinFailure, registerPinSuccess, pinLockMessage } from '../utils/pinGuard';
+import { purchaseOutstandingOf, purchasePaymentKind } from '../utils/accountingLedger';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -186,6 +187,12 @@ export interface POSTransactionsContextType {
   processPurchaseReturn: (returnData: Omit<PurchaseReturn, 'id' | 'createdAt'>) => PurchaseReturn;
   supplierPurchases: SupplierPurchase[];
   processSupplierPurchase: (purchaseData: Omit<SupplierPurchase, 'id' | 'createdAt'>) => SupplierPurchase;
+  recordSupplierPayment: (
+    purchaseId: string,
+    amount: number,
+    source: 'cash_drawer' | 'bank_transfer',
+    note?: string
+  ) => { success: boolean; message: string };
   suppliers: Supplier[];
   addSupplier: (supplier: Omit<Supplier, 'id' | 'createdAt'>) => Supplier;
   updateSupplier: (id: string, updated: Partial<Supplier>) => void;
@@ -2476,6 +2483,46 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newReturn;
   };
 
+  /**
+   * Catat pembayaran / pelunasan faktur tempo atau konsinyasi. Hanya Supervisor/Owner.
+   * Jumlah tidak boleh melebihi sisa hutang. Bila dibayar dari laci, tercatat sebagai uang keluar shift.
+   */
+  const recordSupplierPayment = (
+    purchaseId: string,
+    amount: number,
+    source: 'cash_drawer' | 'bank_transfer',
+    note?: string
+  ): { success: boolean; message: string } => {
+    if (activeEmployee?.role !== 'owner' && activeEmployee?.role !== 'supervisor') {
+      return { success: false, message: 'Pembayaran hutang supplier hanya bisa dicatat Supervisor atau Owner.' };
+    }
+    const po = supplierPurchases.find((p) => p.id === purchaseId);
+    if (!po) return { success: false, message: 'Faktur tidak ditemukan.' };
+    if (purchasePaymentKind(po) === 'cash') return { success: false, message: 'Faktur ini dibayar tunai, tidak ada hutang.' };
+    const outstanding = purchaseOutstandingOf(po);
+    const value = Math.round(Number(amount));
+    if (!Number.isFinite(value) || value <= 0) return { success: false, message: 'Isi jumlah pembayaran lebih dari 0.' };
+    if (value > outstanding) {
+      return { success: false, message: `Jumlah melebihi sisa hutang (${outstanding.toLocaleString('id-ID')}).` };
+    }
+    const payment = {
+      id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      amount: value,
+      date: new Date().toISOString(),
+      source,
+      note: note?.trim() || undefined,
+      recordedBy: activeEmployee?.name || 'Owner',
+    };
+    setSupplierPurchases((prev) =>
+      prev.map((p) => (p.id === purchaseId ? { ...p, payments: [...(p.payments || []), payment] } : p))
+    );
+    if (source === 'cash_drawer') recordShiftCashOut(value);
+    return {
+      success: true,
+      message: value === outstanding ? 'Faktur lunas.' : `Pembayaran tercatat. Sisa hutang ${(outstanding - value).toLocaleString('id-ID')}.`,
+    };
+  };
+
   const processSupplierPurchase = (purchaseData: Omit<SupplierPurchase, 'id' | 'createdAt'>): SupplierPurchase => {
     const newPurchase: SupplierPurchase = {
       ...purchaseData,
@@ -2615,13 +2662,36 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newProduct;
   };
 
+  /**
+   * Impor produk massal. Produk dengan barcode yang sudah ada di katalog (atau kembar di dalam
+   * berkas yang sama) DILEWATI, agar impor ulang berkas yang sama tidak menggandakan katalog.
+   * Angka harga/modal/stok dibersihkan (bukan angka atau negatif -> 0). Mengembalikan produk
+   * yang benar-benar ditambahkan.
+   */
   const addProductsBatch = (productsData: Omit<Product, 'id'>[]): Product[] => {
     const timestamp = Date.now();
-    const newProducts: Product[] = productsData.map((data, idx) => ({
-      ...data,
-      id: `prod-${timestamp}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
-    }));
-    setProducts((prev) => [...newProducts, ...prev]);
+    const importedAt = new Date().toISOString();
+    const seenBarcodes = new Set(products.map((p) => (p.barcode || '').trim()).filter(Boolean));
+    const num = (v: unknown) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    };
+    const newProducts: Product[] = [];
+    productsData.forEach((data, idx) => {
+      const barcode = (data.barcode || '').trim();
+      if (barcode && seenBarcodes.has(barcode)) return;
+      if (barcode) seenBarcodes.add(barcode);
+      newProducts.push({
+        ...data,
+        barcode,
+        price: num(data.price),
+        costPrice: num(data.costPrice),
+        stock: Math.round(num(data.stock)),
+        importedAt,
+        id: `prod-${timestamp}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+      });
+    });
+    if (newProducts.length > 0) setProducts((prev) => [...newProducts, ...prev]);
     return newProducts;
   };
 
@@ -2630,9 +2700,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProducts((prev) => prev.filter((p) => !idSet.has(p.id)));
   };
 
+  /** Hapus HANYA produk yang masuk lewat impor file (bertanda importedAt). Dulu semua produk selain
+   *  produk demo ikut terhapus, termasuk produk yang diinput manual. */
   const clearImportedProducts = () => {
-    const initialIds = new Set(INITIAL_PRODUCTS.map((p) => p.id));
-    setProducts((prev) => prev.filter((p) => initialIds.has(p.id)));
+    setProducts((prev) => prev.filter((p) => !p.importedAt));
   };
 
   const resetProductsToDefault = () => {
@@ -2895,6 +2966,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         employees,
         heldOrders,
         currentShift,
+        expenses,
+        pastShifts,
       },
       summary: {
         totalProducts: products.length,
@@ -2920,6 +2993,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     employees,
     heldOrders,
     currentShift,
+    expenses,
+    pastShifts,
   ]);
 
   const downloadBackupFile = useCallback(
@@ -3111,10 +3186,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (Array.isArray(d.salesReturns)) setSalesReturns(d.salesReturns);
           if (Array.isArray(d.purchaseReturns)) setPurchaseReturns(d.purchaseReturns);
           if (Array.isArray(d.supplierPurchases)) setSupplierPurchases(d.supplierPurchases);
-          if (d.settings) setSettings(d.settings);
+          // Pengaturan digabung: backup versi lama tidak punya pengaturan baru (jangan sampai kosong)
+          if (d.settings && typeof d.settings === 'object') setSettings((prev) => ({ ...prev, ...d.settings }));
           if (Array.isArray(d.vouchers)) setVouchers(d.vouchers);
-          if (Array.isArray(d.employees) && d.employees.length > 0) setEmployees(d.employees);
+          // Daftar karyawan & PIN TIDAK ditimpa: memulihkan backup lama bisa mengembalikan PIN bawaan
+          // atau akun mantan karyawan. Karyawan dari backup yang belum ada ditambahkan sebagai NONAKTIF.
+          if (Array.isArray(d.employees)) {
+            setEmployees((prev) => {
+              const ids = new Set(prev.map((e) => e.id));
+              const added = d.employees!
+                .filter((e) => e && e.id && e.name && !ids.has(e.id))
+                .map((e) => ({ ...e, isActive: false }));
+              return [...prev, ...added];
+            });
+          }
           if (Array.isArray(d.heldOrders)) setHeldOrders(d.heldOrders);
+          if (Array.isArray(d.expenses)) setExpenses(d.expenses);
+          if (Array.isArray(d.pastShifts)) setPastShifts(d.pastShifts);
           setCart([]);
         } else {
           // Merge mode
@@ -3182,6 +3270,19 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               return [...prev, ...added];
             });
           }
+
+          if (Array.isArray(d.expenses)) {
+            setExpenses((prev) => {
+              const ids = new Set(prev.map((e) => e.id));
+              return [...prev, ...d.expenses!.filter((e) => e && e.id && !ids.has(e.id))];
+            });
+          }
+        }
+
+        // Di jaringan LAN: stok hasil restore dianggap "sudah diketahui server" agar tidak terkirim
+        // sebagai selisih stok besar ke server. Stok server tetap; tarik data dari server bila perlu.
+        if (mode === 'overwrite' && cleanProducts !== null && lanBaselineRef.current) {
+          resetLanBaseline(cleanProducts);
         }
 
         return {
@@ -3464,6 +3565,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       processPurchaseReturn,
       supplierPurchases,
       processSupplierPurchase,
+      recordSupplierPayment,
       suppliers,
       addSupplier,
       updateSupplier,

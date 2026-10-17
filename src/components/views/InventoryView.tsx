@@ -63,7 +63,7 @@ import { ProductFormModal } from '../ProductFormModal';
 import { SupplierFormModal } from '../SupplierFormModal';
 import { SupplierPurchaseDetailModal } from '../SupplierPurchaseDetailModal';
 import { ReceivingBarcodeCameraModal } from '../ReceivingBarcodeCameraModal';
-import { parsePaymentTermsInfo } from '../../utils/paymentTermsHelper';
+import { parsePaymentTermsInfo, withPaymentStatus } from '../../utils/paymentTermsHelper';
 import { PriceTagModal } from '../PriceTagModal';
 import { QRShelfLabelModal } from '../QRShelfLabelModal';
 import { ShelfProductLiveModal } from '../ShelfProductLiveModal';
@@ -91,6 +91,7 @@ import {
 import { playScannerSound } from '../../utils/scannerAudio';
 import { Html5Qrcode } from 'html5-qrcode';
 import { escapeHtml } from '../../utils/escapeHtml';
+import { purchaseOutstandingOf } from '../../utils/accountingLedger';
 
 interface ReceivingItem {
   productId: string;
@@ -175,9 +176,9 @@ export const InventoryView: React.FC = () => {
   const [isBulkAdjustModalOpen, setIsBulkAdjustModalOpen] = useState(false);
   const [bulkAdjustInitialProductIds, setBulkAdjustInitialProductIds] = useState<string[]>([]);
 
-  // Helper to distinguish imported products from initial seed products
-  const initialProductIds = new Set(INITIAL_PRODUCTS.map((p) => p.id));
-  const isImportedProduct = (p: Product) => !initialProductIds.has(p.id);
+  // Produk hasil impor file ditandai importedAt saat diimpor (dulu: semua produk selain produk demo
+  // dianggap "impor", sehingga 'Hapus Semua Data Impor' bisa menghapus seluruh katalog asli toko)
+  const isImportedProduct = (p: Product) => Boolean(p.importedAt);
   const importedProducts = products.filter(isImportedProduct);
   const importedCount = importedProducts.length;
 
@@ -517,8 +518,10 @@ export const InventoryView: React.FC = () => {
     let urgentTempoCount = 0;
 
     supplierPurchases.forEach((p) => {
-      const info = parsePaymentTermsInfo(p.createdAt, p.paymentTerms);
-      const val = Number(p.finalTotal ?? p.totalAmount) || 0;
+      // Ringkasan hutang memakai SISA yang belum dibayar; faktur lunas tidak dihitung mendesak
+      const outstanding = purchaseOutstandingOf(p);
+      const info = withPaymentStatus(parsePaymentTermsInfo(p.createdAt, p.paymentTerms), outstanding);
+      const val = info.category === 'cash' ? Number(p.finalTotal ?? p.totalAmount) || 0 : outstanding;
       if (info.category === 'tempo') {
         tempoTotal += val;
         tempoCount++;
@@ -1787,7 +1790,7 @@ export const InventoryView: React.FC = () => {
             >
               <option value="all">Semua Asal Produk ({products.length})</option>
               <option value="imported">Khusus Hasil Impor ({importedCount})</option>
-              <option value="default">Katalog Bawaan ({products.length - importedCount})</option>
+              <option value="default">Produk Non-Impor ({products.length - importedCount})</option>
             </select>
 
             {/* Filter Posisi & Tampilan Barang Stok Kosong */}
@@ -2803,7 +2806,10 @@ export const InventoryView: React.FC = () => {
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {filteredPurchases.length > 0 ? (
                     filteredPurchases.map((purch) => {
-                      const termsInfo = parsePaymentTermsInfo(purch.createdAt, purch.paymentTerms);
+                      const termsInfo = withPaymentStatus(
+                        parsePaymentTermsInfo(purch.createdAt, purch.paymentTerms),
+                        purchaseOutstandingOf(purch)
+                      );
                       return (
                         <tr key={purch.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                           <td className="py-3 px-4">
@@ -4290,7 +4296,7 @@ export const InventoryView: React.FC = () => {
               <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-xl text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2 mb-6">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                 <span>
-                  Penghapusan ini aman terhadap katalog bawaan toko. Riwayat transaksi kasir yang sudah tercatat sebelumnya tidak akan hilang.
+                  Hanya produk yang masuk lewat impor file yang dihapus; produk yang diinput manual tetap aman. Riwayat transaksi kasir yang sudah tercatat tidak akan hilang.
                 </span>
               </div>
 

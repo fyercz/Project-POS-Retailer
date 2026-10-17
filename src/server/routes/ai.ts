@@ -10,7 +10,7 @@ const router = aiRouter;
 router.post('/api/ai/scan-invoice', async (req, res) => {
   const { imageBase64, mimeType, catalogProducts, storeSettings } = req.body;
 
-  // Smart fallback simulator if no key or image failed
+  // Catatan: faktur karangan ini TIDAK lagi dikirim ke kasir; dibiarkan hanya sebagai referensi bentuk data.
   const generateRuleBasedInvoice = () => {
     const matchedProducts = (catalogProducts || []).slice(0, 3).map((p: any) => ({
       matchedProductId: p.id,
@@ -39,8 +39,10 @@ router.post('/api/ai/scan-invoice', async (req, res) => {
     };
   };
 
+  // Tanpa gambar atau AI gagal: jawab error. Dulu dikembalikan faktur KARANGAN (3 produk pertama x 24 unit,
+  // supplier 'PT Indomarco', PPN 11%) seolah hasil membaca faktur, yang bisa menambah stok & hutang fiktif.
   if (!imageBase64) {
-    return res.json(generateRuleBasedInvoice());
+    return res.status(400).json({ success: false, error: 'Gambar faktur belum dipilih.' });
   }
 
   try {
@@ -94,14 +96,14 @@ TUGAS:
     );
 
     if (!rawText) {
-      return res.json(generateRuleBasedInvoice());
+      return res.status(503).json({ success: false, error: 'AI tidak dapat membaca faktur saat ini (API key kosong, kuota habis, atau gambar tidak terbaca). Coba lagi atau isi penerimaan barang secara manual.' });
     }
 
     const parsed = JSON.parse(rawText);
     res.json({ ...parsed, isAiGenerated: true });
   } catch (err) {
     console.error('Invoice scan error:', err);
-    res.json(generateRuleBasedInvoice());
+    res.status(503).json({ success: false, error: 'AI tidak dapat membaca faktur saat ini (API key kosong, kuota habis, atau gambar tidak terbaca). Coba lagi atau isi penerimaan barang secara manual.' });
   }
 });
 
@@ -109,6 +111,8 @@ TUGAS:
 router.post('/api/ai/visual-stock-opname', async (req, res) => {
   const { imagesBase64, mimeType, scannedType, catalogProducts, storeSettings, shelfArea } = req.body;
 
+  // Catatan: hasil karangan ini TIDAK lagi dikirim (dulu hitungan stok acak = stok sistem +/- 1).
+  // Dibiarkan hanya sebagai referensi bentuk data.
   const generateRuleBasedOpname = () => {
     const sampleItems = (catalogProducts || []).slice(0, 4).map((p: any) => {
       const detected = Math.max(0, p.stock + Math.floor(Math.random() * 3) - 1);
@@ -145,7 +149,7 @@ router.post('/api/ai/visual-stock-opname', async (req, res) => {
 
   const imagesArray = Array.isArray(imagesBase64) ? imagesBase64 : imagesBase64 ? [imagesBase64] : [];
   if (imagesArray.length === 0) {
-    return res.json(generateRuleBasedOpname());
+    return res.status(503).json({ success: false, error: 'AI tidak dapat menghitung stok dari foto saat ini (API key kosong, kuota habis, atau foto tidak terbaca). Lakukan stock opname manual.' });
   }
 
   try {
@@ -207,18 +211,18 @@ TUGAS:
 
     const rawText = await callGeminiVisionSafe(prompt, formattedImages, 0.1);
     if (!rawText) {
-      return res.json(generateRuleBasedOpname());
+      return res.status(503).json({ success: false, error: 'AI tidak dapat menghitung stok dari foto saat ini (API key kosong, kuota habis, atau foto tidak terbaca). Lakukan stock opname manual.' });
     }
 
     const parsed = extractJsonFromText(rawText);
     if (!parsed || !Array.isArray(parsed.items)) {
-      return res.json(generateRuleBasedOpname());
+      return res.status(503).json({ success: false, error: 'AI tidak dapat menghitung stok dari foto saat ini (API key kosong, kuota habis, atau foto tidak terbaca). Lakukan stock opname manual.' });
     }
 
     res.json({ ...parsed, isAiGenerated: true });
   } catch (err) {
     console.error('Visual stock opname error:', err);
-    res.json(generateRuleBasedOpname());
+    res.status(503).json({ success: false, error: 'AI tidak dapat menghitung stok dari foto saat ini (API key kosong, kuota habis, atau foto tidak terbaca). Lakukan stock opname manual.' });
   }
 });
 

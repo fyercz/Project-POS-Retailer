@@ -272,9 +272,9 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
       image: getImageForCategory(it.categoryId, it.name),
     }));
 
-    addProductsBatch(payloads);
+    const added = addProductsBatch(payloads);
 
-    setImportedCount(selected.length);
+    setImportedCount(added.length);
     setTimeout(() => {
       setImportedCount(null);
       onClose();

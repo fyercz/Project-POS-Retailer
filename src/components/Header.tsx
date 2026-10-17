@@ -160,7 +160,13 @@ export const Header: React.FC = () => {
         description:
           'Akses pencadangan dan pemulihan data (Restore Point) dibatasi untuk Supervisor atau Pemilik Toko (Owner). Masukkan PIN otoritas untuk melanjutkan.',
         requiredRole: 'supervisor',
-        onSuccess: () => setIsBackupRestoreOpen(true),
+        onSuccess: () => {
+          // Persetujuan PIN Supervisor/Owner berlaku 10 menit untuk jendela Backup & Restore
+          try {
+            sessionStorage.setItem('pos_backup_authorized_until', String(Date.now() + 10 * 60_000));
+          } catch {}
+          setIsBackupRestoreOpen(true);
+        },
       });
     } else {
       setIsBackupRestoreOpen(true);

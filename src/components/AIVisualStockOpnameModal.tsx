@@ -502,46 +502,18 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
         return;
       }
 
-      console.warn('Server visual stock opname returned status:', response.status);
-      throw new Error(`Server returned ${response.status}`);
-    } catch (err) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `Server AI menjawab ${response.status}`);
+    } catch (err: any) {
       console.error('AI visual stock opname error:', err);
-
-      // Graceful local fallback to avoid blocking user workflow
-      const sampleItems = (products || []).slice(0, 4).map((p) => {
-        const detected = Math.max(0, p.stock + (Math.floor(Math.random() * 3) - 1));
-        return {
-          productId: p.id,
-          productName: p.name,
-          systemStock: p.stock,
-          detectedCount: detected,
-          difference: detected - p.stock,
-          condition: 'Baik / Utuh' as const,
-          shelfLocation: p.aisle || 'Rak Display',
-          confidence: 0.92,
-        };
-      });
-
-      const fallbackResult: AIStockOpnameResult = {
-        sessionTitle: `Audit Visual AI - ${shelfArea || 'Area Display Toko'}`,
-        scannedType: scannedType || 'shelf_image',
-        items: sampleItems,
-        totalDiscrepancy: sampleItems.filter((i) => i.difference !== 0).length,
-        aiObservations: [
-          'Kerapian rak display terpantau rapi dengan label harga (price tag) menghadap ke depan.',
-          'Hasil estimasi visual rak telah disinkronisasikan dengan katalog master toko.',
-          'Semua kemasan produk fisik terlihat utuh dan tersegel baik.',
-        ],
-        suggestedStockUpdates: sampleItems.map((item) => ({
-          productId: item.productId,
-          newStock: item.detectedCount,
-          note: `Penyesuaian hasil audit visual (${item.difference >= 0 ? '+' : ''}${item.difference})`,
-        })),
-        isAiGenerated: false,
-      };
-
-      setScanResult(fallbackResult);
-      setNotification('Server AI sibuk. Menampilkan hasil audit visual berbasis estimasi rak.');
+      // Tidak ada hasil cadangan: dulu dibuat hitungan stok ACAK (stok sistem +/- 1) yang bisa
+      // diterapkan ke stok asli. Lebih aman memberi tahu bahwa AI gagal.
+      setScanResult(null);
+      setNotification(
+        (err?.message && !String(err.message).startsWith('Failed to fetch')
+          ? err.message
+          : 'Server AI tidak dapat dihubungi.') + ' Lakukan stock opname manual atau coba lagi nanti.'
+      );
     } finally {
       setIsProcessing(false);
     }

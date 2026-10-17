@@ -185,14 +185,20 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Gagal memproses faktur');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Gagal memproses faktur.');
       }
 
       const result: AIInvoiceScanResult = await response.json();
       setScanResult(result);
     } catch (err: any) {
       console.error(err);
-      setScanError('Gagal memproses gambar faktur. Menggunakan hasil parsing alternatif.');
+      setScanResult(null);
+      setScanError(
+        err?.message && !String(err.message).startsWith('Failed to fetch')
+          ? err.message
+          : 'Server AI tidak dapat dihubungi. Isi penerimaan barang secara manual atau coba lagi nanti.'
+      );
     } finally {
       setIsScanning(false);
     }
