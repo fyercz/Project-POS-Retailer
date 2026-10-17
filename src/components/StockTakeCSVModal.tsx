@@ -19,6 +19,7 @@ import { Product } from '../types';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency, toLocalDateString } from '../utils/formatters';
 import { splitCSVLine, detectDelimiter, normalizeScientificBarcode } from '../utils/retailNormalizer';
+import { csvRow } from '../utils/csv';
 
 export interface StockTakeCSVModalProps {
   isOpen: boolean;
@@ -160,7 +161,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
       } else if (rawTokens.length >= 5) {
         // Standard full template: barcode, sku, nama_produk, stok_tercatat, stok_fisik_hitung, [tanggal_kadaluarsa]
         rawIdentifier = rawTokens[0] || rawTokens[1] || '';
-        rawQtyStr = rawTokens[4] || rawTokens[3] || '';
+        rawQtyStr = rawTokens[4] || ''; // kolom stok fisik; kosong = belum dihitung (tidak diterapkan)
         rawExpiryStr = rawTokens[5] || '';
       } else if (rawTokens.length === 3) {
         // Could be (barcode, nama, stok) OR (barcode, stok, tanggal)
@@ -348,16 +349,12 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
   // Handle Download CSV Template
   const handleDownloadTemplate = () => {
     const headers = ['barcode', 'sku', 'nama_produk', 'stok_tercatat', 'stok_fisik_hitung', 'tanggal_kadaluarsa'];
-    const rows = products.slice(0, 50).map((p) => [
-      `"${p.barcode || ''}"`,
-      `"${p.sku || ''}"`,
-      `"${p.name.replace(/"/g, '""')}"`,
-      p.stock,
-      p.stock, // pre-fill with current stock as baseline
-      `"${p.expiryDate || ''}"`,
-    ]);
+    // Semua produk (dulu hanya 50 pertama). Kolom stok_fisik_hitung DIKOSONGKAN: diisi hasil hitung.
+    // Dulu diisi stok sistem, sehingga baris yang lupa dihitung terimpor seolah tanpa selisih.
+    // Baris yang dibiarkan kosong tidak diterapkan saat impor.
+    const rows = products.map((p) => [p.barcode || '', p.sku || '', p.name, p.stock, '', p.expiryDate || '']);
 
-    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
+    const csvContent = [csvRow(headers), ...rows.map((r) => csvRow(r))].join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

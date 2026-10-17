@@ -60,6 +60,8 @@ export const POS_STORAGE_KEYS = [
   'pos_is_locked',
   'pos_current_shift_v1',
   'pos_restore_points_v1',
+  'pos_operational_expenses',
+  'pos_past_shifts_v1',
 ] as const;
 
 export type POSStorageKey = typeof POS_STORAGE_KEYS[number] | string;

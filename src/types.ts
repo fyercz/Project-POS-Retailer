@@ -200,6 +200,8 @@ export interface Voucher {
   description: string;
   minProfitMargin?: number;
   projectedMarginPercent?: number;
+  /** Batas berlaku (ISO). Kosong = tanpa batas waktu. */
+  expiresAt?: string;
 }
 
 export interface HeldOrder {
@@ -542,6 +544,8 @@ export interface ShiftSummary {
   totalTransactions: number;
   cashSales: number;
   nonCashSales: number;
+  /** Uang keluar dari laci selama shift: retur tunai, void transaksi tunai, pengeluaran dari laci */
+  cashOut?: number;
   actualCashEnding?: number;
   difference?: number;
   status: 'active' | 'closed';

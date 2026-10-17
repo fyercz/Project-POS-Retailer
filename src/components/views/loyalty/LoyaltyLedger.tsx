@@ -17,6 +17,7 @@ import {
 import { usePOS } from '../../../context/POSContext';
 import { formatCurrency, toLocalDateString } from '../../../utils/formatters';
 import { Customer } from '../../../types';
+import { csvRow } from '../../../utils/csv';
 
 interface LedgerRow {
   id: string;
@@ -168,22 +169,22 @@ export const LoyaltyLedger: React.FC = () => {
     ];
 
     const csvLines = [
-      headers.join(','),
+      csvRow(headers),
       ...filteredRows.map((r) =>
-        [
-          `"${r.id}"`,
-          `"${r.date}"`,
-          `"${r.customerName.replace(/"/g, '""')}"`,
-          `"${r.customerPhone}"`,
-          `"${r.customerTier}"`,
-          `"${r.type}"`,
+        csvRow([
+          r.id,
+          r.date,
+          r.customerName,
+          r.customerPhone,
+          r.customerTier,
+          r.type,
           r.points,
           r.points < 0 ? Math.abs(r.points) * redemptionRate : 0,
           r.balanceAfter,
-          `"${r.invoiceNumber || '-'}"`,
-          `"${r.description.replace(/"/g, '""')}"`,
-          `"${r.operatorName || '-'}"`,
-        ].join(',')
+          r.invoiceNumber || '-',
+          r.description,
+          r.operatorName || '-',
+        ])
       ),
     ];
 

@@ -350,6 +350,8 @@ export const MarketingPromoSection: React.FC = () => {
       value: promo.value,
       minSpend: promo.minSpend,
       description: `${promo.title} (${promo.targetSegment})`,
+      // Masa berlaku sesuai yang dijanjikan di pesan promo ke pelanggan ("berlaku N hari")
+      expiresAt: promo.expiryDays > 0 ? new Date(Date.now() + promo.expiryDays * 86400000).toISOString() : undefined,
     };
 
     addVoucher(voucher);

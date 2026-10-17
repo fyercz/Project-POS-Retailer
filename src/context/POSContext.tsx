@@ -219,6 +219,7 @@ export interface POSAuthShiftContextType {
   deleteEmployee: (id: string) => { success: boolean; message: string };
   startNewShift: (startingCash: number) => ShiftSummary;
   updateShiftStartingCash: (startingCash: number) => boolean;
+  deleteVoucher: (code: string) => void;
   closeCurrentShift: (actualCashEnding: number, notes?: string) => ShiftSummary;
 }
 
@@ -348,7 +349,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const saved = localStorage.getItem('pos_retail_products_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        // Daftar kosong yang tersimpan (mis. katalog dikosongkan saat persiapan peluncuran)
+        // tetap kosong; dulu kembali ke produk demo saat aplikasi dibuka ulang.
+        if (Array.isArray(parsed)) {
           rawList = parsed;
         }
       }
@@ -503,8 +506,16 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [vouchers, setVouchers] = useState<Voucher[]>(() => {
-    const saved = localStorage.getItem('pos_vouchers');
-    return saved ? JSON.parse(saved) : INITIAL_VOUCHERS;
+    try {
+      const saved = localStorage.getItem('pos_vouchers');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // data rusak: jangan sampai aplikasi gagal dibuka
+    }
+    return INITIAL_VOUCHERS;
   });
 
   // Returns state (Sales Returns and Supplier Purchase Returns)
@@ -551,7 +562,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!saved) return INITIAL_SUPPLIER_PURCHASES;
     try {
       const list: SupplierPurchase[] = JSON.parse(saved);
-      if (!Array.isArray(list) || list.length === 0) return INITIAL_SUPPLIER_PURCHASES;
+      if (!Array.isArray(list)) return INITIAL_SUPPLIER_PURCHASES;
       const seen = new Set<string>();
       return list.map((p, i) => {
         let id = p.id;
@@ -572,7 +583,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const saved = localStorage.getItem('pos_retail_suppliers_v2');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           rawList = parsed;
         }
       }
@@ -673,7 +684,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const saved = localStorage.getItem('pos_operational_expenses');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // fallback
@@ -681,13 +692,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return INITIAL_EXPENSES;
   });
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('pos_operational_expenses', JSON.stringify(expenses));
-    } catch {
-      // ignore
-    }
-  }, [expenses]);
 
   const addExpense = (expData: Omit<OperationalExpense, 'id' | 'date'>): OperationalExpense => {
     const newExp: OperationalExpense = {
@@ -696,11 +700,17 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: new Date().toISOString(),
     };
     setExpenses((prev) => [newExp, ...prev]);
+    if (newExp.paymentSource === 'cash_drawer') recordShiftCashOut(Number(newExp.amount) || 0);
     return newExp;
   };
 
   const deleteExpense = (expId: string) => {
+    const exp = expenses.find((e) => e.id === expId);
     setExpenses((prev) => prev.filter((e) => e.id !== expId));
+    // Pengeluaran dari laci yang dicatat di shift ini dibatalkan: kembalikan ke hitungan kas
+    if (exp && exp.paymentSource === 'cash_drawer' && currentShift && exp.date >= currentShift.startTime) {
+      recordShiftCashOut(-(Number(exp.amount) || 0));
+    }
   };
 
   // Modal States
@@ -1093,7 +1103,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const v = await posStorage.readFromIndexedDB<T>(key);
           if (!cancelled && v !== undefined && v !== null && valid(v)) apply(v);
         };
-        await load<Product[]>('pos_retail_products_v3', (v) => isArr(v) && v.length > 0, (v) => {
+        await load<Product[]>('pos_retail_products_v3', isArr, (v) => {
           const seen = new Set<string>();
           setProducts(
             v.map((p, idx) => {
@@ -1118,6 +1128,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await load<any[]>('pos_employees_v2', (v) => isArr(v) && v.length > 0, setEmployees as any);
         await load<any[]>('pos_restore_points_v1', isArr, setRestorePoints as any);
         await load<any>('pos_current_shift_v1', (v) => typeof v === 'object' && !isArr(v), setCurrentShift as any);
+        await load<OperationalExpense[]>('pos_operational_expenses', isArr, setExpenses);
+        await load<ShiftSummary[]>('pos_past_shifts_v1', isArr, setPastShifts);
       } catch (err) {
         console.warn('[posStorage] Gagal memuat data dari IndexedDB, memakai data localStorage:', err);
       } finally {
@@ -1194,6 +1206,16 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!isStorageHydrated) return;
     scheduleSave('pos_restore_points_v1', restorePoints);
   }, [restorePoints, scheduleSave, isStorageHydrated]);
+
+  useEffect(() => {
+    if (!isStorageHydrated) return;
+    scheduleSave('pos_operational_expenses', expenses);
+  }, [expenses, scheduleSave, isStorageHydrated]);
+
+  useEffect(() => {
+    if (!isStorageHydrated) return;
+    scheduleSave('pos_past_shifts_v1', pastShifts);
+  }, [pastShifts, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
     if (activeEmployee) {
@@ -1672,6 +1694,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!voucher) {
       return { success: false, message: 'Kode voucher tidak valid.' };
     }
+    if (voucher.expiresAt && new Date(voucher.expiresAt).getTime() < Date.now()) {
+      return {
+        success: false,
+        message: `Voucher ${voucher.code} sudah kedaluwarsa sejak ${new Date(voucher.expiresAt).toLocaleDateString('id-ID')}.`,
+      };
+    }
 
     const currentSubtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
     if (currentSubtotal < voucher.minSpend) {
@@ -1690,7 +1718,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addVoucher = (v: Voucher) => {
-    setVouchers((prev) => [v, ...prev]);
+    // Kode yang sama menggantikan voucher lama (bukan dobel)
+    setVouchers((prev) => [v, ...prev.filter((x) => x.code.toUpperCase() !== v.code.toUpperCase())]);
+  };
+
+  const deleteVoucher = (code: string) => {
+    setVouchers((prev) => prev.filter((v) => v.code.toUpperCase() !== code.toUpperCase()));
+    if (appliedVoucher && appliedVoucher.code.toUpperCase() === code.toUpperCase()) setAppliedVoucher(null);
   };
 
   // Memoized Calculations
@@ -1981,6 +2015,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
    * pertama (mengecilkan modal di tengah shift bisa menyembunyikan kekurangan kas);
    * Supervisor/Owner boleh kapan saja.
    */
+  /** Catat uang yang keluar dari laci (retur tunai, void tunai, pengeluaran dari laci). */
+  const recordShiftCashOut = (amount: number) => {
+    if (!Number.isFinite(amount) || amount === 0) return;
+    setCurrentShift((prev) => (prev ? { ...prev, cashOut: Math.max(0, (prev.cashOut || 0) + amount) } : prev));
+  };
+
   const updateShiftStartingCash = (startingCash: number): boolean => {
     if (!currentShift || !Number.isFinite(startingCash) || startingCash < 0) return false;
     const isManager = activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor';
@@ -2004,7 +2044,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'active' as const,
     };
 
-    const expectedCash = current.startingCash + current.cashSales;
+    // Kas yang seharusnya ada = modal + penjualan tunai - uang keluar (retur/void tunai, pengeluaran dari laci)
+    const expectedCash = current.startingCash + current.cashSales - (current.cashOut || 0);
     const difference = actualCashEnding - expectedCash;
 
     const closed: ShiftSummary = {
@@ -2016,13 +2057,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notes,
     };
 
-    setPastShifts((prev) => {
-      const updated = [closed, ...prev];
-      try {
-        localStorage.setItem('pos_past_shifts_v1', JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
+    setPastShifts((prev) => [closed, ...prev]); // disimpan ke IndexedDB lewat efek simpan
 
     // Start clean new shift
     const nextShift: ShiftSummary = {
@@ -2032,6 +2067,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       role: activeEmployee?.role || 'cashier',
       startTime: new Date().toISOString(),
       startingCash: actualCashEnding, // default next shift starting cash to counted cash
+      cashOut: 0,
       totalSales: 0,
       totalTransactions: 0,
       cashSales: 0,
@@ -2295,6 +2331,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTransactions((prev) =>
       prev.map((t) => (t.id === txId ? { ...t, status: 'void' as const } : t))
     );
+    if (tx.payment?.method === 'cash') {
+      recordShiftCashOut(Math.max(0, (tx.finalTotal || 0) - (tx.returnedAmount || 0)));
+    }
 
     // Barang dari transaksi yang dibatalkan kembali ke stok. Jika sebagian sudah diretur
     // (returnedAmount > 0), stok tidak dikembalikan otomatis agar tidak terhitung dua kali.
@@ -2340,6 +2379,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 1. Save return record
     setSalesReturns((prev) => [newReturn, ...prev]);
+    if (returnData.refundMethod === 'cash') recordShiftCashOut(Number(returnData.totalRefundAmount) || 0);
 
     // 2. Update transaction status and metadata
     const originalTx = transactions.find(
@@ -3189,6 +3229,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // 3. Reset shift so day 1 cashier opening starts fresh
         setCurrentShift(null);
         localStorage.removeItem('pos_current_shift_v1');
+        setPastShifts([]);
+
+        // 3b. Hapus data demo lain yang dulu tertinggal: member, supplier, faktur pembelian,
+        //     pengeluaran, voucher, dan retur supplier contoh. Hanya data yang berasal dari
+        //     data demo (dicocokkan lewat id/kode); data yang sudah diinput toko tetap aman.
+        const demoIds = (list: Array<{ id?: string }>) => new Set(list.map((x) => x.id).filter(Boolean) as string[]);
+        const demoCustomerIds = demoIds(INITIAL_CUSTOMERS);
+        const demoSupplierIds = demoIds(INITIAL_SUPPLIERS);
+        const demoPurchaseIds = demoIds(INITIAL_SUPPLIER_PURCHASES);
+        const demoExpenseIds = demoIds(INITIAL_EXPENSES);
+        const demoVoucherCodes = new Set(INITIAL_VOUCHERS.map((v) => v.code.toUpperCase()));
+        setCustomers((prev) => prev.filter((c) => !demoCustomerIds.has(c.id)));
+        setSuppliers((prev) => prev.filter((s) => !demoSupplierIds.has(s.id)));
+        setSupplierPurchases((prev) => prev.filter((p) => !demoPurchaseIds.has(p.id)));
+        setExpenses((prev) => prev.filter((e) => !demoExpenseIds.has(e.id)));
+        setVouchers((prev) => prev.filter((v) => !demoVoucherCodes.has(v.code.toUpperCase())));
+        if (options?.resetTransactions !== false) setPurchaseReturns([]);
 
         // 4. Products options
         if (options?.resetProductsToBlank) {
@@ -3445,6 +3502,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteEmployee,
       startNewShift,
       updateShiftStartingCash,
+      deleteVoucher,
       closeCurrentShift,
     }),
     [

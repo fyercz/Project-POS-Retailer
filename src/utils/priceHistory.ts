@@ -1,5 +1,6 @@
 import { Product, PriceHistoryRecord } from '../types';
 import { formatDate, toLocalDateString } from './formatters';
+import { csvCell } from './csv';
 
 /**
  * Generates realistic price history data points if a product doesn't have custom history yet.
@@ -300,13 +301,7 @@ export function exportPriceHistoryCSV(product: Product, history: PriceHistoryRec
     const marginPct = rec.sellingPrice > 0 ? ((grossProfit / rec.sellingPrice) * 100).toFixed(1) : '0';
     const typeLabel = changeTypeLabels[rec.changeType] || rec.changeType;
 
-    const escapeCsv = (val: string | number | undefined) => {
-      const str = String(val ?? '');
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
-    };
+    const escapeCsv = (val: string | number | undefined) => csvCell(val);
 
     return [
       index + 1,

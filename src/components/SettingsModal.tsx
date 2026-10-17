@@ -68,6 +68,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
     autoSyncEnabled,
     autoSyncIntervalSeconds,
     databaseEngine,
+    vouchers,
+    deleteVoucher,
   } = usePOS();
   const [formData, setFormData] = useState<StoreSettings>({ ...settings });
   const [saved, setSaved] = useState(false);
@@ -960,6 +962,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
               </span>
               <span>Kapasitas penyimpanan puluhan GB tanpa batas 5MB LocalStorage.</span>
             </div>
+          </div>
+
+          {/* Daftar voucher: lihat masa berlaku & hapus voucher yang tidak dipakai lagi */}
+          <div className="space-y-2 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <div className="font-bold text-slate-800 dark:text-slate-200 text-sm">Voucher Diskon Aktif ({vouchers.length})</div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Semua kode di bawah ini bisa dipakai di kasir. Hapus voucher yang sudah tidak berlaku atau tidak pernah dibuat toko.
+            </p>
+            {vouchers.length === 0 ? (
+              <p className="text-[11px] text-slate-400">Belum ada voucher.</p>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
+                {vouchers.map((v) => {
+                  const expired = Boolean(v.expiresAt && new Date(v.expiresAt).getTime() < Date.now());
+                  return (
+                    <div key={v.code} className="py-1.5 flex items-center justify-between gap-2 text-[11px]">
+                      <div className="min-w-0">
+                        <div className="font-mono font-bold text-slate-800 dark:text-slate-100">
+                          {v.code}{' '}
+                          <span className="font-sans font-normal text-slate-500">
+                            {v.discountType === 'percentage' ? `${v.value}%` : `Rp ${v.value.toLocaleString('id-ID')}`} · min. Rp{' '}
+                            {(v.minSpend || 0).toLocaleString('id-ID')}
+                          </span>
+                        </div>
+                        <div className={expired ? 'text-rose-500' : 'text-slate-400'}>
+                          {v.expiresAt
+                            ? `${expired ? 'Kedaluwarsa' : 'Berlaku s/d'} ${new Date(v.expiresAt).toLocaleDateString('id-ID')}`
+                            : 'Tanpa batas waktu'}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Hapus voucher ${v.code}? Kode ini tidak bisa dipakai lagi di kasir.`)) deleteVoucher(v.code);
+                        }}
+                        className="shrink-0 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Pemeliharaan File Usang & Cache */}

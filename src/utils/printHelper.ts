@@ -1,4 +1,5 @@
 import { escapeHtml } from './escapeHtml';
+import { csvCell } from './csv';
 
 /**
  * Print & Export Utilities for POS Reports & Receipts
@@ -307,13 +308,7 @@ export const openPrintWindow = (contentHtml: string, title: string = 'Laporan PO
  * Export tabular data as Excel-friendly CSV with UTF-8 BOM
  */
 export const exportToCSV = (filename: string, headers: string[], rows: (string | number)[][]) => {
-  const escapeCell = (val: string | number) => {
-    const stringVal = String(val ?? '');
-    if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
-      return `"${stringVal.replace(/"/g, '""')}"`;
-    }
-    return stringVal;
-  };
+  const escapeCell = (val: string | number) => csvCell(val);
 
   const csvContent = [
     headers.map(escapeCell).join(','),

@@ -18,6 +18,7 @@ import {
 import { usePOS } from '../context/POSContext';
 import { formatRupiah, formatDate } from '../utils/formatters';
 import { printViaIframe } from '../utils/printHelper';
+import { escapeHtml } from '../utils/escapeHtml';
 
 export interface ShiftModalProps {
   isOpen?: boolean;
@@ -48,16 +49,24 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
     (activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor' || (currentShift?.totalTransactions || 0) === 0);
   const [notes, setNotes] = useState<string>('');
   const [shiftClosedResult, setShiftClosedResult] = useState<any>(null);
+  const [closeError, setCloseError] = useState('');
 
   if (!isModalVisible) return null;
 
-  const expectedCash = (currentShift?.startingCash || 0) + (currentShift?.cashSales || 0);
+  // Kas yang seharusnya ada = modal + penjualan tunai - uang keluar (retur/void tunai, pengeluaran dari laci)
+  const cashOut = currentShift?.cashOut || 0;
+  const expectedCash = (currentShift?.startingCash || 0) + (currentShift?.cashSales || 0) - cashOut;
   const enteredCashNum = parseFloat(actualCash.replace(/\D/g, '')) || 0;
   const difference = enteredCashNum - expectedCash;
 
   const handleCloseShift = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!enteredCashNum && enteredCashNum !== 0) return;
+    // Uang fisik wajib diisi (boleh 0). Dulu kolom kosong dianggap Rp 0 dan tercatat sebagai kekurangan kas.
+    if (actualCash.trim() === '') {
+      setCloseError('Isi jumlah uang fisik di laci hasil hitungan (boleh 0).');
+      return;
+    }
+    setCloseError('');
 
     const result = closeCurrentShift(enteredCashNum, notes);
     setShiftClosedResult(result);
@@ -73,13 +82,17 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
   const handlePrintShiftReceipt = () => {
     if (!shiftClosedResult) return;
     const printedAt = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+    // Angka struk diambil dari shift yang BARU DITUTUP (bukan shift berikutnya yang sudah dimulai)
+    const closedCashOut = Number(shiftClosedResult.cashOut) || 0;
+    const closedExpected =
+      (Number(shiftClosedResult.startingCash) || 0) + (Number(shiftClosedResult.cashSales) || 0) - closedCashOut;
     const shiftHtml = `
       <div style="font-family: monospace; font-size: 11px; line-height: 1.35; color: #000;">
         <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
-          <div style="font-size: 13px; font-weight: bold; text-transform: uppercase;">${settings.storeName}</div>
-          <div>${settings.branchName}</div>
-          <div style="font-size: 9px;">${settings.address}</div>
-          <div style="font-size: 9px;">Telp: ${settings.phone}</div>
+          <div style="font-size: 13px; font-weight: bold; text-transform: uppercase;">${escapeHtml(settings.storeName)}</div>
+          <div>${escapeHtml(settings.branchName)}</div>
+          <div style="font-size: 9px;">${escapeHtml(settings.address)}</div>
+          <div style="font-size: 9px;">Telp: ${escapeHtml(settings.phone)}</div>
         </div>
 
         <div style="text-align: center; font-weight: bold; margin: 6px 0; font-size: 12px;">
@@ -89,7 +102,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
         <div style="border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 6px; font-size: 10px;">
           <div style="display: flex; justify-content: space-between;">
             <span>Petugas Kasir:</span>
-            <span style="font-weight: bold;">${shiftClosedResult.employeeName}</span>
+            <span style="font-weight: bold;">${escapeHtml(shiftClosedResult.employeeName)}</span>
           </div>
           <div style="display: flex; justify-content: space-between;">
             <span>Waktu Tutup:</span>
@@ -97,7 +110,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
           </div>
           <div style="display: flex; justify-content: space-between;">
             <span>Catatan:</span>
-            <span>${notes.trim() || '-'}</span>
+            <span>${escapeHtml(shiftClosedResult.notes || '-')}</span>
           </div>
         </div>
 
@@ -111,12 +124,16 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
             <span>+${formatRupiah(shiftClosedResult.cashSales)}</span>
           </div>
           <div style="display: flex; justify-content: space-between;">
+            <span>Uang Keluar (Retur/Void/Biaya):</span>
+            <span>-${formatRupiah(closedCashOut)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
             <span>Penjualan Non-Tunai:</span>
             <span>+${formatRupiah(shiftClosedResult.nonCashSales)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px dotted #000; margin-top: 3px; padding-top: 3px;">
             <span>Ekspektasi Kas Laci:</span>
-            <span>${formatRupiah(expectedCash)}</span>
+            <span>${formatRupiah(closedExpected)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; font-weight: bold;">
             <span>Fisik Kasir Dihitung:</span>
@@ -398,10 +415,15 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
               {/* Expected Drawer Total */}
               <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-slate-400">Target Uang Kas di Laci (Modal + Tunai):</span>
+                  <span className="text-xs text-slate-400">Target Uang Kas di Laci (Modal + Tunai − Uang Keluar):</span>
                   <div className="text-xl font-bold font-mono text-emerald-400 mt-0.5">
                     {formatRupiah(expectedCash)}
                   </div>
+                  {cashOut > 0 && (
+                    <div className="text-[11px] text-amber-300 mt-0.5">
+                      Uang keluar dari laci (retur/void tunai, pengeluaran): −{formatRupiah(cashOut)}
+                    </div>
+                  )}
                 </div>
                 <div className="text-right text-xs text-slate-400">
                   Total Omzet Shift:{' '}
@@ -477,6 +499,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                   >
                     Batal
                   </button>
+                  {closeError && <p className="mr-auto text-[11px] text-rose-600 dark:text-rose-400">{closeError}</p>}
                   <button
                     type="submit"
                     id="btn-confirm-close-shift"
