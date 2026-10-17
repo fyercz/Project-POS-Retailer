@@ -31,18 +31,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
   const { settings, isOnline } = usePOSUI();
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
-  const [cashTendered, setCashTendered] = useState<number>(finalTotal);
+  // Uang diterima & jenis kartu dimulai kosong. Dulu otomatis 'uang pas' sehingga kembalian
+  // tercatat Rp 0 bila kasir lupa mengetik jumlah uang yang sebenarnya diterima.
+  const [cashTendered, setCashTendered] = useState<number>(0);
   const [cardLast4, setCardLast4] = useState<string>('');
-  const [cardBank, setCardBank] = useState<string>('Debit BRI');
+  const [cardBank, setCardBank] = useState<string>('');
   const [cardRefCode, setCardRefCode] = useState<string>('');
   const [cardBatch, setCardBatch] = useState<string>('');
   const [qrisRefCode, setQrisRefCode] = useState<string>('');
   const [qrisBatch, setQrisBatch] = useState<string>('');
 
-  // Reset cash tendered to exact total when opened
+  // Kosongkan kolom setiap kali layar pembayaran dibuka
   useEffect(() => {
     if (isOpen) {
-      setCashTendered(finalTotal);
+      setCashTendered(0);
+      setCardBank('');
       setQrisRefCode('');
       setQrisBatch('');
       setCardRefCode('');
@@ -193,6 +196,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                       type="number"
                       value={cashTendered || ''}
                       onChange={(e) => setCashTendered(Number(e.target.value))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && isCashSufficient) {
+                          e.preventDefault();
+                          handleSubmitPayment();
+                        }
+                      }}
+                      autoFocus
+                      min={0}
+                      placeholder="Ketik uang dari pembeli, atau tekan Uang Pas"
                       className="w-full p-2.5 text-base font-bold font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
@@ -231,17 +243,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </span>
                     <div
                       className={`text-lg font-black font-mono ${
-                        isCashSufficient
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-rose-500'
+                        !cashTendered
+                          ? 'text-slate-400 dark:text-slate-500'
+                          : isCashSufficient
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-rose-500'
                       }`}
                     >
-                      {isCashSufficient
-                        ? formatCurrency(changeDue, settings.currency)
-                        : `Kurang (-${formatCurrency(finalTotal - cashTendered, settings.currency)})`}
+                      {!cashTendered
+                        ? '—'
+                        : isCashSufficient
+                          ? formatCurrency(changeDue, settings.currency)
+                          : `Kurang (-${formatCurrency(finalTotal - cashTendered, settings.currency)})`}
                     </div>
                   </div>
-                  {isCashSufficient && (
+                  {isCashSufficient && cashTendered > 0 && (
                     <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
