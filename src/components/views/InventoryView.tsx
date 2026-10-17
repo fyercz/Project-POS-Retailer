@@ -239,37 +239,38 @@ export const InventoryView: React.FC = () => {
   const [isReceivingOpen, setIsReceivingOpen] = useState(false);
   const [isAiInvoiceScannerOpen, setIsAiInvoiceScannerOpen] = useState(false);
   const [isAiStockOpnameOpen, setIsAiStockOpnameOpen] = useState(false);
-  const [supplierName, setSupplierName] = useState(suppliers[0]?.name || 'PT Indomarco Adi Prima (Indofood)');
-  const [invoiceNumber, setInvoiceNumber] = useState(`INV-SUP-${Date.now().toString().slice(-6)}`);
-  const [paymentTerms, setPaymentTerms] = useState(suppliers[0]?.paymentTerms || 'Tunai / Cash');
+  // Formulir terima barang & retur supplier dimulai kosong (dulu diisi supplier pertama,
+  // produk pertama, qty 24, expired 2027-06-30, PPN 11%). Nomor faktur diisi dari nota supplier.
+  const [supplierName, setSupplierName] = useState('');
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState('Tunai / Cash');
   const [purchaseNotes, setPurchaseNotes] = useState('');
   const [discountTiming, setDiscountTiming] = useState<'before_ppn' | 'after_ppn'>('before_ppn');
   const [discountType, setDiscountType] = useState<'percentage' | 'nominal'>('percentage');
   const [discountRate, setDiscountRate] = useState<number>(0);
-  const [ppnRate, setPpnRate] = useState<number>(11);
+  const [ppnRate, setPpnRate] = useState<number>(0);
   const [barcodeInput, setBarcodeInput] = useState('');
   const [barcodeFeedback, setBarcodeFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isBarcodeCameraOpen, setIsBarcodeCameraOpen] = useState(false);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
-  const [receivingItems, setReceivingItems] = useState<ReceivingItem[]>([
-    {
-      productId: products[0]?.id || '',
-      quantity: 24,
-      costPrice: products[0]?.costPrice || 0,
-      subtotal: 24 * (products[0]?.costPrice || 0),
-      expiryDate: '2027-06-30',
-    },
-  ]);
+  const [receivingItems, setReceivingItems] = useState<ReceivingItem[]>([{ productId: '', quantity: 0, costPrice: 0, subtotal: 0, expiryDate: '' }]);
 
   // Supplier Purchase Return Modal State
   const [isReturnOpen, setIsReturnOpen] = useState(false);
-  const [returnSupplierName, setReturnSupplierName] = useState(suppliers[0]?.name || 'PT Indomarco Adi Prima (Indofood)');
+  const [returnSupplierName, setReturnSupplierName] = useState('');
   const [returnRefInvoice, setReturnRefInvoice] = useState('');
-  const [returnReason, setReturnReason] = useState('Barang Rusak / Bad Stock');
+  const [returnReason, setReturnReason] = useState('');
   const [returnNotes, setReturnNotes] = useState('');
-  const [returnItems, setReturnItems] = useState<SupplierReturnItemRow[]>([
-    { productId: products[0]?.id || '', quantity: 1, costPrice: products[0]?.costPrice || 0 },
-  ]);
+  const [returnItems, setReturnItems] = useState<SupplierReturnItemRow[]>([{ productId: '', quantity: 0, costPrice: 0 }]);
+  // Pesan validasi ditampilkan DI DALAM formulir (bilah notifikasi halaman tertutup jendela formulir)
+  const [receivingFormError, setReceivingFormError] = useState('');
+  const [returnFormError, setReturnFormError] = useState('');
+  useEffect(() => {
+    if (isReceivingOpen) setReceivingFormError('');
+  }, [isReceivingOpen]);
+  useEffect(() => {
+    if (isReturnOpen) setReturnFormError('');
+  }, [isReturnOpen]);
 
   const [notificationMsg, setNotificationMsg] = useState<{
     type: 'success' | 'return' | 'delete';
@@ -286,7 +287,7 @@ export const InventoryView: React.FC = () => {
           productId: item.productId,
           quantity: item.quantity,
           costPrice: item.costPrice,
-          expiryDate: item.expiryDate || toLocalDateString(new Date(Date.now() + 180 * 86400000)),
+          expiryDate: item.expiryDate || '',
         }))
       );
       setIsReceivingOpen(true);
@@ -696,9 +697,9 @@ export const InventoryView: React.FC = () => {
       setReceivingItems([
         {
           productId: prod.id,
-          quantity: Math.max(12, (prod.minStock || 10) * 2),
-          costPrice: prod.costPrice,
-          expiryDate: prod.expiryDate || '2027-06-30',
+          quantity: 0, // diisi sesuai barang yang benar-benar datang
+          costPrice: prod.costPrice, // harga modal terakhir sebagai titik awal
+          expiryDate: '', // tanggal expired batch baru, dari kemasan
         },
       ]);
     }
@@ -710,16 +711,17 @@ export const InventoryView: React.FC = () => {
       setReturnItems([
         {
           productId: prod.id,
-          quantity: Math.max(1, prod.stock > 0 ? Math.min(prod.stock, 5) : 1),
+          quantity: 0, // diisi sesuai barang yang benar-benar diretur
           costPrice: prod.costPrice,
           expiryDate: prod.expiryDate,
         },
       ]);
       const diff = getProductExpiryDiffDays(prod.expiryDate);
       if (diff !== null && diff <= 0) {
-        setReturnReason('Barang Kadaluarsa / Expired Date');
+        // Nilai harus sama persis dengan pilihan di daftar alasan
+        setReturnReason('Kadaluarsa / Near Expired (FEFO)');
       } else {
-        setReturnReason('Barang Rusak / Bad Stock');
+        setReturnReason('');
       }
     }
     setIsReturnOpen(true);
@@ -774,18 +776,7 @@ export const InventoryView: React.FC = () => {
 
   // Goods Receiving Row Helpers
   const handleAddReceivingRow = () => {
-    const firstProd = products[0];
-    const cost = firstProd?.costPrice || 0;
-    setReceivingItems((prev) => [
-      ...prev,
-      {
-        productId: firstProd?.id || '',
-        quantity: 12,
-        costPrice: cost,
-        subtotal: 12 * cost,
-        expiryDate: '2027-06-30',
-      },
-    ]);
+    setReceivingItems((prev) => [...prev, { productId: '', quantity: 0, costPrice: 0, subtotal: 0, expiryDate: '' }]);
   };
 
   const handleScanBarcode = (rawCode: string) => {
@@ -818,9 +809,29 @@ export const InventoryView: React.FC = () => {
         quantity: 1,
         costPrice: cost,
         subtotal: cost,
-        expiryDate: '2027-06-30',
+        expiryDate: '',
       };
-      setReceivingItems((prev) => [...prev, newRow]);
+      const target = matched;
+      setReceivingItems((prev) => {
+        // Produk yang sama di-scan lagi: tambah jumlahnya, bukan baris baru
+        const existingIdx = prev.findIndex((r) => r.productId === target.id);
+        if (existingIdx >= 0) {
+          const copy = [...prev];
+          const row = { ...copy[existingIdx] };
+          row.quantity = (Number(row.quantity) || 0) + 1;
+          row.subtotal = row.quantity * (Number(row.costPrice) || 0);
+          copy[existingIdx] = row;
+          return copy;
+        }
+        // Isi baris kosong yang belum dipilih produknya, kalau ada
+        const emptyIdx = prev.findIndex((r) => !r.productId);
+        if (emptyIdx >= 0) {
+          const copy = [...prev];
+          copy[emptyIdx] = newRow;
+          return copy;
+        }
+        return [...prev, newRow];
+      });
       setBarcodeFeedback({
         type: 'success',
         message: `+1 Baris Barang: "${matched.name}" (Barcode/SKU: ${matched.barcode || matched.sku}) berhasil ditambahkan.`,
@@ -980,6 +991,15 @@ export const InventoryView: React.FC = () => {
   const handleSubmitReceiving = (e: React.FormEvent) => {
     e.preventDefault();
     if (receivingItems.length === 0) return;
+    const receivingError = !supplierName
+      ? 'Pilih supplier terlebih dahulu.'
+      : receivingItems.some((r) => !r.productId)
+        ? 'Ada baris barang yang belum dipilih produknya. Pilih produknya atau hapus barisnya.'
+        : receivingItems.some((r) => !(Number(r.quantity) > 0))
+          ? 'Jumlah barang yang diterima harus lebih dari 0.'
+          : '';
+    setReceivingFormError(receivingError);
+    if (receivingError) return;
 
     const purchasePayload: Omit<SupplierPurchase, 'id' | 'createdAt'> = {
       supplierName,
@@ -1032,21 +1052,18 @@ export const InventoryView: React.FC = () => {
     setTimeout(() => setNotificationMsg(null), 8000);
 
     // Reset Form
-    setInvoiceNumber(`INV-SUP-${Date.now().toString().slice(-6)}`);
+    setSupplierName('');
+    setInvoiceNumber('');
+    setPaymentTerms('Tunai / Cash');
     setPurchaseNotes('');
     setDiscountRate(0);
-    setReceivingItems([
-      { productId: products[0]?.id || '', quantity: 24, costPrice: products[0]?.costPrice || 0, expiryDate: '2027-06-30' },
-    ]);
+    setPpnRate(0);
+    setReceivingItems([{ productId: '', quantity: 0, costPrice: 0, subtotal: 0, expiryDate: '' }]);
   };
 
   // Supplier Return Row Helpers
   const handleAddReturnRow = () => {
-    const firstProd = products[0];
-    setReturnItems((prev) => [
-      ...prev,
-      { productId: firstProd?.id || '', quantity: 1, costPrice: firstProd?.costPrice || 0 },
-    ]);
+    setReturnItems((prev) => [...prev, { productId: '', quantity: 0, costPrice: 0 }]);
   };
 
   const handleRemoveReturnRow = (index: number) => {
@@ -1087,6 +1104,23 @@ export const InventoryView: React.FC = () => {
   const handleSubmitSupplierReturn = (e: React.FormEvent) => {
     e.preventDefault();
     if (returnItems.length === 0) return;
+    const overStock = returnItems.find((r) => {
+      const p = products.find((x) => x.id === r.productId);
+      return p && Number(r.quantity) > (Number(p.stock) || 0);
+    });
+    const returnError = !returnSupplierName
+      ? 'Pilih supplier tujuan retur.'
+      : !returnReason
+        ? 'Pilih alasan retur.'
+        : returnItems.some((r) => !r.productId)
+          ? 'Ada baris barang yang belum dipilih produknya. Pilih produknya atau hapus barisnya.'
+          : returnItems.some((r) => !(Number(r.quantity) > 0))
+            ? 'Jumlah barang yang diretur harus lebih dari 0.'
+            : overStock
+              ? `Jumlah retur melebihi stok yang ada untuk "${products.find((x) => x.id === overStock.productId)?.name}".`
+              : '';
+    setReturnFormError(returnError);
+    if (returnError) return;
 
     const returnPayload: Omit<PurchaseReturn, 'id' | 'createdAt'> = {
       returnNumber: `RET-SUP-${Date.now().toString().slice(-6)}`,
@@ -1118,11 +1152,11 @@ export const InventoryView: React.FC = () => {
     setTimeout(() => setNotificationMsg(null), 6000);
 
     // Reset Form
+    setReturnSupplierName('');
+    setReturnReason('');
     setReturnRefInvoice('');
     setReturnNotes('');
-    setReturnItems([
-      { productId: products[0]?.id || '', quantity: 1, costPrice: products[0]?.costPrice || 0 },
-    ]);
+    setReturnItems([{ productId: '', quantity: 0, costPrice: 0 }]);
   };
 
   const handleOpenPurchaseForSupplier = (sup: Supplier) => {
@@ -3348,15 +3382,14 @@ export const InventoryView: React.FC = () => {
                       }}
                       className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-medium focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                     >
+                      <option value="" disabled>
+                        -- Pilih supplier --
+                      </option>
                       {suppliers.map((s) => (
                         <option key={s.id} value={s.name}>
                           {s.name} ({s.category || 'Distributor'})
                         </option>
                       ))}
-                      <option value="PT Indomarco Adi Prima (Indofood)">PT Indomarco (Indofood)</option>
-                      <option value="PT Wings Surya (Wings)">PT Wings Surya</option>
-                      <option value="PT Unilever Indonesia Tbk">PT Unilever Indonesia</option>
-                      <option value="PT Mayora Indah Tbk">PT Mayora Indah</option>
                       <option value="Supplier Lainnya / Grosir Lokal">Supplier Lainnya / Grosir Lokal</option>
                     </select>
                   </div>
@@ -3367,9 +3400,9 @@ export const InventoryView: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      required
                       value={invoiceNumber}
                       onChange={(e) => setInvoiceNumber(e.target.value)}
+                      placeholder="Dari nota supplier (kosongkan bila tidak ada)"
                       className="w-full p-2 font-mono font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
@@ -3520,8 +3553,12 @@ export const InventoryView: React.FC = () => {
                                 <select
                                   value={item.productId}
                                   onChange={(e) => handleReceivingItemChange(idx, 'productId', e.target.value)}
+                                  required
                                   className="w-full p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs cursor-pointer font-medium"
                                 >
+                                  <option value="" disabled>
+                                    -- Pilih produk --
+                                  </option>
                                   {products.map((p) => (
                                     <option key={p.id} value={p.id}>
                                       {p.name} ({p.sku}) {p.barcode ? `• Barcode: ${p.barcode}` : ''} - Stok: {p.stock}
@@ -3555,7 +3592,7 @@ export const InventoryView: React.FC = () => {
                               <td className="py-2 px-3">
                                 <input
                                   type="date"
-                                  value={item.expiryDate || '2027-06-30'}
+                                  value={item.expiryDate || ''}
                                   onChange={(e) => handleReceivingItemChange(idx, 'expiryDate', e.target.value)}
                                   className="w-full p-1.5 text-center text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 cursor-pointer"
                                 />
@@ -3694,9 +3731,9 @@ export const InventoryView: React.FC = () => {
                         onChange={(e) => setPpnRate(Number(e.target.value))}
                         className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white cursor-pointer font-medium"
                       >
+                        <option value={0}>Non-PPN / 0% (Nota tanpa PPN)</option>
                         <option value={11}>PPN 11% (Standar Nasional UU HPP)</option>
                         <option value={12}>PPN 12% (Kenaikan Tarif)</option>
-                        <option value={0}>Non-PPN / 0% (Bebas Pajak / Toko Non-PKP)</option>
                       </select>
                     </div>
                   </div>
@@ -3772,7 +3809,12 @@ export const InventoryView: React.FC = () => {
               </div>
 
               {/* Modal Footer Buttons */}
-              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-end gap-2.5">
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-end gap-2.5 flex-wrap">
+                {receivingFormError && (
+                  <p role="alert" className="mr-auto text-xs font-semibold text-rose-600 dark:text-rose-400">
+                    {receivingFormError}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsReceivingOpen(false)}
@@ -3845,15 +3887,14 @@ export const InventoryView: React.FC = () => {
                       onChange={(e) => setReturnSupplierName(e.target.value)}
                       className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-medium focus:ring-2 focus:ring-rose-500 cursor-pointer"
                     >
+                      <option value="" disabled>
+                        -- Pilih supplier --
+                      </option>
                       {suppliers.map((s) => (
                         <option key={s.id} value={s.name}>
                           {s.name}
                         </option>
                       ))}
-                      <option value="PT Indomarco Adi Prima (Indofood)">PT Indomarco (Indofood)</option>
-                      <option value="PT Wings Surya (Wings)">PT Wings Surya</option>
-                      <option value="PT Unilever Indonesia Tbk">PT Unilever Indonesia</option>
-                      <option value="PT Mayora Indah Tbk">PT Mayora Indah</option>
                       <option value="Supplier Lainnya / Grosir Lokal">Supplier Lainnya / Grosir Lokal</option>
                     </select>
                   </div>
@@ -3867,6 +3908,9 @@ export const InventoryView: React.FC = () => {
                       onChange={(e) => setReturnReason(e.target.value)}
                       className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-medium focus:ring-2 focus:ring-rose-500 cursor-pointer"
                     >
+                      <option value="" disabled>
+                        -- Pilih alasan --
+                      </option>
                       <option value="Barang Rusak / Bad Stock">Barang Rusak / Bad Stock</option>
                       <option value="Kadaluarsa / Near Expired (FEFO)">Kadaluarsa / Near Expired (FEFO)</option>
                       <option value="Salah Kirim / Tidak Sesuai PO">Salah Kirim / Tidak Sesuai PO</option>
@@ -3927,8 +3971,12 @@ export const InventoryView: React.FC = () => {
                                 <select
                                   value={item.productId}
                                   onChange={(e) => handleReturnItemChange(idx, 'productId', e.target.value)}
+                                  required
                                   className="w-full p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs cursor-pointer"
                                 >
+                                  <option value="" disabled>
+                                    -- Pilih produk --
+                                  </option>
                                   {products.map((p) => (
                                     <option key={p.id} value={p.id}>
                                       {p.name} ({p.sku}) - Sisa Stok: {p.stock}
@@ -4011,7 +4059,12 @@ export const InventoryView: React.FC = () => {
               </div>
 
               {/* Modal Footer Buttons */}
-              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-end gap-2.5">
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-end gap-2.5 flex-wrap">
+                {returnFormError && (
+                  <p role="alert" className="mr-auto text-xs font-semibold text-rose-600 dark:text-rose-400">
+                    {returnFormError}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsReturnOpen(false)}

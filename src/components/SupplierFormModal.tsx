@@ -57,9 +57,9 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
-  const [category, setCategory] = useState(CATEGORY_PRESETS[0]);
+  const [category, setCategory] = useState('');
   const [paymentTerms, setPaymentTerms] = useState(PAYMENT_TERMS_OPTIONS[0]);
-  const [leadTimeDays, setLeadTimeDays] = useState<number>(2);
+  const [leadTimeDays, setLeadTimeDays] = useState<number>(0);
   const [isActive, setIsActive] = useState<boolean>(true);
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -71,9 +71,9 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
       setPhone(supplierToEdit.phone || '');
       setEmail(supplierToEdit.email || '');
       setAddress(supplierToEdit.address || '');
-      setCategory(supplierToEdit.category || CATEGORY_PRESETS[0]);
+      setCategory(supplierToEdit.category || '');
       setPaymentTerms(supplierToEdit.paymentTerms || PAYMENT_TERMS_OPTIONS[0]);
-      setLeadTimeDays(supplierToEdit.leadTimeDays || 2);
+      setLeadTimeDays(supplierToEdit.leadTimeDays || 0);
       setIsActive(supplierToEdit.isActive !== false);
       setNotes(supplierToEdit.notes || '');
     } else {
@@ -82,9 +82,10 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
       setPhone('');
       setEmail('');
       setAddress('');
-      setCategory(CATEGORY_PRESETS[0]);
+      // Mitra baru: kategori & lama pengiriman dikosongkan (dulu otomatis 'Sembako' dan 2 hari)
+      setCategory('');
       setPaymentTerms(PAYMENT_TERMS_OPTIONS[0]);
-      setLeadTimeDays(2);
+      setLeadTimeDays(0);
       setIsActive(true);
       setNotes('');
     }
@@ -113,7 +114,7 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
       address: address.trim() || undefined,
       category: category.trim() || undefined,
       paymentTerms: paymentTerms.trim() || undefined,
-      leadTimeDays: Number(leadTimeDays) || 1,
+      leadTimeDays: Number(leadTimeDays) > 0 ? Number(leadTimeDays) : undefined,
       isActive,
       notes: notes.trim() || undefined,
     };
@@ -252,6 +253,7 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
               >
+                <option value="">-- Pilih kategori (opsional) --</option>
                 {CATEGORY_PRESETS.map((cat, idx) => (
                   <option key={idx} value={cat}>
                     {cat}
@@ -293,8 +295,9 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                   type="number"
                   min={1}
                   max={60}
-                  value={leadTimeDays}
+                  value={leadTimeDays || ''}
                   onChange={(e) => setLeadTimeDays(Number(e.target.value))}
+                  placeholder="Opsional"
                   className="w-full pl-9 pr-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
