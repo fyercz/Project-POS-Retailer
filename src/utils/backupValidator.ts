@@ -476,18 +476,23 @@ export function validateBackupFile(
     storeName: payloadStoreName,
     branchName: payloadBranch,
     data: {
-      products: sanitizedProducts,
-      transactions: sanitizedTransactions,
-      customers: sanitizedCustomers,
-      suppliers: sanitizedSuppliers,
-      salesReturns: Array.isArray(parsed.data.salesReturns) ? parsed.data.salesReturns : [],
-      purchaseReturns: Array.isArray(parsed.data.purchaseReturns) ? parsed.data.purchaseReturns : [],
-      supplierPurchases: Array.isArray(parsed.data.supplierPurchases) ? parsed.data.supplierPurchases : [],
+      // Bagian utama yang tidak ada di berkas dilewati saat restore (bukan mengosongkan katalog/riwayat)
+      products: Array.isArray(rawProducts) ? sanitizedProducts : undefined,
+      transactions: Array.isArray(rawTransactions) ? sanitizedTransactions : undefined,
+      customers: Array.isArray(rawCustomers) ? sanitizedCustomers : undefined,
+      suppliers: Array.isArray(rawSuppliers) ? sanitizedSuppliers : undefined,
+      // Bagian yang TIDAK ADA di berkas dibiarkan undefined agar restore melewatinya.
+      // (Dulu diganti [] sehingga restore 'Timpa' menghapus retur/voucher/pesanan yang ada.)
+      salesReturns: Array.isArray(parsed.data.salesReturns) ? parsed.data.salesReturns : undefined,
+      purchaseReturns: Array.isArray(parsed.data.purchaseReturns) ? parsed.data.purchaseReturns : undefined,
+      supplierPurchases: Array.isArray(parsed.data.supplierPurchases) ? parsed.data.supplierPurchases : undefined,
       settings: parsed.data.settings && typeof parsed.data.settings === 'object' ? parsed.data.settings : undefined,
-      vouchers: Array.isArray(parsed.data.vouchers) ? parsed.data.vouchers : [],
+      vouchers: Array.isArray(parsed.data.vouchers) ? parsed.data.vouchers : undefined,
       employees: sanitizedEmployees,
-      heldOrders: Array.isArray(parsed.data.heldOrders) ? parsed.data.heldOrders : [],
+      heldOrders: Array.isArray(parsed.data.heldOrders) ? parsed.data.heldOrders : undefined,
       currentShift: parsed.data.currentShift || null,
+      expenses: Array.isArray(parsed.data.expenses) ? parsed.data.expenses : undefined,
+      pastShifts: Array.isArray(parsed.data.pastShifts) ? parsed.data.pastShifts : undefined,
     },
     summary: {
       totalProducts: sanitizedProducts.length,

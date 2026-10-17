@@ -662,6 +662,8 @@ export interface BackupPayload {
     employees?: Employee[];
     heldOrders?: HeldOrder[];
     currentShift?: ShiftSummary | null;
+    expenses?: OperationalExpense[];
+    pastShifts?: ShiftSummary[];
   };
   summary: {
     totalProducts: number;

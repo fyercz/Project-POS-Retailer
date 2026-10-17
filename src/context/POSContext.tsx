@@ -2895,6 +2895,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         employees,
         heldOrders,
         currentShift,
+        expenses,
+        pastShifts,
       },
       summary: {
         totalProducts: products.length,
@@ -2920,6 +2922,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     employees,
     heldOrders,
     currentShift,
+    expenses,
+    pastShifts,
   ]);
 
   const downloadBackupFile = useCallback(
@@ -3111,10 +3115,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (Array.isArray(d.salesReturns)) setSalesReturns(d.salesReturns);
           if (Array.isArray(d.purchaseReturns)) setPurchaseReturns(d.purchaseReturns);
           if (Array.isArray(d.supplierPurchases)) setSupplierPurchases(d.supplierPurchases);
-          if (d.settings) setSettings(d.settings);
+          // Pengaturan digabung: backup versi lama tidak punya pengaturan baru (jangan sampai kosong)
+          if (d.settings && typeof d.settings === 'object') setSettings((prev) => ({ ...prev, ...d.settings }));
           if (Array.isArray(d.vouchers)) setVouchers(d.vouchers);
-          if (Array.isArray(d.employees) && d.employees.length > 0) setEmployees(d.employees);
+          // Daftar karyawan & PIN TIDAK ditimpa: memulihkan backup lama bisa mengembalikan PIN bawaan
+          // atau akun mantan karyawan. Karyawan dari backup yang belum ada ditambahkan sebagai NONAKTIF.
+          if (Array.isArray(d.employees)) {
+            setEmployees((prev) => {
+              const ids = new Set(prev.map((e) => e.id));
+              const added = d.employees!
+                .filter((e) => e && e.id && e.name && !ids.has(e.id))
+                .map((e) => ({ ...e, isActive: false }));
+              return [...prev, ...added];
+            });
+          }
           if (Array.isArray(d.heldOrders)) setHeldOrders(d.heldOrders);
+          if (Array.isArray(d.expenses)) setExpenses(d.expenses);
+          if (Array.isArray(d.pastShifts)) setPastShifts(d.pastShifts);
           setCart([]);
         } else {
           // Merge mode
@@ -3182,6 +3199,19 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               return [...prev, ...added];
             });
           }
+
+          if (Array.isArray(d.expenses)) {
+            setExpenses((prev) => {
+              const ids = new Set(prev.map((e) => e.id));
+              return [...prev, ...d.expenses!.filter((e) => e && e.id && !ids.has(e.id))];
+            });
+          }
+        }
+
+        // Di jaringan LAN: stok hasil restore dianggap "sudah diketahui server" agar tidak terkirim
+        // sebagai selisih stok besar ke server. Stok server tetap; tarik data dari server bila perlu.
+        if (mode === 'overwrite' && cleanProducts !== null && lanBaselineRef.current) {
+          resetLanBaseline(cleanProducts);
         }
 
         return {
