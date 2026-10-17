@@ -7,6 +7,8 @@ coverage/
 .env*
 !.env.example
 
-# Data toko (database SQLite) jangan pernah masuk Git
-data/
-data-backup/
+# Data toko (database SQLite) jangan pernah masuk Git.
+# Diawali "/" agar hanya folder data di folder utama yang diabaikan,
+# bukan folder kode seperti src/server/data/.
+/data/
+/data-backup/
