@@ -1074,6 +1074,32 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  // Tulis simpanan yang masih tertunda saat tab disembunyikan / ditutup, agar perubahan terakhir
+  // (mis. transaksi yang baru selesai) tidak hilang bila browser ditutup dalam jeda 250 ms.
+  useEffect(() => {
+    const flushPendingSaves = () => {
+      const saves = { ...pendingStorageSaves.current };
+      if (Object.keys(saves).length === 0) return;
+      pendingStorageSaves.current = {};
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+      for (const [k, v] of Object.entries(saves)) {
+        posStorage.setItem(k, v).catch((err) => console.warn('[posStorage] Gagal menyimpan saat menutup:', err));
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flushPendingSaves();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flushPendingSaves);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', flushPendingSaves);
+    };
+  }, []);
+
   // High-Capacity Storage Diagnostics & Benchmark
   const [storageDiagnostics, setStorageDiagnostics] = useState<StorageDiagnostics | null>(null);
 

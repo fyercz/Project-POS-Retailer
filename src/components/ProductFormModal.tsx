@@ -573,7 +573,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    value={name}
+                    data-testid="product-name" value={name}
                     onChange={(e) => handleNameChange(e.target.value)}
                     onBlur={() => {
                       if (autoMapCategoryEnabled && !hasManuallySelectedCategory && name.trim().length >= 3) {
@@ -642,7 +642,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </button>
                 </div>
                 <select
-                  value={categoryId}
+                  data-testid="product-category" value={categoryId}
                   onChange={(e) => {
                     setCategoryId(e.target.value);
                     setHasManuallySelectedCategory(true);
@@ -729,7 +729,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <Hash className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    value={sku}
+                    data-testid="product-sku" value={sku}
                     onChange={(e) => setSku(e.target.value)}
                     placeholder="SEM-BRS-5KG"
                     className="w-full pl-9 pr-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -775,7 +775,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <Barcode className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    value={barcode}
+                    data-testid="product-barcode" value={barcode}
                     onChange={(e) => setBarcode(e.target.value)}
                     placeholder="Contoh: 8998866200223 atau ZN-SHMP-170"
                     className="w-full pl-9 pr-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -835,7 +835,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     type="number"
                     min={0}
                     step={100}
-                    value={costPrice || ''}
+                    data-testid="product-cost" value={costPrice || ''}
                     onChange={(e) => setCostPrice(Number(e.target.value))}
                     placeholder="0"
                     className="w-full pl-9 pr-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -854,7 +854,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     type="number"
                     min={0}
                     step={100}
-                    value={price || ''}
+                    data-testid="product-price" value={price || ''}
                     onChange={(e) => setPrice(Number(e.target.value))}
                     placeholder="0"
                     className="w-full pl-9 pr-3 py-2 text-sm font-mono font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -1051,7 +1051,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 <input
                   type="number"
                   min={0}
-                  value={isEditMode ? stock : stock || ''}
+                  data-testid="product-stock" value={isEditMode ? stock : stock || ''}
                   onChange={(e) => setStock(Number(e.target.value))}
                   placeholder="0"
                   className="w-full px-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -1217,6 +1217,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               </button>
               <button
                 type="submit"
+                data-testid="product-submit"
                 className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
               >
                 <Save className="w-4 h-4" />

@@ -29,6 +29,7 @@ export const FirstRunSetup: React.FC = () => {
   return (
     <div className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4 overflow-y-auto">
       <form
+        data-testid="first-run-setup"
         onSubmit={handleSubmit}
         className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-4"
       >
@@ -44,7 +45,7 @@ export const FirstRunSetup: React.FC = () => {
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Nama Toko (opsional)</span>
           <input
             className={inputClass}
-            value={storeName}
+            data-testid="setup-store" value={storeName}
             onChange={(e) => setStoreName(e.target.value)}
             placeholder={settings.storeName || 'Nama toko'}
           />
@@ -56,7 +57,7 @@ export const FirstRunSetup: React.FC = () => {
             className={inputClass}
             required
             autoFocus
-            value={ownerName}
+            data-testid="setup-owner" value={ownerName}
             onChange={(e) => setOwnerName(e.target.value)}
           />
         </label>
@@ -71,7 +72,7 @@ export const FirstRunSetup: React.FC = () => {
               autoComplete="new-password"
               maxLength={6}
               required
-              value={pin}
+              data-testid="setup-pin" value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
             />
           </label>
@@ -84,7 +85,7 @@ export const FirstRunSetup: React.FC = () => {
               autoComplete="new-password"
               maxLength={6}
               required
-              value={pinConfirm}
+              data-testid="setup-pin-confirm" value={pinConfirm}
               onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, ''))}
             />
           </label>
@@ -101,6 +102,7 @@ export const FirstRunSetup: React.FC = () => {
 
         <button
           type="submit"
+          data-testid="setup-submit"
           className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold cursor-pointer"
         >
           Buat Akun Owner &amp; Mulai

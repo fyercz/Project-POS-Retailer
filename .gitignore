@@ -12,3 +12,7 @@ coverage/
 # bukan folder kode seperti src/server/data/.
 /data/
 /data-backup/
+
+# Hasil tes E2E
+test-results/
+playwright-report/
