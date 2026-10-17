@@ -268,3 +268,17 @@ test('filter tanggal ke server memakai batas hari lokal (penjualan dini hari WIB
   const r = await (await fetch(`${BASE}/api/pos/transactions?startDate=${wibStart}&endDate=${wibEnd}&pageSize=100`)).json();
   assert.ok(r.transactions.some((t: any) => t.id === 'tx-dinihari'));
 });
+
+test('AI faktur & opname visual: tanpa AI menjawab error, tidak mengarang data', async () => {
+  const catalog = [{ id: 'p-ai', name: 'Produk AI', price: 1000, costPrice: 800, stock: 10 }];
+  const inv = await post('/api/ai/scan-invoice', { imageBase64: 'aGVsbG8=', mimeType: 'image/png', catalogProducts: catalog });
+  assert.equal(inv.status, 503);
+  assert.equal(inv.data.items, undefined, 'tidak boleh ada barang karangan');
+
+  const noImage = await post('/api/ai/scan-invoice', { catalogProducts: catalog });
+  assert.equal(noImage.status, 400);
+
+  const opname = await post('/api/ai/visual-stock-opname', { imagesBase64: ['aGVsbG8='], catalogProducts: catalog });
+  assert.equal(opname.status, 503);
+  assert.equal(opname.data.items, undefined, 'tidak boleh ada hitungan stok karangan');
+});
