@@ -71,7 +71,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onPrintQRShelfLabel,
   onViewPriceHistory,
 }) => {
-  const { categories, addProduct, updateProduct, settings } = usePOS();
+  const { categories, addProduct, updateProduct, settings, products } = usePOS();
 
   const isEditMode = Boolean(productToEdit);
 
@@ -119,7 +119,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setLastOrderQuantity(initialLastOrder);
       setMinStock(productToEdit.minStock || (initialLastOrder > 0 ? Math.max(1, Math.ceil(initialLastOrder * 0.5)) : 5));
       setUnit(productToEdit.unit || 'pcs');
-      setExpiryDate(productToEdit.expiryDate || '2027-12-31');
+      setExpiryDate(productToEdit.expiryDate || '');
       setBatchNumber(productToEdit.batchNumber || '');
       setPromoBadge(productToEdit.promoBadge || '');
       setIsPopular(Boolean(productToEdit.isPopular));
@@ -128,23 +128,22 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setHasManuallySelectedCategory(true);
       setAiMappingResult(null);
     } else {
-      // Reset defaults for new item
+      // Produk baru: semua kolom kosong. Dulu diisi data contoh (harga 15.000, stok 24,
+      // barcode & SKU acak, expired 2027) yang mudah ikut tersimpan tanpa sengaja.
+      // Hanya barcode hasil scan (bila form dibuka dari scan barcode tak dikenal) yang diisi.
       setName('');
       setBrand('');
-      const randNum = Math.floor(1000 + Math.random() * 9000);
-      const barcodeToUse = (initialBarcode || '').trim() || `899${Math.floor(100000000 + Math.random() * 900000000)}`;
-      const cleanSkuSuffix = initialBarcode ? initialBarcode.replace(/\D/g, '').slice(-4) || randNum : randNum;
-      setSku(`SKU-${cleanSkuSuffix}`);
-      setBarcode(barcodeToUse);
-      setCategoryId('groceries');
-      setPrice(15000);
-      setCostPrice(12000);
-      setStock(24);
-      setLastOrderQuantity(20);
-      setMinStock(10); // Aturan 50% dari order 20
+      setSku('');
+      setBarcode((initialBarcode || '').trim());
+      setCategoryId('');
+      setPrice(0);
+      setCostPrice(0);
+      setStock(0);
+      setLastOrderQuantity(0);
+      setMinStock(0);
       setUnit('pcs');
-      setExpiryDate('2027-12-31');
-      setBatchNumber(`BCH-${randNum}`);
+      setExpiryDate('');
+      setBatchNumber('');
       setPromoBadge('');
       setIsPopular(false);
       setDescription('');
@@ -222,8 +221,18 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       const categoryPrefix = (categoryId.replace('cat-', '') || 'BC').toUpperCase().slice(0, 3);
       setBarcode(`${categoryPrefix}-${randomCode}`);
     } else {
-      const random12 = `899${Math.floor(100000000 + Math.random() * 900000000)}`;
-      setBarcode(random12);
+      // Awalan 2 = kode internal toko (GS1 "restricted circulation"), tidak bentrok dengan
+      // barcode produk pabrik. Awalan 899 adalah kode negara Indonesia milik produk asli.
+      const used = new Set((products || []).map((p) => (p.barcode || '').trim()));
+      let code = '';
+      for (let attempt = 0; attempt < 20; attempt++) {
+        let body = '2';
+        for (let i = 0; i < 11; i++) body += Math.floor(Math.random() * 10);
+        const sum = body.split('').reduce((acc, d, i) => acc + Number(d) * (i % 2 === 0 ? 1 : 3), 0);
+        code = body + ((10 - (sum % 10)) % 10);
+        if (!used.has(code)) break;
+      }
+      setBarcode(code);
     }
   };
 
@@ -353,9 +362,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   };
 
   const handleGenerateSku = () => {
-    const catCode = categoryId.slice(0, 3).toUpperCase();
-    const rand = Math.floor(100 + Math.random() * 900);
-    setSku(`${catCode}-${rand}`);
+    const catCode = (categoryId.replace(/^cat-/, '').slice(0, 3) || 'PRD').toUpperCase();
+    const used = new Set((products || []).map((p) => (p.sku || '').trim().toUpperCase()));
+    let candidate = '';
+    for (let attempt = 0; attempt < 20; attempt++) {
+      candidate = `${catCode}-${Math.floor(10000 + Math.random() * 90000)}`;
+      if (!used.has(candidate)) break;
+    }
+    setSku(candidate);
   };
 
   const marginNominal = Math.max(0, price - costPrice);
@@ -393,8 +407,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const validate = () => {
     const errs: { [key: string]: string } = {};
     if (!name.trim()) errs.name = 'Nama produk wajib diisi';
-    if (!sku.trim()) errs.sku = 'SKU / Kode barang wajib diisi';
-    if (!barcode.trim()) errs.barcode = 'Barcode wajib diisi';
+    if (!sku.trim()) errs.sku = 'SKU / Kode barang wajib diisi (atau tekan "Auto")';
+    if (!barcode.trim()) errs.barcode = 'Barcode wajib diisi (atau tekan "Acak EAN")';
+    if (!categoryId) errs.categoryId = 'Kategori wajib dipilih';
+    const others = (products || []).filter((p) => p.id !== productToEdit?.id);
+    const dupBarcode = barcode.trim() && others.find((p) => (p.barcode || '').trim() === barcode.trim());
+    if (dupBarcode) errs.barcode = `Barcode sudah dipakai produk "${dupBarcode.name}"`;
+    const dupSku = sku.trim() && others.find((p) => (p.sku || '').trim().toLowerCase() === sku.trim().toLowerCase());
+    if (dupSku) errs.sku = `SKU sudah dipakai produk "${dupSku.name}"`;
     if (price <= 0) errs.price = 'Harga jual harus lebih dari 0';
     if (costPrice < 0) errs.costPrice = 'Harga modal tidak boleh negatif';
     if (stock < 0) errs.stock = 'Stok tidak boleh negatif';
@@ -633,6 +653,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800'
                   } text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer transition`}
                 >
+                  <option value="" disabled>
+                    -- Pilih kategori --
+                  </option>
                   {categories
                     .filter((c) => c.id !== 'all')
                     .map((cat) => (
@@ -641,6 +664,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       </option>
                     ))}
                 </select>
+                {errors.categoryId && <p className="text-[11px] text-rose-500 mt-1">{errors.categoryId}</p>}
 
                 {/* AI Mapping Status / Feedback Indicator */}
                 {isAiMappingCategory && (
@@ -813,7 +837,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     step={100}
                     value={costPrice || ''}
                     onChange={(e) => setCostPrice(Number(e.target.value))}
-                    placeholder="12000"
+                    placeholder="0"
                     className="w-full pl-9 pr-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
@@ -832,7 +856,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     step={100}
                     value={price || ''}
                     onChange={(e) => setPrice(Number(e.target.value))}
-                    placeholder="15000"
+                    placeholder="0"
                     className="w-full pl-9 pr-3 py-2 text-sm font-mono font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
@@ -1027,8 +1051,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 <input
                   type="number"
                   min={0}
-                  value={stock}
+                  value={isEditMode ? stock : stock || ''}
                   onChange={(e) => setStock(Number(e.target.value))}
+                  placeholder="0"
                   className="w-full px-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
@@ -1043,7 +1068,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 <input
                   type="number"
                   min={0}
-                  value={lastOrderQuantity}
+                  value={lastOrderQuantity || ''}
                   onChange={(e) => {
                     const val = Number(e.target.value);
                     setLastOrderQuantity(val);
@@ -1075,8 +1100,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <input
                     type="number"
                     min={0}
-                    value={minStock}
+                    value={isEditMode ? minStock : minStock || ''}
                     onChange={(e) => setMinStock(Number(e.target.value))}
+                    placeholder="Otomatis"
                     className="w-full px-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                   {lastOrderQuantity > 0 && minStock === Math.max(1, Math.ceil(lastOrderQuantity * 0.5)) && (
