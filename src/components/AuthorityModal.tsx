@@ -136,9 +136,6 @@ export const AuthorityModal: React.FC<AuthorityModalProps> = ({
               placeholder="Masukkan 4 digit PIN..."
               className="w-full px-3 py-2 text-center text-xl font-mono font-bold tracking-widest rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
-            <div className="text-[10px] text-slate-400 text-center mt-1.5 font-mono">
-              PIN Supervisor: <strong>7890</strong> • Owner: <strong>9999</strong>
-            </div>
           </div>
 
           {error && (

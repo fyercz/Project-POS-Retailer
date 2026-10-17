@@ -17,6 +17,7 @@ import { CustomersView } from './components/views/CustomersView';
 import { ReportsView } from './components/views/ReportsView';
 import { GeminiRetailCopilot } from './components/GeminiRetailCopilot';
 import { EmployeeLockScreen } from './components/EmployeeLockScreen';
+import { FirstRunSetup } from './components/FirstRunSetup';
 import { EmployeeManagementModal } from './components/EmployeeManagementModal';
 import { ShiftModal } from './components/ShiftModal';
 import { OfflineSyncModal } from './components/OfflineSyncModal';
@@ -37,6 +38,7 @@ const POSMainApp: React.FC = () => {
     activeView,
     setActiveView,
     activeEmployee,
+    employees,
     isPaymentModalOpen,
     setIsPaymentModalOpen,
     activeReceipt,
@@ -221,6 +223,9 @@ const POSMainApp: React.FC = () => {
 
       {/* Employee Login & Screen Lock */}
       <EmployeeLockScreen />
+
+      {/* Instalasi baru (belum ada karyawan): pendaftaran akun Owner */}
+      {employees.length === 0 && <FirstRunSetup />}
 
       {/* Employee Management Modal */}
       {isEmployeeManagementOpen && <EmployeeManagementModal />}

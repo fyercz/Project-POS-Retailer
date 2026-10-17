@@ -29,7 +29,6 @@ import {
 } from 'lucide-react';
 import { Product, WholesaleUnit } from '../types';
 import { usePOS } from '../context/POSContext';
-import { INITIAL_PRODUCTS } from '../data/mockData';
 import { formatCurrency } from '../utils/formatters';
 import { getImageForCategory } from '../data/importHelpers';
 import { parseRetailLine, parseRetailLineRaw, parseFullCSVText, ParsedItem } from '../utils/retailNormalizer';
@@ -96,10 +95,10 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
   const [clearMessage, setClearMessage] = useState<string | null>(null);
 
   // Check how many imported products exist in system
-  const initialProductIds = useMemo(() => new Set(INITIAL_PRODUCTS.map((p) => p.id)), []);
+  // Produk hasil impor ditandai importedAt saat diimpor
   const currentImportedCount = useMemo(
-    () => products.filter((p) => !initialProductIds.has(p.id)).length,
-    [products, initialProductIds]
+    () => products.filter((p) => Boolean(p.importedAt)).length,
+    [products]
   );
 
   // Parse raw text into items (supports direct AS-IS or auto-correction mode with full CSV engine)

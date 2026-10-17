@@ -116,7 +116,6 @@ export const InventoryView: React.FC = () => {
     deleteProduct,
     deleteProductsBatch,
     clearImportedProducts,
-    resetProductsToDefault,
     clearAllProducts,
     recordProductPriceChange,
     updateProduct,
@@ -650,7 +649,7 @@ export const InventoryView: React.FC = () => {
     } catch {
       // ignore
     }
-    resetProductsToDefault();
+    // (Tombol 'Reset Default' ke produk contoh sudah dihapus; jendela ini tidak lagi bisa dibuka)
     setSelectedProductIds([]);
     setIsResetCatalogModalOpen(false);
     setNotificationMsg({
@@ -1805,16 +1804,6 @@ export const InventoryView: React.FC = () => {
               <option value="hide">Stok Habis: Sembunyikan 👁️‍🗨️</option>
               <option value="normal">Stok Habis: Urutan Normal 📋</option>
             </select>
-
-            <button
-              type="button"
-              onClick={() => setIsResetCatalogModalOpen(true)}
-              className="px-2.5 py-1.5 text-[11px] font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-              title="Reset seluruh katalog produk ke setelan awal 40 item default"
-            >
-              <RefreshCw className="w-3 h-3 text-slate-400" />
-              <span>Reset Default</span>
-            </button>
 
             {/* Quick Alert Filter Chips */}
             <div className="flex items-center gap-1.5 ml-auto flex-wrap">

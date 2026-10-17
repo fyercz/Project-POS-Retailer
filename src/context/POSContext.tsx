@@ -36,18 +36,9 @@ import {
 } from '../types';
 import {
   INITIAL_CATEGORIES,
-  INITIAL_PRODUCTS,
-  INITIAL_CUSTOMERS,
-  INITIAL_VOUCHERS,
-  INITIAL_SUPPLIERS,
-  INITIAL_SUPPLIER_PURCHASES,
   DEFAULT_STORE_SETTINGS,
-  INITIAL_RECENT_TRANSACTIONS,
-  INITIAL_EMPLOYEES,
-  INITIAL_EXPENSES,
 } from '../data/mockData';
 import { generateInvoiceNumber, toLocalDateString } from '../utils/formatters';
-import { generate14DaysSampleTransactions } from '../utils/salesForecaster';
 import { offlineSyncManager } from '../utils/offlineSyncManager';
 import {
   getLANConfig,
@@ -103,7 +94,6 @@ export interface POSCatalogContextType {
   addProductsBatch: (products: Omit<Product, 'id'>[]) => Product[];
   deleteProductsBatch: (ids: string[]) => void;
   clearImportedProducts: () => void;
-  resetProductsToDefault: () => void;
   clearAllProducts: () => void;
   updateProduct: (id: string, updated: Partial<Product>) => void;
   recordProductPriceChange: (
@@ -113,7 +103,6 @@ export interface POSCatalogContextType {
     historyRecord: PriceHistoryRecord
   ) => void;
   deleteProduct: (id: string) => void;
-  resetToRetailDefaults: () => void;
 }
 
 export interface POSCartActionsContextType {
@@ -316,7 +305,10 @@ export interface POSUIContextType {
     customers?: Customer[];
     suppliers?: Supplier[];
   }) => void;
-  prepareStoreForLaunch: (options?: { resetTransactions?: boolean; resetProductsToBlank?: boolean }) => { success: boolean; message: string };
+  /** Hapus transaksi latihan/uji coba (Owner). Membuat titik pulih lebih dulu. */
+  clearTrialTransactions: () => { success: boolean; message: string };
+  /** Pendaftaran pertama: buat akun Owner (nama + PIN sendiri) dan nama toko. */
+  completeFirstRunSetup: (data: { ownerName: string; pin: string; storeName?: string }) => { success: boolean; message: string };
   // Accounting & Financial Statements (Double-Entry & Balance Sheet)
   expenses: OperationalExpense[];
   addExpense: (expense: Omit<OperationalExpense, 'id' | 'date'>) => OperationalExpense;
@@ -352,7 +344,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [products, setProducts] = useState<Product[]>(() => {
     // Clear out old mock sample dataset if present
     localStorage.removeItem('pos_retail_products_v2');
-    let rawList: Product[] = INITIAL_PRODUCTS;
+    // Instalasi baru dimulai tanpa produk (dulu 16 produk contoh dengan harga & stok karangan)
+    let rawList: Product[] = [];
     try {
       const saved = localStorage.getItem('pos_retail_products_v3');
       if (saved) {
@@ -364,7 +357,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
     } catch {
-      rawList = INITIAL_PRODUCTS;
+      rawList = [];
     }
     const seenIds = new Set<string>();
     return rawList.map((p, idx) => {
@@ -439,12 +432,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const saved = localStorage.getItem('pos_retail_tx_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
-        return Array.isArray(parsed) ? parsed : INITIAL_RECENT_TRANSACTIONS;
+        return Array.isArray(parsed) ? parsed : [];
       }
     } catch {
-      return INITIAL_RECENT_TRANSACTIONS;
+      return [];
     }
-    return INITIAL_RECENT_TRANSACTIONS;
+    return []; // dulu: 14 hari transaksi contoh
   });
 
   // Customers with loyalty tracking & points ledger
@@ -463,7 +456,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const parsed = JSON.parse(savedV2);
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map((c: any) => {
-            const match = INITIAL_CUSTOMERS.find((init) => init.id === c.id);
+            const match = undefined as Customer | undefined;
             return {
               ...c,
               tier: c.tier && c.tier !== 'Regular' ? c.tier : (match ? match.tier : 'Bronze'),
@@ -476,7 +469,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // fallback
       }
     }
-    return INITIAL_CUSTOMERS;
+    return [];
   });
 
   // Store Settings
@@ -523,7 +516,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       // data rusak: jangan sampai aplikasi gagal dibuka
     }
-    return INITIAL_VOUCHERS;
+    return []; // dulu: 4 voucher contoh yang langsung aktif
   });
 
   // Returns state (Sales Returns and Supplier Purchase Returns)
@@ -567,10 +560,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [supplierPurchases, setSupplierPurchases] = useState<SupplierPurchase[]>(() => {
     const saved = localStorage.getItem('pos_supplier_purchases_v2');
-    if (!saved) return INITIAL_SUPPLIER_PURCHASES;
+    if (!saved) return [];
     try {
       const list: SupplierPurchase[] = JSON.parse(saved);
-      if (!Array.isArray(list)) return INITIAL_SUPPLIER_PURCHASES;
+      if (!Array.isArray(list)) return [];
       const seen = new Set<string>();
       return list.map((p, i) => {
         let id = p.id;
@@ -581,12 +574,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { ...p, id };
       });
     } catch {
-      return INITIAL_SUPPLIER_PURCHASES;
+      return [];
     }
   });
 
   const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
-    let rawList: Supplier[] = INITIAL_SUPPLIERS;
+    let rawList: Supplier[] = [];
     try {
       const saved = localStorage.getItem('pos_retail_suppliers_v2');
       if (saved) {
@@ -596,7 +589,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
     } catch {
-      rawList = INITIAL_SUPPLIERS;
+      rawList = [];
     }
     const seen = new Set<string>();
     return rawList.map((s, i) => {
@@ -620,14 +613,16 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       // fallback
     }
-    return INITIAL_EMPLOYEES;
+    // Instalasi baru: tanpa karyawan. Layar pendaftaran Owner muncul (dulu 5 akun contoh dengan
+    // PIN yang tertulis di kode: 1234, 2345, 3456, 7890, dan 9999 untuk Owner).
+    return [];
   });
 
   const [activeEmployee, setActiveEmployee] = useState<Employee | null>(() => {
     try {
       const savedEmpId = localStorage.getItem('pos_active_employee_id');
       const savedEmployeesStr = localStorage.getItem('pos_employees_v2');
-      let allEmployees: Employee[] = INITIAL_EMPLOYEES;
+      let allEmployees: Employee[] = [];
       if (savedEmployeesStr) {
         try {
           const parsed = JSON.parse(savedEmployeesStr);
@@ -638,9 +633,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const match = allEmployees.find((e) => e.id === savedEmpId);
         if (match) return match;
       }
-      return allEmployees[0] || INITIAL_EMPLOYEES[0];
+      return allEmployees[0] || null;
     } catch {
-      return INITIAL_EMPLOYEES[0];
+      return null;
     }
   });
 
@@ -658,11 +653,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       // fallback
     }
+    // Shift pertama dibuat setelah Owner mendaftar (lihat completeFirstRunSetup)
+    return null;
     return {
       id: `shift-${Date.now()}`,
-      employeeId: INITIAL_EMPLOYEES[0].id,
-      employeeName: INITIAL_EMPLOYEES[0].name,
-      role: INITIAL_EMPLOYEES[0].role,
+      employeeId: '',
+      employeeName: '',
+      role: 'owner',
       startTime: new Date().toISOString(),
       startingCash: 0, // Modal awal diisi kasir di layar Shift (dulu otomatis Rp 500.000)
       totalSales: 0,
@@ -697,7 +694,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       // fallback
     }
-    return INITIAL_EXPENSES;
+    return [];
   });
 
 
@@ -1981,6 +1978,61 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLocked(true);
   };
 
+  /**
+   * Pendaftaran pertama (instalasi baru tanpa karyawan): buat akun Owner dengan PIN pilihan sendiri,
+   * langsung login, mulai shift pertama, dan simpan nama toko bila diisi.
+   */
+  const completeFirstRunSetup = (data: { ownerName: string; pin: string; storeName?: string }): { success: boolean; message: string } => {
+    if (employees.length > 0) return { success: false, message: 'Akun Owner sudah ada. Silakan login.' };
+    const ownerName = (data.ownerName || '').trim();
+    const pin = (data.pin || '').trim();
+    if (!ownerName) return { success: false, message: 'Isi nama Owner.' };
+    if (!/^\d{4,6}$/.test(pin)) return { success: false, message: 'PIN harus 4-6 digit angka.' };
+    if (/^(\d)\1+$/.test(pin) || ['1234', '12345', '123456', '4321', '54321', '654321'].includes(pin)) {
+      return { success: false, message: 'PIN terlalu mudah ditebak. Gunakan kombinasi angka lain.' };
+    }
+    const initials = ownerName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]!.toUpperCase())
+      .join('');
+    const owner: Employee = {
+      id: `emp-${Date.now()}`,
+      employeeCode: 'EMP-01',
+      name: ownerName,
+      role: 'owner',
+      roleTitle: 'Pemilik Toko',
+      pin,
+      avatar: initials || 'OW',
+      avatarColor: 'bg-purple-600',
+      isActive: true,
+      assignedShift: 'Full Day',
+      registeredAt: toLocalDateString(),
+    };
+    setEmployees([owner]);
+    setActiveEmployee(owner);
+    setIsLocked(false);
+    if (data.storeName && data.storeName.trim()) {
+      setSettings((prev) => ({ ...prev, storeName: data.storeName!.trim() }));
+    }
+    setCurrentShift({
+      id: `shift-${Date.now()}`,
+      employeeId: owner.id,
+      employeeName: owner.name,
+      role: owner.role,
+      startTime: new Date().toISOString(),
+      startingCash: 0,
+      cashOut: 0,
+      totalSales: 0,
+      totalTransactions: 0,
+      cashSales: 0,
+      nonCashSales: 0,
+      status: 'active',
+    });
+    return { success: true, message: `Selamat datang, ${owner.name}!` };
+  };
+
   const addEmployee = (empData: Omit<Employee, 'id' | 'registeredAt'>): Employee => {
     const newEmp: Employee = {
       ...empData,
@@ -2706,9 +2758,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProducts((prev) => prev.filter((p) => !p.importedAt));
   };
 
-  const resetProductsToDefault = () => {
-    setProducts(INITIAL_PRODUCTS);
-  };
 
   const clearAllProducts = () => {
     setProducts([]);
@@ -2817,7 +2866,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const loadSampleTransactions = (customSample?: Transaction[]) => {
-    const list = customSample || generate14DaysSampleTransactions();
+    // Tidak ada lagi 'data contoh': hanya transaksi yang diberikan pemanggil
+    const list = customSample || [];
     setTransactions((prev) => {
       const existingIds = new Set(prev.map((t) => t.id));
       const newItems = list.filter((t) => !existingIds.has(t.id));
@@ -2825,35 +2875,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const resetToRetailDefaults = () => {
-    posStorage.clear().catch(console.warn);
-    localStorage.removeItem('pos_retail_products_v2');
-    localStorage.removeItem('pos_retail_products_v3');
-    localStorage.removeItem('pos_retail_suppliers_v2');
-    localStorage.removeItem('pos_retail_tx_v2');
-    localStorage.removeItem('pos_retail_tx_v3');
-    localStorage.removeItem('pos_retail_customers_v2');
-    localStorage.removeItem('pos_retail_settings_v2');
-    localStorage.removeItem('pos_active_cart');
-    localStorage.removeItem('pos_held_orders');
-    localStorage.removeItem('pos_vouchers');
-    localStorage.removeItem('pos_employees_v2');
-    localStorage.removeItem('pos_active_employee_id');
-    localStorage.removeItem('pos_is_locked');
-    localStorage.removeItem('pos_current_shift_v1');
 
-    setProducts(INITIAL_PRODUCTS);
-    setSuppliers(INITIAL_SUPPLIERS);
-    setTransactions(INITIAL_RECENT_TRANSACTIONS);
-    setCustomers(INITIAL_CUSTOMERS);
-    setSettings(DEFAULT_STORE_SETTINGS);
-    setVouchers(INITIAL_VOUCHERS);
-    setEmployees(INITIAL_EMPLOYEES);
-    setActiveEmployee(INITIAL_EMPLOYEES[0]);
-    setIsLocked(false);
-    setCart([]);
-    setHeldOrders([]);
-  };
 
   const addCustomer = (
     customerData: Omit<Customer, 'id' | 'points' | 'totalSpent' | 'ordersCount' | 'pointsHistory'> & { initialPoints?: number }
@@ -3316,71 +3338,45 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [restorePoints, restoreFromPayload]
   );
 
-  const prepareStoreForLaunch = useCallback(
-    (options?: { resetTransactions?: boolean; resetProductsToBlank?: boolean }): { success: boolean; message: string } => {
-      try {
-        // 1. Snapshot safety restore point before launch cleanup
-        createRestorePoint(
-          'Titik Pulih Pra-Peluncuran Toko (Pre-Launch)',
-          'Cadangan otomatis sistem sebelum inisialisasi pembukaan toko dan pembersihan data demo.',
-          'auto_pre_reset'
-        );
-
-        // 2. Clear test transactions, sales returns, held orders, active cart
-        if (options?.resetTransactions !== false) {
-          setTransactions([]);
-          setSalesReturns([]);
-          setCart([]);
-          setHeldOrders([]);
-          localStorage.removeItem('pos_retail_tx_v2');
-          localStorage.removeItem('pos_retail_tx_v3');
-          localStorage.removeItem('pos_active_cart');
-          localStorage.removeItem('pos_held_orders');
-          posStorage.setItem('pos_retail_tx_v3', []).catch(console.warn);
-        }
-
-        // 3. Reset shift so day 1 cashier opening starts fresh
-        setCurrentShift(null);
-        localStorage.removeItem('pos_current_shift_v1');
-        setPastShifts([]);
-
-        // 3b. Hapus data demo lain yang dulu tertinggal: member, supplier, faktur pembelian,
-        //     pengeluaran, voucher, dan retur supplier contoh. Hanya data yang berasal dari
-        //     data demo (dicocokkan lewat id/kode); data yang sudah diinput toko tetap aman.
-        const demoIds = (list: Array<{ id?: string }>) => new Set(list.map((x) => x.id).filter(Boolean) as string[]);
-        const demoCustomerIds = demoIds(INITIAL_CUSTOMERS);
-        const demoSupplierIds = demoIds(INITIAL_SUPPLIERS);
-        const demoPurchaseIds = demoIds(INITIAL_SUPPLIER_PURCHASES);
-        const demoExpenseIds = demoIds(INITIAL_EXPENSES);
-        const demoVoucherCodes = new Set(INITIAL_VOUCHERS.map((v) => v.code.toUpperCase()));
-        setCustomers((prev) => prev.filter((c) => !demoCustomerIds.has(c.id)));
-        setSuppliers((prev) => prev.filter((s) => !demoSupplierIds.has(s.id)));
-        setSupplierPurchases((prev) => prev.filter((p) => !demoPurchaseIds.has(p.id)));
-        setExpenses((prev) => prev.filter((e) => !demoExpenseIds.has(e.id)));
-        setVouchers((prev) => prev.filter((v) => !demoVoucherCodes.has(v.code.toUpperCase())));
-        if (options?.resetTransactions !== false) setPurchaseReturns([]);
-
-        // 4. Products options
-        if (options?.resetProductsToBlank) {
-          setProducts([]);
-          localStorage.removeItem('pos_retail_products_v2');
-          localStorage.removeItem('pos_retail_products_v3');
-          posStorage.setItem('pos_retail_products_v3', []).catch(console.warn);
-        }
-
-        return {
-          success: true,
-          message: 'Sistem POS berhasil disiapkan untuk peluncuran toko (Ready to Launch)!',
-        };
-      } catch (err: any) {
-        return {
-          success: false,
-          message: `Gagal menyiapkan sistem toko: ${err?.message || 'Terjadi kesalahan sistem'}`,
-        };
-      }
-    },
-    [createRestorePoint]
-  );
+  /**
+   * Hapus transaksi latihan/uji coba (mis. setelah melatih kasir sebelum buka). Hanya Owner.
+   * Menghapus transaksi, retur penjualan, keranjang, pesanan parkir, dan riwayat shift, lalu memulai
+   * shift baru. Produk, member, supplier, karyawan, dan pengaturan TIDAK disentuh. Titik pulih dibuat dulu.
+   */
+  const clearTrialTransactions = useCallback((): { success: boolean; message: string } => {
+    if (activeEmployee?.role !== 'owner') {
+      return { success: false, message: 'Hanya Owner yang boleh menghapus transaksi uji coba.' };
+    }
+    try {
+      createRestorePoint(
+        'Otomatis: Sebelum Hapus Transaksi Uji Coba',
+        'Cadangan otomatis sebelum menghapus transaksi latihan/uji coba.',
+        'auto_pre_reset'
+      );
+      setTransactions([]);
+      setSalesReturns([]);
+      setCart([]);
+      setHeldOrders([]);
+      setPastShifts([]);
+      setCurrentShift({
+        id: `shift-${Date.now()}`,
+        employeeId: activeEmployee.id,
+        employeeName: activeEmployee.name,
+        role: activeEmployee.role,
+        startTime: new Date().toISOString(),
+        startingCash: 0,
+        cashOut: 0,
+        totalSales: 0,
+        totalTransactions: 0,
+        cashSales: 0,
+        nonCashSales: 0,
+        status: 'active',
+      });
+      return { success: true, message: 'Transaksi uji coba dihapus. Titik pulih otomatis sudah dibuat.' };
+    } catch (err: any) {
+      return { success: false, message: `Gagal menghapus transaksi uji coba: ${err?.message || err}` };
+    }
+  }, [activeEmployee, createRestorePoint]);
 
   // Auto-seed initial baseline restore point on first boot so users have an immediate point to test
   useEffect(() => {
@@ -3424,12 +3420,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addProductsBatch,
       deleteProductsBatch,
       clearImportedProducts,
-      resetProductsToDefault,
       clearAllProducts,
       updateProduct,
       recordProductPriceChange,
       deleteProduct,
-      resetToRetailDefaults,
     }),
     [
       products,
@@ -3442,12 +3436,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addProductsBatch,
       deleteProductsBatch,
       clearImportedProducts,
-      resetProductsToDefault,
       clearAllProducts,
       updateProduct,
       recordProductPriceChange,
       deleteProduct,
-      resetToRetailDefaults,
     ]
   );
 
@@ -3734,7 +3726,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isLANModalOpen,
       setIsLANModalOpen,
       applyMasterLANData,
-      prepareStoreForLaunch,
+      clearTrialTransactions,
+      completeFirstRunSetup,
       // Accounting & Financial Statements
       expenses,
       addExpense,
@@ -3771,7 +3764,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       runStorageBenchmark,
       isLANModalOpen,
       applyMasterLANData,
-      prepareStoreForLaunch,
+      clearTrialTransactions,
+      completeFirstRunSetup,
       expenses,
       journalEntries,
       balanceSheet,

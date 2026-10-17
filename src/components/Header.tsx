@@ -54,7 +54,7 @@ import { isDesktopApp } from '../utils/desktopHelper';
 
 export const Header: React.FC = () => {
   const { theme, isDark, toggleTheme } = useTheme();
-  const { products, resetToRetailDefaults } = usePOSCatalog();
+  const { products } = usePOSCatalog();
   const { heldOrders, cart, recallHeldOrder } = usePOSCart();
   const { transactions, customers, suppliers } = usePOSTransactions();
   const {
@@ -124,10 +124,10 @@ export const Header: React.FC = () => {
     if (activeEmployee?.role !== 'owner') {
       setAuthorityModalConfig({
         isOpen: true,
-        title: tab === 'launch' ? 'Kesiapan Peluncuran Toko' : 'Pengaturan Toko & Struk',
+        title: tab === 'launch' ? 'Hapus Transaksi Uji Coba' : 'Pengaturan Toko & Struk',
         description:
           tab === 'launch'
-            ? 'Inisialisasi buka toko dan pembersihan data demo dibatasi untuk Pemilik Toko (Owner). Masukkan PIN Owner untuk otorisasi.'
+            ? 'Menghapus transaksi uji coba dibatasi untuk Pemilik Toko (Owner). Masukkan PIN Owner untuk otorisasi.'
             : 'Konfigurasi sistem toko, printer struk, dan persentase pajak dibatasi untuk Pemilik Toko (Owner). Masukkan PIN Owner untuk otorisasi.',
         requiredRole: 'owner',
         onSuccess: () => setIsSettingsOpen(true),
@@ -749,11 +749,8 @@ export const Header: React.FC = () => {
                   >
                     <div className="flex items-center gap-2">
                       <Rocket className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      <span>Kesiapan Peluncuran (Ready to Launch)</span>
+                      <span>Hapus Transaksi Uji Coba</span>
                     </div>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
-                      Siap Buka
-                    </span>
                   </button>
 
                   <button

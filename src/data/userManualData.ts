@@ -76,7 +76,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         ],
         tips: [
           'Transaksi pelanggan tidak terputus: Kasir tidak perlu mengulang scan karena produk baru otomatis masuk ke nota belanja yang sedang berjalan.',
-          'PIN default otorisasi master: Supervisor (7890) atau Hendro Wijaya Owner (9999). Dapat diubah kapan saja di menu Kelola Master Karyawan.',
+          'Otorisasi memakai PIN pribadi Supervisor atau Owner yang terdaftar di menu Kelola Master Karyawan. Tidak ada PIN bawaan.',
         ],
         shortcuts: ['F3: Scanner Barcode', 'Enter: Cari / Validasi Barcode'],
       },
@@ -466,7 +466,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         steps: [
           'Saat staf kasir melakukan void nota belanja, menghapus item pesanan yang sudah terkunci, atau memproses retur barang, sistem akan menampilkan dialog "Otoritas Supervisor Diperlukan".',
           'Supervisor wajib hadir langsung di meja kasir untuk memverifikasi bukti fisik nota belanja asli dan memastikan fisik barang yang hendak diretur (keadaan kemasan utuh, tidak kedaluwarsa, atau cacat pabrik).',
-          'Supervisor memasukkan 4-digit PIN miliknya pada jendela otorisasi (PIN default: "9999" atau PIN personal supervisor yang didaftarkan di data karyawan).',
+          'Supervisor memasukkan PIN pribadinya pada jendela otorisasi. Setelah 5 kali PIN salah, otorisasi dikunci sementara.',
           'Sistem mencatat nama Supervisor yang menyetujui transaksi ke dalam audit log internal demi mencegah kecurangan.',
         ],
         tips: [
@@ -951,7 +951,7 @@ export const USER_FAQS: UserFAQ[] = [
   {
     category: 'Supervisor & Otoritas',
     question: 'Berapa PIN default supervisor untuk otorisasi void atau retur kasir?',
-    answer: 'PIN bawaan sistem untuk otorisasi supervisor adalah "9999". Namun, sangat disarankan bagi Supervisor untuk membuat PIN personal 4-digit unik di menu Pengaturan Karyawan agar tercatat jelas siapa yang memberi izin pada setiap transaksi.',
+    answer: 'Tidak ada PIN bawaan. Owner membuat PIN sendiri saat aplikasi pertama kali dibuka, lalu menambahkan Supervisor beserta PIN pribadinya di menu Kelola Master Karyawan.',
   },
   {
     category: 'Supervisor & Kasir',

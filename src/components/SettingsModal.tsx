@@ -63,7 +63,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
     cart,
     heldOrders,
     activeEmployee,
-    prepareStoreForLaunch,
+    clearTrialTransactions,
     setIsSyncModalOpen,
     autoSyncEnabled,
     autoSyncIntervalSeconds,
@@ -163,23 +163,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
   };
 
   const handleExecuteLaunch = () => {
-    try {
-      const res = prepareStoreForLaunch({
-        resetTransactions: cleanTxOption,
-        resetProductsToBlank: productCatalogChoice === 'blank_catalog',
-      });
-      if (res.success) {
-        setLaunchSuccessMessage(
-          `Selamat! Data demo dan pengujian berhasil dibersihkan. Toko "${formData.storeName || 'Retail POS'}" kini 100% SIAP DILUNCURKAN (Ready to Launch) untuk melayani pelanggan pertama!`
-        );
-        setIsConfirmingLaunch(false);
-      } else {
-        setLaunchErrorMessage(res.message);
-      }
-    } catch (err: any) {
-      setLaunchErrorMessage(err.message || 'Terjadi kesalahan sistem saat menyiapkan toko.');
+    const res = clearTrialTransactions();
+    if (res.success) {
+      setLaunchSuccessMessage(res.message);
+      setLaunchErrorMessage(null);
+      setIsConfirmingLaunch(false);
+    } else {
+      setLaunchErrorMessage(res.message);
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
@@ -227,8 +220,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
             }`}
           >
             <Rocket className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Kesiapan Peluncuran (Ready to Launch)</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Hapus Transaksi Uji Coba</span>
           </button>
         </div>
 
@@ -1070,272 +1062,67 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
         )}
 
         {activeTab === 'launch' && (
-          <div className="p-5 flex-1 overflow-y-auto space-y-4 text-xs">
-            {/* Launch Status Hero */}
-            <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-slate-900 border border-emerald-500/30 flex items-start justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] uppercase tracking-wider">
-                    Ready to Launch
-                  </span>
-                  <span className="text-slate-400 text-[11px]">Mode Produksi Siap Pakai</span>
-                </div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Kesiapan Peluncuran Toko &amp; Kasir
-                </h4>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                  Aplikasi telah dikonfigurasi penuh tanpa data demo yang bocor. Gunakan halaman ini untuk membersihkan riwayat pengujian sebelum membuka toko untuk pembeli nyata pertama.
-                </p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
-                <Rocket className="w-5 h-5 text-emerald-500" />
-              </div>
-            </div>
-
-            {/* Operational Checklist Cards */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 space-y-1">
-                <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <Store className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Identitas Toko</span>
-                </div>
-                <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
-                  {formData.storeName || 'Belum diisi'}
-                </div>
-                <div className="text-[10px] text-slate-500 truncate">
-                  {formData.branchName || 'Cabang Utama'} • {formData.phone || 'No Telp Belum Diisi'}
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 space-y-1">
-                <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Keamanan Kasir (RBAC)</span>
-                </div>
-                <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
-                  {activeEmployee ? activeEmployee.name : 'Belum Login'}
-                </div>
-                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium truncate">
-                  {activeEmployee ? activeEmployee.roleTitle : 'Siap Digunakan'} • PIN Terlindungi
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 space-y-1">
-                <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <Receipt className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Riwayat Transaksi</span>
-                </div>
-                <div className="font-bold text-slate-900 dark:text-white text-xs">
-                  {transactions.length} Transaksi Tercatat
-                </div>
-                <div className="text-[10px] text-slate-500">
-                  {transactions.length === 0 ? '✓ Bersih (Omset Rp 0)' : 'Perlu dibersihkan sebelum buka'}
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 space-y-1">
-                <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <Package className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Katalog Produk</span>
-                </div>
-                <div className="font-bold text-slate-900 dark:text-white text-xs">
-                  {products.length} Produk Terdaftar
-                </div>
-                <div className="text-[10px] text-slate-500 truncate">
-                  {cart.length > 0 ? `${cart.length} item di kasir` : 'Keranjang kasir kosong'}
-                </div>
-              </div>
-            </div>
-
-            {/* Success notification */}
-            {launchSuccessMessage && (
-              <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs flex items-start gap-2.5 animate-in fade-in">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-bold">Inisialisasi Peluncuran Sukses!</div>
-                  <div className="text-[11px] mt-0.5 leading-relaxed">{launchSuccessMessage}</div>
-                </div>
-              </div>
-            )}
-
-            {/* Error notification */}
-            {launchErrorMessage && (
-              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
-                <span>{launchErrorMessage}</span>
-              </div>
-            )}
-
-            {/* Clean Slate Action Box */}
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-3">
-              <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100">
-                <Trash2 className="w-4 h-4 text-rose-500" />
-                <span>Pembersihan Data Demo &amp; Uji Coba</span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Pilih opsi di bawah ini untuk mengembalikan status operasional ke hari pertama buka toko:
+          <div className="p-5 space-y-4 text-xs overflow-y-auto">
+            <div className="space-y-1">
+              <div className="text-sm font-bold text-slate-900 dark:text-white">Hapus Transaksi Uji Coba</div>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                Gunakan setelah melatih kasir atau mencoba aplikasi sebelum toko buka. Yang dihapus:{' '}
+                <strong>transaksi, retur penjualan, keranjang, pesanan parkir, dan riwayat shift</strong>.
+                Produk, member, supplier, karyawan, dan pengaturan <strong>tidak</strong> disentuh.
               </p>
+              <p className="text-slate-500 dark:text-slate-400">
+                Saat ini: {transactions.length} transaksi tercatat. Titik pulih otomatis dibuat sebelum penghapusan.
+              </p>
+              <p className="text-slate-500 dark:text-slate-400">
+                Catatan: transaksi yang sudah terkirim ke database server (folder data\ di komputer server) tidak ikut
+                terhapus.
+              </p>
+            </div>
 
-              <div className="space-y-2">
-                <label className="flex items-start gap-2.5 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={cleanTxOption}
-                    onChange={(e) => setCleanTxOption(e.target.checked)}
-                    className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
-                      Hapus Semua Transaksi Percobaan (Reset Omset ke Rp 0)
-                    </div>
-                    <div className="text-[10px] text-slate-500">
-                      Menghapus riwayat transaksi demo agar buku kasir dan laporan keuangan murni menghitung penjualan nyata.
-                    </div>
-                  </div>
-                </label>
+            {launchSuccessMessage && (
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300">
+                {launchSuccessMessage}
+              </div>
+            )}
+            {launchErrorMessage && (
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300">
+                {launchErrorMessage}
+              </div>
+            )}
 
-                <label className="flex items-start gap-2.5 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={cleanCartOption}
-                    onChange={(e) => setCleanCartOption(e.target.checked)}
-                    className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
-                      Kosongkan Keranjang Kasir &amp; Antrean Pesanan Parkir
-                    </div>
-                    <div className="text-[10px] text-slate-500">
-                      Mengosongkan nota gantung / held order uji coba agar antrean kasir bersih.
-                    </div>
-                  </div>
-                </label>
-
-                {/* Catalog Choice */}
-                <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-                  <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
-                    Pengaturan Katalog Produk Awal:
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <label
-                      className={`p-2 rounded-lg border cursor-pointer flex flex-col justify-between ${
-                        productCatalogChoice === 'keep_starter'
-                          ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="catalog_choice"
-                          checked={productCatalogChoice === 'keep_starter'}
-                          onChange={() => setProductCatalogChoice('keep_starter')}
-                          className="text-emerald-600 focus:ring-emerald-500"
-                        />
-                        <span className="font-bold text-[11px] text-slate-800 dark:text-slate-200">
-                          Gunakan Master Produk Siap Pakai
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-slate-500 mt-1 pl-5">
-                        Mempertahankan template 16 barang sembako &amp; minimarket (Indomie, Aqua, Beras, dll.) yang dapat diedit langsung.
-                      </span>
-                    </label>
-
-                    <label
-                      className={`p-2 rounded-lg border cursor-pointer flex flex-col justify-between ${
-                        productCatalogChoice === 'blank_catalog'
-                          ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-950/20'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="catalog_choice"
-                          checked={productCatalogChoice === 'blank_catalog'}
-                          onChange={() => setProductCatalogChoice('blank_catalog')}
-                          className="text-rose-600 focus:ring-rose-500"
-                        />
-                        <span className="font-bold text-[11px] text-slate-800 dark:text-slate-200">
-                          Kosongkan Seluruh Katalog
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-slate-500 mt-1 pl-5">
-                        Mulai dari 0 produk untuk toko yang ingin menginput sendiri atau mengimpor data produk via Excel/CSV.
-                      </span>
-                    </label>
-                  </div>
+            {!isConfirmingLaunch ? (
+              <button
+                type="button"
+                id="btn-clear-trial-transactions"
+                disabled={transactions.length === 0}
+                onClick={() => setIsConfirmingLaunch(true)}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold cursor-pointer"
+              >
+                Hapus {transactions.length} Transaksi Uji Coba
+              </button>
+            ) : (
+              <div className="p-3 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/30 space-y-2">
+                <p className="text-rose-800 dark:text-rose-300 font-semibold">
+                  Yakin? Jangan lakukan ini bila sudah ada penjualan sungguhan.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleExecuteLaunch}
+                    className="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold cursor-pointer"
+                  >
+                    Ya, Hapus
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsConfirmingLaunch(false)}
+                    className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 font-bold cursor-pointer"
+                  >
+                    Batal
+                  </button>
                 </div>
               </div>
-
-              {/* Execution confirmation */}
-              {!isConfirmingLaunch ? (
-                <button
-                  type="button"
-                  id="btn-prepare-store-launch"
-                  onClick={() => setIsConfirmingLaunch(true)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-600/20 transition-all active:scale-[0.99]"
-                >
-                  <Rocket className="w-4 h-4" />
-                  <span>Jalankan Inisialisasi Buka Toko (Ready to Launch)</span>
-                </button>
-              ) : (
-                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-2">
-                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-xs">
-                    <ShieldAlert className="w-4 h-4 shrink-0" />
-                    <span>Konfirmasi Persiapan Peluncuran Toko</span>
-                  </div>
-                  <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
-                    Sistem akan secara otomatis membuat Cadangan Pengaman (Restore Point Snapshot) sebelum membersihkan data uji coba. Lanjutkan inisialisasi?
-                  </p>
-                  <div className="flex items-center justify-end gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setIsConfirmingLaunch(false)}
-                      className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 cursor-pointer"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      type="button"
-                      id="btn-confirm-execute-launch"
-                      onClick={handleExecuteLaunch}
-                      className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Ya, Siapkan Toko Sekarang</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Quick backup shortcut */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-500">
-              <span>Ingin mencadangkan data terlebih dahulu?</span>
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  setIsBackupRestoreOpen(true);
-                }}
-                className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Database className="w-3 h-3" />
-                <span>Buka Pusat Cadangan &amp; Restore</span>
-              </button>
-            </div>
-
-            {/* Close footer */}
-            <div className="pt-2 flex justify-end">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-              >
-                Selesai &amp; Buka Kasir
-              </button>
-            </div>
+            )}
           </div>
         )}
       </div>

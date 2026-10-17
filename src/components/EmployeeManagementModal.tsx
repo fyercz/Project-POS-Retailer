@@ -43,6 +43,9 @@ export const EmployeeManagementModal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'list' | 'matrix' | 'form'>('list');
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  // PIN akun contoh dari versi lama (tertulis di kode sumber, diketahui umum)
+  const DEMO_PINS = ['1234', '2345', '3456', '7890', '9999'];
+  const employeesWithDemoPin = employees.filter((e) => e.isActive && DEMO_PINS.includes(e.pin));
 
   // Form State
   const [name, setName] = useState('');
@@ -275,7 +278,15 @@ export const EmployeeManagementModal: React.FC = () => {
         </div>
 
         {/* Notification banner */}
-        {notification && (
+        {employeesWithDemoPin.length > 0 && (
+            <div className="mb-3 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-800 dark:text-rose-300">
+              <strong>Peringatan keamanan:</strong> {employeesWithDemoPin.length} akun aktif masih memakai PIN contoh yang
+              diketahui umum ({employeesWithDemoPin.map((e) => e.name).join(', ')}). Ganti PIN-nya, atau nonaktifkan/hapus akun
+              contoh yang tidak dipakai.
+            </div>
+          )}
+
+          {notification && (
           <div
             className={`px-6 py-2.5 flex items-center gap-2 text-xs font-medium ${
               notification.type === 'success'
@@ -915,7 +926,7 @@ export const EmployeeManagementModal: React.FC = () => {
                       required={!editingEmployee}
                       value={pin}
                       onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                      placeholder={editingEmployee ? 'Kosongkan bila PIN tidak diubah' : 'misal: 1234'}
+                      placeholder={editingEmployee ? 'Kosongkan bila PIN tidak diubah' : '4-6 angka, jangan yang mudah ditebak'}
                       className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono tracking-widest"
                     />
                     <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />

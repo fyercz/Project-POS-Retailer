@@ -1076,7 +1076,6 @@ export const ReportsView: React.FC = () => {
           <ProjectedSalesWidget
             transactions={transactions}
             currency={settings.currency}
-            onLoadSampleData={loadSampleTransactions}
           />
 
           {/* Quick AI Dynamic Pricing Banner */}
@@ -1202,7 +1201,6 @@ export const ReportsView: React.FC = () => {
           <ProjectedSalesWidget
             transactions={transactions}
             currency={settings.currency}
-            onLoadSampleData={loadSampleTransactions}
           />
         </div>
       )}
