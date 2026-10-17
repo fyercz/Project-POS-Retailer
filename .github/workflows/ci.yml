@@ -1,0 +1,32 @@
+# Pemeriksaan otomatis setiap push / pull request:
+# cek tipe TypeScript, build, dan seluruh tes. Berjalan dari salinan bersih repo, sehingga
+# file yang lupa di-commit (mis. tertangkap .gitignore) langsung ketahuan.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Tes (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows ikut diuji karena komputer kasir memakai Windows
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Repo tidak menyimpan package-lock.json, jadi memakai npm install (bukan npm ci)
+      - run: npm install --no-audit --no-fund
+      - name: Cek tipe TypeScript
+        run: npx tsc --noEmit
+      - name: Build
+        run: npm run build
+      - name: Tes
+        run: npm test

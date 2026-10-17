@@ -20,7 +20,7 @@
     "autorun": "node scripts/launcher.mjs autorun",
     "desktop": "node scripts/launcher.mjs desktop",
     "desktop:electron": "electron electron/main.cjs",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test \"tests/*.test.ts\""
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
