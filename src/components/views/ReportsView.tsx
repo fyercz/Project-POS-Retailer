@@ -64,6 +64,7 @@ import {
 import { ProjectedSalesWidget } from '../ProjectedSalesWidget';
 import { DynamicPricingModule } from '../DynamicPricingModule';
 import { usePOSCatalog } from '../../context/POSContext';
+import { lineCogs, baseUnitsOf, unitMultiplierOf } from '../../utils/cogs';
 
 export const ReportsView: React.FC = () => {
   const { products, categories, recordProductPriceChange, updateProduct } = usePOSCatalog();
@@ -316,17 +317,24 @@ export const ReportsView: React.FC = () => {
 
     const productCountMap: Record<string, { name: string; quantity: number; revenue: number; profit: number }> = {};
 
-    for (let i = 0; i < completedTransactions.length; i++) {
-      const tx = completedTransactions[i];
+    // Transaksi yang diretur penuh (refunded) tetap dihitung sebagai penjualan; nilai returnya
+    // dikurangkan SEKALI lewat salesReturns. Dulu transaksi itu dibuang DAN returnya dikurangkan
+    // lagi, sehingga retur penuh terhitung dua kali.
+    const soldTransactions = transactions.filter((t) => t.status === 'completed' || t.status === 'refunded');
+    for (let i = 0; i < soldTransactions.length; i++) {
+      const tx = soldTransactions[i];
       grossSales += tx.finalTotal;
       totalSubtotal += tx.subtotal;
       totalDiscounts += tx.discountAmount;
 
       for (let j = 0; j < tx.items.length; j++) {
         const item = tx.items[j];
-        totalUnitsSold += item.quantity;
-        const itemCost = item.product.costPrice || 0;
-        totalCOGS += itemCost * item.quantity;
+        // Satuan grosir (mis. Dus isi 40): HPP & jumlah unit memakai isi satuan. Dulu HPP dihitung
+        // per pcs untuk setiap Dus, sehingga laba penjualan grosir tampak jauh lebih besar.
+        const multiplier = unitMultiplierOf(item);
+        totalUnitsSold += baseUnitsOf(item);
+        const lineCost = lineCogs(item);
+        totalCOGS += lineCost;
 
         const pId = item.product.id;
         if (!productCountMap[pId]) {
@@ -337,15 +345,15 @@ export const ReportsView: React.FC = () => {
             profit: 0,
           };
         }
-        productCountMap[pId].quantity += item.quantity;
+        productCountMap[pId].quantity += item.quantity * multiplier;
         productCountMap[pId].revenue += item.totalPrice;
-        productCountMap[pId].profit += (item.unitPrice - itemCost) * item.quantity;
+        productCountMap[pId].profit += item.totalPrice - lineCost;
       }
     }
 
     const totalSalesReturnAmount = salesReturns.reduce((sum, r) => sum + r.totalRefundAmount, 0);
     const netSales = Math.max(0, grossSales - totalSalesReturnAmount);
-    const averageTicket = completedTransactions.length > 0 ? grossSales / completedTransactions.length : 0;
+    const averageTicket = soldTransactions.length > 0 ? grossSales / soldTransactions.length : 0;
     const grossProfit = Math.max(0, grossSales - totalCOGS);
     const profitMargin = grossSales > 0 ? ((grossProfit / grossSales) * 100).toFixed(1) : '0';
 
@@ -366,7 +374,7 @@ export const ReportsView: React.FC = () => {
       profitMargin,
       topProducts,
     };
-  }, [completedTransactions, salesReturns]);
+  }, [transactions, salesReturns]);
 
   // Settlement reconciliation calculation
   const physicalEdcAmount = parseFloat(edcSlipTotalInput.replace(/[^0-9.]/g, '')) || 0;

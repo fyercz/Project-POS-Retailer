@@ -90,6 +90,7 @@ import {
 } from '../../utils/dateFilters';
 import { playScannerSound } from '../../utils/scannerAudio';
 import { Html5Qrcode } from 'html5-qrcode';
+import { escapeHtml } from '../../utils/escapeHtml';
 
 interface ReceivingItem {
   productId: string;
@@ -1171,9 +1172,9 @@ export const InventoryView: React.FC = () => {
       <div style="max-width: 900px; margin: 0 auto; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
           <div>
-            <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin: 0;">${settings.storeName}</h1>
-            <div style="font-size: 12px; color: #475569; margin-top: 2px;">${settings.branchName} • ${settings.address}</div>
-            <div style="font-size: 11px; color: #64748b;">Telp: ${settings.phone}</div>
+            <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin: 0;">${escapeHtml(settings.storeName)}</h1>
+            <div style="font-size: 12px; color: #475569; margin-top: 2px;">${escapeHtml(settings.branchName)} • ${escapeHtml(settings.address)}</div>
+            <div style="font-size: 11px; color: #64748b;">Telp: ${escapeHtml(settings.phone)}</div>
           </div>
           <div style="text-align: right;">
             <div style="display: inline-block; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: #0f172a;">
@@ -1185,7 +1186,7 @@ export const InventoryView: React.FC = () => {
 
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; display: flex; justify-content: space-between; font-size: 11px;">
           <div>Waktu Cetak: <strong>${printedAt}</strong></div>
-          <div>Filter Kategori: <strong>${categoryFilter === 'all' ? 'Semua Kategori' : categoryFilter}</strong></div>
+          <div>Filter Kategori: <strong>${escapeHtml(categoryFilter === 'all' ? 'Semua Kategori' : categoryFilter)}</strong></div>
         </div>
 
         <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
@@ -1208,9 +1209,9 @@ export const InventoryView: React.FC = () => {
                 const isOut = p.stock <= 0;
                 return `
                 <tr style="border-bottom: 1px solid #f1f5f9;">
-                  <td style="padding: 6px 8px; font-weight: 600; color: #0f172a;">${p.name}</td>
-                  <td style="padding: 6px 8px; font-family: monospace; color: #64748b; font-size: 10px;">${p.sku} ${p.barcode ? `• ${p.barcode}` : ''}</td>
-                  <td style="padding: 6px 8px; color: #64748b;">${p.categoryId}</td>
+                  <td style="padding: 6px 8px; font-weight: 600; color: #0f172a;">${escapeHtml(p.name)}</td>
+                  <td style="padding: 6px 8px; font-family: monospace; color: #64748b; font-size: 10px;">${escapeHtml(p.sku)} ${p.barcode ? `• ${escapeHtml(p.barcode)}` : ''}</td>
+                  <td style="padding: 6px 8px; color: #64748b;">${escapeHtml(p.categoryId)}</td>
                   <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold;">${p.stock}</td>
                   <td style="padding: 6px 8px; text-align: center; border-left: 1px dashed #cbd5e1; border-right: 1px dashed #cbd5e1; width: 110px;">[ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</td>
                   <td style="padding: 6px 8px; text-align: right; font-family: monospace;">${formatCurrency(p.costPrice || 0, settings.currency)}</td>

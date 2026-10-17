@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { Employee } from '../types';
+import { pinLockSecondsLeft, registerPinFailure, registerPinSuccess, pinLockMessage } from '../utils/pinGuard';
 
 interface UnregisteredBarcodeModalProps {
   isOpen: boolean;
@@ -104,6 +105,13 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
       return;
     }
 
+    const lockedFor = pinLockSecondsLeft();
+    if (lockedFor > 0) {
+      setErrorMessage(pinLockMessage(lockedFor));
+      setPinInput('');
+      return;
+    }
+
     // Cocokkan PIN dengan karyawan otoritas yang dipilih (atau karyawan otoritas lain)
     let matchedAuthorizer: Employee | undefined;
 
@@ -123,6 +131,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
     }
 
     if (matchedAuthorizer) {
+      registerPinSuccess();
       setErrorMessage('');
       setSuccessMessage(`Otorisasi Berhasil! Disetujui oleh ${matchedAuthorizer.name} (${matchedAuthorizer.roleTitle || matchedAuthorizer.role}).`);
       setTimeout(() => {
@@ -132,15 +141,11 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
         });
       }, 350);
     } else {
-      // Check if this PIN belongs to a regular cashier
-      const cashierMatch = employees.find((e) => e.role === 'cashier' && e.pin === pin);
-      if (cashierMatch) {
-        setErrorMessage(
-          `PIN milik "${cashierMatch.name}" (Kasir). Kasir tidak memiliki wewenang untuk otorisasi tambah produk baru!`
-        );
-      } else {
-        setErrorMessage('PIN salah atau akun tidak memiliki wewenang Supervisor / Owner.');
-      }
+      // Jangan sebutkan pemilik PIN (dulu "PIN milik <nama kasir>" membocorkan PIN rekan kerja)
+      const lockedNow = registerPinFailure();
+      setErrorMessage(
+        lockedNow > 0 ? pinLockMessage(lockedNow) : 'PIN salah atau akun tidak memiliki wewenang Supervisor / Owner.'
+      );
       setPinInput('');
     }
   };

@@ -3,6 +3,7 @@ import { ShieldAlert, Lock, ArrowLeft, KeyRound, CheckCircle, AlertCircle } from
 import { usePOS } from '../context/POSContext';
 import { AppView } from '../types';
 import { getViewTitle, getRequiredRoleForView } from '../utils/permissions';
+import { pinLockSecondsLeft, registerPinFailure, pinLockMessage } from '../utils/pinGuard';
 
 interface AccessDeniedViewProps {
   attemptedView: AppView;
@@ -18,7 +19,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
     setActiveView,
     lockScreen,
     employees,
-    quickSwitchEmployee,
+    loginWithPin,
   } = usePOS();
 
   const [pinInput, setPinInput] = useState('');
@@ -35,6 +36,13 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
       return;
     }
 
+    const lockedFor = pinLockSecondsLeft();
+    if (lockedFor > 0) {
+      setErrorMessage(pinLockMessage(lockedFor));
+      setPinInput('');
+      return;
+    }
+
     // Find supervisor or owner matching the PIN
     const authorityEmp = employees.find(
       (emp) =>
@@ -44,13 +52,20 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
     );
 
     if (authorityEmp) {
+      // Masuk sebagai Supervisor/Owner lewat jalur PIN resmi (quickSwitchEmployee menolak naik jabatan)
+      const res = loginWithPin(pinInput.trim(), authorityEmp.id);
+      if (!res.success) {
+        setErrorMessage(res.message);
+        setPinInput('');
+        return;
+      }
       setErrorMessage('');
-      quickSwitchEmployee(authorityEmp);
       if (onAuthorized) {
         onAuthorized();
       }
     } else {
-      setErrorMessage('PIN salah atau akun tidak memiliki otoritas Supervisor / Owner.');
+      const lockedNow = registerPinFailure();
+      setErrorMessage(lockedNow > 0 ? pinLockMessage(lockedNow) : 'PIN salah atau akun tidak memiliki otoritas Supervisor / Owner.');
       setPinInput('');
     }
   };

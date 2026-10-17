@@ -90,7 +90,7 @@ export const EmployeeManagementModal: React.FC = () => {
     setEmployeeCode(emp.employeeCode);
     setRole(emp.role);
     setRoleTitle(emp.roleTitle || '');
-    setPin(emp.pin);
+    setPin(''); // PIN lama tidak ditampilkan; kosong = tidak diubah
     setPhone(emp.phone || '');
     setEmail(emp.email || '');
     setAssignedShift(emp.assignedShift || 'Shift Pagi (07:00 - 15:00)');
@@ -113,8 +113,22 @@ export const EmployeeManagementModal: React.FC = () => {
       setNotification({ type: 'error', message: 'Nama karyawan wajib diisi.' });
       return;
     }
-    if (!pin.trim() || pin.length < 4) {
+    // Hanya Owner yang boleh mengubah akun Owner atau menjadikan seseorang Owner
+    // (dulu Supervisor bisa mengganti PIN Owner lalu masuk sebagai Owner)
+    if (activeEmployee?.role !== 'owner' && (editingEmployee?.role === 'owner' || role === 'owner')) {
+      setNotification({ type: 'error', message: 'Hanya Owner yang boleh mengubah akun Owner atau memberi jabatan Owner.' });
+      return;
+    }
+    const keepExistingPin = Boolean(editingEmployee) && pin.trim() === '';
+    if (!keepExistingPin && (!pin.trim() || pin.length < 4)) {
       setNotification({ type: 'error', message: 'PIN harus berupa minimal 4 digit angka.' });
+      return;
+    }
+    // PIN kembar membuat login tanpa memilih nama masuk ke karyawan yang salah
+    // (transaksi tercatat atas nama orang lain)
+    const pinOwner = !keepExistingPin && employees.find((e) => e.pin === pin.trim() && e.id !== editingEmployee?.id);
+    if (pinOwner) {
+      setNotification({ type: 'error', message: 'PIN sudah dipakai karyawan lain. Gunakan PIN yang berbeda.' });
       return;
     }
 
@@ -124,7 +138,7 @@ export const EmployeeManagementModal: React.FC = () => {
         employeeCode,
         role,
         roleTitle: roleTitle || (role === 'cashier' ? 'Kasir Frontliner' : role === 'supervisor' ? 'Supervisor Toko' : role === 'inventory' ? 'Admin Gudang' : 'Owner'),
-        pin,
+        ...(keepExistingPin ? {} : { pin }),
         phone,
         email,
         assignedShift,
@@ -395,7 +409,7 @@ export const EmployeeManagementModal: React.FC = () => {
                           </td>
                           <td className="p-3.5 font-mono text-slate-700 dark:text-slate-300">
                             <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded font-bold">
-                              •••• ({emp.pin})
+                              ••••
                             </span>
                           </td>
                           <td className="p-3.5">
@@ -898,10 +912,10 @@ export const EmployeeManagementModal: React.FC = () => {
                     <input
                       type="password"
                       maxLength={6}
-                      required
+                      required={!editingEmployee}
                       value={pin}
                       onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                      placeholder="misal: 1234"
+                      placeholder={editingEmployee ? 'Kosongkan bila PIN tidak diubah' : 'misal: 1234'}
                       className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono tracking-widest"
                     />
                     <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />

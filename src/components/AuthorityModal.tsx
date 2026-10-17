@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { ShieldCheck, Lock, X, AlertCircle, KeyRound } from 'lucide-react';
 import { usePOS } from '../context/POSContext';
 import { Employee } from '../types';
+import { pinLockSecondsLeft, registerPinFailure, registerPinSuccess, pinLockMessage } from '../utils/pinGuard';
 
 interface AuthorityModalProps {
   isOpen: boolean;
@@ -33,6 +34,12 @@ export const AuthorityModal: React.FC<AuthorityModalProps> = ({
       setError('Masukkan PIN otoritas.');
       return;
     }
+    const lockedFor = pinLockSecondsLeft();
+    if (lockedFor > 0) {
+      setError(pinLockMessage(lockedFor));
+      setPin('');
+      return;
+    }
 
     const matched = employees.find((emp) => {
       if (!emp.isActive) return false;
@@ -46,11 +53,18 @@ export const AuthorityModal: React.FC<AuthorityModalProps> = ({
     });
 
     if (matched) {
+      registerPinSuccess();
       setError('');
       setPin('');
       onSuccess(matched);
       onClose();
     } else {
+      const lockedNow = registerPinFailure();
+      if (lockedNow > 0) {
+        setError(pinLockMessage(lockedNow));
+        setPin('');
+        return;
+      }
       setError(
         requiredRole === 'owner'
           ? 'PIN salah atau akun bukan Pemilik (Owner).'

@@ -35,6 +35,7 @@ import {
 } from '../utils/priceHistory';
 import { ProductPriceChart } from './ProductPriceChart';
 import { printViaIframe } from '../utils/printHelper';
+import { escapeHtml } from '../utils/escapeHtml';
 
 interface ProductPriceHistoryViewProps {
   products: Product[];
@@ -195,12 +196,12 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
         <tr>
           <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px;">${i + 1}</td>
           <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px;">${formatDate(rec.date)}</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px;">${rec.changeType}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px;">${escapeHtml(rec.changeType)}</td>
           <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px; text-align: right; font-weight: bold;">${formatCurrency(rec.costPrice, settings.currency)}</td>
           <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px; text-align: right; font-weight: bold;">${formatCurrency(rec.sellingPrice, settings.currency)}</td>
           <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px; text-align: right;">${formatCurrency(gross, settings.currency)} (${marginPct}%)</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px;">${rec.sourceReference || '-'}</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px;">${rec.notes || '-'}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px;">${escapeHtml(rec.sourceReference || '-')}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px;">${escapeHtml(rec.notes || '-')}</td>
         </tr>
       `;
       })
@@ -209,14 +210,14 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
     const html = `
       <div style="font-family: Arial, sans-serif; color: #1e293b; padding: 20px;">
         <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
-          <h2 style="margin: 0; font-size: 18px; text-transform: uppercase;">${settings.storeName}</h2>
+          <h2 style="margin: 0; font-size: 18px; text-transform: uppercase;">${escapeHtml(settings.storeName)}</h2>
           <p style="margin: 4px 0 0; font-size: 12px; color: #64748b;">Laporan Riwayat Fluktuasi Harga Modal (HPP) & Harga Jual Retail</p>
           <p style="margin: 2px 0 0; font-size: 11px; color: #94a3b8;">Dicetak pada: ${formatDate(new Date().toISOString())}</p>
         </div>
 
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px;">
-          <strong>Produk:</strong> ${currentProduct.name}<br/>
-          <strong>SKU / Barcode:</strong> ${currentProduct.sku} / ${currentProduct.barcode}<br/>
+          <strong>Produk:</strong> ${escapeHtml(currentProduct.name)}<br/>
+          <strong>SKU / Barcode:</strong> ${escapeHtml(currentProduct.sku)} / ${escapeHtml(currentProduct.barcode)}<br/>
           <strong>Harga Jual Terkini:</strong> ${formatCurrency(currentProduct.price, settings.currency)} | <strong>Harga Modal Terkini:</strong> ${formatCurrency(currentProduct.costPrice, settings.currency)}<br/>
           <strong>Margin Laba Saat Ini:</strong> ${(((currentProduct.price - currentProduct.costPrice) / (currentProduct.price || 1)) * 100).toFixed(1)}% (${formatCurrency(currentProduct.price - currentProduct.costPrice, settings.currency)})
         </div>

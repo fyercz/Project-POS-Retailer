@@ -149,7 +149,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
           <div style="width: 45%;">
             <div>Petugas Kasir</div>
             <div style="margin-top: 35px; border-bottom: 1px solid #000;"></div>
-            <div style="margin-top: 2px;">(${shiftClosedResult.employeeName})</div>
+            <div style="margin-top: 2px;">(${escapeHtml(shiftClosedResult.employeeName)})</div>
           </div>
           <div style="width: 45%;">
             <div>Supervisor / Manager</div>

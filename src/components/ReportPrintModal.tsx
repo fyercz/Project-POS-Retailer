@@ -26,6 +26,7 @@ import { formatCurrency, formatNumber, formatDate, toLocalDateString } from '../
 import { printViaIframe, openPrintWindow, exportToCSV } from '../utils/printHelper';
 import { Transaction, Product, SupplierPurchase, PurchaseReturn, SalesReturn } from '../types';
 import { escapeHtml } from '../utils/escapeHtml';
+import { lineCogs, unitMultiplierOf } from '../utils/cogs';
 
 export type ReportType =
   | 'summary'
@@ -113,7 +114,8 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
 
   // Filtered dataset
   const filteredTransactions = transactions
-    .filter((t) => t.status === 'completed' && isDateInPeriod(t.createdAt))
+    // Termasuk transaksi yang diretur penuh; nilai returnya dikurangkan sekali di bawah (bukan dua kali)
+    .filter((t) => (t.status === 'completed' || t.status === 'refunded') && isDateInPeriod(t.createdAt))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const filteredSalesReturns = salesReturns.filter((r) => isDateInPeriod(r.createdAt));
@@ -127,12 +129,16 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
   const totalRefundAmount = filteredSalesReturns.reduce((sum, r) => sum + r.totalRefundAmount, 0);
   const netSales = Math.max(0, grossSales - totalRefundAmount);
 
+  // HPP per baris memakai isi satuan grosir (mis. Dus isi 40), sama seperti laporan keuangan
+  const unitMultiplier = (item: any) => unitMultiplierOf(item);
+  const lineCOGS = (item: any) => lineCogs(item);
+
   let totalCOGS = 0;
   let totalUnitsSold = 0;
   filteredTransactions.forEach((tx) => {
     tx.items.forEach((item) => {
-      totalUnitsSold += item.quantity;
-      totalCOGS += (item.product.costPrice || 0) * item.quantity;
+      totalUnitsSold += item.quantity * unitMultiplier(item);
+      totalCOGS += lineCOGS(item);
     });
   });
   const grossProfit = Math.max(0, grossSales - totalCOGS);
@@ -170,8 +176,8 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
           profit: 0,
         };
       }
-      const itemCOGS = (item.product.costPrice || 0) * item.quantity;
-      productStatsMap[item.product.id].quantity += item.quantity;
+      const itemCOGS = lineCOGS(item);
+      productStatsMap[item.product.id].quantity += item.quantity * unitMultiplier(item);
       productStatsMap[item.product.id].revenue += item.totalPrice;
       productStatsMap[item.product.id].cogs += itemCOGS;
       productStatsMap[item.product.id].profit += item.totalPrice - itemCOGS;

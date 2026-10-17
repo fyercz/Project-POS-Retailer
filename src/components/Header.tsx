@@ -879,8 +879,9 @@ export const Header: React.FC = () => {
                           <button
                             key={emp.id}
                             onClick={() => {
-                              quickSwitchEmployee(emp);
                               setIsUserMenuOpen(false);
+                              // Ke jabatan yang lebih tinggi wajib PIN: buka layar kunci untuk login
+                              if (!quickSwitchEmployee(emp)) lockScreen();
                             }}
                             className={`w-full px-2.5 py-1.5 rounded-xl flex items-center justify-between text-left text-xs transition border cursor-pointer ${
                               isAuthority
@@ -896,7 +897,7 @@ export const Header: React.FC = () => {
                               </span>
                             </div>
                             <span className="text-[9px] text-slate-400 font-mono shrink-0">
-                              PIN: {emp.pin}
+                              {isAuthority ? 'Perlu PIN' : ''}
                             </span>
                           </button>
                         );

@@ -93,14 +93,16 @@ export const EmployeeLockScreen: React.FC = () => {
     setPinInput(newPin);
 
     // Auto submit on 4-digit PIN for selected employee
-    if (newPin.length === 4 && selectedEmp) {
-      if (selectedEmp.pin === newPin) {
-        setTimeout(() => {
-          quickSwitchEmployee(selectedEmp);
-          setPinInput('');
-          setErrorMessage('');
-        }, 150);
-      }
+    // Masuk otomatis saat 4 digit diketik (untuk PIN 4 digit). Setiap percobaan lewat loginWithPin,
+    // jadi PIN salah tetap dihitung untuk batas salah PIN (tidak bisa ditebak tanpa batas).
+    if (newPin.length === 4 && selectedEmp && (selectedEmp.pin || '').length === 4) {
+      setTimeout(() => {
+        const res = loginWithPin(newPin, selectedEmp.id);
+        setPinInput('');
+        setErrorMessage(
+          res.success ? '' : res.message.startsWith('Terlalu') ? res.message : 'PIN salah untuk ' + selectedEmp.name + '. Silakan coba lagi.'
+        );
+      }, 150);
     }
   };
 
@@ -121,14 +123,11 @@ export const EmployeeLockScreen: React.FC = () => {
     }
 
     if (selectedEmp) {
-      if (selectedEmp.pin === pinInput) {
-        quickSwitchEmployee(selectedEmp);
-        setPinInput('');
-        setErrorMessage('');
-      } else {
-        setErrorMessage('PIN salah untuk ' + selectedEmp.name + '. Silakan coba lagi.');
-        setPinInput('');
-      }
+      // Login lewat jalur PIN resmi: memeriksa PIN, batas salah PIN, dan boleh masuk ke jabatan
+      // apa pun (quickSwitchEmployee menolak naik jabatan sehingga Owner tidak bisa membuka kunci)
+      const res = loginWithPin(pinInput, selectedEmp.id);
+      setPinInput('');
+      setErrorMessage(res.success ? '' : res.message.startsWith('Terlalu') ? res.message : 'PIN salah untuk ' + selectedEmp.name + '. Silakan coba lagi.');
     } else {
       const res = loginWithPin(pinInput);
       if (res.success) {

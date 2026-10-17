@@ -76,6 +76,7 @@ import {
   computeIncomeStatement,
 } from '../utils/accountingLedger';
 import { playScannerSound } from '../utils/scannerAudio';
+import { pinLockSecondsLeft, registerPinFailure, registerPinSuccess, pinLockMessage } from '../utils/pinGuard';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -1914,6 +1915,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Employee Authentication & Shift Management Methods
   const loginWithPin = (pin: string, employeeId?: string): { success: boolean; message: string; employee?: Employee } => {
+    const lockedFor = pinLockSecondsLeft();
+    if (lockedFor > 0) return { success: false, message: pinLockMessage(lockedFor) };
     let matched: Employee | undefined;
     if (employeeId) {
       matched = employees.find((e) => e.id === employeeId && e.pin === pin && e.isActive);
@@ -1922,9 +1925,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     if (!matched) {
-      return { success: false, message: 'PIN salah atau akun karyawan non-aktif.' };
+      const lockedNow = registerPinFailure();
+      return {
+        success: false,
+        message: lockedNow > 0 ? pinLockMessage(lockedNow) : 'PIN salah atau akun karyawan non-aktif.',
+      };
     }
 
+    registerPinSuccess();
     setActiveEmployee(matched);
     setIsLocked(false);
     return { success: true, message: `Selamat datang, ${matched.name}!`, employee: matched };
@@ -1951,11 +1959,15 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!activeEmployee) {
       return loginWithPin(pin);
     }
+    const lockedFor = pinLockSecondsLeft();
+    if (lockedFor > 0) return { success: false, message: pinLockMessage(lockedFor) };
     if (activeEmployee.pin === pin) {
+      registerPinSuccess();
       setIsLocked(false);
       return { success: true, message: 'Layar berhasil dibuka.' };
     }
-    return { success: false, message: 'PIN tidak sesuai.' };
+    const lockedNow = registerPinFailure();
+    return { success: false, message: lockedNow > 0 ? pinLockMessage(lockedNow) : 'PIN tidak sesuai.' };
   };
 
   const logoutEmployee = () => {
