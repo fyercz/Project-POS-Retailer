@@ -24,7 +24,7 @@ interface CustomerModalProps {
 }
 
 export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose }) => {
-  const { customers, selectedCustomer, setSelectedCustomer, addCustomer, settings } = usePOS();
+  const { customers, selectedCustomer, setSelectedCustomer, addCustomer, settings, activeEmployee } = usePOS();
   const [activeTab, setActiveTab] = useState<'select' | 'new'>('select');
   const [search, setSearch] = useState('');
   const [viewingCustomerLedger, setViewingCustomerLedger] = useState<Customer | null>(null);
@@ -34,7 +34,11 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [tier, setTier] = useState<MemberTier>('Bronze');
-  const [initialPoints, setInitialPoints] = useState<number>(25);
+  // Bonus member baru mengikuti Pengaturan Toko (default 0). Hanya Supervisor/Owner yang boleh mengubahnya
+  // per member, supaya kasir tidak memberi poin (= potongan harga) di luar kebijakan toko.
+  const welcomeBonus = Math.max(0, settings.welcomeBonusPoints ?? 0);
+  const canAdjustBonus = activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor';
+  const [initialPoints, setInitialPoints] = useState<number>(welcomeBonus);
 
   if (!isOpen) return null;
 
@@ -54,7 +58,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
       phone: phone.trim(),
       email: email.trim() || undefined,
       tier,
-      initialPoints,
+      initialPoints: canAdjustBonus ? Math.max(0, initialPoints) : welcomeBonus,
     });
 
     onClose();
@@ -419,10 +423,15 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                       type="number"
                       min={0}
                       step={5}
-                      value={initialPoints}
-                      onChange={(e) => setInitialPoints(Number(e.target.value))}
-                      className="w-full p-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                      value={canAdjustBonus ? initialPoints : welcomeBonus}
+                      onChange={(e) => setInitialPoints(Math.max(0, Number(e.target.value) || 0))}
+                      disabled={!canAdjustBonus}
+                      title={canAdjustBonus ? undefined : 'Diatur pemilik di Pengaturan Toko'}
+                      className="w-full p-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono disabled:opacity-60 disabled:cursor-not-allowed"
                     />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      {canAdjustBonus ? 'Bawaan dari Pengaturan Toko' : 'Diatur pemilik di Pengaturan Toko'}
+                    </p>
                   </div>
                 </div>
 

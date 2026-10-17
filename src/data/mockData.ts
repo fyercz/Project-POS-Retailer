@@ -554,6 +554,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   pointRedemptionRate: 100, // 1 poin = Rp 100 diskon kasir
   minRedeemPoints: 10, // Minimal 10 poin untuk tukar diskon kasir
   minProfitPercentForPoints: 15, // Minimal profit margin per barang 15% untuk mendapatkan poin
+  welcomeBonusPoints: 0, // Bonus poin member baru; diatur pemilik di Pengaturan Toko
   minStockRulePercentage: 50, // Aturan batas minimal stock adalah 50% dari jumlah order terakhir
   autoUpdateMinStockFromOrder: true, // Otomatis perbarui batas min stock saat penerimaan faktur masuk
   initialCapital: 50000000, // Modal awal usaha toko Rp 50.000.000

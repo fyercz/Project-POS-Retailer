@@ -2721,7 +2721,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addCustomer = (
     customerData: Omit<Customer, 'id' | 'points' | 'totalSpent' | 'ordersCount' | 'pointsHistory'> & { initialPoints?: number }
   ): Customer => {
-    const initPoints = customerData.initialPoints !== undefined ? customerData.initialPoints : 25;
+    // Bonus member baru mengikuti Pengaturan Toko (default 0), bukan angka tetap 25
+    const initPoints = Math.max(0, customerData.initialPoints !== undefined ? customerData.initialPoints : settings.welcomeBonusPoints ?? 0);
     const nowIso = new Date().toISOString();
     const newCust: Customer = {
       ...customerData,

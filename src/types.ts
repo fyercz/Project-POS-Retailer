@@ -378,6 +378,7 @@ export interface StoreSettings {
   pointRedemptionRate?: number; // Nilai 1 poin = Rp X diskon kasir (default 100)
   minRedeemPoints?: number; // Minimal poin untuk dapat ditukarkan di kasir (default 10)
   minProfitPercentForPoints: number; // e.g. 15% minimal profit margin barang untuk menghasilkan poin
+  welcomeBonusPoints?: number; // Bonus poin untuk setiap member baru (default 0 = tidak ada bonus)
   minStockRulePercentage?: number; // Aturan batas minimal stok (default 50 = 50% dari order terakhir)
   autoUpdateMinStockFromOrder?: boolean; // Otomatis perbarui minStock saat terima barang PO (default: true)
   initialCapital?: number; // Modal awal usaha toko untuk Neraca Keuangan (default: 50.000.000)

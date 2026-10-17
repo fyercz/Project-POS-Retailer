@@ -465,6 +465,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
 
               <div>
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
+                  Bonus Poin Member Baru
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step={5}
+                  value={formData.welcomeBonusPoints ?? 0}
+                  onChange={(e) => setFormData({ ...formData, welcomeBonusPoints: Math.max(0, Number(e.target.value) || 0) })}
+                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  placeholder="0"
+                />
+                <span className="text-[10px] text-slate-400">Diberikan saat daftar. 0 = tanpa bonus</span>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Rasio Perolehan Poin (Rp)
                 </label>
                 <input
