@@ -1,9 +1,11 @@
 CARA PAKAI ULILMART POS
 =======================
-1. Klik ganda  MULAI-KASIR.bat  (pertama kali butuh internet, 1-3 menit).
-2. Jendela kasir terbuka otomatis. Selanjutnya langsung terbuka dalam beberapa detik.
-3. Mau ikon di Desktop? Klik ganda  BUAT-SHORTCUT-DESKTOP.bat.
-4. Untuk mematikan server: BERHENTI-KASIR.bat (menutup jendela kasir saja tidak mematikan server).
-5. Menghapus aplikasi dari komputer: HAPUS-APLIKASI.bat (menawarkan cadangan data ke Desktop dulu).
+1. MULAI-KASIR.bat    Jalankan kasir. Pertama kali butuh internet (1-3 menit),
+                       sekaligus membuat ikon "Ulilmart POS" di Desktop.
+2. BERHENTI-KASIR.bat  Matikan server (menutup jendela kasir saja tidak mematikannya).
+3. update.bat          Ambil versi terbaru. Data toko dicadangkan dulu.
+4. HAPUS-APLIKASI.bat  Hapus aplikasi (menawarkan cadangan data ke Desktop dulu).
+
+Auto-start saat Windows menyala: MULAI-KASIR.bat --startup  (matikan: --remove-startup)
 
 Perlu: Windows + Node.js LTS (nodejs.org). Jika bermasalah, lihat file server.log.

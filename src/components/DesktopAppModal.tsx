@@ -46,13 +46,6 @@ import {
   downloadWindowsNativeExe,
   downloadWindowsDesktopLauncher,
   downloadUnixDesktopLauncher,
-  downloadAutorunBat,
-  downloadSetupStartupBat,
-  downloadBuatShortcutLogoBat,
-  downloadAutorunInf,
-  downloadUpdateBat,
-  downloadCleanerBat,
-  downloadCleanerSh,
   fetchGitStatus,
   triggerGitPull,
   configureGitRemote,
@@ -673,17 +666,12 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       <span>Script update.bat (Windows)</span>
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      File batch otomatis untuk Windows. Sudah disetel ke repositori resmi dan otomatis membersihkan file sampah serta mengompilasi ulang.
+                      Klik ganda file <strong>update.bat</strong> di folder aplikasi kasir. Server dimatikan, data toko dicadangkan ke folder data-backup, lalu kode terbaru diunduh dan dibuild ulang.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={downloadUpdateBat}
-                    className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Unduh update.bat (Resmi)</span>
-                  </button>
+                  <code className="block w-full py-2 text-center rounded-xl bg-slate-900 text-emerald-400 font-mono text-xs">
+                    update.bat
+                  </code>
                 </div>
 
                 {/* Method B: Perintah Terminal Manual */}
@@ -1110,28 +1098,9 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                         Setup Pembersihan Mandiri (.bat &amp; Perintah Terminal)
                       </h5>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                        Jalankan pembersihan tanpa membuka web browser atau unduh file skrip otomatis.
+                        Jalankan pembersihan dari terminal di folder aplikasi tanpa membuka web browser.
                       </p>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={downloadCleanerBat}
-                      className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                    >
-                      <Download className="w-3.5 h-3.5 text-blue-500" />
-                      <span>Unduh .BAT (Windows)</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={downloadCleanerSh}
-                      className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                    >
-                      <Download className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Unduh .SH (Linux/Mac)</span>
-                    </button>
                   </div>
                 </div>
 
@@ -1180,22 +1149,22 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
 
                   <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Klik Ganda Windows:</span>
+                      <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Cek Saja (Tanpa Hapus):</span>
                       <button
                         type="button"
                         onClick={() => {
-                          navigator.clipboard.writeText('clean.bat');
+                          navigator.clipboard.writeText('npm run clean:dry');
                           setCopiedCmd('bat');
                           setTimeout(() => setCopiedCmd(null), 2000);
                         }}
                         className="text-slate-400 hover:text-emerald-500 cursor-pointer"
-                        title="Salin Nama File"
+                        title="Salin Perintah"
                       >
                         {copiedCmd === 'bat' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                     <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded font-mono text-[11px] text-blue-600 dark:text-blue-400 truncate">
-                      clean.bat
+                      npm run clean:dry
                     </code>
                   </div>
                 </div>
@@ -1364,38 +1333,17 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                     </div>
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Sistem <strong>Autorun</strong> lengkap untuk toko fisik. Cukup klik ganda <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 font-mono text-[11px]">autorun.bat</code> untuk auto-boot kasir setiap pagi!
+                    Saat <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 font-mono text-[11px]">MULAI-KASIR.bat</code> pertama kali dijalankan, Anda akan ditanya apakah kasir mau menyala otomatis setiap Windows dinyalakan. Shortcut <strong>Ulilmart POS</strong> di Desktop juga dibuat otomatis.
                   </p>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <button
-                      onClick={() => downloadAutorunBat()}
-                      className="px-3.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Unduh autorun.bat</span>
-                    </button>
-                    <button
-                      onClick={() => downloadBuatShortcutLogoBat()}
-                      className="px-3.5 py-1.5 rounded-xl border border-sky-300 dark:border-sky-700 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/50 text-sky-800 dark:text-sky-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
-                      title="Buat shortcut aplikasi berlogo resmi Ulilmart di Desktop dan Folder"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-                      <span>Unduh buat-shortcut-logo.bat</span>
-                    </button>
-                    <button
-                      onClick={() => downloadSetupStartupBat()}
-                      className="px-3.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
-                    >
-                      <Settings className="w-3.5 h-3.5 text-amber-600" />
-                      <span>Unduh setup-autorun-startup.bat</span>
-                    </button>
-                    <button
-                      onClick={() => downloadAutorunInf()}
-                      className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Unduh autorun.inf</span>
-                    </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px]">
+                    <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60">
+                      <div className="font-bold text-slate-700 dark:text-slate-300 mb-1">Aktifkan auto-start:</div>
+                      <code className="font-mono text-amber-700 dark:text-amber-300">MULAI-KASIR.bat --startup</code>
+                    </div>
+                    <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60">
+                      <div className="font-bold text-slate-700 dark:text-slate-300 mb-1">Matikan auto-start:</div>
+                      <code className="font-mono text-amber-700 dark:text-amber-300">MULAI-KASIR.bat --remove-startup</code>
+                    </div>
                   </div>
                 </div>
               </div>

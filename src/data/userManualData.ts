@@ -642,8 +642,8 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         title: 'Menjalankan sebagai Aplikasi Desktop Mandiri & Layar Penuh Kiosk',
         summary: 'Membuka POS tanpa bilah browser, tanpa tab, dan langsung terintegrasi dengan hardware toko.',
         steps: [
-          'Di komputer Windows, cukup klik ganda file "MULAI-KASIR.bat" (atau "autorun.bat"). Script akan otomatis mendeteksi, menginstal, mengompilasi, dan langsung membuka kasir.',
-          'Untuk menyalakan kasir otomatis setiap kali PC dinyalakan di pagi hari, jalankan file "autorun.bat --startup" atau buka wizard menu dengan "autorun.bat --menu".',
+          'Di komputer Windows, cukup klik ganda file "MULAI-KASIR.bat". Script akan otomatis mendeteksi, menginstal, mengompilasi, dan langsung membuka kasir.',
+          'Untuk menyalakan kasir otomatis setiap kali PC dinyalakan, jawab "Y" saat ditanya ketika MULAI-KASIR.bat pertama kali dijalankan, atau jalankan "MULAI-KASIR.bat --startup" (matikan dengan "MULAI-KASIR.bat --remove-startup").',
           'Media USB / Flashdisk juga dilengkapi file "autorun.inf" standar untuk instalasi cepat.',
           'Aplikasi akan membuka jendela desktop mandiri menggunakan Chrome/Edge App Mode.',
           'Tekan F11 untuk masuk ke Mode Kiosk Layar Penuh (tanpa tombol minimize/close).',

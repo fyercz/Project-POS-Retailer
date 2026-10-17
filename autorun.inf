@@ -9,5 +9,3 @@ shell\kiosk=Buka Mode Kiosk Layar Penuh (.EXE)
 shell\kiosk\command=UlilmartPOS-Kiosk.exe
 shell\desktop=Jalankan Kasir (Jendela Aplikasi)
 shell\desktop\command=MULAI-KASIR.bat
-shell\install=Instalasi Lengkap (Auto-Install)
-shell\install\command=install.bat

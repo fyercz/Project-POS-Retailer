@@ -43,10 +43,7 @@ import {
   kickCashDrawerOnly,
   PrinterConfig,
 } from '../utils/escposPrinter';
-import {
-  executeSystemCleanup,
-  downloadCleanerBat,
-} from '../utils/desktopHelper';
+import { executeSystemCleanup } from '../utils/desktopHelper';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -956,15 +953,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <Trash2 className="w-4 h-4 text-rose-500" />
                 <span>Pembersihan File Usang &amp; Cache Sistem</span>
               </div>
-              <button
-                type="button"
-                onClick={downloadCleanerBat}
-                className="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10px] flex items-center gap-1 cursor-pointer"
-                title="Unduh skrip otomatis untuk Windows"
-              >
-                <Download className="w-3 h-3 text-blue-500" />
-                <span>Unduh .BAT</span>
-              </button>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400">
               Pindai dan hapus file sampah, cache build usang (<code>node_modules/.vite</code>), log debugging (<code>*.log</code>), dan file sementara (<code>*.tmp</code>) dengan aman tanpa menghapus database kasir.

@@ -538,8 +538,7 @@ router.get('/api/system/verify-files', adminOnly, async (req, res) => {
       { path: 'MULAI-KASIR.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Peluncur kasir Windows' },
       { path: 'BERHENTI-KASIR.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Mematikan server kasir Windows' },
       { path: 'run.sh', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Script start server Linux/macOS' },
-      { path: 'install.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Wizard instalasi Windows' },
-      { path: 'install.sh', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Wizard instalasi Linux/macOS' },
+      { path: 'HAPUS-APLIKASI.bat', category: 'Skrip Desktop & Auto-Update', critical: false, description: 'Uninstall aplikasi Windows' },
 
       // Database & State
       { path: 'data/lan-database.json', category: 'Database & Data Toko', critical: false, description: 'Database persisten server LAN' },

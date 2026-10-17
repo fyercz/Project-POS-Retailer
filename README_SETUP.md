@@ -77,102 +77,40 @@ Untuk menjaga performa dan kebersihan penyimpanan komputer kasir:
 
 ---
 
-## 🚀 Fitur Autorun & Auto-Start (1-Klik Tanpa Setup Rumit)
-
-Aplikasi telah dilengkapi suite **Autorun** lengkap untuk mempermudah operasional kasir harian dan media installer (USB Flashdisk / CD):
-
-### 1. `autorun.bat` (Universal Auto-Runner Windows)
-Cukup klik ganda **`autorun.bat`**:
-- Otomatis mendeteksi Node.js (memberi panduan unduh jika belum ada).
-- Otomatis membuat `.env` jika belum tersedia.
-- Otomatis menginstal package jika `node_modules` belum ada (`npm install`).
-- Otomatis melakukan build produksi jika `dist` belum ada (`npm run build`).
-- Langsung membuka jendela aplikasi kasir (*Desktop App Window*) siap pakai.
-
-### 2. `autorun.inf` (Untuk Flashdisk / Media Penyimpanan Eksternal)
-- Berkas autorun standar Windows saat flashdisk atau installer dicolokkan ke PC.
-- Mengarahkan aksi *Open* langsung ke `autorun.bat`.
-
-### 3. Auto-Start & Wizard Konfigurasi (`autorun.bat --menu`)
-Ingin agar PC kasir langsung membuka aplikasi kasir setiap kali komputer dinyalakan di pagi hari?
-- Jalankan **`autorun.bat --menu`** (atau jalankan langsung **`autorun.bat --startup`**).
-- Tekan **`1`** untuk mendaftarkan Ulilmart POS ke folder **Windows Startup**.
-- Tekan **`3`** untuk membuat shortcut ikon logo kasir langsung di layar Desktop.
-- Tekan **`2`** jika sewaktu-waktu ingin menonaktifkan auto-start.
-
-### 4. `autorun.sh` (Auto-Runner Linux / Raspberry Pi / macOS)
-Jalankan di terminal:
-```bash
-./autorun.sh
-```
-Atau untuk mendaftarkan auto-start saat login di Linux desktop (GNOME/XFCE/Raspberry Pi OS):
-```bash
-./autorun.sh --autostart
-```
-
----
-
 ## 💻 Pengguna Windows
 
-### 1. Instalasi Pertama Kali (Auto-Install)
-- Pastikan komputer sudah terpasang [Node.js](https://nodejs.org/) (versi LTS direkomendasikan).
-- Klik ganda (double-click) file:
-  ```bat
-  install.bat
-  ```
-  Script akan otomatis:
-  - Memeriksa Node.js & npm
-  - Membuat file `.env` dari `.env.example`
-  - Menginstal seluruh dependensi (`npm install`)
-  - Mengompilasi aplikasi untuk mode produksi (`npm run build`)
+Hanya ada 4 file yang perlu diketahui:
 
-### 2. Menjalankan Aplikasi Kasir
-- Cukup klik ganda file:
-  ```bat
-  MULAI-KASIR.bat
-  ```
-- Kasir akan terbuka otomatis sebagai jendela aplikasi di `http://localhost:3000`.
-- Untuk mematikan server: klik ganda `BERHENTI-KASIR.bat`.
+| File | Fungsi |
+|---|---|
+| **`MULAI-KASIR.bat`** | Menjalankan kasir. Pertama kali: otomatis menawarkan pasang Node.js bila belum ada, memasang komponen (`npm install`), build, membuat shortcut **Ulilmart POS** di Desktop, dan menawarkan auto-start. |
+| **`BERHENTI-KASIR.bat`** | Mematikan server kasir (menutup jendela kasir saja tidak mematikan server). |
+| **`update.bat`** | Mengambil versi terbaru dari GitHub. Data toko dicadangkan dulu ke `data-backup\`. |
+| **`HAPUS-APLIKASI.bat`** | Menghapus aplikasi (menawarkan cadangan data ke Desktop dulu). |
 
-### 3. Pembaruan Aplikasi (Auto-Update)
-- Jika ada update kode terbaru (misalnya dari Git), klik ganda file:
-  ```bat
-  update.bat
-  ```
-  Script akan menarik kode terbaru, memperbarui dependensi, dan melakukan build ulang secara otomatis.
+Pilihan tambahan `MULAI-KASIR.bat` (jalankan dari Command Prompt di folder aplikasi):
+```bat
+MULAI-KASIR.bat --startup          :: kasir menyala otomatis saat Windows dinyalakan
+MULAI-KASIR.bat --remove-startup   :: matikan auto-start
+MULAI-KASIR.bat --shortcut         :: buat ulang shortcut di Desktop
+```
+
+`autorun.inf` dipakai bila aplikasi dijalankan dari flashdisk: aksi *Open* menjalankan `UlilmartPOS.exe`.
 
 ---
 
 ## 🐧 Pengguna Linux & macOS
 
-Sebelum menjalankan pertama kali, pastikan script memiliki izin eksekusi:
 ```bash
 chmod +x *.sh
+./run.sh                     # jalankan kasir (pertama kali: pasang otomatis)
+./run.sh --dev               # mode pengembang (hot-reload)
+./run.sh --autostart         # nyalakan otomatis saat login (Linux desktop)
+./run.sh --remove-autostart  # matikan auto-start
+./update.sh                  # ambil versi terbaru (data dicadangkan dulu)
 ```
 
-### 1. Instalasi Pertama Kali (Auto-Install)
-Jalankan di terminal:
-```bash
-./install.sh
-```
-
-### 2. Menjalankan Aplikasi
-- **Mode Kasir Produksi (Direkomendasikan):**
-  ```bash
-  ./run.sh
-  ```
-- **Mode Pengembang (Development / Hot-Reload):**
-  ```bash
-  ./run.sh --dev
-  ```
-
-Aplikasi akan otomatis membuka browser ke alamat `http://localhost:3000`.
-
-### 3. Pembaruan Aplikasi (Auto-Update)
-Jalankan di terminal:
-```bash
-./update.sh
-```
+Aplikasi otomatis membuka browser ke `http://localhost:3000`.
 
 ---
 
@@ -209,7 +147,7 @@ node scripts/launcher.mjs dev
 
 Yang perlu dihapus manual bila diinginkan: data kasir di browser (`edge://settings/siteData` atau `chrome://settings/content/all`, cari `localhost`), aplikasi PWA (`edge://apps`), Node.js (Settings → Apps), dan data situs di HP/kasir lain.
 
-**Linux / macOS:** jalankan `./autorun.sh --remove-autostart`, lalu hapus folder aplikasi.
+**Linux / macOS:** jalankan `./run.sh --remove-autostart`, lalu hapus folder aplikasi.
 
 ---
 
