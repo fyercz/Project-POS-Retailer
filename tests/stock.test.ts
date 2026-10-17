@@ -69,7 +69,10 @@ before(async () => {
 
 after(async () => {
   await stopServer();
-  fs.rmSync(dataDir, { recursive: true, force: true });
+  // Windows bisa menahan file database sesaat setelah proses berhenti: hapus dengan toleransi
+  try {
+    fs.rmSync(dataDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  } catch {}
 });
 
 test('data produk lengkap (harga grosir, foto, rak) tetap ada setelah server restart', async () => {

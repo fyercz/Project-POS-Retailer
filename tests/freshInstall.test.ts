@@ -13,5 +13,11 @@ test('database server pada instalasi baru tidak berisi data contoh', async () =>
   assert.equal((await db.getAllProducts()).length, 0);
   assert.equal((await db.getAllCustomers()).length, 0);
   assert.equal((await db.getAllSuppliers()).length, 0);
-  fs.rmSync(dir, { recursive: true, force: true });
+  // Windows tidak bisa menghapus file database yang masih terbuka: tutup dulu, lalu hapus dengan toleransi
+  try {
+    db.getSqliteClient().close();
+  } catch {}
+  try {
+    fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  } catch {}
 });

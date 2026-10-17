@@ -4,8 +4,8 @@
 name: CI
 
 on:
+  # Semua branch, agar perubahan bisa diuji sebelum masuk main
   push:
-    branches: [main]
   pull_request:
 
 jobs:
@@ -18,8 +18,8 @@ jobs:
         # Windows ikut diuji karena komputer kasir memakai Windows
         os: [ubuntu-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       # Repo tidak menyimpan package-lock.json, jadi memakai npm install (bukan npm ci)
@@ -29,4 +29,11 @@ jobs:
       - name: Build
         run: npm run build
       - name: Tes
-        run: npm test
+        shell: bash
+        # Tes yang gagal juga ditulis sebagai anotasi (::error::) agar penyebabnya terlihat di ringkasan CI
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test-output.txt || {
+            grep -E "^not ok|^\s+not ok|error:|Error:|expected|actual|code: '" test-output.txt | head -40 | sed 's/^/::error::/'
+            exit 1
+          }
