@@ -305,15 +305,7 @@ Aplikasi kasir Ulilmart dilengkapi sistem pembersihan file usang (*Obsolete & Ju
 
 ### Cara Menggunakan Setup Pembersihan:
 
-#### 1. Klik Ganda File Skrip Windows (Paling Praktis)
-* Buka folder aplikasi kasir Ulilmart di Windows Explorer.
-* Klik ganda file **`clean.bat`**.
-* Pilih mode:
-  * **[1] Pembersihan Standar Aman (Rekomendasi)**: Menghapus log, file temp, cache Vite, dan file sampah OS.
-  * **[2] Pembersihan Penuh**: Standar + menghapus folder `dist/` untuk kompilasi bersih ulang.
-  * **[3] Simulasi Pindai Saja (Dry-Run)**: Menampilkan daftar file usang tanpa menghapus.
-
-#### 2. Perintah Cepat Terminal / Command Prompt
+#### 1. Perintah Cepat Terminal / Command Prompt
 Jalankan salah satu perintah berikut:
 ```bash
 # Pembersihan standar lintas platform (Windows / Linux / Mac)
@@ -329,18 +321,8 @@ npm run clean:dry
 npm run app:clean
 ```
 
-#### 3. Linux / macOS Terminal
-```bash
-# Jalankan skrip shell pembersihan
-chmod +x clean.sh
-./clean.sh
-
-# Atau simulasi dry-run
-./clean.sh --dry-run
-```
-
-#### 4. Pembersihan 1-Klik Langsung dari Layar Kasir (UI)
+#### 2. Pembersihan 1-Klik Langsung dari Layar Kasir (UI)
 * **Melalui Menu Alat di Header**: Klik menu **Alat Tambahan** di header atas -> pilih **"Pembersihan File Usang & Cache"**.
 * **Melalui Modal Pengaturan**: Buka menu **Pengaturan Toko & Struk** -> scroll ke bagian bawah kartu **"Pembersihan File Usang & Cache Sistem"** -> klik **"Bersihkan File Usang Sekarang"**.
-* **Melalui Menu Desktop & Kiosk (`Alt + D`)**: Buka tab **"Bersihkan File Sampah"** -> klik **"Pindai Sampah"** dan **"Bersihkan File Sekarang"**. Anda juga dapat mengunduh file `.bat` atau `.sh` langsung dari tombol di dalam modal ini.
+* **Melalui Menu Desktop & Kiosk (`Alt + D`)**: Buka tab **"Bersihkan File Sampah"** -> klik **"Pindai Sampah"** dan **"Bersihkan File Sekarang"**.
 

@@ -198,7 +198,7 @@ function getFallbackErrorHtml(isTempPath, appDir) {
           <li>Tutup jendela ini.</li>
           <li>Buka file <b>ZIP Ulilmart POS</b> di File Explorer Anda.</li>
           <li>Klik kanan file ZIP &gt; pilih <b>"Extract All..." / "Ekstrak Semua"</b> ke folder baru (misal di Desktop atau <code>C:\\UlilmartPOS</code>).</li>
-          <li>Jalankan <b>UlilmartPOS.exe</b> atau <b>autorun.bat</b> dari folder yang sudah diekstrak.</li>
+          <li>Jalankan <b>UlilmartPOS.exe</b> atau <b>MULAI-KASIR.bat</b> dari folder yang sudah diekstrak.</li>
         </ol>
       ` : `
         <b>Petunjuk Menyalakan Kasir:</b>

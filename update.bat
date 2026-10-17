@@ -60,7 +60,7 @@ echo [PERINGATAN] Git tidak ditemukan (https://git-scm.com). Kode tidak diunduh,
 goto BUILD
 
 :NO_NODE
-echo [GAGAL] Node.js belum terpasang. Jalankan pasang-nodejs.bat terlebih dahulu.
+echo [GAGAL] Node.js belum terpasang. Jalankan MULAI-KASIR.bat untuk memasangnya.
 pause
 exit /b 1
 
