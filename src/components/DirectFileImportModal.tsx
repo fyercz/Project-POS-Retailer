@@ -141,9 +141,13 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
       wholesaleUnits: undefined,
     }));
 
-    addProductsBatch(payloads);
+    const added = addProductsBatch(payloads);
+    const skipped = selected.length - added.length;
 
-    setSuccessMessage(`Berhasil mengimpor ${selected.length} produk langsung ke katalog toko.`);
+    setSuccessMessage(
+      `Berhasil mengimpor ${added.length} produk langsung ke katalog toko.` +
+        (skipped > 0 ? ` ${skipped} produk dilewati karena barcode-nya sudah ada di katalog.` : '')
+    );
     setTimeout(() => {
       setSuccessMessage(null);
       setIsProcessing(false);

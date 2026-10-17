@@ -121,6 +121,8 @@ export interface Product {
     name: string;
     choices: { name: string; extraPrice: number }[];
   }[];
+  /** Diisi saat produk masuk lewat impor file (untuk fitur 'Hapus Data Impor') */
+  importedAt?: string;
 }
 
 export interface SelectedOption {

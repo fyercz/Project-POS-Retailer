@@ -2662,13 +2662,36 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newProduct;
   };
 
+  /**
+   * Impor produk massal. Produk dengan barcode yang sudah ada di katalog (atau kembar di dalam
+   * berkas yang sama) DILEWATI, agar impor ulang berkas yang sama tidak menggandakan katalog.
+   * Angka harga/modal/stok dibersihkan (bukan angka atau negatif -> 0). Mengembalikan produk
+   * yang benar-benar ditambahkan.
+   */
   const addProductsBatch = (productsData: Omit<Product, 'id'>[]): Product[] => {
     const timestamp = Date.now();
-    const newProducts: Product[] = productsData.map((data, idx) => ({
-      ...data,
-      id: `prod-${timestamp}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
-    }));
-    setProducts((prev) => [...newProducts, ...prev]);
+    const importedAt = new Date().toISOString();
+    const seenBarcodes = new Set(products.map((p) => (p.barcode || '').trim()).filter(Boolean));
+    const num = (v: unknown) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    };
+    const newProducts: Product[] = [];
+    productsData.forEach((data, idx) => {
+      const barcode = (data.barcode || '').trim();
+      if (barcode && seenBarcodes.has(barcode)) return;
+      if (barcode) seenBarcodes.add(barcode);
+      newProducts.push({
+        ...data,
+        barcode,
+        price: num(data.price),
+        costPrice: num(data.costPrice),
+        stock: Math.round(num(data.stock)),
+        importedAt,
+        id: `prod-${timestamp}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+      });
+    });
+    if (newProducts.length > 0) setProducts((prev) => [...newProducts, ...prev]);
     return newProducts;
   };
 
@@ -2677,9 +2700,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProducts((prev) => prev.filter((p) => !idSet.has(p.id)));
   };
 
+  /** Hapus HANYA produk yang masuk lewat impor file (bertanda importedAt). Dulu semua produk selain
+   *  produk demo ikut terhapus, termasuk produk yang diinput manual. */
   const clearImportedProducts = () => {
-    const initialIds = new Set(INITIAL_PRODUCTS.map((p) => p.id));
-    setProducts((prev) => prev.filter((p) => initialIds.has(p.id)));
+    setProducts((prev) => prev.filter((p) => !p.importedAt));
   };
 
   const resetProductsToDefault = () => {
