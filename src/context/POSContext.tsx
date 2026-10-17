@@ -77,6 +77,7 @@ import {
 } from '../utils/accountingLedger';
 import { playScannerSound } from '../utils/scannerAudio';
 import { pinLockSecondsLeft, registerPinFailure, registerPinSuccess, pinLockMessage } from '../utils/pinGuard';
+import { purchaseOutstandingOf, purchasePaymentKind } from '../utils/accountingLedger';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -186,6 +187,12 @@ export interface POSTransactionsContextType {
   processPurchaseReturn: (returnData: Omit<PurchaseReturn, 'id' | 'createdAt'>) => PurchaseReturn;
   supplierPurchases: SupplierPurchase[];
   processSupplierPurchase: (purchaseData: Omit<SupplierPurchase, 'id' | 'createdAt'>) => SupplierPurchase;
+  recordSupplierPayment: (
+    purchaseId: string,
+    amount: number,
+    source: 'cash_drawer' | 'bank_transfer',
+    note?: string
+  ) => { success: boolean; message: string };
   suppliers: Supplier[];
   addSupplier: (supplier: Omit<Supplier, 'id' | 'createdAt'>) => Supplier;
   updateSupplier: (id: string, updated: Partial<Supplier>) => void;
@@ -2476,6 +2483,46 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newReturn;
   };
 
+  /**
+   * Catat pembayaran / pelunasan faktur tempo atau konsinyasi. Hanya Supervisor/Owner.
+   * Jumlah tidak boleh melebihi sisa hutang. Bila dibayar dari laci, tercatat sebagai uang keluar shift.
+   */
+  const recordSupplierPayment = (
+    purchaseId: string,
+    amount: number,
+    source: 'cash_drawer' | 'bank_transfer',
+    note?: string
+  ): { success: boolean; message: string } => {
+    if (activeEmployee?.role !== 'owner' && activeEmployee?.role !== 'supervisor') {
+      return { success: false, message: 'Pembayaran hutang supplier hanya bisa dicatat Supervisor atau Owner.' };
+    }
+    const po = supplierPurchases.find((p) => p.id === purchaseId);
+    if (!po) return { success: false, message: 'Faktur tidak ditemukan.' };
+    if (purchasePaymentKind(po) === 'cash') return { success: false, message: 'Faktur ini dibayar tunai, tidak ada hutang.' };
+    const outstanding = purchaseOutstandingOf(po);
+    const value = Math.round(Number(amount));
+    if (!Number.isFinite(value) || value <= 0) return { success: false, message: 'Isi jumlah pembayaran lebih dari 0.' };
+    if (value > outstanding) {
+      return { success: false, message: `Jumlah melebihi sisa hutang (${outstanding.toLocaleString('id-ID')}).` };
+    }
+    const payment = {
+      id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      amount: value,
+      date: new Date().toISOString(),
+      source,
+      note: note?.trim() || undefined,
+      recordedBy: activeEmployee?.name || 'Owner',
+    };
+    setSupplierPurchases((prev) =>
+      prev.map((p) => (p.id === purchaseId ? { ...p, payments: [...(p.payments || []), payment] } : p))
+    );
+    if (source === 'cash_drawer') recordShiftCashOut(value);
+    return {
+      success: true,
+      message: value === outstanding ? 'Faktur lunas.' : `Pembayaran tercatat. Sisa hutang ${(outstanding - value).toLocaleString('id-ID')}.`,
+    };
+  };
+
   const processSupplierPurchase = (purchaseData: Omit<SupplierPurchase, 'id' | 'createdAt'>): SupplierPurchase => {
     const newPurchase: SupplierPurchase = {
       ...purchaseData,
@@ -3494,6 +3541,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       processPurchaseReturn,
       supplierPurchases,
       processSupplierPurchase,
+      recordSupplierPayment,
       suppliers,
       addSupplier,
       updateSupplier,

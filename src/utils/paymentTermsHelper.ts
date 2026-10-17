@@ -151,3 +151,23 @@ export function parsePaymentTermsInfo(createdAtStr: string, paymentTerms: string
     badgeClasses,
   };
 }
+
+/**
+ * Sesuaikan status jatuh tempo dengan pembayaran: faktur yang sudah lunas tidak lagi
+ * ditandai "mendesak/terlambat" dan tidak dihitung sebagai hutang.
+ */
+export function withPaymentStatus(info: PaymentTermsInfo, outstanding: number): PaymentTermsInfo {
+  if (info.category === 'cash' || outstanding > 0) return info;
+  return {
+    ...info,
+    urgency: 'safe',
+    daysRemaining: null,
+    statusBadgeText: 'Lunas',
+    badgeClasses: {
+      bg: 'bg-emerald-50 dark:bg-emerald-950/50',
+      border: 'border-emerald-200 dark:border-emerald-800',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+    },
+  };
+}

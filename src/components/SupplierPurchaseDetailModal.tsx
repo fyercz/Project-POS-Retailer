@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   X,
   Printer,
@@ -17,9 +17,11 @@ import {
 } from 'lucide-react';
 import { SupplierPurchase, StoreSettings } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
-import { parsePaymentTermsInfo } from '../utils/paymentTermsHelper';
+import { parsePaymentTermsInfo, withPaymentStatus } from '../utils/paymentTermsHelper';
 import { printViaIframe } from '../utils/printHelper';
 import { UlilMartLogo } from './UlilMartLogo';
+import { usePOS } from '../context/POSContext';
+import { purchaseOutstandingOf, purchasePaidOf, purchasePaymentKind, purchaseTotalOf } from '../utils/accountingLedger';
 
 interface SupplierPurchaseDetailModalProps {
   isOpen: boolean;
@@ -37,10 +39,36 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
   onPrintPriceTags,
 }) => {
   const printAreaRef = useRef<HTMLDivElement>(null);
+  const { supplierPurchases, recordSupplierPayment, activeEmployee } = usePOS();
+  const [payAmount, setPayAmount] = useState('');
+  const [paySource, setPaySource] = useState<'cash_drawer' | 'bank_transfer' | ''>('');
+  const [payNote, setPayNote] = useState('');
+  const [payMessage, setPayMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   if (!isOpen || !purchase) return null;
 
-  const dueInfo = parsePaymentTermsInfo(purchase.createdAt, purchase.paymentTerms);
+  // Data terbaru dari aplikasi (prop hanya salinan saat modal dibuka)
+  const livePurchase = supplierPurchases.find((p) => p.id === purchase.id) || purchase;
+  const payKind = purchasePaymentKind(livePurchase);
+  const payTotal = purchaseTotalOf(livePurchase);
+  const payPaid = purchasePaidOf(livePurchase);
+  const payOutstanding = purchaseOutstandingOf(livePurchase);
+  const canRecordPayment = activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor';
+  const handleRecordPayment = () => {
+    if (!paySource) {
+      setPayMessage({ ok: false, text: 'Pilih sumber dana pembayaran.' });
+      return;
+    }
+    const res = recordSupplierPayment(livePurchase.id, Number(payAmount), paySource, payNote);
+    setPayMessage({ ok: res.success, text: res.message });
+    if (res.success) {
+      setPayAmount('');
+      setPayNote('');
+      setPaySource('');
+    }
+  };
+
+  const dueInfo = withPaymentStatus(parsePaymentTermsInfo(purchase.createdAt, purchase.paymentTerms), payOutstanding);
   const totalItemsCount = (purchase.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
 
   const handlePrintDocument = (paper: 'a4' | '80mm') => {
@@ -339,6 +367,87 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             </div>
           </div>
         </div>
+
+        {/* Status hutang & pembayaran (tempo / konsinyasi); tidak ikut dicetak */}
+        {payKind !== 'cash' && (
+          <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <span className="font-bold text-slate-800 dark:text-slate-100">
+                {payKind === 'consignment' ? 'Hutang Konsinyasi' : 'Hutang Tempo'}:{' '}
+                {payOutstanding === 0 ? (
+                  <span className="text-emerald-600 dark:text-emerald-400">LUNAS</span>
+                ) : (
+                  <span className="text-rose-600 dark:text-rose-400">sisa {formatCurrency(payOutstanding, settings.currency)}</span>
+                )}
+              </span>
+              <span className="text-slate-500">
+                Dibayar {formatCurrency(payPaid, settings.currency)} dari {formatCurrency(payTotal, settings.currency)}
+              </span>
+            </div>
+            {(livePurchase.payments || []).length > 0 && (
+              <ul className="space-y-0.5 text-[11px] text-slate-500">
+                {(livePurchase.payments || []).map((p) => (
+                  <li key={p.id}>
+                    {formatDate(p.date)} · {formatCurrency(p.amount, settings.currency)} ·{' '}
+                    {p.source === 'bank_transfer' ? 'Transfer bank' : 'Kas laci'} · {p.recordedBy}
+                    {p.note ? ` · ${p.note}` : ''}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {payOutstanding > 0 && canRecordPayment && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="number"
+                  min={1}
+                  max={payOutstanding}
+                  value={payAmount}
+                  onChange={(e) => setPayAmount(e.target.value)}
+                  placeholder="Jumlah dibayar"
+                  className="w-36 px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPayAmount(String(payOutstanding))}
+                  className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 font-bold cursor-pointer"
+                >
+                  Lunasi
+                </button>
+                <select
+                  value={paySource}
+                  onChange={(e) => setPaySource(e.target.value as any)}
+                  className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                >
+                  <option value="" disabled>
+                    -- Sumber dana --
+                  </option>
+                  <option value="cash_drawer">Kas laci kasir</option>
+                  <option value="bank_transfer">Transfer bank</option>
+                </select>
+                <input
+                  type="text"
+                  value={payNote}
+                  onChange={(e) => setPayNote(e.target.value)}
+                  placeholder="Catatan (opsional)"
+                  className="flex-1 min-w-[120px] px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                />
+                <button
+                  type="button"
+                  onClick={handleRecordPayment}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer"
+                >
+                  Catat Pembayaran
+                </button>
+              </div>
+            )}
+            {payOutstanding > 0 && !canRecordPayment && (
+              <p className="text-[11px] text-slate-400">Pembayaran hutang dicatat oleh Supervisor/Owner.</p>
+            )}
+            {payMessage && (
+              <p className={`text-[11px] ${payMessage.ok ? 'text-emerald-600' : 'text-rose-600'}`}>{payMessage.text}</p>
+            )}
+          </div>
+        )}
 
         {/* Modal Actions Footer */}
         <div className="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between flex-wrap gap-2">

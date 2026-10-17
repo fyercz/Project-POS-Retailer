@@ -63,7 +63,7 @@ import { ProductFormModal } from '../ProductFormModal';
 import { SupplierFormModal } from '../SupplierFormModal';
 import { SupplierPurchaseDetailModal } from '../SupplierPurchaseDetailModal';
 import { ReceivingBarcodeCameraModal } from '../ReceivingBarcodeCameraModal';
-import { parsePaymentTermsInfo } from '../../utils/paymentTermsHelper';
+import { parsePaymentTermsInfo, withPaymentStatus } from '../../utils/paymentTermsHelper';
 import { PriceTagModal } from '../PriceTagModal';
 import { QRShelfLabelModal } from '../QRShelfLabelModal';
 import { ShelfProductLiveModal } from '../ShelfProductLiveModal';
@@ -91,6 +91,7 @@ import {
 import { playScannerSound } from '../../utils/scannerAudio';
 import { Html5Qrcode } from 'html5-qrcode';
 import { escapeHtml } from '../../utils/escapeHtml';
+import { purchaseOutstandingOf } from '../../utils/accountingLedger';
 
 interface ReceivingItem {
   productId: string;
@@ -517,8 +518,10 @@ export const InventoryView: React.FC = () => {
     let urgentTempoCount = 0;
 
     supplierPurchases.forEach((p) => {
-      const info = parsePaymentTermsInfo(p.createdAt, p.paymentTerms);
-      const val = Number(p.finalTotal ?? p.totalAmount) || 0;
+      // Ringkasan hutang memakai SISA yang belum dibayar; faktur lunas tidak dihitung mendesak
+      const outstanding = purchaseOutstandingOf(p);
+      const info = withPaymentStatus(parsePaymentTermsInfo(p.createdAt, p.paymentTerms), outstanding);
+      const val = info.category === 'cash' ? Number(p.finalTotal ?? p.totalAmount) || 0 : outstanding;
       if (info.category === 'tempo') {
         tempoTotal += val;
         tempoCount++;
@@ -2803,7 +2806,10 @@ export const InventoryView: React.FC = () => {
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {filteredPurchases.length > 0 ? (
                     filteredPurchases.map((purch) => {
-                      const termsInfo = parsePaymentTermsInfo(purch.createdAt, purch.paymentTerms);
+                      const termsInfo = withPaymentStatus(
+                        parsePaymentTermsInfo(purch.createdAt, purch.paymentTerms),
+                        purchaseOutstandingOf(purch)
+                      );
                       return (
                         <tr key={purch.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                           <td className="py-3 px-4">

@@ -358,6 +358,17 @@ export interface SupplierPurchase {
   createdAt: string;
   receivedBy?: string;
   notes?: string;
+  /** Pembayaran / pelunasan untuk faktur tempo atau konsinyasi */
+  payments?: SupplierPayment[];
+}
+
+export interface SupplierPayment {
+  id: string;
+  amount: number;
+  date: string;
+  source: 'cash_drawer' | 'bank_transfer';
+  note?: string;
+  recordedBy: string;
 }
 
 export interface StoreSettings {
@@ -775,7 +786,7 @@ export interface JournalEntry {
   id: string;
   date: string;
   referenceNumber: string; // e.g. INV-..., RET-..., PO-..., EXP-...
-  sourceType: 'sale' | 'sales_return' | 'purchase_order' | 'shift_adjustment' | 'expense' | 'initial_balance';
+  sourceType: 'sale' | 'sales_return' | 'purchase_order' | 'supplier_payment' | 'shift_adjustment' | 'expense' | 'initial_balance';
   description: string;
   lines: JournalLineItem[];
   totalDebit: number;
