@@ -19,6 +19,7 @@ import { usePOS } from '../context/POSContext';
 import { formatRupiah, formatDate } from '../utils/formatters';
 import { printViaIframe } from '../utils/printHelper';
 import { escapeHtml } from '../utils/escapeHtml';
+import { expectedCashOf, canEditStartingCash as canEditStartingCashFor } from '../domain/shiftCash';
 
 export interface ShiftModalProps {
   isOpen?: boolean;
@@ -44,9 +45,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
   const [isEditingStartingCash, setIsEditingStartingCash] = useState(false);
   const [startingCashInput, setStartingCashInput] = useState<string>('');
   const [startingCashError, setStartingCashError] = useState('');
-  const canEditStartingCash =
-    Boolean(currentShift) &&
-    (activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor' || (currentShift?.totalTransactions || 0) === 0);
+  const canEditStartingCash = canEditStartingCashFor(activeEmployee?.role, currentShift);
   const [notes, setNotes] = useState<string>('');
   const [shiftClosedResult, setShiftClosedResult] = useState<any>(null);
   const [closeError, setCloseError] = useState('');
@@ -55,7 +54,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
 
   // Kas yang seharusnya ada = modal + penjualan tunai - uang keluar (retur/void tunai, pengeluaran dari laci)
   const cashOut = currentShift?.cashOut || 0;
-  const expectedCash = (currentShift?.startingCash || 0) + (currentShift?.cashSales || 0) - cashOut;
+  const expectedCash = expectedCashOf(currentShift);
   const enteredCashNum = parseFloat(actualCash.replace(/\D/g, '')) || 0;
   const difference = enteredCashNum - expectedCash;
 
@@ -84,8 +83,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
     const printedAt = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
     // Angka struk diambil dari shift yang BARU DITUTUP (bukan shift berikutnya yang sudah dimulai)
     const closedCashOut = Number(shiftClosedResult.cashOut) || 0;
-    const closedExpected =
-      (Number(shiftClosedResult.startingCash) || 0) + (Number(shiftClosedResult.cashSales) || 0) - closedCashOut;
+    const closedExpected = expectedCashOf(shiftClosedResult);
     const shiftHtml = `
       <div style="font-family: monospace; font-size: 11px; line-height: 1.35; color: #000;">
         <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">

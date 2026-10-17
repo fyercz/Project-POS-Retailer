@@ -69,6 +69,21 @@ import {
 import { playScannerSound } from '../utils/scannerAudio';
 import { pinLockSecondsLeft, registerPinFailure, registerPinSuccess, pinLockMessage } from '../utils/pinGuard';
 import { purchaseOutstandingOf, purchasePaymentKind } from '../utils/accountingLedger';
+import {
+  calcSubtotal,
+  calcVoucherDiscount,
+  calcCustomerDiscount,
+  calcRemainingBill,
+  calcMaxRedeemablePoints,
+  calcPointsDiscount,
+  calcFinalTotal,
+  calcPointsEligibleSpend,
+  calcEffectiveEligibleSpend,
+  tierPointsMultiplier,
+  calcPointsEarned,
+} from '../domain/cartTotals';
+import { newShift, expectedCashOf, applySaleToShift, applyCashOut, canEditStartingCash, closeShift } from '../domain/shiftCash';
+import { saleStockDeltas, returnRestockLines, voidRestockLines, linesToDeltas, applyStockDeltas } from '../domain/stockMovements';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -1733,64 +1748,45 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Memoized Calculations
-  const subtotal = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  }, [cart]);
+  // Perhitungan total: logika murni di src/domain/cartTotals.ts (teruji)
+  const subtotal = useMemo(() => calcSubtotal(cart), [cart]);
 
   // Voucher discount calculation
-  const voucherDiscount = useMemo(() => {
-    if (appliedVoucher && subtotal >= appliedVoucher.minSpend) {
-      if (appliedVoucher.discountType === 'percentage') {
-        const disc = (subtotal * appliedVoucher.value) / 100;
-        return appliedVoucher.maxDiscount && disc > appliedVoucher.maxDiscount
-          ? appliedVoucher.maxDiscount
-          : disc;
-      }
-      return appliedVoucher.value;
-    }
-    return 0;
-  }, [appliedVoucher, subtotal]);
+  const voucherDiscount = useMemo(() => calcVoucherDiscount(appliedVoucher, subtotal), [appliedVoucher, subtotal]);
 
   // Customer-specific discount calculation based on loyalty status and previous purchase history
-  const customerDiscountAmount = useMemo(() => {
-    if (!customerDiscount) return 0;
-    if (customerDiscount.targetType === 'item' && customerDiscount.targetProductId) {
-      const targetItem = cart.find((i) => i.product.id === customerDiscount.targetProductId);
-      if (!targetItem) return 0;
-      return Math.round((targetItem.totalPrice * customerDiscount.value) / 100);
-    }
-    // Cart-level discount
-    if (customerDiscount.minSpend && subtotal < customerDiscount.minSpend) {
-      return 0;
-    }
-    if (customerDiscount.type === 'percentage') {
-      const disc = (subtotal * customerDiscount.value) / 100;
-      return Math.round(disc);
-    }
-    return Math.min(customerDiscount.value, subtotal);
-  }, [customerDiscount, cart, subtotal]);
+  const customerDiscountAmount = useMemo(
+    () => calcCustomerDiscount(customerDiscount, cart, subtotal),
+    [customerDiscount, cart, subtotal]
+  );
 
   // Loyalty Points discount calculations (configurable rate: default 1 point = Rp 100 discount)
   const pointRedemptionRate = settings.pointRedemptionRate || 100;
 
-  const maxRedeemablePoints = useMemo(() => {
-    if (!selectedCustomer || selectedCustomer.points <= 0) return 0;
-    const remainingBill = Math.max(0, subtotal - voucherDiscount - customerDiscountAmount);
-    const maxPointsByBill = Math.floor(remainingBill / pointRedemptionRate);
-    return Math.min(selectedCustomer.points, maxPointsByBill);
-  }, [selectedCustomer, subtotal, voucherDiscount, customerDiscountAmount, pointRedemptionRate]);
+  const maxRedeemablePoints = useMemo(
+    () =>
+      calcMaxRedeemablePoints(
+        Boolean(selectedCustomer),
+        selectedCustomer?.points || 0,
+        calcRemainingBill(subtotal, voucherDiscount, customerDiscountAmount),
+        pointRedemptionRate
+      ),
+    [selectedCustomer, subtotal, voucherDiscount, customerDiscountAmount, pointRedemptionRate]
+  );
 
   // Points to redeem capped at customer balance and payable total
   const effectivePointsToRedeem = Math.min(pointsToRedeem, maxRedeemablePoints);
 
-  const pointsDiscount = useMemo(() => {
-    if (!selectedCustomer || effectivePointsToRedeem <= 0) {
-      return 0;
-    }
-    const remainingBill = Math.max(0, subtotal - voucherDiscount - customerDiscountAmount);
-    const disc = effectivePointsToRedeem * pointRedemptionRate;
-    return Math.min(disc, remainingBill);
-  }, [selectedCustomer, effectivePointsToRedeem, pointRedemptionRate, subtotal, voucherDiscount, customerDiscountAmount]);
+  const pointsDiscount = useMemo(
+    () =>
+      calcPointsDiscount(
+        Boolean(selectedCustomer),
+        effectivePointsToRedeem,
+        pointRedemptionRate,
+        calcRemainingBill(subtotal, voucherDiscount, customerDiscountAmount)
+      ),
+    [selectedCustomer, effectivePointsToRedeem, pointRedemptionRate, subtotal, voucherDiscount, customerDiscountAmount]
+  );
 
   // Dynamic customer discount recommendations based on purchase history and loyalty tier
   const customerDiscountSuggestions = useMemo(() => {
@@ -1824,34 +1820,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Sales Tax & Surcharges removed on sales as requested
   const taxAmount = 0;
   const serviceChargeAmount = 0;
-  const finalTotal = Math.max(0, Math.round(subtotal - totalDiscount));
+  const finalTotal = calcFinalTotal(subtotal, totalDiscount);
 
   // Poin Loyalitas: HANYA didapatkan dari belanja item produk dengan profit margin >= minProfitPercentForPoints (15%)
   // Profit barang dihitung per item produk, bukan profit agregat transaksi
-  const pointsEligibleSpend = useMemo(() => {
-    return cart
-      .filter((item) => item.isPointsEligible)
-      .reduce((sum, item) => sum + item.totalPrice, 0);
-  }, [cart]);
+  const pointsEligibleSpend = useMemo(() => calcPointsEligibleSpend(cart), [cart]);
 
   // Proporsi nilai belanja setelah potongan diskon/voucher untuk item yang eligible
-  const effectiveEligibleSpend =
-    subtotal > 0 ? Math.max(0, (pointsEligibleSpend / subtotal) * finalTotal) : 0;
+  const effectiveEligibleSpend = calcEffectiveEligibleSpend(pointsEligibleSpend, subtotal, finalTotal);
 
   // Multiplier berdasarkan Member Tier: Regular/Bronze: 1x, Silver: 1.2x, Gold: 1.5x, Platinum: 2x
-  const tierMultiplier = useMemo(() => {
-    if (!selectedCustomer) return 1;
-    switch (selectedCustomer.tier) {
-      case 'Platinum': return 2;
-      case 'Gold': return 1.5;
-      case 'Silver': return 1.2;
-      default: return 1;
-    }
-  }, [selectedCustomer]);
+  const tierMultiplier = useMemo(
+    () => (selectedCustomer ? tierPointsMultiplier(selectedCustomer.tier) : 1),
+    [selectedCustomer]
+  );
 
   // 1 poin tiap pointsRatio (default Rp 10.000) dari item profit >= 15% dikalikan tier multiplier
-  const basePointsEarned = Math.floor(effectiveEligibleSpend / (settings.pointsRatio || 10000));
-  const pointsEarned = Math.floor(basePointsEarned * tierMultiplier);
+  const pointsEarned = calcPointsEarned(effectiveEligibleSpend, settings.pointsRatio || 10000, tierMultiplier);
 
   // Held Orders (Order Parking)
   const holdCurrentOrder = (note?: string): boolean => {
@@ -2016,20 +2001,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (data.storeName && data.storeName.trim()) {
       setSettings((prev) => ({ ...prev, storeName: data.storeName!.trim() }));
     }
-    setCurrentShift({
-      id: `shift-${Date.now()}`,
-      employeeId: owner.id,
-      employeeName: owner.name,
-      role: owner.role,
-      startTime: new Date().toISOString(),
-      startingCash: 0,
-      cashOut: 0,
-      totalSales: 0,
-      totalTransactions: 0,
-      cashSales: 0,
-      nonCashSales: 0,
-      status: 'active',
-    });
+    setCurrentShift(newShift(owner));
     return { success: true, message: `Selamat datang, ${owner.name}!` };
   };
 
@@ -2087,66 +2059,24 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
    * Supervisor/Owner boleh kapan saja.
    */
   /** Catat uang yang keluar dari laci (retur tunai, void tunai, pengeluaran dari laci). */
+  // Logika kas shift: src/domain/shiftCash.ts (teruji)
   const recordShiftCashOut = (amount: number) => {
-    if (!Number.isFinite(amount) || amount === 0) return;
-    setCurrentShift((prev) => (prev ? { ...prev, cashOut: Math.max(0, (prev.cashOut || 0) + amount) } : prev));
+    setCurrentShift((prev) => (prev ? applyCashOut(prev, amount) : prev));
   };
 
   const updateShiftStartingCash = (startingCash: number): boolean => {
     if (!currentShift || !Number.isFinite(startingCash) || startingCash < 0) return false;
-    const isManager = activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor';
-    if (!isManager && (currentShift.totalTransactions || 0) > 0) return false;
+    if (!canEditStartingCash(activeEmployee?.role, currentShift)) return false;
     setCurrentShift({ ...currentShift, startingCash: Math.round(startingCash) });
     return true;
   };
 
   const closeCurrentShift = (actualCashEnding: number, notes?: string): ShiftSummary => {
-    const current = currentShift || {
-      id: `shift-${Date.now()}`,
-      employeeId: activeEmployee?.id || 'emp-001',
-      employeeName: activeEmployee?.name || 'Kasir',
-      role: activeEmployee?.role || 'cashier',
-      startTime: new Date().toISOString(),
-      startingCash: 0,
-      totalSales: 0,
-      totalTransactions: 0,
-      cashSales: 0,
-      nonCashSales: 0,
-      status: 'active' as const,
-    };
-
-    // Kas yang seharusnya ada = modal + penjualan tunai - uang keluar (retur/void tunai, pengeluaran dari laci)
-    const expectedCash = current.startingCash + current.cashSales - (current.cashOut || 0);
-    const difference = actualCashEnding - expectedCash;
-
-    const closed: ShiftSummary = {
-      ...current,
-      endTime: new Date().toISOString(),
-      actualCashEnding,
-      difference,
-      status: 'closed',
-      notes,
-    };
-
+    const current = currentShift || newShift(activeEmployee);
+    const closed = closeShift(current, actualCashEnding, notes);
     setPastShifts((prev) => [closed, ...prev]); // disimpan ke IndexedDB lewat efek simpan
-
-    // Start clean new shift
-    const nextShift: ShiftSummary = {
-      id: `shift-${Date.now()}`,
-      employeeId: activeEmployee?.id || 'emp-001',
-      employeeName: activeEmployee?.name || 'Kasir',
-      role: activeEmployee?.role || 'cashier',
-      startTime: new Date().toISOString(),
-      startingCash: actualCashEnding, // default next shift starting cash to counted cash
-      cashOut: 0,
-      totalSales: 0,
-      totalTransactions: 0,
-      cashSales: 0,
-      nonCashSales: 0,
-      status: 'active',
-    };
-
-    setCurrentShift(nextShift);
+    // Shift berikutnya: modal awal = uang yang baru dihitung (bisa diubah di layar Shift)
+    setCurrentShift(newShift(activeEmployee, actualCashEnding));
     return closed;
   };
 
@@ -2222,39 +2152,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     // Update Shift Metrics
-    setCurrentShift((prev) => {
-      if (!prev) return prev;
-      const isCash = payment.method === 'cash';
-      return {
-        ...prev,
-        totalSales: prev.totalSales + finalTotal,
-        totalTransactions: prev.totalTransactions + 1,
-        cashSales: isCash ? prev.cashSales + finalTotal : prev.cashSales,
-        nonCashSales: !isCash ? prev.nonCashSales + finalTotal : prev.nonCashSales,
-      };
-    });
+    setCurrentShift((prev) => (prev ? applySaleToShift(prev, finalTotal, payment.method === 'cash') : prev));
 
     // 1. Deduct Product Stock (mengalikan quantity dengan multiplier satuan grosir jika ada)
     // Server LAN memotong stoknya sendiri dari transaksi ini, jadi bukan "penyesuaian" yang perlu dikirim.
-    markStockKnownToServer(
-      cart.map((item) => ({ productId: item.product.id, delta: -(item.quantity * (item.selectedUnit?.multiplier || 1)) }))
-    );
-    setProducts((prevProducts) =>
-      prevProducts.map((p) => {
-        const cartMatches = cart.filter((item) => item.product.id === p.id);
-        if (cartMatches.length > 0) {
-          const totalQtyDeduction = cartMatches.reduce(
-            (sum, item) => sum + item.quantity * (item.selectedUnit?.multiplier || 1),
-            0
-          );
-          return {
-            ...p,
-            stock: Math.max(0, p.stock - totalQtyDeduction),
-          };
-        }
-        return p;
-      })
-    );
+    // Aturan stok: src/domain/stockMovements.ts (teruji, dipakai juga oleh server)
+    const saleDeltas = saleStockDeltas(cart);
+    markStockKnownToServer(saleDeltas);
+    setProducts((prevProducts) => applyStockDeltas(prevProducts, saleDeltas));
 
     // 2. Update Customer Points Ledger, Balance & Tier Progression
     if (selectedCustomer) {
@@ -2409,27 +2314,15 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Barang dari transaksi yang dibatalkan kembali ke stok. Jika sebagian sudah diretur
     // (returnedAmount > 0), stok tidak dikembalikan otomatis agar tidak terhitung dua kali.
     const alreadyReturned = (tx.returnedAmount || 0) > 0;
-    const items = alreadyReturned
-      ? []
-      : (tx.items || [])
-          .map((item: any) => ({
-            productId: item.product?.id || item.productId,
-            quantity: Number(item.quantity) || 1,
-            unitMultiplier: Number(item.selectedUnit?.multiplier) || 1,
-          }))
-          .filter((i) => i.productId);
+    const items = voidRestockLines(tx);
     if (alreadyReturned) {
       console.warn('[POS] Void transaksi yang sudah diretur sebagian: stok tidak dikembalikan otomatis.', tx.invoiceNumber);
     }
 
     if (items.length > 0) {
-      markStockKnownToServer(items.map((i) => ({ productId: i.productId, delta: i.quantity * i.unitMultiplier })));
-      setProducts((prev) =>
-        prev.map((p) => {
-          const back = items.filter((i) => i.productId === p.id).reduce((sum, i) => sum + i.quantity * i.unitMultiplier, 0);
-          return back > 0 ? { ...p, stock: p.stock + back } : p;
-        })
-      );
+      const voidDeltas = linesToDeltas(items);
+      markStockKnownToServer(voidDeltas);
+      setProducts((prev) => applyStockDeltas(prev, voidDeltas));
     }
 
     sendStockReturnToServer({
@@ -2472,23 +2365,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
 
     // 3. Restock returned items to inventory if marked (dikali isi satuan, mis. 1 Dus = 12 pcs)
-    const restockItems = returnData.items
-      .filter((item) => item.restockToInventory && item.quantity > 0)
-      .map((item) => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        unitMultiplier: item.unitMultiplier && item.unitMultiplier > 0 ? item.unitMultiplier : 1,
-      }));
+    const restockItems = returnRestockLines(returnData.items);
     if (restockItems.length > 0) {
-      markStockKnownToServer(restockItems.map((i) => ({ productId: i.productId, delta: i.quantity * i.unitMultiplier })));
-      setProducts((prev) =>
-        prev.map((p) => {
-          const back = restockItems
-            .filter((i) => i.productId === p.id)
-            .reduce((sum, i) => sum + i.quantity * i.unitMultiplier, 0);
-          return back > 0 ? { ...p, stock: p.stock + back } : p;
-        })
-      );
+      const returnDeltas = linesToDeltas(restockItems);
+      markStockKnownToServer(returnDeltas);
+      setProducts((prev) => applyStockDeltas(prev, returnDeltas));
     }
 
     // 4. Laporkan ke server: status transaksi (laporan omzet) dan stok yang kembali (server LAN)
@@ -3358,20 +3239,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCart([]);
       setHeldOrders([]);
       setPastShifts([]);
-      setCurrentShift({
-        id: `shift-${Date.now()}`,
-        employeeId: activeEmployee.id,
-        employeeName: activeEmployee.name,
-        role: activeEmployee.role,
-        startTime: new Date().toISOString(),
-        startingCash: 0,
-        cashOut: 0,
-        totalSales: 0,
-        totalTransactions: 0,
-        cashSales: 0,
-        nonCashSales: 0,
-        status: 'active',
-      });
+      setCurrentShift(newShift(activeEmployee));
       return { success: true, message: 'Transaksi uji coba dihapus. Titik pulih otomatis sudah dibuat.' };
     } catch (err: any) {
       return { success: false, message: `Gagal menghapus transaksi uji coba: ${err?.message || err}` };

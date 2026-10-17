@@ -38,6 +38,7 @@ import {
 import { aiRouter } from './src/server/routes/ai.ts';
 import { onlineRouter } from './src/server/routes/online.ts';
 import { systemRouter } from './src/server/routes/system.ts';
+import { saleStockDeltas } from './src/domain/stockMovements.ts';
 
 
 const app = express();
@@ -482,14 +483,9 @@ app.get('/api/lan/data/pull', (req, res) => {
 // -------------------------------------------------------------
 const memoryAppliedMovements = new Set<string>(); // cadangan bila SQLite tidak tersedia
 
+// Aturan yang sama dengan aplikasi kasir (src/domain/stockMovements.ts)
 function saleMovementItems(tx: any): StockMovementItem[] {
-  if (!Array.isArray(tx?.items)) return [];
-  return tx.items
-    .map((it: any) => ({
-      productId: it?.product?.id || it?.productId,
-      delta: -((Number(it?.quantity) || 1) * (Number(it?.selectedUnit?.multiplier) || 1)),
-    }))
-    .filter((i: StockMovementItem) => Boolean(i.productId));
+  return saleStockDeltas(tx?.items);
 }
 
 async function applyStockMovement(
