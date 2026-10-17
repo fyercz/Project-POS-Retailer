@@ -37,3 +37,26 @@ jobs:
             grep -E "^not ok|^\s+not ok|error:|Error:|expected|actual|code: '" test-output.txt | head -40 | sed 's/^/::error::/'
             exit 1
           }
+
+  e2e:
+    name: E2E (Chromium)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Pasang browser Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build
+        run: npm run build
+      - name: Tes E2E
+        run: npm run test:e2e
+      - name: Simpan jejak tes yang gagal
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-hasil
+          path: test-results/
+          retention-days: 7

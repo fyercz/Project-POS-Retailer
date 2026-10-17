@@ -20,7 +20,8 @@
     "autorun": "node scripts/launcher.mjs autorun",
     "desktop": "node scripts/launcher.mjs desktop",
     "desktop:electron": "electron electron/main.cjs",
-    "test": "tsx --test \"tests/*.test.ts\""
+    "test": "tsx --test \"tests/*.test.ts\"",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -54,6 +55,7 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "@playwright/test": "1.55.0"
   }
 }

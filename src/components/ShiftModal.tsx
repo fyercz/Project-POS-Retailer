@@ -254,6 +254,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                         ? 'text-blue-600'
                         : 'text-rose-600'
                     }
+                    data-testid="shift-difference"
                   >
                     {(shiftClosedResult.difference || 0) === 0
                       ? 'Sesuai (Rp 0)'
@@ -445,7 +446,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                     <input
                       type="text"
                       required
-                      value={actualCash}
+                      data-testid="shift-actual-cash" value={actualCash}
                       onChange={(e) => {
                         const num = e.target.value.replace(/\D/g, '');
                         setActualCash(num ? parseInt(num, 10).toLocaleString('id-ID') : '');

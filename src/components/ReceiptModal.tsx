@@ -214,6 +214,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           </div>
           <button
             onClick={onClose}
+            data-testid="receipt-close"
+            aria-label="Tutup struk"
             className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />

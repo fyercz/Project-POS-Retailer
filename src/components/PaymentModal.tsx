@@ -194,7 +194,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                   <div className="relative">
                     <input
                       type="number"
-                      value={cashTendered || ''}
+                      data-testid="payment-cash-input" value={cashTendered || ''}
                       onChange={(e) => setCashTendered(Number(e.target.value))}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && isCashSufficient) {
