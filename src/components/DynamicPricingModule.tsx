@@ -190,7 +190,8 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
     const clearanceItems = suggestions.filter((s) => s.strategyTag === 'Cuci Gudang');
     const totalPotentialProfit = suggestions.reduce((sum, s) => sum + Math.max(0, s.projectedProfitImpact), 0);
 
-    const priceGaps = suggestions.map((s) => s.priceVsMarketPercent);
+    // Selisih pasar hanya dari produk yang punya harga pesaing asli
+    const priceGaps = suggestions.filter((s) => s.hasMarketData).map((s) => s.priceVsMarketPercent);
     const avgMarketDiff = priceGaps.length > 0 ? (priceGaps.reduce((a, b) => a + b, 0) / priceGaps.length).toFixed(1) : '0';
 
     return {
@@ -353,11 +354,13 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
     setSuggestions((prev) =>
       prev.map((s) => {
         if (s.productId !== competitorModalItem.productId) return s;
-        const compPrices = editableCompetitors.map((c) => c.price).filter((p) => p > 0);
-        const avg = compPrices.length > 0 ? Math.round(compPrices.reduce((a, b) => a + b, 0) / compPrices.length) : s.currentPrice;
+        // Rata-rata pasar hanya dari harga pesaing asli (input manual), bukan estimasi
+        const compPrices = saved.filter((c) => !c.isEstimate).map((c) => c.price).filter((p) => p > 0);
+        const avg = compPrices.length > 0 ? Math.round(compPrices.reduce((a, b) => a + b, 0) / compPrices.length) : 0;
         return {
           ...s,
           competitors: saved,
+          hasMarketData: saved.some((c) => !c.isEstimate),
           competitorAvgPrice: avg,
           competitorMinPrice: compPrices.length > 0 ? Math.min(...compPrices) : s.currentPrice,
           competitorMaxPrice: compPrices.length > 0 ? Math.max(...compPrices) : s.currentPrice,
@@ -746,10 +749,10 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                       {/* COMPETITOR MARKET */}
                       <td className="py-3 px-3 whitespace-nowrap">
                         <div className="font-bold text-slate-800 dark:text-slate-200">
-                          {formatCurrency(item.competitorAvgPrice, currency)}
+                          {item.hasMarketData ? formatCurrency(item.competitorAvgPrice, currency) : <span className="text-xs font-semibold text-slate-500">Belum ada</span>}
                         </div>
                         <div className="text-[11px] flex items-center gap-1 mt-0.5">
-                          <span
+                          {item.hasMarketData && <span
                             className={`font-bold px-1 rounded-md ${
                               item.priceVsMarketPercent > 0
                                 ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
@@ -757,7 +760,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                             }`}
                           >
                             {item.priceVsMarketPercent > 0 ? `+${item.priceVsMarketPercent}% mahal` : `${item.priceVsMarketPercent}% murah`}
-                          </span>
+                          </span>}
                           <button
                             onClick={() => handleOpenCompetitors(item)}
                             className="text-indigo-600 dark:text-indigo-400 hover:underline text-[11px] cursor-pointer"
@@ -964,9 +967,9 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                       <div className="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
                         <span className="text-slate-500">Rata-rata Pasar:</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {formatCurrency(item.competitorAvgPrice, currency)}
+                          {item.hasMarketData ? formatCurrency(item.competitorAvgPrice, currency) : 'Belum ada harga pesaing asli'}
                         </span>
-                        <span
+                        {item.hasMarketData && <span
                           className={`font-extrabold px-1.5 py-0.2 rounded-md text-[11px] ${
                             item.priceVsMarketPercent > 0
                               ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
@@ -974,7 +977,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                           }`}
                         >
                           {item.priceVsMarketPercent > 0 ? `+${item.priceVsMarketPercent}% mahal` : `${item.priceVsMarketPercent}% murah`}
-                        </span>
+                        </span>}
                       </div>
                     </div>
 
@@ -1192,7 +1195,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                 <span className="font-bold text-indigo-600 dark:text-indigo-400">
                   Harga Simulasi: {formatCurrency(simulatedPrice, currency)}
                 </span>
-                <span>Pasar: {formatCurrency(simulatorItem.competitorAvgPrice, currency)}</span>
+                <span>Pasar: {simulatorItem.hasMarketData ? formatCurrency(simulatorItem.competitorAvgPrice, currency) : 'belum ada data'}</span>
               </div>
 
               <input

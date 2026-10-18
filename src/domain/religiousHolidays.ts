@@ -4,14 +4,21 @@
  * untuk 2026.
  *
  * official: true  = ditetapkan pemerintah (sidang isbat / SKB 3 Menteri)
- * official: false = PERKIRAAN astronomis (+/- 1 hari); tampil berlabel "perkiraan" di aplikasi.
+ * official: false = PERKIRAAN; tampil berlabel "perkiraan" di aplikasi.
+ * altDate         = tanggal versi lain (KHGT Muhammadiyah). Menurut tim hisab rukyat Kemenag/BRIN,
+ *                   Idul Fitri pemerintah & KHGT diperkirakan berbeda sehari pada 2026-2029, jadi
+ *                   kedua tanggal ditandai sebagai hari lonjakan belanja.
+ * Sumber perkiraan: KHGT Muhammadiyah (1449 H: Idul Fitri 26 Feb 2028, Idul Adha 5 Mei 2028),
+ *   kalender hijriah global berbasis visibilitas hilal, dan tabel Idul Fitri 1449-1451 H.
  * Perbarui tabel ini setiap SKB libur nasional tahun berikutnya terbit (biasanya September).
  */
 export type MovableHoliday = 'idul_fitri' | 'idul_adha';
 
 export interface MovableHolidayDate {
-  date: string; // YYYY-MM-DD
+  date: string; // YYYY-MM-DD (resmi, atau perkiraan versi pemerintah)
   official: boolean;
+  /** Tanggal versi lain (mis. KHGT Muhammadiyah) untuk tahun perkiraan */
+  altDate?: string;
 }
 
 export const MOVABLE_HOLIDAYS: Record<MovableHoliday, Record<number, MovableHolidayDate>> = {
@@ -19,17 +26,21 @@ export const MOVABLE_HOLIDAYS: Record<MovableHoliday, Record<number, MovableHoli
     2025: { date: '2025-03-31', official: true },
     2026: { date: '2026-03-21', official: true }, // Kemenag: Sabtu, 21 Maret 2026
     2027: { date: '2027-03-10', official: true }, // SKB 3 Menteri 2027: 10-11 Maret
-    2028: { date: '2028-02-27', official: false },
-    2029: { date: '2029-02-15', official: false },
-    2030: { date: '2030-02-05', official: false },
+    2028: { date: '2028-02-27', official: false, altDate: '2028-02-26' }, // KHGT: 26 Feb
+    2029: { date: '2029-02-15', official: false, altDate: '2029-02-14' },
+    2030: { date: '2030-02-05', official: false, altDate: '2030-02-04' },
+    2031: { date: '2031-01-25', official: false, altDate: '2031-01-24' },
+    2032: { date: '2032-01-15', official: false, altDate: '2032-01-14' },
   },
   idul_adha: {
     2025: { date: '2025-06-06', official: true },
     2026: { date: '2026-05-27', official: true }, // Sidang isbat: Rabu, 27 Mei 2026
     2027: { date: '2027-05-17', official: true }, // SKB 3 Menteri 2027
-    2028: { date: '2028-05-05', official: false },
+    2028: { date: '2028-05-05', official: false }, // KHGT: 5 Mei
     2029: { date: '2029-04-24', official: false },
     2030: { date: '2030-04-13', official: false },
+    2031: { date: '2031-04-02', official: false },
+    2032: { date: '2032-03-22', official: false },
   },
 };
 
@@ -45,9 +56,12 @@ const parseYMD = (s: string): Date => {
 export function movableDateFor(holiday: MovableHoliday, year: number, offsetDays = 0): MovableHolidayDate | null {
   const entry = MOVABLE_HOLIDAYS[holiday][year];
   if (!entry) return null;
-  const d = parseYMD(entry.date);
-  d.setDate(d.getDate() + offsetDays);
-  return { date: toYMD(d), official: entry.official };
+  const shift = (ymd: string) => {
+    const d = parseYMD(ymd);
+    d.setDate(d.getDate() + offsetDays);
+    return toYMD(d);
+  };
+  return { date: shift(entry.date), official: entry.official, ...(entry.altDate ? { altDate: shift(entry.altDate) } : {}) };
 }
 
 /** Kejadian berikutnya (>= tanggal acuan) beserta tahunnya; null bila di luar tabel. */

@@ -339,7 +339,7 @@ router.post('/api/ai/dynamic-pricing', async (req, res) => {
         turnoverSpeed: tm.turnoverSpeed || 'moderate',
         daysOfInventory: tm.daysOfInventory || 30,
         unitsSold30d: tm.unitsSold30d || 0,
-        competitors: compSummary || 'N/A',
+        competitors: compSummary || 'BELUM ADA data harga pesaing asli (jangan mengarang/menebak harga pasar)',
       };
     });
 

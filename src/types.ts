@@ -74,6 +74,8 @@ export interface DynamicPricingSuggestion {
   
   // Competitor metrics
   competitors: CompetitorPrice[];
+  /** true bila ada harga pesaing ASLI (input manual); false = rekomendasi hanya dari data toko */
+  hasMarketData?: boolean;
   competitorAvgPrice: number;
   competitorMinPrice: number;
   competitorMaxPrice: number;

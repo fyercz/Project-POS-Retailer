@@ -8,6 +8,7 @@ import {
 } from '../types';
 import { toLocalDateString } from './formatters';
 import { daysUntil } from '../domain/expiry';
+import { recommendFromOwnData } from '../domain/pricingRules';
 
 /**
  * Deterministic hash helper for consistent pseudo-random benchmarks based on product ID
@@ -214,13 +215,17 @@ export function generateDynamicPricingSuggestions(
 
     const currentMarginPercent = Number((((currentPrice - costPrice) / currentPrice) * 100).toFixed(1));
     const competitors = getEffectiveCompetitors(product);
+    // Perhitungan pasar HANYA dari harga pesaing asli (input manual). Estimasi otomatis tetap
+    // ditampilkan sebagai gambaran, tetapi tidak dipakai menghitung rekomendasi.
+    const realCompetitors = competitors.filter((c) => !c.isEstimate);
+    const hasMarketData = realCompetitors.length > 0;
 
-    const compPrices = competitors.map((c) => c.price).filter((p) => p > 0);
+    const compPrices = realCompetitors.map((c) => c.price).filter((p) => p > 0);
     const competitorMinPrice = compPrices.length > 0 ? Math.min(...compPrices) : currentPrice;
     const competitorMaxPrice = compPrices.length > 0 ? Math.max(...compPrices) : currentPrice;
     const competitorAvgPrice = compPrices.length > 0
       ? Math.round(compPrices.reduce((a, b) => a + b, 0) / compPrices.length)
-      : currentPrice;
+      : 0;
 
     const priceVsMarketPercent = competitorAvgPrice > 0
       ? Number((((currentPrice - competitorAvgPrice) / competitorAvgPrice) * 100).toFixed(1))
@@ -255,6 +260,23 @@ export function generateDynamicPricingSuggestions(
       aiReasoning = `Produk mendekati batas kedaluwarsa (${daysToExpiry} hari lagi, sisa ${product.stock} ${product.unit}). Disarankan diskon cuci gudang agresif mendekati HPP untuk melikuidasi modal sebelum expired dan mencegah kerugian 100%.`;
       projectedTurnoverImpactDays = -Math.round(turnover.daysOfInventory * 0.6);
       confidenceScore = 96;
+    } else if (!hasMarketData) {
+      // Tanpa harga pesaing asli: rekomendasi dari data toko sendiri (src/domain/pricingRules.ts)
+      const own = recommendFromOwnData({
+        currentPrice,
+        costPrice,
+        turnoverSpeed: turnover.turnoverSpeed,
+        unitsSold30d: turnover.unitsSold30d,
+        daysOfInventory: turnover.daysOfInventory,
+        strategy,
+        minSafePrice,
+        round: roundToIndonesianRetailPrice,
+      });
+      suggestedPrice = own.suggestedPrice;
+      strategyTag = own.strategyTag;
+      aiReasoning = own.reasoning;
+      projectedTurnoverImpactDays = own.projectedTurnoverImpactDays;
+      confidenceScore = own.confidenceScore;
     } else if (strategy === 'maximize_profit') {
       // 2. PROFIT MAXIMIZATION STRATEGY
       if (turnover.turnoverSpeed === 'fast') {
@@ -393,11 +415,6 @@ export function generateDynamicPricingSuggestions(
     const newMonthlyProfit = (suggestedPrice - costPrice) * (turnover.unitsSold30d * volumeMultiplier);
     const projectedProfitImpact = Math.round(newMonthlyProfit - currentMonthlyProfit);
 
-    // Perbandingan pasar memakai estimasi? Katakan terus terang di rekomendasi
-    if (competitors.length > 0 && competitors.every((c) => c.isEstimate)) {
-      aiReasoning += ' Catatan: perbandingan memakai ESTIMASI harga pesaing (bukan harga asli). Masukkan harga pesaing yang Anda lihat sendiri lewat tombol Ubah agar rekomendasi akurat.';
-    }
-
     suggestions.push({
       productId: product.id,
       productName: product.name,
@@ -412,6 +429,7 @@ export function generateDynamicPricingSuggestions(
       daysOfInventory: turnover.daysOfInventory,
       turnoverSpeed: turnover.turnoverSpeed,
       competitors,
+      hasMarketData,
       competitorAvgPrice,
       competitorMinPrice,
       competitorMaxPrice,
@@ -503,7 +521,8 @@ export async function fetchAIDynamicPricing(
           costPrice: p.costPrice,
           stock: p.stock,
           expiryDate: p.expiryDate,
-          competitors: getEffectiveCompetitors(p),
+          // Hanya harga pesaing asli yang dikirim ke AI (estimasi tidak boleh dianggap data pasar)
+          competitors: getEffectiveCompetitors(p).filter((c) => !c.isEstimate),
         })),
         turnoverMetrics: ruleSuggestions.map((s) => ({
           productId: s.productId,
