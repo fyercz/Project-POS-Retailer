@@ -45,6 +45,12 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: '50mb' }));
+// Express 5: req.body = undefined bila tidak ada body JSON (Express 4: {}). Samakan agar handler
+// yang membaca req.body tetap menjawab 400 dengan pesan jelas, bukan crash 500.
+app.use((req, _res, next) => {
+  if (req.body === undefined) req.body = {};
+  next();
+});
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Pembatasan origin: hanya halaman dari server ini sendiri yang boleh memakai API
@@ -1116,7 +1122,8 @@ async function setupViteOrStatic() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    // Express 5: penangkap semua rute memakai sintaks path-to-regexp v8
+    app.get('/{*splat}', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
