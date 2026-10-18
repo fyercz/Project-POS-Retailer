@@ -398,7 +398,7 @@ export const MarketingPromoSection: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <button
+            <button aria-label="Buat ulang dengan AI"
               id="btn-generate-promo"
               type="button"
               disabled={isGenerating}
@@ -425,7 +425,7 @@ export const MarketingPromoSection: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <Users className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
             <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
               1. Pilih Target Segmen Pelanggan (Berdasarkan Riwayat Belanja)
             </h3>
@@ -486,7 +486,7 @@ export const MarketingPromoSection: React.FC = () => {
                 </div>
 
                 {isSelected && (
-                  <div className="mt-2 pt-1 border-t border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                  <div className="mt-2 pt-1 border-t border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
                     <span>Terpilih</span>
                     <Check className="w-3 h-3" />
                   </div>
@@ -508,7 +508,7 @@ export const MarketingPromoSection: React.FC = () => {
               <label className="text-[11px] font-bold text-violet-900 dark:text-violet-300 block">
                 Pilih Member Spesifik untuk Penawaran 1-on-1:
               </label>
-              <select
+              <select aria-label="Pilih Member Spesifik untuk Penawaran 1-on-1"
                 value={selectedIndividualId}
                 onChange={(e) => {
                   setSelectedIndividualId(e.target.value);
@@ -609,10 +609,10 @@ export const MarketingPromoSection: React.FC = () => {
               <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 Tujuan Kampanye:
               </label>
-              <select
+              <select aria-label="Tujuan Kampanye"
                 value={campaignObjective}
                 onChange={(e) => setCampaignObjective(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium"
+                className="w-full px-3 py-1.5 rounded-xl text-xs border border-slate-500 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium"
               >
                 <option value="reengagement">Re-engagement / Kangen Belanja (Ajak Kembali)</option>
                 <option value="reward_vip">Reward Loyalitas VIP (Apresiasi Eksklusif)</option>
@@ -627,10 +627,10 @@ export const MarketingPromoSection: React.FC = () => {
               <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 Gaya Bahasa &amp; Karakter Brand:
               </label>
-              <select
+              <select aria-label="Gaya Bahasa & Karakter Brand"
                 value={brandTone}
                 onChange={(e) => setBrandTone(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium"
+                className="w-full px-3 py-1.5 rounded-xl text-xs border border-slate-500 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium"
               >
                 <option value="warm_friendly">Ramah, Hangat &amp; Akrab (Khas Kasir Tetangga)</option>
                 <option value="exclusive_vip">Eksklusif, Elegan &amp; Istimewa (Khusus VIP/Sultan)</option>
@@ -645,7 +645,7 @@ export const MarketingPromoSection: React.FC = () => {
                 Format Penawaran Diskon:
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <button
+                <button aria-pressed={discountTypePreference === 'percentage'}
                   type="button"
                   onClick={() => setDiscountTypePreference('percentage')}
                   className={`py-1.5 px-3 rounded-xl text-xs font-bold border transition cursor-pointer ${
@@ -656,7 +656,7 @@ export const MarketingPromoSection: React.FC = () => {
                 >
                   Persentase (%)
                 </button>
-                <button
+                <button aria-pressed={discountTypePreference === 'fixed'}
                   type="button"
                   onClick={() => setDiscountTypePreference('fixed')}
                   className={`py-1.5 px-3 rounded-xl text-xs font-bold border transition cursor-pointer ${
@@ -675,17 +675,17 @@ export const MarketingPromoSection: React.FC = () => {
               <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 Instruksi Khusus / Tema Tambahan (Opsional):
               </label>
-              <input
+              <input aria-label="Instruksi Khusus / Tema Tambahan (Opsional)"
                 type="text"
                 value={customInstructions}
                 onChange={(e) => setCustomInstructions(e.target.value)}
                 placeholder="Misal: Promo Gajian JSM, Gratis Kopi Botol, dll."
-                className="w-full px-3 py-1.5 rounded-xl text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                className="w-full px-3 py-1.5 rounded-xl text-xs border border-slate-500 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
               />
             </div>
 
             {/* ACTION BUTTON */}
-            <button
+            <button aria-label="Buat ulang dengan AI"
               id="btn-generate-promo-sidebar"
               type="button"
               disabled={isGenerating}
@@ -784,7 +784,7 @@ export const MarketingPromoSection: React.FC = () => {
                   <div className="flex items-center gap-3 text-xs">
                     <div>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Nilai Diskon</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
                         {currentPromo.discountType === 'percentage'
                           ? `${currentPromo.value}%`
                           : formatCurrency(currentPromo.value, settings.currency)}
@@ -811,7 +811,7 @@ export const MarketingPromoSection: React.FC = () => {
               {/* CHANNEL TABS: WHATSAPP, SMS, SOCIAL */}
               <div className="px-5">
                 <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                  <button
+                  <button aria-pressed={activeChannelTab === 'whatsapp'}
                     type="button"
                     onClick={() => setActiveChannelTab('whatsapp')}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
@@ -824,7 +824,7 @@ export const MarketingPromoSection: React.FC = () => {
                     <span>WhatsApp / Chat Broadcast</span>
                   </button>
 
-                  <button
+                  <button aria-pressed={activeChannelTab === 'sms'}
                     type="button"
                     onClick={() => setActiveChannelTab('sms')}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
@@ -837,7 +837,7 @@ export const MarketingPromoSection: React.FC = () => {
                     <span>SMS / Push Notif</span>
                   </button>
 
-                  <button
+                  <button aria-pressed={activeChannelTab === 'social'}
                     type="button"
                     onClick={() => setActiveChannelTab('social')}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
@@ -865,7 +865,7 @@ export const MarketingPromoSection: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <button
+                          <button aria-label="Salin"
                             type="button"
                             onClick={() =>
                               handleCopyToClipboard(currentPromo.brandMessageWhatsApp, 'wa')
@@ -925,7 +925,7 @@ export const MarketingPromoSection: React.FC = () => {
                           Karakter: {currentPromo.brandMessageSMS.length} / 160
                         </span>
 
-                        <button
+                        <button aria-label="Salin"
                           type="button"
                           onClick={() => handleCopyToClipboard(currentPromo.brandMessageSMS, 'sms')}
                           className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer hover:bg-slate-50"
@@ -953,7 +953,7 @@ export const MarketingPromoSection: React.FC = () => {
                       </div>
 
                       <div className="flex justify-end">
-                        <button
+                        <button aria-label="Salin"
                           type="button"
                           onClick={() =>
                             handleCopyToClipboard(currentPromo.brandMessageSocial, 'social')
@@ -991,7 +991,7 @@ export const MarketingPromoSection: React.FC = () => {
             </div>
           ) : (
             <div className="p-8 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 text-center flex flex-col items-center justify-center min-h-[420px] space-y-3 bg-slate-50/50 dark:bg-slate-900/50">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shadow-xs">
                 <Sparkles className="w-7 h-7" />
               </div>
               <div className="space-y-1 max-w-sm">
@@ -1000,7 +1000,7 @@ export const MarketingPromoSection: React.FC = () => {
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Pilih segmen pelanggan di atas dan klik tombol{' '}
-                  <strong className="text-emerald-600 dark:text-emerald-400">"Generate Promo"</strong> untuk merancang pesan diskon berbasis riwayat belanja.
+                  <strong className="text-emerald-700 dark:text-emerald-400">"Generate Promo"</strong> untuk merancang pesan diskon berbasis riwayat belanja.
                 </p>
               </div>
               <button
@@ -1032,7 +1032,7 @@ export const MarketingPromoSection: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowRecipientModal(false)}
-                className="text-slate-400 hover:text-slate-600 text-xs font-bold"
+                className="text-slate-500 hover:text-slate-600 text-xs font-bold"
               >
                 Tutup
               </button>

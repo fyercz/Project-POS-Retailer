@@ -51,6 +51,7 @@ import {
   DEFAULT_DEMAND_EVENTS,
   formatYMD,
 } from '../utils/salesForecaster';
+import { activateOnKey } from '../utils/a11y';
 
 interface ProjectedSalesWidgetProps {
   transactions: Transaction[];
@@ -195,7 +196,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             className="px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/80 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition active:scale-95"
             title="Kelola faktor lonjakan demand tanggal tertentu (Hari Jadi Kabupaten Magetan, Hari Raya, Libur Nasional)"
           >
-            <PartyPopper className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <PartyPopper className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
             <span>Event Demand &amp; Hari Raya</span>
             {projection.activeEvents.length > 0 && (
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
@@ -213,7 +214,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             }`}
             title="Aktifkan atau nonaktifkan efek lonjakan demand event khusus"
           >
-            <SlidersHorizontal className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+            <SlidersHorizontal className="w-3 h-3 text-amber-700 dark:text-amber-400" />
             <span>Demand Event: {enableEventMultiplier ? 'Aktif' : 'Nonaktif'}</span>
           </button>
 
@@ -232,7 +233,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
 
           {/* Scenario Tabs */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
-            <button
+            <button aria-pressed={scenario === 'conservative'}
               type="button"
               onClick={() => setScenario('conservative')}
               className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
@@ -244,7 +245,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             >
               Konservatif
             </button>
-            <button
+            <button aria-pressed={scenario === 'realistic'}
               type="button"
               onClick={() => setScenario('realistic')}
               className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
@@ -256,12 +257,12 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             >
               Realistis
             </button>
-            <button
+            <button aria-pressed={scenario === 'optimistic'}
               type="button"
               onClick={() => setScenario('optimistic')}
               className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
                 scenario === 'optimistic'
-                  ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-2xs font-bold'
+                  ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-2xs font-bold'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
               }`}
               title="Skenario Optimis: Perhitungan batas atas estimasi lonjakan (+15%)"
@@ -276,7 +277,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
       {projection.hasEventBoost && (
         <div className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 border-b border-amber-200 dark:border-amber-900/60 flex items-center justify-between gap-3 text-xs flex-wrap">
           <div className="flex items-center gap-2">
-            <PartyPopper className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 animate-bounce" />
+            <PartyPopper className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0 animate-bounce" />
             <span className="font-bold text-amber-900 dark:text-amber-200">
               Peringatan Lonjakan Demand Terdeteksi:
             </span>
@@ -349,7 +350,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
           </div>
           <div className="flex items-center gap-1.5 text-[10px] mt-1 font-mono">
             {projection.trendPercentage >= 0 ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center">
+              <span className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center">
                 <TrendingUp className="w-3 h-3 mr-0.5" />
                 +{projection.trendPercentage}%
               </span>
@@ -359,7 +360,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                 {projection.trendPercentage}%
               </span>
             )}
-            <span className="text-slate-400">vs 7 hari lalu</span>
+            <span className="text-slate-500">vs 7 hari lalu</span>
           </div>
         </div>
 
@@ -387,14 +388,14 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Hari Puncak (Peak Day)
             </span>
-            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
               🔥 Teramai
             </span>
           </div>
           <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mt-1 truncate">
             {projection.peakDay.dayName || 'Sabtu'}
           </div>
-          <div className="text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400">
+          <div className="text-[11px] font-mono font-bold text-amber-700 dark:text-amber-400">
             {formatCurrency(projection.peakDay.sales, currency)}
           </div>
         </div>
@@ -433,13 +434,13 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   Proyeksi 7 Hari ({scenario === 'optimistic' ? 'Optimis' : scenario === 'conservative' ? 'Konservatif' : 'Realistis'})
                 </span>
               </div>
-              <div className="hidden sm:flex items-center gap-1.5 text-slate-400">
+              <div className="hidden sm:flex items-center gap-1.5 text-slate-500">
                 <span className="w-4 h-1 border-t-2 border-dashed border-indigo-300 dark:border-indigo-700"></span>
                 <span className="text-[11px]">Rentang Toleransi</span>
               </div>
             </div>
 
-            <span className="text-[11px] text-slate-400 font-mono">
+            <span className="text-[11px] text-slate-500 font-mono">
               {projection.chartData.length} Titik Data Analisis
             </span>
           </div>
@@ -516,18 +517,18 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                         {isProj ? (
                           <>
                             <div className="flex justify-between items-center">
-                              <span className="text-slate-400">Proyeksi Penjualan:</span>
+                              <span className="text-slate-500">Proyeksi Penjualan:</span>
                               <span className="font-mono font-bold text-indigo-300">
                                 {formatCurrency(data.projectedSales || 0, currency)}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center text-[11px] text-slate-400">
+                            <div className="flex justify-between items-center text-[11px] text-slate-500">
                               <span>Rentang Skenario:</span>
                               <span className="font-mono">
                                 {formatCurrency(data.conservativeSales || 0, currency)} – {formatCurrency(data.optimisticSales || 0, currency)}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
+                            <div className="flex justify-between items-center text-[11px] text-slate-500 pt-1 border-t border-slate-800/80">
                               <span>Estimasi Struk:</span>
                               <span className="font-mono font-semibold text-slate-300">
                                 ~{data.txCount || 0} transaksi
@@ -551,12 +552,12 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                         ) : (
                           <>
                             <div className="flex justify-between items-center">
-                              <span className="text-slate-400">Omzet Aktual:</span>
+                              <span className="text-slate-500">Omzet Aktual:</span>
                               <span className="font-mono font-bold text-emerald-400">
                                 {formatCurrency(data.actualSales || 0, currency)}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center text-[11px] text-slate-400">
+                            <div className="flex justify-between items-center text-[11px] text-slate-500">
                               <span>Jumlah Struk:</span>
                               <span className="font-mono text-slate-300">
                                 {data.txCount || 0} transaksi
@@ -629,7 +630,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             const hasEvent = !!day.specialEvent;
 
             return (
-              <div
+              <div role="button" tabIndex={0} onKeyDown={activateOnKey}
                 key={day.dayIndex}
                 onClick={() => setSelectedDayIndex(day.dayIndex)}
                 className={`p-3 rounded-xl border transition-all cursor-pointer select-none flex flex-col justify-between ${
@@ -648,7 +649,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                       {day.dayName}
                     </span>
                     <span
-                      className={`text-[9px] px-1.5 py-0.2 rounded font-bold shrink-0 ${
+                      className={`text-[10px] px-1.5 py-0.2 rounded font-bold shrink-0 ${
                         hasEvent
                           ? 'bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200 font-mono'
                           : isPeak
@@ -668,7 +669,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   </span>
 
                   {day.specialEvent && (
-                    <div className="mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 truncate flex items-center justify-between gap-0.5">
+                    <div className="mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 truncate flex items-center justify-between gap-0.5">
                       <span className="truncate">{day.specialEvent.badge}</span>
                       <span className="shrink-0 font-mono">+{Math.round((day.specialEvent.demandMultiplier - 1) * 100)}%</span>
                     </div>
@@ -684,8 +685,8 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                     <span
                       className={`font-bold ${
                         day.growthVsAvg >= 0
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-slate-400'
+                          ? 'text-emerald-700 dark:text-emerald-400'
+                          : 'text-slate-500'
                       }`}
                     >
                       {day.growthVsAvg >= 0 ? `+${day.growthVsAvg}%` : `${day.growthVsAvg}%`}
@@ -815,10 +816,10 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   </p>
                 </div>
               </div>
-              <button
+              <button aria-label="Tutup"
                 type="button"
                 onClick={() => setIsEventModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -891,7 +892,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
               <div>
                 <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] mb-2 flex items-center justify-between">
                   <span>Daftar Event Demand &amp; Hari Besar ({eventsList.length})</span>
-                  <span className="text-slate-400 text-[10px] lowercase font-normal">
+                  <span className="text-slate-500 text-[10px] lowercase font-normal">
                     pola MM-DD berlaku tahunan
                   </span>
                 </h4>
@@ -910,23 +911,23 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                           <span className="px-1.5 py-0.2 rounded font-mono text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                             +{Math.round((evt.demandMultiplier - 1) * 100)}% Surge
                           </span>
-                          <span className="text-[10px] text-slate-400 font-mono">
+                          <span className="text-[10px] text-slate-500 font-mono">
                             {evt.datePattern === 'payday' ? 'tgl 25 - 5' : `Pola: ${evt.datePattern}`}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
                           {evt.description}
                         </p>
-                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 italic">
+                        <p className="text-[10px] text-emerald-700 dark:text-emerald-400 italic">
                           💡 {evt.stockAdvice}
                         </p>
                       </div>
 
                       {!evt.isDefault && (
-                        <button
+                        <button aria-label="Hapus event kustom"
                           type="button"
                           onClick={() => handleDeleteCustomEvent(evt.id)}
-                          className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition shrink-0 cursor-pointer"
+                          className="p-1.5 rounded text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition shrink-0 cursor-pointer"
                           title="Hapus event kustom"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -948,7 +949,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                 </h4>
 
                 {formError && (
-                  <div className="p-2 rounded-lg bg-rose-50 text-rose-700 text-xs font-semibold">
+                  <div role="alert" className="p-2 rounded-lg bg-rose-50 text-rose-700 text-xs font-semibold">
                     {formError}
                   </div>
                 )}
@@ -958,12 +959,12 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                     <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
                       Nama Event / Perayaan
                     </label>
-                    <input
+                    <input aria-label="Nama Event / Perayaan"
                       type="text"
                       value={newEventName}
                       onChange={(e) => setNewEventName(e.target.value)}
                       placeholder="Contoh: Festival Telaga Sarangan Magetan"
-                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
 
@@ -971,12 +972,12 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                     <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
                       Pola Tanggal (MM-DD atau YYYY-MM-DD)
                     </label>
-                    <input
+                    <input aria-label="Pola Tanggal (MM-DD atau YYYY-MM-DD)"
                       type="text"
                       value={newEventDatePattern}
                       onChange={(e) => setNewEventDatePattern(e.target.value)}
                       placeholder="Contoh: 10-12 atau 2026-10-12"
-                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
 
@@ -985,13 +986,13 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                       Estimasi Lonjakan Demand (%)
                     </label>
                     <div className="flex items-center gap-2">
-                      <input
+                      <input aria-label="Estimasi Lonjakan Demand (%)"
                         type="number"
                         min="5"
                         max="200"
                         value={newEventMultiplierPercent}
                         onChange={(e) => setNewEventMultiplierPercent(e.target.value)}
-                        className="w-24 px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono"
+                        className="w-24 px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono"
                       />
                       <span className="text-[11px] text-slate-500">
                         = x{(1 + (parseFloat(newEventMultiplierPercent) || 0) / 100).toFixed(2)} omzet
@@ -1003,10 +1004,10 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                     <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
                       Kategori Event
                     </label>
-                    <select
+                    <select aria-label="Kategori Event"
                       value={newEventCategory}
                       onChange={(e) => setNewEventCategory(e.target.value as any)}
-                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                     >
                       <option value="local_event">Event Daerah / Kota (Magetan)</option>
                       <option value="religious_holiday">Hari Raya Keagamaan</option>
@@ -1020,12 +1021,12 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
                     Deskripsi Singkat / Latar Belakang Keramaian
                   </label>
-                  <input
+                  <input aria-label="Deskripsi Singkat / Latar Belakang Keramaian"
                     type="text"
                     value={newEventDescription}
                     onChange={(e) => setNewEventDescription(e.target.value)}
                     placeholder="Contoh: Pawai budaya dan pasar rakyat memicu lonjakan konsumsi warga"
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   />
                 </div>
 
@@ -1033,12 +1034,12 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
                     Instruksi Persiapan Stok / Logistik Kasir
                   </label>
-                  <input
+                  <input aria-label="Instruksi Persiapan Stok / Logistik Kasir"
                     type="text"
                     value={newEventAdvice}
                     onChange={(e) => setNewEventAdvice(e.target.value)}
                     placeholder="Contoh: Tambah stok minuman dingin & siapkan uang kembalian pecahan kecil"
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   />
                 </div>
 

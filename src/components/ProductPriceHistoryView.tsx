@@ -260,7 +260,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
 
   if (!currentProduct) {
     return (
-      <div className="p-8 text-center text-slate-400">
+      <div className="p-8 text-center text-slate-500">
         <Package className="w-12 h-12 mx-auto mb-2 text-slate-300" />
         <p>Tidak ada produk dalam database inventaris.</p>
       </div>
@@ -293,7 +293,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
       case 'promotion':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-            <Sparkles className="w-3 h-3 text-amber-600" />
+            <Sparkles className="w-3 h-3 text-amber-700" />
             Harga Promo
           </span>
         );
@@ -311,14 +311,14 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
     <div className={`space-y-6 ${isModal ? 'p-1' : ''}`}>
       {/* Toast Notification */}
       {successToast && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between gap-2 shadow-xs animate-in fade-in duration-200">
+        <div role="status" className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between gap-2 shadow-xs animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
             <span className="font-semibold">{successToast}</span>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={() => setSuccessToast(null)}
-            className="p-1 rounded-md hover:bg-emerald-200/50 text-emerald-700 dark:text-emerald-300"
+            className="p-1.5 rounded-md hover:bg-emerald-200/50 text-emerald-700 dark:text-emerald-300"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -349,7 +349,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                       {currentProduct.name}
                     </span>
                     {currentProduct.brand && (
-                      <span className="px-1.5 py-0.2 rounded-md text-[9px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 shrink-0">
+                      <span className="px-1.5 py-0.2 rounded-md text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 shrink-0">
                         {currentProduct.brand}
                       </span>
                     )}
@@ -361,7 +361,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                   </div>
                 </div>
               </div>
-              <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isProductPickerOpen ? 'rotate-90' : ''}`} />
+              <ChevronRight className={`w-4 h-4 text-slate-500 transition-transform ${isProductPickerOpen ? 'rotate-90' : ''}`} />
             </button>
           </div>
 
@@ -370,13 +370,13 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
             <div className="absolute top-full left-0 right-0 mt-2 z-40 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 max-h-80 flex flex-col">
               <div className="p-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                  <input
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                  <input aria-label="Ketik nama produk, SKU, barcode, atau brand..."
                     type="text"
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
                     placeholder="Ketik nama produk, SKU, barcode, atau brand..."
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
                     autoFocus
                   />
                 </div>
@@ -417,14 +417,14 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                         <div className="text-xs font-bold text-slate-900 dark:text-white font-mono">
                           {formatCurrency(prod.price, settings.currency)}
                         </div>
-                        <div className="text-[10px] text-amber-600 dark:text-amber-400 font-mono">
+                        <div className="text-[10px] text-amber-700 dark:text-amber-400 font-mono">
                           HPP: {formatCurrency(prod.costPrice, settings.currency)}
                         </div>
                       </div>
                     </button>
                   ))
                 ) : (
-                  <div className="p-4 text-center text-xs text-slate-400">
+                  <div className="p-4 text-center text-xs text-slate-500">
                     Tidak ada produk cocok dengan pencarian &ldquo;{productSearch}&rdquo;
                   </div>
                 )}
@@ -451,11 +451,11 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
             className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
             title="Ekspor riwayat harga ke file spreadsheet CSV"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
             <span className="hidden sm:inline">Ekspor CSV</span>
           </button>
 
-          <button
+          <button aria-label="Cetak lembar laporan riwayat harga"
             id="btn-print-price-history"
             onClick={handlePrint}
             className="p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
@@ -465,7 +465,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
           </button>
 
           {isModal && onClose && (
-            <button
+            <button aria-label="Tutup riwayat harga"
               onClick={onClose}
               className="p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
               title="Tutup riwayat harga"
@@ -485,14 +485,14 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
               <span>Harga Jual Retail</span>
               <Tag className="w-3.5 h-3.5 text-emerald-500" />
             </span>
-            <div className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400">
+            <div className="text-base sm:text-lg font-black font-mono text-emerald-700 dark:text-emerald-400">
               {formatCurrency(analytics.currentPrice, settings.currency)}
             </div>
             <div className="flex items-center gap-1 text-[11px] font-medium">
               {analytics.priceChangeNominal !== 0 ? (
                 <span
                   className={`flex items-center gap-0.5 font-bold ${
-                    analytics.priceChangeNominal > 0 ? 'text-emerald-600' : 'text-rose-600'
+                    analytics.priceChangeNominal > 0 ? 'text-emerald-700' : 'text-rose-600'
                   }`}
                 >
                   {analytics.priceChangeNominal > 0 ? (
@@ -505,7 +505,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                   {analytics.priceChangePercent.toFixed(1)}%)
                 </span>
               ) : (
-                <span className="text-slate-400">Tetap stabil dari periode lalu</span>
+                <span className="text-slate-500">Tetap stabil dari periode lalu</span>
               )}
             </div>
           </div>
@@ -516,14 +516,14 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
               <span>Harga Modal (HPP)</span>
               <DollarSign className="w-3.5 h-3.5 text-amber-500" />
             </span>
-            <div className="text-base sm:text-lg font-black font-mono text-amber-600 dark:text-amber-400">
+            <div className="text-base sm:text-lg font-black font-mono text-amber-700 dark:text-amber-400">
               {formatCurrency(analytics.currentCost, settings.currency)}
             </div>
             <div className="flex items-center gap-1 text-[11px] font-medium">
               {analytics.costChangeNominal !== 0 ? (
                 <span
                   className={`flex items-center gap-0.5 font-bold ${
-                    analytics.costChangeNominal > 0 ? 'text-rose-600' : 'text-emerald-600'
+                    analytics.costChangeNominal > 0 ? 'text-rose-600' : 'text-emerald-700'
                   }`}
                 >
                   {analytics.costChangeNominal > 0 ? (
@@ -536,7 +536,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                   {analytics.costChangePercent.toFixed(1)}%)
                 </span>
               ) : (
-                <span className="text-slate-400">Modal belum mengalami kenaikan</span>
+                <span className="text-slate-500">Modal belum mengalami kenaikan</span>
               )}
             </div>
           </div>
@@ -655,11 +655,11 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
 
           {/* Change Type Filter */}
           <div className="flex items-center gap-2">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <select
+            <Filter className="w-3.5 h-3.5 text-slate-500" />
+            <select aria-label="Filter jenis perubahan harga"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-2.5 py-1 text-xs rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 cursor-pointer font-medium"
+              className="px-2.5 py-1 text-xs rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 cursor-pointer font-medium"
             >
               <option value="all">Semua Tipe Perubahan</option>
               <option value="purchase_receiving">Faktur Supplier / Kulakan</option>
@@ -710,7 +710,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                       {/* Date */}
                       <td className="py-3 px-4 font-mono text-slate-800 dark:text-slate-200 whitespace-nowrap">
                         <div className="font-bold">{formatDate(rec.date)}</div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[10px] text-slate-500">
                           {new Date(rec.date).toLocaleTimeString('id-ID', {
                             hour: '2-digit',
                             minute: '2-digit',
@@ -732,7 +732,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                         {costDiff !== 0 && (
                           <div
                             className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${
-                              costDiff > 0 ? 'text-rose-600' : 'text-emerald-600'
+                              costDiff > 0 ? 'text-rose-600' : 'text-emerald-700'
                             }`}
                           >
                             {costDiff > 0 ? '+' : ''}
@@ -749,7 +749,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                         {priceDiff !== 0 && (
                           <div
                             className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${
-                              priceDiff > 0 ? 'text-emerald-600' : 'text-rose-600'
+                              priceDiff > 0 ? 'text-emerald-700' : 'text-rose-600'
                             }`}
                           >
                             {priceDiff > 0 ? '+' : ''}
@@ -796,7 +796,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                           {rec.notes || '-'}
                         </div>
                         {rec.recordedBy && (
-                          <div className="text-[10px] text-slate-400">Oleh: {rec.recordedBy}</div>
+                          <div className="text-[10px] text-slate-500">Oleh: {rec.recordedBy}</div>
                         )}
                       </td>
                     </tr>
@@ -804,7 +804,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                  <td colSpan={8} className="py-8 text-center text-slate-500">
                     Tidak ada catatan perubahan harga untuk filter ini.
                   </td>
                 </tr>
@@ -832,10 +832,10 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                   </p>
                 </div>
               </div>
-              <button
+              <button aria-label="Tutup"
                 type="button"
                 onClick={() => setIsAddPriceModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -845,17 +845,17 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
               {/* Previous vs New Comparison */}
               <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800">
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Harga Saat Ini:</span>
-                  <div className="font-mono text-emerald-600 font-bold">
+                  <span className="text-[10px] text-slate-500 block">Harga Saat Ini:</span>
+                  <div className="font-mono text-emerald-700 font-bold">
                     Jual: {formatCurrency(currentProduct.price, settings.currency)}
                   </div>
-                  <div className="font-mono text-amber-600 font-bold">
+                  <div className="font-mono text-amber-700 font-bold">
                     Modal: {formatCurrency(currentProduct.costPrice, settings.currency)}
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Margin Saat Ini:</span>
+                  <span className="text-[10px] text-slate-500 block">Margin Saat Ini:</span>
                   <div className="font-mono font-black text-indigo-600">
                     {(((currentProduct.price - currentProduct.costPrice) / (currentProduct.price || 1)) * 100).toFixed(1)}%
                   </div>
@@ -871,14 +871,14 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                   <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                     <span>Harga Jual Retail Baru (Rp)*</span>
                   </label>
-                  <input
+                  <input aria-label="Harga Jual Retail Baru (Rp)"
                     type="number"
                     min={0}
                     step={100}
                     value={newSellingPriceInput}
                     onChange={(e) => setNewSellingPriceInput(Number(e.target.value))}
                     required
-                    className="w-full px-3 py-2 font-mono font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 font-mono font-bold rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
@@ -886,14 +886,14 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                   <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                     <span>Harga Modal / HPP Baru (Rp)*</span>
                   </label>
-                  <input
+                  <input aria-label="Harga Modal / HPP Baru (Rp)"
                     type="number"
                     min={0}
                     step={100}
                     value={newCostPriceInput}
                     onChange={(e) => setNewCostPriceInput(Number(e.target.value))}
                     required
-                    className="w-full px-3 py-2 font-mono font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 font-mono font-bold rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
@@ -917,10 +917,10 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                   <label className="font-bold text-slate-800 dark:text-slate-200">
                     Tipe Perubahan*
                   </label>
-                  <select
+                  <select aria-label="Tipe Perubahan"
                     value={changeTypeInput}
                     onChange={(e) => setChangeTypeInput(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 font-medium"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 font-medium"
                   >
                     <option value="manual_update">Penyesuaian Manual Toko</option>
                     <option value="purchase_receiving">Penerimaan Faktur Supplier</option>
@@ -933,12 +933,12 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                   <label className="font-bold text-slate-800 dark:text-slate-200">
                     No. Faktur / Referensi
                   </label>
-                  <input
+                  <input aria-label="No. Faktur / Referensi"
                     type="text"
                     value={sourceRefInput}
                     onChange={(e) => setSourceRefInput(e.target.value)}
                     placeholder="Contoh: INV-SUP-2026-04"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
@@ -947,12 +947,12 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                 <label className="font-bold text-slate-800 dark:text-slate-200">
                   Nama Supplier / Pemasok (Opsional)
                 </label>
-                <input
+                <input aria-label="Nama Supplier / Pemasok (Opsional)"
                   type="text"
                   value={supplierNameInput}
                   onChange={(e) => setSupplierNameInput(e.target.value)}
                   placeholder="Contoh: PT Indomarco, Wings Surya, dll."
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -960,12 +960,12 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                 <label className="font-bold text-slate-800 dark:text-slate-200">
                   Keterangan / Alasan Fluktuasi
                 </label>
-                <textarea
+                <textarea aria-label="Keterangan / Alasan Fluktuasi"
                   value={notesInput}
                   onChange={(e) => setNotesInput(e.target.value)}
                   placeholder="Contoh: Kenaikan harga pabrik distributor per 1 September, penyesuaian margin target 20%..."
                   rows={2}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
 

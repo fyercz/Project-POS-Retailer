@@ -100,9 +100,9 @@ export const AuthorityModal: React.FC<AuthorityModalProps> = ({
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition"
+            className="p-1.5 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -124,7 +124,7 @@ export const AuthorityModal: React.FC<AuthorityModalProps> = ({
               <KeyRound className="w-3.5 h-3.5 text-amber-500" />
               PIN Otoritas:
             </label>
-            <input
+            <input aria-label="PIN Otoritas"
               type="password"
               maxLength={6}
               autoFocus
@@ -134,12 +134,12 @@ export const AuthorityModal: React.FC<AuthorityModalProps> = ({
                 setError('');
               }}
               placeholder="Masukkan 4 digit PIN..."
-              className="w-full px-3 py-2 text-center text-xl font-mono font-bold tracking-widest rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 text-center text-xl font-mono font-bold tracking-widest rounded-xl bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
           {error && (
-            <div className="flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-xl border border-rose-200 dark:border-rose-900/50">
+            <div role="alert" className="flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-xl border border-rose-200 dark:border-rose-900/50">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>

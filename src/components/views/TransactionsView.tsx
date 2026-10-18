@@ -41,6 +41,7 @@ import {
   toLocalYMD,
   formatPeriodLabel,
 } from '../../utils/dateFilters';
+import { activateOnKey } from '../../utils/a11y';
 
 export const TransactionsView: React.FC = () => {
   const {
@@ -427,7 +428,7 @@ export const TransactionsView: React.FC = () => {
 
           {/* Ergonomic View Toggle Tabs */}
           <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs gap-0.5">
-            <button
+            <button aria-pressed={activeTab === 'sales'}
               onClick={() => setActiveTab('sales')}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'sales'
@@ -441,7 +442,7 @@ export const TransactionsView: React.FC = () => {
                 {transactions.length}
               </span>
             </button>
-            <button
+            <button aria-pressed={activeTab === 'returns'}
               onClick={() => setActiveTab('returns')}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'returns'
@@ -463,23 +464,23 @@ export const TransactionsView: React.FC = () => {
         <div className="flex items-center gap-2 flex-wrap">
           {/* Search */}
           <div className="relative w-full sm:w-auto flex-1 sm:flex-initial">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <input aria-label="Cari no. nota, pelanggan, barang..."
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari no. nota, pelanggan, barang..."
-              className="w-full sm:w-64 pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full sm:w-64 pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           {/* Payment Method Filter */}
           {activeTab === 'sales' && (
             <>
-              <select
+              <select aria-label="Filter metode pembayaran"
                 value={methodFilter}
                 onChange={(e) => setMethodFilter(e.target.value)}
-                className="px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer"
+                className="px-3 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-600"
               >
                 <option value="all">Semua Cara Bayar</option>
                 <option value="cash">💵 Tunai (Cash)</option>
@@ -488,11 +489,11 @@ export const TransactionsView: React.FC = () => {
               </select>
 
               {/* Cloud Sync Filter - Desktop only */}
-              <select
+              <select aria-label="Filter status sinkron"
                 id="filter-sync-status"
                 value={syncFilter}
                 onChange={(e) => setSyncFilter(e.target.value as any)}
-                className="hidden md:inline-block px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer"
+                className="hidden md:inline-block px-3 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-600"
               >
                 <option value="all">Semua Status Cloud</option>
                 <option value="synced">☁️ Tersinkron Cloud</option>
@@ -528,7 +529,7 @@ export const TransactionsView: React.FC = () => {
             className="hidden md:flex px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-xs transition-colors active:scale-95"
             title="Cadangkan Seluruh Riwayat Transaksi & Database Toko (Backup & Restore - F9)"
           >
-            <Database className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <Database className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
             <span>Backup &amp; Restore</span>
           </button>
         </div>
@@ -559,7 +560,7 @@ export const TransactionsView: React.FC = () => {
               <span className="text-slate-500 dark:text-slate-400 text-[11px]">
                 Total Omzet Periode:
               </span>
-              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs">
+              <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-xs">
                 {formatCurrency(totalPeriodRevenue, settings.currency)}
               </span>
             </div>
@@ -596,7 +597,7 @@ export const TransactionsView: React.FC = () => {
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {isServerLoading ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-slate-400">
+                      <td colSpan={7} className="py-12 text-center text-slate-500">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <RefreshCw className="w-6 h-6 text-emerald-500 animate-spin" />
                           <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
@@ -622,7 +623,7 @@ export const TransactionsView: React.FC = () => {
                               {tx.invoiceNumber}
                             </div>
                             <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                              <Calendar className="w-3 h-3 text-slate-400" />
+                              <Calendar className="w-3 h-3 text-slate-500" />
                               {formatDate(tx.createdAt)}
                             </div>
                           </td>
@@ -649,12 +650,12 @@ export const TransactionsView: React.FC = () => {
                                 <p className="font-semibold text-slate-900 dark:text-slate-100">
                                   {tx.customer.name}
                                 </p>
-                                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono">
+                                <span className="text-[10px] text-amber-700 dark:text-amber-400 font-mono">
                                   Tier: {tx.customer.tier}
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-slate-400 dark:text-slate-400 italic">Pelanggan Umum</span>
+                              <span className="text-slate-500 dark:text-slate-400 italic">Pelanggan Umum</span>
                             )}
                           </td>
 
@@ -677,7 +678,7 @@ export const TransactionsView: React.FC = () => {
                               {formatCurrency(Number(tx.finalTotal ?? (tx as any).total) || 0, settings.currency)}
                             </div>
                             {(tx.discountAmount || 0) > 0 && (
-                              <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
+                              <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono">
                                 Diskon: -{formatCurrency(tx.discountAmount, settings.currency)}
                                 {tx.customerDiscount ? ` • ${tx.customerDiscount.badge}` : ''}
                               </div>
@@ -707,16 +708,16 @@ export const TransactionsView: React.FC = () => {
 
                             {/* Cloud Sync Status Indicator */}
                             {tx.syncStatus === 'pending_sync' ? (
-                              <div
+                              <div role="button" tabIndex={0} onKeyDown={activateOnKey}
                                 onClick={() => setIsSyncModalOpen(true)}
-                                className="mt-1 flex items-center justify-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 cursor-pointer hover:underline"
+                                className="mt-1 flex items-center justify-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 cursor-pointer hover:underline"
                                 title="Transaksi disimpan lokal, menunggu koneksi cloud untuk diunggah"
                               >
                                 <CloudOff className="w-3 h-3" />
                                 <span>Antrean Lokal</span>
                               </div>
                             ) : (
-                              <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-slate-400 dark:text-slate-500">
+                              <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
                                 <Cloud className="w-3 h-3 text-emerald-500" />
                                 <span>Cloud Synced</span>
                               </div>
@@ -750,9 +751,9 @@ export const TransactionsView: React.FC = () => {
 
                               {/* Void Button */}
                               {!isVoid && (
-                                <button
+                                <button aria-label="Batalkan / Void Transaksi"
                                   onClick={() => setSelectedTxForVoid(tx)}
-                                  className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
+                                  className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
                                   title="Batalkan / Void Transaksi"
                                 >
                                   <Ban className="w-3.5 h-3.5" />
@@ -765,7 +766,7 @@ export const TransactionsView: React.FC = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-400">
+                      <td colSpan={7} className="py-12 text-center text-slate-500 dark:text-slate-400">
                         {transactions.length > 0 ? (
                           <div className="max-w-md mx-auto space-y-2">
                             <Receipt className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-1" />
@@ -782,7 +783,7 @@ export const TransactionsView: React.FC = () => {
                                 setStartDate('');
                                 setEndDate('');
                               }}
-                              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition"
+                              className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition"
                             >
                               <span>Tampilkan Seluruh Nota ({transactions.length})</span>
                             </button>
@@ -819,7 +820,7 @@ export const TransactionsView: React.FC = () => {
                             {ret.returnNumber}
                           </div>
                           <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                            <Calendar className="w-3 h-3 text-slate-400" />
+                            <Calendar className="w-3 h-3 text-slate-500" />
                             {formatDate(ret.createdAt)}
                           </div>
                         </td>
@@ -846,11 +847,11 @@ export const TransactionsView: React.FC = () => {
                                   @{formatCurrency(i.unitPrice, settings.currency)}
                                 </span>
                                 {i.restockToInventory ? (
-                                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">
                                     (Restock)
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] text-rose-500 dark:text-rose-400 font-semibold">
+                                  <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold">
                                     (Bad Stock)
                                   </span>
                                 )}
@@ -892,7 +893,7 @@ export const TransactionsView: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400 dark:text-slate-400">
+                      <td colSpan={6} className="py-12 text-center text-slate-500 dark:text-slate-400">
                         {salesReturns.length > 0 ? (
                           <div className="max-w-md mx-auto space-y-2">
                             <RotateCcw className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-1" />
@@ -967,7 +968,7 @@ export const TransactionsView: React.FC = () => {
                       }}
                       className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
                         paginationMode === 'cursor'
-                          ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                          ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-2xs'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
@@ -996,7 +997,7 @@ export const TransactionsView: React.FC = () => {
                       setCurrentPage(1);
                       handleResetCursor();
                     }}
-                    className="px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                    className="px-2 py-0.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                   >
                     <option value={15}>15</option>
                     <option value={25}>25</option>
@@ -1091,7 +1092,8 @@ export const TransactionsView: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedTxForReturn(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                aria-label="Tutup"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 ✕
               </button>
@@ -1124,7 +1126,7 @@ export const TransactionsView: React.FC = () => {
 
                     {/* Qty Stepper */}
                     <div className="flex items-center gap-2">
-                      <button
+                      <button aria-label="Kurangi"
                         onClick={() => handleUpdateItemReturnQty(item.productId, -1)}
                         disabled={item.returnQty <= 0}
                         className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center font-bold disabled:opacity-30 cursor-pointer"
@@ -1134,7 +1136,7 @@ export const TransactionsView: React.FC = () => {
                       <span className="w-8 text-center font-mono font-bold text-sm text-slate-900 dark:text-white">
                         {item.returnQty}
                       </span>
-                      <button
+                      <button aria-label="Tambah"
                         onClick={() => handleUpdateItemReturnQty(item.productId, 1)}
                         disabled={item.returnQty >= item.maxQty}
                         className="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold disabled:opacity-30 cursor-pointer"
@@ -1151,10 +1153,10 @@ export const TransactionsView: React.FC = () => {
                         <label className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block mb-1">
                           Alasan Retur:
                         </label>
-                        <select
+                        <select aria-label="Alasan Retur"
                           value={item.reason}
                           onChange={(e) => handleUpdateItemReason(item.productId, e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none"
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                         >
                           <option value="Barang Cacat / Rusak Fisik">Barang Cacat / Rusak Fisik</option>
                           <option value="Kadaluarsa / Near Expired">Kadaluarsa / Near Expired</option>
@@ -1171,7 +1173,7 @@ export const TransactionsView: React.FC = () => {
                             type="checkbox"
                             checked={item.restockToInventory}
                             onChange={() => handleToggleRestock(item.productId)}
-                            className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer"
+                            className="w-4 h-4 rounded text-emerald-700 focus:ring-emerald-500 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer"
                           />
                           <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
                             Kembalikan ke stok etalase (Restock)
@@ -1219,12 +1221,12 @@ export const TransactionsView: React.FC = () => {
                   <label className="font-bold text-slate-700 dark:text-slate-200 block mb-1">
                     Catatan Kasir:
                   </label>
-                  <input
+                  <input aria-label="Catatan Kasir"
                     type="text"
                     value={returnNote}
                     onChange={(e) => setReturnNote(e.target.value)}
                     placeholder="Contoh: Barang diganti uang cash oleh SPV..."
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                   />
                 </div>
               </div>

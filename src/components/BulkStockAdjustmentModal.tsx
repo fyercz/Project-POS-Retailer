@@ -360,9 +360,9 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               </span>
             </div>
 
-            <button
+            <button aria-label="Tutup (Esc)"
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
               title="Tutup (Esc)"
             >
               <X className="w-5 h-5" />
@@ -380,15 +380,15 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                   <Calendar className="w-3.5 h-3.5 text-blue-500" />
                   <span>Set Kadaluarsa Serentak ({selectedCount} Terpilih)</span>
                 </span>
-                <span className="text-[10px] text-slate-400">FEFO Expiry</span>
+                <span className="text-[10px] text-slate-500">FEFO Expiry</span>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                <input
+                <input aria-label="Tanggal kedaluwarsa serentak"
                   type="date"
                   value={uniformExpiryDate}
                   onChange={(e) => setUniformExpiryDate(e.target.value)}
-                  className="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
 
                 <div className="flex items-center gap-1 flex-wrap">
@@ -470,12 +470,12 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                   <Package className="w-3.5 h-3.5 text-emerald-500" />
                   <span>Penyesuaian Stok Serentak ({selectedCount} Terpilih)</span>
                 </span>
-                <span className="text-[10px] text-slate-400">Batch Qty</span>
+                <span className="text-[10px] text-slate-500">Batch Qty</span>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
                 <div className="flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
-                  <button
+                  <button aria-pressed={uniformQtyMode === 'add'}
                     type="button"
                     onClick={() => setUniformQtyMode('add')}
                     className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${
@@ -486,7 +486,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                   >
                     + Tambah
                   </button>
-                  <button
+                  <button aria-pressed={uniformQtyMode === 'subtract'}
                     type="button"
                     onClick={() => setUniformQtyMode('subtract')}
                     className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${
@@ -497,7 +497,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                   >
                     - Kurang
                   </button>
-                  <button
+                  <button aria-pressed={uniformQtyMode === 'set'}
                     type="button"
                     onClick={() => setUniformQtyMode('set')}
                     className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${
@@ -516,7 +516,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                     min={0}
                     value={uniformQtyValue || ''}
                     onChange={(e) => setUniformQtyValue(Number(e.target.value))}
-                    className="w-20 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-20 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     placeholder="0"
                   />
                   <span className="text-[11px] text-slate-500">Unit</span>
@@ -525,7 +525,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                 <button
                   type="button"
                   onClick={handleApplyUniformQuantity}
-                  className="ml-auto px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] transition cursor-pointer"
+                  className="ml-auto px-3 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-semibold text-[11px] transition cursor-pointer"
                 >
                   Terapkan Qty ke {selectedCount} Baris
                 </button>
@@ -536,13 +536,13 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
           {/* Search Table & Add Products Toolbar */}
           <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-              <input
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+              <input aria-label="Saring nama barang di tabel ini..."
                 type="text"
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
                 placeholder="Saring nama barang di tabel ini..."
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
 
@@ -555,24 +555,24 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               >
                 <Plus className="w-3.5 h-3.5 text-emerald-400" />
                 <span>+ Tambah Produk Lain ({candidateProducts.length} Tersedia)</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
               </button>
 
               {isAddProductDropdownOpen && (
                 <div className="absolute right-0 mt-1.5 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-30 p-2 text-xs">
                   <div className="p-1 mb-1">
-                    <input
+                    <input aria-label="Cari produk dari katalog..."
                       type="text"
                       autoFocus
                       value={catalogSearch}
                       onChange={(e) => setCatalogSearch(e.target.value)}
                       placeholder="Cari produk dari katalog..."
-                      className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                      className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white"
                     />
                   </div>
                   <div className="max-h-56 overflow-y-auto space-y-1">
                     {candidateProducts.length === 0 ? (
-                      <div className="p-3 text-center text-slate-400 text-xs">
+                      <div className="p-3 text-center text-slate-500 text-xs">
                         Tidak ada produk tambahan yang cocok.
                       </div>
                     ) : (
@@ -587,7 +587,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                             <p className="font-bold text-slate-900 dark:text-slate-100 truncate">
                               {p.name}
                             </p>
-                            <span className="text-[10px] text-slate-400 font-mono">
+                            <span className="text-[10px] text-slate-500 font-mono">
                               Stok: {p.stock} • SKU: {p.sku}
                             </span>
                           </div>
@@ -617,7 +617,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
         {/* Table List of Items */}
         <div className="flex-1 overflow-auto">
           {filteredItems.length === 0 ? (
-            <div className="py-16 text-center text-slate-400 text-xs">
+            <div className="py-16 text-center text-slate-500 text-xs">
               <Package className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
               <p>Tidak ada produk yang dimuat untuk penyesuaian massal.</p>
               <p className="text-[11px] text-slate-500 mt-1">
@@ -629,11 +629,11 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               <thead className="bg-slate-100 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
                 <tr>
                   <th className="py-3 px-3 w-10 text-center">
-                    <input
+                    <input aria-label="Pilih semua produk"
                       type="checkbox"
                       checked={filteredItems.length > 0 && filteredItems.every((i) => i.isSelected)}
                       onChange={handleToggleSelectAll}
-                      className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
+                      className="w-4 h-4 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
                       title="Pilih semua baris yang tampil"
                     />
                   </th>
@@ -661,18 +661,18 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                     >
                       {/* Select Checkbox */}
                       <td className="py-3 px-3 text-center">
-                        <input
+                        <input aria-label={`Pilih ${p.name}`}
                           type="checkbox"
                           checked={item.isSelected}
                           onChange={() => handleToggleSelectItem(p.id)}
-                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
+                          className="w-4 h-4 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
                         />
                       </td>
 
                       {/* Product details */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
+                          <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center shrink-0">
                             <Package className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -681,12 +681,12 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                                 {p.name}
                               </h4>
                               {p.brand && (
-                                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                                   ({p.brand})
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
+                            <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
                               <span>SKU: {p.sku}</span>
                               {p.barcode && <span>• Barcode: {p.barcode}</span>}
                             </div>
@@ -712,7 +712,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                           >
                             -5
                           </button>
-                          <button
+                          <button aria-label="-1 Unit"
                             type="button"
                             onClick={() => handleStockDelta(p.id, -1)}
                             className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition"
@@ -721,7 +721,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                             <Minus className="w-3 h-3 mx-auto" />
                           </button>
 
-                          <input
+                          <input aria-label="Stok baru"
                             type="number"
                             min={0}
                             value={item.newStock}
@@ -729,11 +729,11 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                             className={`w-16 py-1 px-1.5 text-center font-mono font-bold text-xs rounded-lg border transition ${
                               isStockChanged
                                 ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-400 text-emerald-900 dark:text-emerald-200'
-                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white'
+                                : 'bg-white dark:bg-slate-900 border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white'
                             }`}
                           />
 
-                          <button
+                          <button aria-label="+1 Unit"
                             type="button"
                             onClick={() => handleStockDelta(p.id, 1)}
                             className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition"
@@ -754,7 +754,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                         {/* Delta indicator */}
                         <div className="mt-1">
                           {delta > 0 ? (
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 font-mono">
                               +{delta}
                             </span>
                           ) : delta < 0 ? (
@@ -762,7 +762,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                               {delta}
                             </span>
                           ) : (
-                            <span className="text-[10px] text-slate-400 font-mono">
+                            <span className="text-[10px] text-slate-500 font-mono">
                               = Tetap
                             </span>
                           )}
@@ -773,14 +773,14 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                       <td className="py-3 px-4">
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
-                            <input
+                            <input aria-label="Tanggal kedaluwarsa baru"
                               type="date"
                               value={item.newExpiry}
                               onChange={(e) => handleExpiryChange(p.id, e.target.value)}
                               className={`w-full px-2 py-1 text-xs rounded-lg border font-mono transition ${
                                 isExpiryChanged
                                   ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-400 text-blue-900 dark:text-blue-200'
-                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white'
+                                  : 'bg-white dark:bg-slate-900 border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white'
                               }`}
                             />
 
@@ -794,10 +794,10 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                             </button>
 
                             {item.newExpiry && (
-                              <button
+                              <button aria-label="Hapus tanggal kadaluarsa"
                                 type="button"
                                 onClick={() => handleExpiryChange(p.id, '')}
-                                className="p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950 text-slate-400 hover:text-rose-600 transition shrink-0"
+                                className="p-1.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950 text-slate-500 hover:text-rose-600 transition shrink-0"
                                 title="Hapus tanggal kadaluarsa"
                               >
                                 <X className="w-3.5 h-3.5" />
@@ -821,10 +821,10 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
 
                       {/* Action */}
                       <td className="py-3 px-3 text-center">
-                        <button
+                        <button aria-label="Hapus dari antrean penyesuaian massal"
                           type="button"
                           onClick={() => handleRemoveItem(p.id)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
                           title="Hapus dari antrean penyesuaian massal"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -845,13 +845,13 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Alasan Penyesuaian Massal / Audit
               </label>
-              <select
+              <select aria-label="Alasan Penyesuaian Massal / Audit"
                 value={selectedReason}
                 onChange={(e) => {
                   setSelectedReason(e.target.value);
                   setReasonError('');
                 }}
-                className="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium"
+                className="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white font-medium"
               >
                 <option value="" disabled>
                   -- Pilih alasan --
@@ -869,12 +869,12 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Catatan Tambahan / No. Dokumen Referensi (Opsional)
               </label>
-              <input
+              <input aria-label="Catatan Tambahan / No. Dokumen Referensi (Opsional)"
                 type="text"
                 value={customNotes}
                 onChange={(e) => setCustomNotes(e.target.value)}
                 placeholder="Contoh: Berita Acara Stock Opname Rak Makanan Ringan #2026-09"
-                className="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                className="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white"
               />
             </div>
           </div>
@@ -883,7 +883,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
           <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-100 via-emerald-50/50 to-slate-100 dark:from-slate-850 dark:via-emerald-950/20 dark:to-slate-850 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-4 flex-wrap">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
                   Total Item Dimuat
                 </span>
                 <span className="font-bold font-mono text-sm text-slate-800 dark:text-slate-200">
@@ -894,7 +894,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               <div className="h-6 w-px bg-slate-300 dark:bg-slate-700" />
 
               <div>
-                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
                   Perubahan Stok
                 </span>
                 <span className="font-bold font-mono text-sm text-slate-900 dark:text-white">
@@ -902,10 +902,10 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                   <span
                     className={
                       totalStockDelta > 0
-                        ? 'text-emerald-600 dark:text-emerald-400'
+                        ? 'text-emerald-700 dark:text-emerald-400'
                         : totalStockDelta < 0
                         ? 'text-rose-600 dark:text-rose-400'
-                        : 'text-slate-400'
+                        : 'text-slate-500'
                     }
                   >
                     {totalStockDelta > 0 ? `+${totalStockDelta}` : totalStockDelta} Unit
@@ -917,7 +917,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               <div className="h-6 w-px bg-slate-300 dark:bg-slate-700" />
 
               <div>
-                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
                   Perubahan Kadaluarsa
                 </span>
                 <span className="font-bold font-mono text-sm text-blue-600 dark:text-blue-400">
@@ -928,13 +928,13 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               <div className="h-6 w-px bg-slate-300 dark:bg-slate-700" />
 
               <div>
-                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
                   Estimasi Nilai Dampak HPP
                 </span>
                 <span
                   className={`font-bold font-mono text-sm ${
                     totalValuationDelta >= 0
-                      ? 'text-emerald-600 dark:text-emerald-400'
+                      ? 'text-emerald-700 dark:text-emerald-400'
                       : 'text-rose-600 dark:text-rose-400'
                   }`}
                 >

@@ -144,7 +144,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
     return (
       <div className="px-4 py-3 bg-emerald-50/70 dark:bg-emerald-950/20 border-b border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
           <span>
             <strong>Status Inventaris Sehat:</strong> Seluruh {products.length} produk memiliki kuantitas stok di atas batas minimum dan tidak ada tanggal kadaluarsa kritis dalam 90 hari ke depan.
           </span>
@@ -187,7 +187,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
               className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 text-[10px] font-bold border border-slate-300 dark:border-slate-600 flex items-center gap-1 cursor-pointer transition shadow-2xs"
             >
               <span>Filter Aktif: {currentAlertFilter.replace('-', ' ').toUpperCase()}</span>
-              <X className="w-3 h-3 text-rose-500" />
+              <X className="w-3 h-3 text-rose-600" />
             </button>
           )}
         </div>
@@ -217,7 +217,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                   : 'text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/60'
               }`}
             >
-              <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+              <AlertTriangle className="w-3 h-3 text-amber-700 dark:text-amber-400" />
               <span>Stok Menipis ({allLowStockItems.length})</span>
             </button>
             <button
@@ -236,7 +236,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
             </button>
           </div>
 
-          <button
+          <button aria-label="Tampilkan atau sembunyikan detail"
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-amber-200/50 dark:hover:bg-slate-800 transition cursor-pointer"
@@ -278,7 +278,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
 
               {/* Status Badges */}
               <div className="flex items-center gap-1.5">
-                <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                   Rule 50% PO
                 </span>
                 {outOfStockItems.length > 0 && (
@@ -305,7 +305,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
             {/* List preview of top critical low-stock products */}
             <div className="py-2 space-y-1.5 max-h-48 overflow-y-auto pr-1">
               {allLowStockItems.length === 0 ? (
-                <div className="py-4 text-center text-slate-400 text-xs">
+                <div className="py-4 text-center text-slate-500 text-xs">
                   Semua stok produk saat ini mencukupi.
                 </div>
               ) : (
@@ -339,12 +339,12 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                             className={`font-mono font-black text-xs block ${
                               isZero
                                 ? 'text-rose-600 dark:text-rose-400'
-                                : 'text-amber-600 dark:text-amber-400'
+                                : 'text-amber-700 dark:text-amber-400'
                             }`}
                           >
                             {isZero ? '0 (HABIS)' : `${p.stock}`}
                           </span>
-                          <span className="text-[9px] text-slate-400">
+                          <span className="text-[10px] text-slate-500">
                             Modal: {formatCurrency(p.costPrice, currency)}
                           </span>
                         </div>
@@ -352,7 +352,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                         <button
                           type="button"
                           onClick={() => onOpenReceiving(p)}
-                          className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                          className="px-2 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer transition shadow-2xs"
                           title="Buat pesanan terima barang untuk produk ini"
                         >
                           <Truck className="w-3 h-3" />
@@ -411,7 +411,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                 <button
                   type="button"
                   onClick={() => onOpenReceiving()}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer shadow-xs"
                 >
                   <Truck className="w-3 h-3" />
                   <span>+ Terima Barang Masuk</span>
@@ -481,7 +481,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
             {/* List preview of approaching expiry items */}
             <div className="py-2 space-y-1.5 max-h-48 overflow-y-auto pr-1">
               {allExpItems.length === 0 ? (
-                <div className="py-4 text-center text-slate-400 text-xs">
+                <div className="py-4 text-center text-slate-500 text-xs">
                   Tidak ada produk yang mendekati tanggal kadaluarsa.
                 </div>
               ) : (
@@ -532,7 +532,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                               ? 'Hari Ini!'
                               : `${daysLeft} hari lagi`}
                           </span>
-                          <span className="text-[9px] text-slate-400 block mt-0.5 font-mono">
+                          <span className="text-[10px] text-slate-500 block mt-0.5 font-mono">
                             Exp: {p.expiryDate}
                           </span>
                         </div>

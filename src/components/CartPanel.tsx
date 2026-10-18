@@ -35,6 +35,7 @@ import {
 import { formatCurrency } from '../utils/formatters';
 import { CustomerModal } from './CustomerModal';
 import { WholesaleUnit, CustomerDiscount } from '../types';
+import { activateOnKey } from '../utils/a11y';
 
 interface CartPanelProps {
   onBackToCatalog?: () => void;
@@ -171,7 +172,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
         <div className="flex items-center gap-2 min-w-0">
           <div
             className={`w-5 h-5 rounded-md ${
-              activeEmployee?.avatarColor || 'bg-emerald-600'
+              activeEmployee?.avatarColor || 'bg-emerald-700'
             } text-white font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs`}
           >
             {activeEmployee?.avatar || 'KR'}
@@ -180,7 +181,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
               {activeEmployee?.name || 'Kasir 01'}
             </span>
-            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
               {activeEmployee?.roleTitle || (activeEmployee?.role === 'owner' ? 'Owner' : activeEmployee?.role === 'supervisor' ? 'Supervisor' : 'Kasir')}
             </span>
           </div>
@@ -192,7 +193,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
           className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-[11px] font-semibold transition cursor-pointer shrink-0 active:scale-95 shadow-2xs"
           title="Ganti Akun Kasir atau Login Otoritas Supervisor / Owner (Alt+L)"
         >
-          <Lock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+          <Lock className="w-3 h-3 text-amber-700 dark:text-amber-400" />
           <span>Ganti Akun</span>
         </button>
       </div>
@@ -210,7 +211,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             <button
               type="button"
               onClick={clearCart}
-              className="text-[11px] text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 font-medium flex items-center gap-1 cursor-pointer transition-colors"
+              className="text-[11px] text-rose-600 hover:text-rose-600 dark:hover:text-rose-400 font-medium flex items-center gap-1 cursor-pointer transition-colors"
               title="Kosongkan Keranjang"
             >
               <Trash2 className="w-3 h-3" />
@@ -241,7 +242,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
               </p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+          <ChevronRight className="w-4 h-4 text-slate-500 shrink-0" />
         </button>
 
         {/* Customer Discount Quick Highlight */}
@@ -260,7 +261,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
               <button
                 type="button"
                 onClick={removeCustomerDiscount}
-                className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 font-semibold ml-2 cursor-pointer shrink-0"
+                className="text-xs text-rose-600 hover:text-rose-600 dark:hover:text-rose-400 font-semibold ml-2 cursor-pointer shrink-0"
                 title="Hapus diskon khusus member ini"
               >
                 Hapus
@@ -280,7 +281,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   const top = customerDiscountSuggestions.find((s) => s.isApplicable);
                   if (top) applyCustomerDiscount(top);
                 }}
-                className="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] cursor-pointer shrink-0 transition-transform active:scale-95 shadow-2xs"
+                className="px-2 py-0.5 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[10px] cursor-pointer shrink-0 transition-transform active:scale-95 shadow-2xs"
                 title="Klaim diskon rekomendasi terbaik"
               >
                 Klaim Cepat
@@ -367,7 +368,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
 
                     {/* Notes / Special Instructions */}
                     {item.notes && (
-                      <p className="text-[10px] text-amber-600 dark:text-amber-400 italic flex items-center gap-1 mt-0.5">
+                      <p className="text-[10px] text-amber-700 dark:text-amber-400 italic flex items-center gap-1 mt-0.5">
                         <Sparkles className="w-2.5 h-2.5" />
                         {item.notes}
                       </p>
@@ -376,10 +377,10 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
 
                   {/* Price */}
                   <div className="text-right shrink-0">
-                    <div className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                    <div className="text-xs font-bold font-mono text-emerald-700 dark:text-emerald-400">
                       {formatCurrency(item.totalPrice, settings.currency)}
                     </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
+                    <div className="text-[10px] text-slate-500 font-mono">
                       @{formatCurrency(item.unitPrice, settings.currency)}
                       {item.selectedUnit ? `/${item.selectedUnit.name}` : ''}
                     </div>
@@ -401,14 +402,15 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     <button
                       type="button"
                       onClick={() => updateCartItemQuantity(item.id, -1)}
+                      aria-label={item.quantity === 1 ? `Hapus ${item.product.name} dari keranjang` : `Kurangi jumlah ${item.product.name}`}
                       className="w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                     >
-                      {item.quantity === 1 ? <Trash2 className="w-3 h-3 text-rose-500" /> : <Minus className="w-3 h-3" />}
+                      {item.quantity === 1 ? <Trash2 className="w-3 h-3 text-rose-600" /> : <Minus className="w-3 h-3" />}
                     </button>
                     <span className="w-6 text-center font-bold text-xs font-mono text-slate-900 dark:text-slate-100">
                       {item.quantity}
                     </span>
-                    <button
+                    <button aria-label={`Tambah jumlah ${item.product.name}`}
                       type="button"
                       onClick={() => updateCartItemQuantity(item.id, 1)}
                       className="w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-slate-950 flex items-center justify-center transition-colors cursor-pointer"
@@ -421,12 +423,12 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                 {/* In-line Note Editor Form */}
                 {activeEditingNoteId === item.id && (
                   <div className="pt-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
-                    <input
+                    <input aria-label="Masukkan catatan item..."
                       type="text"
                       value={itemNoteText}
                       onChange={(e) => setItemNoteText(e.target.value)}
                       placeholder="Masukkan catatan item..."
-                      className="flex-1 text-[11px] p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none"
+                      className="flex-1 text-[11px] p-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                       autoFocus
                     />
                     <button
@@ -435,9 +437,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     >
                       Simpan
                     </button>
-                    <button
+                    <button aria-label="Tutup"
                       onClick={() => setActiveEditingNoteId(null)}
-                      className="px-1.5 py-1 text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      className="px-1.5 py-1 text-[11px] text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -447,10 +449,10 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             );
           })
         ) : (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 dark:text-slate-500">
+          <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 dark:text-slate-400">
             <ShoppingBag className="w-12 h-12 stroke-[1.3] mb-2 opacity-40 text-emerald-500" />
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Keranjang Kosong</p>
-            <p className="text-xs text-slate-400 max-w-[200px] mt-1">
+            <p className="text-xs text-slate-500 max-w-[200px] mt-1">
               Pilih produk dari katalog atau scan barcode untuk memulai transaksi.
             </p>
           </div>
@@ -479,7 +481,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             <div className="p-2 rounded-xl bg-white/10 border border-white/10 flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-1">
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500 text-slate-950">
+                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500 text-slate-950">
                     {aiUpsellSuggestions[0].urgency}
                   </span>
                   <span className="text-xs font-semibold truncate text-white">
@@ -525,7 +527,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     </span>
                   )}
                 </div>
-                <button
+                <button aria-label="Tutup"
                   onClick={removeVoucher}
                   className="text-emerald-700 dark:text-emerald-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
                 >
@@ -535,13 +537,13 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             ) : (
               <form onSubmit={handleApplyVoucher} className="flex gap-1.5">
                 <div className="relative flex-1">
-                  <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                  <input
+                  <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                  <input aria-label="Kode promo / voucher..."
                     type="text"
                     value={voucherInput}
                     onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
                     placeholder="Kode promo / voucher..."
-                    className="w-full pl-8 pr-2 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 uppercase focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full pl-8 pr-2 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 uppercase focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
                 <button
@@ -553,13 +555,13 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
               </form>
             )}
 
-            {voucherError && <p className="text-[11px] text-rose-500">{voucherError}</p>}
+            {voucherError && <p className="text-[11px] text-rose-600">{voucherError}</p>}
 
             {/* Customer Loyalty & History-Based Discount Suggestions Accordion */}
             {selectedCustomer ? (
               <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/50 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 text-xs overflow-hidden shadow-2xs">
                 {/* Header */}
-                <div
+                <div role="button" tabIndex={0} onKeyDown={activateOnKey}
                   onClick={() => setIsDiscountSuggestionsOpen(!isDiscountSuggestionsOpen)}
                   className="p-2.5 flex items-center justify-between cursor-pointer select-none hover:bg-indigo-100/40 dark:hover:bg-indigo-950/40 transition-colors"
                 >
@@ -601,9 +603,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                       </button>
                     )}
                     {isDiscountSuggestionsOpen ? (
-                      <ChevronUp className="w-4 h-4 text-slate-400" />
+                      <ChevronUp className="w-4 h-4 text-slate-500" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                      <ChevronDown className="w-4 h-4 text-slate-500" />
                     )}
                   </div>
                 </div>
@@ -619,7 +621,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                             <span className="font-bold text-emerald-900 dark:text-emerald-200">
                               {customerDiscount.title}
                             </span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-200/80 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300">
+                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-200/80 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300">
                               {customerDiscount.badge}
                             </span>
                           </div>
@@ -658,7 +660,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                                     <span className="font-bold text-slate-900 dark:text-slate-100">
                                       {suggestion.title}
                                     </span>
-                                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                    <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                                       {suggestion.badge}
                                     </span>
                                   </div>
@@ -666,7 +668,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                                     {suggestion.reason}
                                   </p>
                                   {!suggestion.isApplicable && suggestion.unmetSpendAmount && suggestion.unmetSpendAmount > 0 && (
-                                    <p className="text-[9px] text-amber-600 dark:text-amber-400 font-semibold pt-0.5">
+                                    <p className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold pt-0.5">
                                       Belanja kurang {formatCurrency(suggestion.unmetSpendAmount, settings.currency)} untuk dapat menggunakan promo ini.
                                     </p>
                                   )}
@@ -681,7 +683,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                                     <button
                                       type="button"
                                       onClick={() => removeCustomerDiscount()}
-                                      className="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+                                      className="px-2 py-0.5 rounded-md bg-emerald-700 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer"
                                     >
                                       <Check className="w-3 h-3" />
                                       <span>Terpasang</span>
@@ -694,7 +696,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                                       className={`px-2 py-0.5 rounded-md font-bold text-[10px] transition-all cursor-pointer ${
                                         suggestion.isApplicable
                                           ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xs active:scale-95'
-                                          : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                                          : 'bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-not-allowed'
                                       }`}
                                     >
                                       Terapkan
@@ -706,7 +708,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                           );
                         })
                       ) : (
-                        <p className="text-[10px] text-slate-400 italic text-center py-2">
+                        <p className="text-[10px] text-slate-500 italic text-center py-2">
                           Belum ada diskon riwayat yang cocok untuk produk di keranjang saat ini.
                         </p>
                       )}
@@ -809,7 +811,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     {/* Stepper / Input */}
                     <div className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900/90 p-1.5 rounded-lg border border-amber-200/80 dark:border-amber-900/60">
                       <div className="flex items-center gap-1.5 flex-1">
-                        <span className="text-[10px] text-slate-400">Poin Ditukar:</span>
+                        <span className="text-[10px] text-slate-500">Poin Ditukar:</span>
                         <input
                           type="number"
                           min={0}
@@ -820,14 +822,14 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                             const val = e.target.value === '' ? 0 : Number(e.target.value);
                             setPointsToRedeem(Math.min(maxRedeemablePoints, Math.max(0, Math.floor(val))));
                           }}
-                          className="w-20 px-2 py-0.5 text-xs font-mono font-bold rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          className="w-20 px-2 py-0.5 text-xs font-mono font-bold rounded border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-amber-500"
                           placeholder="0"
                         />
                         <span className="text-[10px] text-slate-500">Pts</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] text-slate-400 block leading-tight">Potongan:</span>
-                        <span className="font-bold font-mono text-xs text-amber-600 dark:text-amber-400">
+                        <span className="text-[10px] text-slate-500 block leading-tight">Potongan:</span>
+                        <span className="font-bold font-mono text-xs text-amber-700 dark:text-amber-400">
                           -{formatCurrency(pointsDiscount, settings.currency)}
                         </span>
                       </div>
@@ -835,7 +837,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
 
                     <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
                       <span>Sisa Poin: <strong className="text-slate-700 dark:text-slate-300">{Math.max(0, selectedCustomer.points - pointsToRedeem)}</strong> pts</span>
-                      <span>Dapat Belanja Ini: <strong className="text-emerald-600 dark:text-emerald-400">+{estimatedPoints}</strong> pts</span>
+                      <span>Dapat Belanja Ini: <strong className="text-emerald-700 dark:text-emerald-400">+{estimatedPoints}</strong> pts</span>
                     </div>
                   </div>
                 )}
@@ -846,7 +848,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   <Award className="w-3.5 h-3.5 text-amber-500" />
                   <span>Member: <strong>{selectedCustomer.name}</strong> ({selectedCustomer.points} Poin)</span>
                 </div>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">
                   + {estimatedPoints} Poin transaksi ini
                 </span>
               </div>
@@ -860,7 +862,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   <User className="w-3.5 h-3.5 text-emerald-500" />
                   <span>Pilih member untuk klaim diskon poin loyalitas</span>
                 </span>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Pilih Member &rarr;</span>
+                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">Pilih Member &rarr;</span>
               </button>
             )}
           </div>
@@ -886,7 +888,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
           )}
 
           {voucherDiscount > 0 && appliedVoucher && (
-            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
+            <div className="flex justify-between text-emerald-700 dark:text-emerald-400 font-medium">
               <span className="flex items-center gap-1">
                 <Tag className="w-3.5 h-3.5 text-emerald-500" />
                 <span>Voucher Promo ({appliedVoucher.code})</span>
@@ -896,7 +898,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
           )}
 
           {pointsDiscount > 0 && (
-            <div className="flex justify-between text-amber-600 dark:text-amber-400 font-medium">
+            <div className="flex justify-between text-amber-700 dark:text-amber-400 font-medium">
               <span className="flex items-center gap-1">
                 <Award className="w-3.5 h-3.5 text-amber-500" />
                 <span>Poin Loyalitas ({pointsToRedeem} Pts)</span>
@@ -906,7 +908,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
           )}
 
           {totalDiscount > 0 && (
-            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold border-t border-dashed border-slate-200 dark:border-slate-800 pt-1">
+            <div className="flex justify-between text-emerald-700 dark:text-emerald-400 font-semibold border-t border-dashed border-slate-200 dark:border-slate-800 pt-1">
               <span>Total Diskon</span>
               <span className="font-mono">-{formatCurrency(totalDiscount, settings.currency)}</span>
             </div>
@@ -925,13 +927,13 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
 
               <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 text-[10px]">
                 <span>Estimasi Poin Diperoleh:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
                   +{estimatedPoints} Poin
                 </span>
               </div>
 
               {nonEligibleSpend > 0 && (
-                <p className="hidden sm:flex text-[9px] text-amber-700 dark:text-amber-400/90 leading-tight pt-0.5 items-start gap-1">
+                <p className="hidden sm:flex text-[10px] text-amber-700 dark:text-amber-400/90 leading-tight pt-0.5 items-start gap-1">
                   <AlertTriangle className="w-2.5 h-2.5 text-amber-500 shrink-0 mt-0.5" />
                   <span>
                     Item senilai {formatCurrency(nonEligibleSpend)} memiliki margin &lt;15% (rokok/promo margin tipis) sehingga tidak dihitung dalam akumulasi poin member.
@@ -944,7 +946,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
           {/* Grand Total */}
           <div className="flex justify-between items-baseline pt-2 border-t border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
             <span className="font-bold text-sm">Total Tagihan</span>
-            <span className="font-black text-lg text-emerald-600 dark:text-emerald-400 font-mono">
+            <span className="font-black text-lg text-emerald-700 dark:text-emerald-400 font-mono">
               {formatCurrency(finalTotal, settings.currency)}
             </span>
           </div>
@@ -953,7 +955,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
         {/* Cart Action Buttons: Clear, Hold (F4), Pay (F9) */}
         <div className="grid grid-cols-4 gap-2 pt-1">
           {/* Clear Cart */}
-          <button
+          <button aria-label="Kosongkan seluruh isi keranjang"
             type="button"
             id="btn-clear-cart"
             onClick={clearCart}

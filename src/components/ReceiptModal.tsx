@@ -216,7 +216,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             onClick={onClose}
             data-testid="receipt-close"
             aria-label="Tutup struk"
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -227,7 +227,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-slate-500 dark:text-slate-400 font-medium text-[11px]">Metode Cetak:</span>
             <div className="flex items-center p-0.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
-              <button
+              <button aria-pressed={printMode === 'browser'}
                 type="button"
                 onClick={() => setPrintMode('browser')}
                 className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
@@ -241,12 +241,12 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               </button>
 
               {hardwareSupport.hasSerial && (
-                <button
+                <button aria-pressed={printMode === 'serial'}
                   type="button"
                   onClick={() => setPrintMode('serial')}
                   className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
                     printMode === 'serial'
-                      ? 'bg-emerald-600 text-white shadow-2xs'
+                      ? 'bg-emerald-700 text-white shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600'
                   }`}
                   title="Direct ESC/POS via USB/Serial Virtual COM Port"
@@ -257,7 +257,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               )}
 
               {hardwareSupport.hasBluetooth && (
-                <button
+                <button aria-pressed={printMode === 'bluetooth'}
                   type="button"
                   onClick={() => setPrintMode('bluetooth')}
                   className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
@@ -307,7 +307,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             }`}
             title="Otomatis picu dialog cetak thermal saat transaksi pembayaran selesai"
           >
-            <input
+            <input aria-label="Cetak struk otomatis"
               type="checkbox"
               id="toolbar-auto-print-receipt-toggle"
               checked={settings.autoPrintReceipt !== false}
@@ -316,7 +316,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 updateSettings({ autoPrintReceipt: val });
                 savePrinterConfig({ ...getSavedPrinterConfig(), autoPrintReceipt: val });
               }}
-              className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              className="w-3.5 h-3.5 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer"
             />
             <Zap className="w-3 h-3 text-amber-500" />
             <span>Auto-Cetak</span>
@@ -325,7 +325,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
         {/* Feedback Alert Banner */}
         {printerFeedback && (
-          <div
+          <div role="status"
             className={`px-4 py-2 text-xs flex items-center justify-between border-b ${
               printerFeedback.type === 'success'
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
@@ -336,13 +336,13 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               {printerFeedback.type === 'success' ? (
                 <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
               ) : (
-                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               )}
               <span>{printerFeedback.message}</span>
             </div>
-            <button
+            <button aria-label="Tutup"
               onClick={() => setPrinterFeedback(null)}
-              className="p-1 hover:opacity-70 cursor-pointer"
+              className="p-1.5 hover:opacity-70 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -425,12 +425,12 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                     </span>
                   </div>
                   {item.selectedOptions && item.selectedOptions.length > 0 && (
-                    <div className="text-[9px] text-slate-500 pl-2 italic">
+                    <div className="text-[10px] text-slate-500 pl-2 italic">
                       + {item.selectedOptions.map((o) => o.choiceName).join(', ')}
                     </div>
                   )}
                   {item.notes && (
-                    <div className="text-[9px] text-slate-500 pl-2 italic">Note: {item.notes}</div>
+                    <div className="text-[10px] text-slate-500 pl-2 italic">Note: {item.notes}</div>
                   )}
                 </div>
               ))}
@@ -523,7 +523,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                     />
                   ))}
                 </div>
-                <span className="text-[9px] tracking-widest text-slate-500 mt-0.5">
+                <span className="text-[10px] tracking-widest text-slate-500 mt-0.5">
                   {transaction.invoiceNumber}
                 </span>
               </div>
@@ -540,10 +540,10 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               id="btn-print-thermal-receipt"
               className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 transition-all ${
                 printMode === 'serial'
-                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                  ? 'bg-emerald-700 hover:bg-emerald-500 text-white'
                   : printMode === 'bluetooth'
                   ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                  : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+                  : 'bg-emerald-700 hover:bg-emerald-400 text-slate-950'
               } disabled:opacity-50`}
             >
               <Printer className={`w-4 h-4 ${directPrinting ? 'animate-bounce' : ''}`} />
@@ -569,7 +569,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               <span className="hidden sm:inline">Buka Laci</span>
             </button>
 
-            <button
+            <button aria-label="Buka struk di jendela cetak baru"
               onClick={handleOpenReceiptTab}
               className="px-2.5 py-2 rounded-xl text-xs border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-850 cursor-pointer"
               title="Buka struk di jendela cetak baru"
@@ -586,7 +586,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               }`}
               title="Picu dialog cetak thermal secara otomatis setelah transaksi pembayaran sukses"
             >
-              <input
+              <input aria-label="Cetak struk otomatis"
                 type="checkbox"
                 id="footer-auto-print-receipt-toggle"
                 checked={settings.autoPrintReceipt !== false}
@@ -595,7 +595,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   updateSettings({ autoPrintReceipt: val });
                   savePrinterConfig({ ...getSavedPrinterConfig(), autoPrintReceipt: val });
                 }}
-                className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                className="w-3.5 h-3.5 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer"
               />
               <Zap className="w-3.5 h-3.5 text-amber-500" />
               <span className="hidden md:inline font-semibold">Auto-Cetak</span>
@@ -609,7 +609,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               <span>{whatsappSent ? 'Sent to WhatsApp!' : 'WhatsApp'}</span>
             </button>
 
-            <button
+            <button aria-label="Copy Invoice ID"
               onClick={handleCopyInvoice}
               className="px-2.5 py-2 rounded-xl text-xs border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-850 cursor-pointer"
               title="Copy Invoice ID"

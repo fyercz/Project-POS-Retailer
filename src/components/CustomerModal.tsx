@@ -17,6 +17,7 @@ import {
 import { usePOS } from '../context/POSContext';
 import { Customer, MemberTier } from '../types';
 import { formatCurrency } from '../utils/formatters';
+import { activateOnKey } from '../utils/a11y';
 
 interface CustomerModalProps {
   isOpen: boolean;
@@ -100,9 +101,9 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -134,7 +135,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
             <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-slate-900 border-b border-amber-200 dark:border-amber-900/40 flex items-center justify-between">
               <div>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Saldo Poin Aktif</span>
-                <div className="text-xl font-black font-mono text-amber-600 dark:text-amber-400 flex items-baseline gap-1.5">
+                <div className="text-xl font-black font-mono text-amber-700 dark:text-amber-400 flex items-baseline gap-1.5">
                   <span>{viewingCustomerLedger.points.toLocaleString()}</span>
                   <span className="text-xs font-semibold">Pts</span>
                 </div>
@@ -184,7 +185,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                           <p className="font-semibold text-slate-900 dark:text-slate-100 leading-tight">
                             {item.description}
                           </p>
-                          <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-1">
+                          <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-1">
                             <span className="flex items-center gap-1 font-mono">
                               <Clock className="w-2.5 h-2.5" />
                               {item.date ? item.date.slice(0, 16).replace('T', ' ') : '-'}
@@ -200,13 +201,13 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                         <span
                           className={`font-mono font-bold block ${
                             isPositive
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-amber-600 dark:text-amber-400'
+                              ? 'text-emerald-700 dark:text-emerald-400'
+                              : 'text-amber-700 dark:text-amber-400'
                           }`}
                         >
                           {isPositive ? `+${item.points}` : item.points} Pts
                         </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-[10px] text-slate-500 font-mono">
                           Saldo: {item.balanceAfter}
                         </span>
                       </div>
@@ -214,7 +215,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                   );
                 })
               ) : (
-                <div className="text-center py-8 text-slate-400 text-xs">
+                <div className="text-center py-8 text-slate-500 text-xs">
                   Belum ada catatan riwayat poin untuk member ini.
                 </div>
               )}
@@ -224,7 +225,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
           <>
             {/* Tab switcher */}
             <div className="p-3 border-b border-slate-200 dark:border-slate-800 grid grid-cols-2 gap-2 bg-slate-50/50 dark:bg-slate-950">
-              <button
+              <button aria-pressed={activeTab === 'select'}
                 onClick={() => setActiveTab('select')}
                 className={`py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                   activeTab === 'select'
@@ -234,7 +235,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
               >
                 Pilih Member Terdaftar
               </button>
-              <button
+              <button aria-pressed={activeTab === 'new'}
                 onClick={() => setActiveTab('new')}
                 className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                   activeTab === 'new'
@@ -252,18 +253,18 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
               <div className="p-4 flex-1 overflow-y-auto space-y-3">
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input aria-label="Cari nama member, nomor WhatsApp..."
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Cari nama member, nomor WhatsApp..."
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-500 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
 
                 {/* Guest / Walk-in Quick Option */}
-                <div
+                <div role="button" tabIndex={0} onKeyDown={activateOnKey}
                   onClick={() => {
                     setSelectedCustomer(null);
                     onClose();
@@ -276,11 +277,11 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                 >
                   <div>
                     <p className="font-bold">Pelanggan Umum (Non-Member / Walk-in)</p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
                       Transaksi langsung tanpa pemakaian/perolehan poin
                     </p>
                   </div>
-                  {selectedCustomer === null && <Check className="w-4 h-4 text-emerald-600" />}
+                  {selectedCustomer === null && <Check className="w-4 h-4 text-emerald-700" />}
                 </div>
 
                 {/* Member List */}
@@ -296,7 +297,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                             : 'border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200'
                         }`}
                       >
-                        <div
+                        <div role="button" tabIndex={0} onKeyDown={activateOnKey}
                           className="flex-1 cursor-pointer"
                           onClick={() => {
                             setSelectedCustomer(cust);
@@ -314,7 +315,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                               <Phone className="w-3 h-3" />
                               {cust.phone}
                             </span>
-                            <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400 font-mono">
+                            <span className="flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400 font-mono">
                               <Award className="w-3 h-3" />
                               {cust.points} Pts ({formatCurrency(cust.points * redemptionRate, settings.currency)})
                             </span>
@@ -343,8 +344,8 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                             }}
                             className={`px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer ${
                               isSelected
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+                                ? 'bg-emerald-700 text-white'
+                                : 'bg-emerald-700 hover:bg-emerald-400 text-slate-950'
                             }`}
                           >
                             {isSelected ? 'Dipilih' : 'Pilih'}
@@ -361,13 +362,13 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Nama Lengkap Member *
                   </label>
-                  <input
+                  <input aria-label="Nama Lengkap Member"
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Contoh: Budi Santoso"
-                    className="w-full p-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full p-2.5 text-xs rounded-xl border border-slate-500 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
 
@@ -375,13 +376,13 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Nomor Handphone / WhatsApp *
                   </label>
-                  <input
+                  <input aria-label="Nomor Handphone / WhatsApp"
                     type="tel"
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Contoh: 0812-3456-7890"
-                    className="w-full p-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                    className="w-full p-2.5 text-xs rounded-xl border border-slate-500 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
                   />
                 </div>
 
@@ -389,12 +390,12 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Email (Opsional)
                   </label>
-                  <input
+                  <input aria-label="Email (Opsional)"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="member@email.com"
-                    className="w-full p-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full p-2.5 text-xs rounded-xl border border-slate-500 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
 
@@ -403,10 +404,10 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Tier Member Awal
                     </label>
-                    <select
+                    <select aria-label="Tier Member Awal"
                       value={tier}
                       onChange={(e) => setTier(e.target.value as MemberTier)}
-                      className="w-full p-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full p-2.5 text-xs rounded-xl border border-slate-500 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     >
                       <option value="Bronze">Bronze (1x Poin)</option>
                       <option value="Silver">Silver (1.2x Poin)</option>
@@ -419,7 +420,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Bonus Poin Sambutan
                     </label>
-                    <input
+                    <input aria-label="Bonus Poin Sambutan"
                       type="number"
                       min={0}
                       step={5}
@@ -427,9 +428,9 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                       onChange={(e) => setInitialPoints(Math.max(0, Number(e.target.value) || 0))}
                       disabled={!canAdjustBonus}
                       title={canAdjustBonus ? undefined : 'Diatur pemilik di Pengaturan Toko'}
-                      className="w-full p-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full p-2.5 text-xs rounded-xl border border-slate-500 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono disabled:opacity-60 disabled:cursor-not-allowed"
                     />
-                    <p className="text-[10px] text-slate-400 mt-1">
+                    <p className="text-[10px] text-slate-500 mt-1">
                       {canAdjustBonus ? 'Bawaan dari Pengaturan Toko' : 'Diatur pemilik di Pengaturan Toko'}
                     </p>
                   </div>

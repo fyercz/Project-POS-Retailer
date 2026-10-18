@@ -164,9 +164,9 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -177,21 +177,21 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
           {/* Company Name */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Nama Perusahaan / Supplier / Distributor <span className="text-rose-500">*</span>
+              Nama Perusahaan / Supplier / Distributor <span className="text-rose-600">*</span>
             </label>
             <div className="relative">
-              <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
+              <Building2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'err-supplierformmodal-name' : undefined} aria-label="Nama Perusahaan / Supplier / Distributor"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Contoh: PT Indomarco Adi Prima, CV Sumber Berkah..."
                 className={`w-full pl-9 pr-3 py-2 text-sm rounded-xl border ${
-                  errors.name ? 'border-rose-500 bg-rose-50/20' : 'border-slate-300 dark:border-slate-700'
+                  errors.name ? 'border-rose-500 bg-rose-50/20' : 'border-slate-500 dark:border-slate-700'
                 } bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none`}
               />
             </div>
-            {errors.name && <p className="text-[11px] text-rose-500 mt-1">{errors.name}</p>}
+            {errors.name && <p id="err-supplierformmodal-name" role="alert" className="text-[11px] text-rose-600 mt-1">{errors.name}</p>}
           </div>
 
           {/* Contact Person & Phone */}
@@ -200,27 +200,27 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Nama Kontak / Sales Representative (PIC)
               </label>
-              <input
+              <input aria-label="Nama Kontak / Sales Representative (PIC)"
                 type="text"
                 value={contactPerson}
                 onChange={(e) => setContactPerson(e.target.value)}
                 placeholder="Contoh: Budi Santoso (Sales)"
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Nomor Telepon / WhatsApp <span className="text-slate-400 font-normal">(Opsional)</span>
+                Nomor Telepon / WhatsApp <span className="text-slate-500 font-normal">(Opsional)</span>
               </label>
               <div className="relative">
-                <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
+                <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input aria-label="Nomor Telepon / WhatsApp (Opsional)"
                   type="text"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="0812-3456-7890 atau 021-55667788 (Opsional)"
-                  className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -233,13 +233,13 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                 Email Kontak (Opsional)
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input aria-label="Email Kontak (Opsional)"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="order@distributor.co.id"
-                  className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -248,10 +248,10 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Kategori Pasokan Produk
               </label>
-              <select
+              <select aria-label="Kategori Pasokan Produk"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
               >
                 <option value="">-- Pilih kategori (opsional) --</option>
                 {CATEGORY_PRESETS.map((cat, idx) => (
@@ -270,11 +270,11 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                 Termin Pembayaran Default
               </label>
               <div className="relative">
-                <CreditCard className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <select
+                <CreditCard className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <select aria-label="Termin Pembayaran Default"
                   value={paymentTerms}
                   onChange={(e) => setPaymentTerms(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
+                  className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
                 >
                   {PAYMENT_TERMS_OPTIONS.map((term, idx) => (
                     <option key={idx} value={term}>
@@ -290,15 +290,15 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                 Lead Time (Hari Kirim)
               </label>
               <div className="relative">
-                <Clock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
+                <Clock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input aria-label="Lead Time (Hari Kirim)"
                   type="number"
                   min={1}
                   max={60}
                   value={leadTimeDays || ''}
                   onChange={(e) => setLeadTimeDays(Number(e.target.value))}
                   placeholder="Opsional"
-                  className="w-full pl-9 pr-3 py-2 text-sm font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full pl-9 pr-3 py-2 text-sm font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -310,13 +310,13 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
               Alamat Kantor / Gudang Distribusi
             </label>
             <div className="relative">
-              <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <textarea
+              <MapPin className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+              <textarea aria-label="Alamat Kantor / Gudang Distribusi"
                 rows={2}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Jl. Kawasan Industri Pulogadung Blok B No. 12, Jakarta Timur..."
-                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
           </div>
@@ -326,12 +326,12 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Catatan / Ketentuan Khusus
             </label>
-            <textarea
+            <textarea aria-label="Catatan / Ketentuan Khusus"
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Jadwal pengiriman rutin, minimal order pembelian, kebijakan retur barang rusak..."
-              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
 

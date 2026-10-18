@@ -809,9 +809,9 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
             </div>
           </div>
 
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -825,10 +825,10 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               <FileText className="w-3.5 h-3.5" />
               <span>Tipe Laporan:</span>
             </label>
-            <select
+            <select aria-label="Tipe Laporan"
               value={reportType}
               onChange={(e) => setReportType(e.target.value as ReportType)}
-              className="w-full text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="w-full text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 cursor-pointer"
             >
               <option value="summary">📊 Ringkasan Penjualan & Laba Kotor</option>
               <option value="transactions">🧾 Rincian Transaksi Selesai</option>
@@ -843,10 +843,10 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               <Calendar className="w-3.5 h-3.5" />
               <span>Rentang Waktu:</span>
             </label>
-            <select
+            <select aria-label="Rentang Waktu"
               value={period}
               onChange={(e) => setPeriod(e.target.value as PeriodFilter)}
-              className="w-full text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="w-full text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 cursor-pointer"
             >
               <option value="today">📅 Hari Ini (Real-Time)</option>
               <option value="yesterday">⏪ Kemarin</option>
@@ -864,7 +864,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               <span>Ukuran Kertas:</span>
             </label>
             <div className="grid grid-cols-3 gap-1">
-              <button
+              <button aria-pressed={paperFormat === 'a4'}
                 type="button"
                 onClick={() => setPaperFormat('a4')}
                 className={`px-2 py-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
@@ -875,7 +875,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               >
                 A4 / PDF
               </button>
-              <button
+              <button aria-pressed={paperFormat === '80mm'}
                 type="button"
                 onClick={() => setPaperFormat('80mm')}
                 className={`px-2 py-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
@@ -886,7 +886,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               >
                 80mm
               </button>
-              <button
+              <button aria-pressed={paperFormat === '58mm'}
                 type="button"
                 onClick={() => setPaperFormat('58mm')}
                 className={`px-2 py-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
@@ -931,7 +931,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               onClick={handleExportCSV}
               className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
               <span>Ekspor Excel (CSV)</span>
             </button>
           </div>

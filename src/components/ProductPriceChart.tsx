@@ -18,7 +18,7 @@ export const ProductPriceChart: React.FC<ProductPriceChartProps> = ({
   // If history is empty
   if (!history || history.length === 0) {
     return (
-      <div className="h-64 flex flex-col items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-300 dark:border-slate-800 text-slate-400 text-xs">
+      <div className="h-64 flex flex-col items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-300 dark:border-slate-800 text-slate-500 text-xs">
         <p>Belum ada data riwayat harga yang tercatat.</p>
       </div>
     );
@@ -132,11 +132,11 @@ export const ProductPriceChart: React.FC<ProductPriceChartProps> = ({
           <span className="text-[11px] text-slate-500 dark:text-slate-400">
             {formatDate(activeRecord.date)}:
           </span>
-          <span className="font-bold text-emerald-600 dark:text-emerald-400">
+          <span className="font-bold text-emerald-700 dark:text-emerald-400">
             Jual: {formatCurrency(activeRecord.sellingPrice, currency)}
           </span>
           <span className="text-slate-300 dark:text-slate-700">|</span>
-          <span className="font-bold text-amber-600 dark:text-amber-400">
+          <span className="font-bold text-amber-700 dark:text-amber-400">
             Modal: {formatCurrency(activeRecord.costPrice, currency)}
           </span>
           <span className="text-slate-300 dark:text-slate-700">|</span>

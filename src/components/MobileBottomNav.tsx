@@ -42,7 +42,7 @@ export const MobileBottomNav: React.FC = () => {
               onClick={() => setActiveView(item.id)}
               className={`relative flex flex-col items-center justify-center py-1 transition-all select-none cursor-pointer ${
                 isActive
-                  ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                  ? 'text-emerald-700 dark:text-emerald-400 font-bold'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-medium'
               }`}
             >
@@ -56,7 +56,7 @@ export const MobileBottomNav: React.FC = () => {
 
                 {/* Cart Badge */}
                 {item.id === 'pos' && totalCartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 px-1.5 min-w-[16px] h-4 rounded-full bg-emerald-500 text-slate-950 font-mono font-black text-[9px] flex items-center justify-center shadow-xs">
+                  <span className="absolute -top-1.5 -right-2 px-1.5 min-w-[16px] h-4 rounded-full bg-emerald-500 text-slate-950 font-mono font-black text-[10px] flex items-center justify-center shadow-xs">
                     {totalCartCount > 99 ? '99+' : totalCartCount}
                   </span>
                 )}

@@ -4,6 +4,7 @@ import { Product, WholesaleUnit, CurrencyType } from '../types';
 import { usePOSCartActions } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { ProductCustomizerModal } from './ProductCustomizerModal';
+import { activateOnKey } from '../utils/a11y';
 
 interface ProductCardProps {
   product: Product;
@@ -49,7 +50,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
   return (
     <>
-      <div
+      <div role="button" tabIndex={0} onKeyDown={activateOnKey}
         id={`product-card-${product.id}`}
         onClick={handleCardClick}
         className={`group relative rounded-xl border transition-all duration-150 p-3.5 flex flex-col justify-between cursor-pointer select-none
@@ -63,7 +64,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         {/* Card Header: Brand/Category & Badges */}
         <div>
           <div className="flex items-start justify-between gap-1 mb-1.5">
-            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 truncate uppercase tracking-wider">
               {product.brand || product.sku}
             </span>
 
@@ -74,25 +75,25 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                 </span>
               )}
               {hasWholesale && (
-                <span className="flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                   <Boxes className="w-2.5 h-2.5 text-emerald-500" />
                   Grosir
                 </span>
               )}
               {product.isPopular && (
-                <span className="flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                   <Flame className="w-2.5 h-2.5 fill-current text-amber-500" />
                   Hot
                 </span>
               )}
               {isLowStock && (
-                <span className="flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                  <AlertTriangle className="w-2.5 h-2.5 text-rose-500" />
+                <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                  <AlertTriangle className="w-2.5 h-2.5 text-rose-600" />
                   Sisa {product.stock}
                 </span>
               )}
               {isOutOfStock && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400">
                   Habis
                 </span>
               )}
@@ -113,7 +114,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               </span>
             </div>
             {product.expiryDate && (
-              <div className="flex items-center justify-end text-[9px] text-slate-400">
+              <div className="flex items-center justify-end text-[10px] text-slate-500">
                 <span>Exp: {product.expiryDate}</span>
               </div>
             )}
@@ -123,15 +124,15 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         {/* Card Footer: Price & Add Button */}
         <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between relative">
           <div>
-            <span className="text-[10px] text-slate-400 block font-medium">Harga Eceran</span>
-            <span className="font-black text-sm text-emerald-600 dark:text-emerald-400 font-mono">
+            <span className="text-[10px] text-slate-500 block font-medium">Harga Eceran</span>
+            <span className="font-black text-sm text-emerald-700 dark:text-emerald-400 font-mono">
               {formatCurrency(product.price, currency)}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
             {hasOptions && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium flex items-center gap-1">
+              <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium flex items-center gap-1">
                 <SlidersHorizontal className="w-2.5 h-2.5 text-emerald-500" />
                 Varian
               </span>
@@ -148,7 +149,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                   className="px-2 py-1 text-[10px] font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1 cursor-pointer transition-colors"
                   title="Pilih Kemasan Grosir"
                 >
-                  <Boxes className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <Boxes className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
                   <span>Grosir</span>
                 </button>
 
@@ -171,11 +172,11 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                           <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">
                             {wu.name}
                           </div>
-                          <div className="text-[9px] text-slate-400">
+                          <div className="text-[10px] text-slate-500">
                             Isi {wu.multiplier} {product.unit}
                           </div>
                         </div>
-                        <div className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]">
+                        <div className="font-bold text-emerald-700 dark:text-emerald-400 font-mono text-[11px]">
                           {formatCurrency(wu.price, currency)}
                         </div>
                       </button>

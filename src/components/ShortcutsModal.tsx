@@ -35,9 +35,9 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
               POS Keyboard Shortcuts
             </h3>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -56,7 +56,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Icon className={`w-4 h-4 ${sc.highlight ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${sc.highlight ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'}`} />
                   <span className="font-medium">{sc.action}</span>
                 </div>
                 <kbd className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono font-bold shadow-2xs">

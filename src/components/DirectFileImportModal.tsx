@@ -19,6 +19,7 @@ import { usePOS } from '../context/POSContext';
 import { formatCurrency } from '../utils/formatters';
 import { parseRetailLineRaw, parseFullCSVText, ParsedItem } from '../utils/retailNormalizer';
 import { downloadCategoryGuideCSV, downloadCategoryGuideTXT } from '../data/categoryGuide';
+import { activateOnKey } from '../utils/a11y';
 
 interface DirectFileImportModalProps {
   isOpen: boolean;
@@ -172,7 +173,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
         {/* Modal Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-600 text-white shadow-md">
+            <div className="p-2.5 rounded-xl bg-emerald-700 text-white shadow-md">
               <Upload className="w-5 h-5" />
             </div>
             <div>
@@ -189,9 +190,9 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -200,8 +201,8 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           {successMessage && (
-            <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 flex items-center gap-2 text-sm font-semibold">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div role="status" className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 flex items-center gap-2 text-sm font-semibold">
+              <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
@@ -209,7 +210,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
           {/* Upload Area & Quick Controls */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Drag & Drop File Upload */}
-            <div
+            <div role="button" tabIndex={0} onKeyDown={activateOnKey}
               onClick={() => fileInputRef.current?.click()}
               className="md:col-span-2 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 rounded-2xl p-5 bg-slate-50/50 dark:bg-slate-800/30 flex flex-col items-center justify-center text-center cursor-pointer transition-colors group"
             >
@@ -249,7 +250,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                   onClick={handleDownloadSample}
                   className="w-full py-2 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 cursor-pointer transition"
                 >
-                  <Download className="w-3.5 h-3.5 text-emerald-600" />
+                  <Download className="w-3.5 h-3.5 text-emerald-700" />
                   <span>Unduh Contoh CSV</span>
                 </button>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -259,7 +260,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                     className="py-1.5 px-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 flex items-center justify-center gap-1 cursor-pointer transition"
                     title="Simpan tabel format kategori resmi sebagai berkas CSV"
                   >
-                    <Download className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    <Download className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
                     <span>Format Kategori (CSV)</span>
                   </button>
                   <button
@@ -288,7 +289,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
           <details className="rounded-xl border border-slate-200 dark:border-slate-800 p-3 bg-white dark:bg-slate-950 text-xs">
             <summary className="font-bold text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-2">
               <span>Atau Tempel / Ketik Teks CSV Langsung</span>
-              <span className="text-[10px] text-slate-400 font-normal">
+              <span className="text-[10px] text-slate-500 font-normal">
                 ({rawText ? `${rawText.split('\n').filter((l) => l.trim()).length} baris` : 'Kosong'})
               </span>
             </summary>
@@ -298,7 +299,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                 value={rawText}
                 onChange={(e) => setRawText(e.target.value)}
                 placeholder={`8999999190112, Indomie Goreng Spesial 80g, 2700, 3100, 120\n8992775211029, Bimoli Minyak Goreng 2L, 33500, 38500, 36`}
-                className="w-full font-mono text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-emerald-500 text-slate-800 dark:text-slate-200"
+                className="w-full font-mono text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-500 dark:border-slate-800 focus:outline-emerald-500 text-slate-800 dark:text-slate-200"
               />
             </div>
           </details>
@@ -314,22 +315,22 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                     className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
                   >
                     {totalSelected === itemsState.length && itemsState.length > 0 ? (
-                      <CheckSquare className="w-4 h-4 text-emerald-600" />
+                      <CheckSquare className="w-4 h-4 text-emerald-700" />
                     ) : (
-                      <Square className="w-4 h-4 text-slate-400" />
+                      <Square className="w-4 h-4 text-slate-500" />
                     )}
                     <span>Pilih Semua ({totalSelected}/{itemsState.length})</span>
                   </button>
                 </div>
 
                 <div className="relative flex-1 max-w-xs">
-                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
-                  <input
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-500" />
+                  <input aria-label="Cari nama/barcode..."
                     type="text"
                     value={filterQuery}
                     onChange={(e) => setFilterQuery(e.target.value)}
                     placeholder="Cari nama/barcode..."
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-emerald-500"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-emerald-500"
                   />
                 </div>
               </div>
@@ -357,63 +358,63 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                         }`}
                       >
                         <td className="py-2 px-3 text-center">
-                          <button
+                          <button aria-label="Pilih"
                             type="button"
                             onClick={() => handleToggleSelect(item.id)}
-                            className="cursor-pointer text-slate-400 hover:text-emerald-600"
+                            className="cursor-pointer text-slate-500 hover:text-emerald-600"
                           >
                             {item.selected ? (
-                              <CheckSquare className="w-4 h-4 text-emerald-600" />
+                              <CheckSquare className="w-4 h-4 text-emerald-700" />
                             ) : (
                               <Square className="w-4 h-4" />
                             )}
                           </button>
                         </td>
                         <td className="py-2 px-3 font-mono text-slate-600 dark:text-slate-400">
-                          <input
+                          <input aria-label="Barcode"
                             type="text"
                             value={item.barcode}
                             onChange={(e) => handleFieldChange(item.id, 'barcode', e.target.value)}
-                            className="w-32 bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 py-0.5 focus:outline-emerald-500"
+                            className="w-32 bg-transparent border-b border-dashed border-slate-500 dark:border-slate-700 py-0.5 focus:outline-emerald-500"
                           />
                         </td>
                         <td className="py-2 px-3 font-bold text-slate-900 dark:text-white">
-                          <input
+                          <input aria-label="Nama produk"
                             type="text"
                             value={item.name}
                             onChange={(e) => handleFieldChange(item.id, 'name', e.target.value)}
-                            className="w-full bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 py-0.5 focus:outline-emerald-500"
+                            className="w-full bg-transparent border-b border-dashed border-slate-500 dark:border-slate-700 py-0.5 focus:outline-emerald-500"
                           />
                         </td>
                         <td className="py-2 px-3">
-                          <input
+                          <input aria-label="Harga modal"
                             type="number"
                             value={item.costPrice}
                             onChange={(e) => handleFieldChange(item.id, 'costPrice', Number(e.target.value))}
-                            className="w-24 bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 py-0.5 focus:outline-emerald-500 font-mono text-right"
+                            className="w-24 bg-transparent border-b border-dashed border-slate-500 dark:border-slate-700 py-0.5 focus:outline-emerald-500 font-mono text-right"
                           />
                         </td>
-                        <td className="py-2 px-3 font-bold text-emerald-600 dark:text-emerald-400">
-                          <input
+                        <td className="py-2 px-3 font-bold text-emerald-700 dark:text-emerald-400">
+                          <input aria-label="Harga jual"
                             type="number"
                             value={item.price}
                             onChange={(e) => handleFieldChange(item.id, 'price', Number(e.target.value))}
-                            className="w-24 bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 py-0.5 focus:outline-emerald-500 font-mono text-right"
+                            className="w-24 bg-transparent border-b border-dashed border-slate-500 dark:border-slate-700 py-0.5 focus:outline-emerald-500 font-mono text-right"
                           />
                         </td>
                         <td className="py-2 px-3">
-                          <input
+                          <input aria-label="Stok"
                             type="number"
                             value={item.stock}
                             onChange={(e) => handleFieldChange(item.id, 'stock', Number(e.target.value))}
-                            className="w-16 bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 py-0.5 focus:outline-emerald-500 font-mono text-right"
+                            className="w-16 bg-transparent border-b border-dashed border-slate-500 dark:border-slate-700 py-0.5 focus:outline-emerald-500 font-mono text-right"
                           />
                         </td>
                         <td className="py-2 px-3 text-center">
-                          <button
+                          <button aria-label="Hapus baris"
                             type="button"
                             onClick={() => handleDeleteItem(item.id)}
-                            className="p-1 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                            className="p-1.5 rounded text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
                             title="Hapus baris"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -426,12 +427,12 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
               </div>
             </div>
           ) : (
-            <div className="py-12 flex flex-col items-center justify-center text-center text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-              <Package className="w-10 h-10 mb-2 opacity-40 text-slate-400" />
+            <div className="py-12 flex flex-col items-center justify-center text-center text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+              <Package className="w-10 h-10 mb-2 opacity-40 text-slate-500" />
               <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
                 Belum ada data file yang dimuat
               </p>
-              <p className="text-xs text-slate-400 mt-1 max-w-sm">
+              <p className="text-xs text-slate-500 mt-1 max-w-sm">
                 Silakan pilih file CSV/Excel atau klik &quot;Muat Data Sampel&quot; di atas untuk melihat preview data asli.
               </p>
             </div>
@@ -462,7 +463,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
               type="button"
               disabled={totalSelected === 0 || isProcessing}
               onClick={handleExecuteImport}
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold shadow-lg shadow-emerald-600/20 flex items-center gap-2 cursor-pointer transition active:scale-98"
+              className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold shadow-lg shadow-emerald-600/20 flex items-center gap-2 cursor-pointer transition active:scale-98"
             >
               <Upload className="w-4 h-4" />
               <span>Impor {totalSelected} Produk Langsung (As-Is)</span>

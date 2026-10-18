@@ -49,11 +49,11 @@ export const ProductPriceHistoryModal: React.FC<ProductPriceHistoryModalProps> =
             </div>
           </div>
 
-          <button
+          <button aria-label="Tutup"
             id="btn-close-price-history-modal"
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>

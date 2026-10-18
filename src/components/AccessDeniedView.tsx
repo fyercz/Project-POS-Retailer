@@ -97,7 +97,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
         <div className="my-5 p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-850/80 border border-slate-200 dark:border-slate-800 text-left flex items-center gap-3">
           <div
             className={`w-10 h-10 rounded-xl ${
-              activeEmployee?.avatarColor || 'bg-emerald-600'
+              activeEmployee?.avatarColor || 'bg-emerald-700'
             } text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-2xs`}
           >
             {activeEmployee?.avatar || 'KR'}
@@ -122,7 +122,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
               <label className="text-xs font-bold text-amber-900 dark:text-amber-200 block mb-1 flex items-center gap-1.5">
                 <KeyRound className="w-3.5 h-3.5" /> Masukkan PIN Supervisor / Owner:
               </label>
-              <input
+              <input aria-label="Masukkan PIN Supervisor / Owner"
                 type="password"
                 maxLength={6}
                 autoFocus
@@ -132,7 +132,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
                   setErrorMessage('');
                 }}
                 placeholder="4-digit PIN..."
-                className="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-xl bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                 Masukkan 4-digit PIN Supervisor atau Owner untuk otorisasi akses.
@@ -140,7 +140,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
             </div>
 
             {errorMessage && (
-              <div className="flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 text-left bg-rose-50 dark:bg-rose-950/40 p-2 rounded-xl border border-rose-200 dark:border-rose-900/50">
+              <div role="alert" className="flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 text-left bg-rose-50 dark:bg-rose-950/40 p-2 rounded-xl border border-rose-200 dark:border-rose-900/50">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMessage}</span>
               </div>

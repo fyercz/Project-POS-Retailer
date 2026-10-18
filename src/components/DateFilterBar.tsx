@@ -96,7 +96,7 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
       {/* Left: Presets and Date Controls */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-semibold text-[11px] mr-1">
-          <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <Calendar className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
           <span>{label}:</span>
         </div>
 
@@ -121,7 +121,7 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
             onClick={() => handleSelectPreset('today')}
             className={`px-2.5 py-1 rounded-lg font-medium text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
               preset === 'today'
-                ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                ? 'bg-emerald-700 text-white font-bold shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400'
             }`}
             title="Tampilkan hanya data hari ini untuk menjaga tampilan tetap fokus & tidak penuh"
@@ -136,7 +136,7 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
             onClick={() => handleSelectPreset('yesterday')}
             className={`px-2.5 py-1 rounded-lg font-medium text-[11px] transition-all cursor-pointer ${
               preset === 'yesterday'
-                ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                ? 'bg-emerald-700 text-white font-bold shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400'
             }`}
           >
@@ -149,7 +149,7 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
             onClick={() => handleSelectPreset('last7days')}
             className={`px-2.5 py-1 rounded-lg font-medium text-[11px] transition-all cursor-pointer ${
               preset === 'last7days'
-                ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                ? 'bg-emerald-700 text-white font-bold shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400'
             }`}
           >
@@ -162,7 +162,7 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
             onClick={() => handleSelectPreset('thismonth')}
             className={`px-2.5 py-1 rounded-lg font-medium text-[11px] transition-all cursor-pointer ${
               preset === 'thismonth'
-                ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                ? 'bg-emerald-700 text-white font-bold shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400'
             }`}
           >
@@ -188,11 +188,11 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
         {/* Day-by-Day Stepper Navigation if a single date is active */}
         {isSingleDay && (
           <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-xl px-1.5 py-0.5 border border-slate-200 dark:border-slate-700 shadow-2xs">
-            <button
+            <button aria-label="1 Hari Sebelumnya (H-1)"
               type="button"
               id={`${idPrefix}-btn-prev-day`}
               onClick={() => handleStepDay(-1)}
-              className="p-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+              className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
               title="1 Hari Sebelumnya (H-1)"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -200,11 +200,11 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
             <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 px-1">
               {formatPeriodLabel('custom', startDate, endDate)}
             </span>
-            <button
+            <button aria-label="1 Hari Berikutnya (H+1)"
               type="button"
               id={`${idPrefix}-btn-next-day`}
               onClick={() => handleStepDay(1)}
-              className="p-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+              className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
               title="1 Hari Berikutnya (H+1)"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -216,8 +216,8 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
         {(preset === 'custom' || isCustomOpen) && (
           <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-blue-200 dark:border-blue-900/60 shadow-2xs animate-in fade-in duration-150">
             <div className="flex items-center gap-1">
-              <span className="text-[10px] text-slate-400 uppercase font-semibold">Dari:</span>
-              <input
+              <span className="text-[10px] text-slate-500 uppercase font-semibold">Dari:</span>
+              <input aria-label="Dari tanggal"
                 type="date"
                 id={`${idPrefix}-input-start-date`}
                 value={startDate}
@@ -226,13 +226,13 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
                   const eDate = endDate && endDate >= s ? endDate : s;
                   onDateChange(s, eDate);
                 }}
-                className="px-1.5 py-0.5 text-xs rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="px-1.5 py-0.5 text-xs rounded border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
-            <span className="text-slate-400 font-bold">-</span>
+            <span className="text-slate-500 font-bold">-</span>
             <div className="flex items-center gap-1">
-              <span className="text-[10px] text-slate-400 uppercase font-semibold">Sampai:</span>
-              <input
+              <span className="text-[10px] text-slate-500 uppercase font-semibold">Sampai:</span>
+              <input aria-label="Sampai tanggal"
                 type="date"
                 id={`${idPrefix}-input-end-date`}
                 value={endDate}
@@ -241,7 +241,7 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
                   const sDate = startDate && startDate <= eDate ? startDate : eDate;
                   onDateChange(sDate, eDate);
                 }}
-                className="px-1.5 py-0.5 text-xs rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="px-1.5 py-0.5 text-xs rounded border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -271,7 +271,7 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
             {isFilterActive ? (
               <>
                 Periode: <strong className="text-slate-900 dark:text-white font-bold">{formatPeriodLabel(preset, startDate, endDate)}</strong>
-                {' '}(<span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{totalFilteredCount}</span> dari {totalAllCount})
+                {' '}(<span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">{totalFilteredCount}</span> dari {totalAllCount})
               </>
             ) : (
               <>

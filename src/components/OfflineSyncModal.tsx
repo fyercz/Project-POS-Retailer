@@ -227,9 +227,9 @@ export const OfflineSyncModal: React.FC = () => {
             </div>
           </div>
 
-          <button
+          <button aria-label="Tutup"
             onClick={() => setIsSyncModalOpen(false)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -237,11 +237,11 @@ export const OfflineSyncModal: React.FC = () => {
 
         {/* Tab Navigation */}
         <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-800/20 px-5 gap-2 pt-2">
-          <button
+          <button aria-pressed={activeTab === 'sync'}
             onClick={() => setActiveTab('sync')}
             className={`px-3 py-2 text-xs font-bold rounded-t-lg transition flex items-center gap-1.5 border-b-2 cursor-pointer ${
               activeTab === 'sync'
-                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-900'
+                ? 'border-emerald-500 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900'
                 : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -252,11 +252,11 @@ export const OfflineSyncModal: React.FC = () => {
             )}
           </button>
 
-          <button
+          <button aria-pressed={activeTab === 'database'}
             onClick={() => setActiveTab('database')}
             className={`px-3 py-2 text-xs font-bold rounded-t-lg transition flex items-center gap-1.5 border-b-2 cursor-pointer ${
               activeTab === 'database'
-                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-900'
+                ? 'border-emerald-500 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900'
                 : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -267,11 +267,11 @@ export const OfflineSyncModal: React.FC = () => {
             </span>
           </button>
 
-          <button
+          <button aria-pressed={activeTab === 'queue'}
             onClick={() => setActiveTab('queue')}
             className={`px-3 py-2 text-xs font-bold rounded-t-lg transition flex items-center gap-1.5 border-b-2 cursor-pointer ${
               activeTab === 'queue'
-                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-900'
+                ? 'border-emerald-500 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900'
                 : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -289,7 +289,7 @@ export const OfflineSyncModal: React.FC = () => {
         <div className="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
           {/* Status Alert feedback */}
           {syncFeedback && (
-            <div
+            <div role="status"
               className={`p-3 rounded-xl border flex items-start gap-2.5 animate-in fade-in duration-150 ${
                 syncFeedback.type === 'success'
                   ? 'bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800'
@@ -297,16 +297,16 @@ export const OfflineSyncModal: React.FC = () => {
               }`}
             >
               {syncFeedback.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
               ) : (
                 <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
               )}
               <div className="flex-1">
                 <span className="font-semibold">{syncFeedback.message}</span>
               </div>
-              <button
+              <button aria-label="Tutup"
                 onClick={() => setSyncFeedback(null)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -321,7 +321,7 @@ export const OfflineSyncModal: React.FC = () => {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
-                      <Zap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <Zap className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                       Sinkronisasi Otomatis Berkala ke Server Pusat
                     </span>
                     <span
@@ -344,7 +344,7 @@ export const OfflineSyncModal: React.FC = () => {
                     onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}
                     className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-xs flex items-center gap-2 ${
                       autoSyncEnabled
-                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                        ? 'bg-emerald-700 hover:bg-emerald-500 text-white'
                         : 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'
                     }`}
                   >
@@ -385,7 +385,7 @@ export const OfflineSyncModal: React.FC = () => {
                         }`}
                       >
                         <div className="font-bold text-xs">{preset.label}</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{preset.desc}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">{preset.desc}</div>
                       </button>
                     );
                   })}
@@ -441,7 +441,7 @@ export const OfflineSyncModal: React.FC = () => {
                     <button
                       onClick={handleManualSync}
                       disabled={!isOnline || isSyncing}
-                      className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shadow-xs cursor-pointer text-center flex items-center justify-center gap-1"
+                      className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] shadow-xs cursor-pointer text-center flex items-center justify-center gap-1"
                     >
                       <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
                       <span>{isSyncing ? 'Sync...' : 'Push Now'}</span>
@@ -494,7 +494,7 @@ export const OfflineSyncModal: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                     <span>
                       Hasil Pemeriksaan Integritas PRAGMA:{' '}
                       <strong className="font-mono uppercase">{integrityStatus.result}</strong> (Basis data sehat &amp;
@@ -510,7 +510,7 @@ export const OfflineSyncModal: React.FC = () => {
               {/* Technical Specifications Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                 <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                  <div className="text-slate-400 text-[10px] uppercase font-semibold">Mode Jurnal Transaksi</div>
+                  <div className="text-slate-500 text-[10px] uppercase font-semibold">Mode Jurnal Transaksi</div>
                   <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-1">
                     {dbStatus?.journalMode?.toUpperCase() || 'WAL'}
                   </div>
@@ -520,7 +520,7 @@ export const OfflineSyncModal: React.FC = () => {
                 </div>
 
                 <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                  <div className="text-slate-400 text-[10px] uppercase font-semibold">Sinkronisasi Disk</div>
+                  <div className="text-slate-500 text-[10px] uppercase font-semibold">Sinkronisasi Disk</div>
                   <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-1">
                     {dbStatus?.synchronous || 'NORMAL'}
                   </div>
@@ -530,8 +530,8 @@ export const OfflineSyncModal: React.FC = () => {
                 </div>
 
                 <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                  <div className="text-slate-400 text-[10px] uppercase font-semibold">Foreign Keys &amp; Relasi</div>
-                  <div className="text-sm font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
+                  <div className="text-slate-500 text-[10px] uppercase font-semibold">Foreign Keys &amp; Relasi</div>
+                  <div className="text-sm font-black font-mono text-emerald-700 dark:text-emerald-400 mt-1">
                     ON (Enabled)
                   </div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
@@ -540,7 +540,7 @@ export const OfflineSyncModal: React.FC = () => {
                 </div>
 
                 <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                  <div className="text-slate-400 text-[10px] uppercase font-semibold">Berkas Database SQLite</div>
+                  <div className="text-slate-500 text-[10px] uppercase font-semibold">Berkas Database SQLite</div>
                   <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-1">
                     {dbStatus?.fileSizeKb || 120} KB
                   </div>
@@ -557,10 +557,10 @@ export const OfflineSyncModal: React.FC = () => {
                     <Layers className="w-4 h-4 text-slate-500" />
                     Statistik Baris Data Relasional di Server SQLite
                   </h4>
-                  <button
+                  <button aria-label="Muat Ulang Statistik"
                     onClick={fetchDatabaseMetrics}
                     disabled={isLoadingDbStatus}
-                    className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                    className="p-1.5 rounded text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                     title="Muat Ulang Statistik"
                   >
                     <RotateCcw className={`w-3.5 h-3.5 ${isLoadingDbStatus ? 'animate-spin' : ''}`} />
@@ -569,42 +569,42 @@ export const OfflineSyncModal: React.FC = () => {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                   <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-                    <div className="text-[10px] text-slate-400">Tabel Produk</div>
+                    <div className="text-[10px] text-slate-500">Tabel Produk</div>
                     <div className="text-lg font-black font-mono text-slate-900 dark:text-white">
                       {dbStatus?.counts?.products ?? 0}
                     </div>
                   </div>
 
                   <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-                    <div className="text-[10px] text-slate-400">Tabel Transaksi</div>
-                    <div className="text-lg font-black font-mono text-emerald-600 dark:text-emerald-400">
+                    <div className="text-[10px] text-slate-500">Tabel Transaksi</div>
+                    <div className="text-lg font-black font-mono text-emerald-700 dark:text-emerald-400">
                       {dbStatus?.counts?.transactions ?? totalSyncedCount}
                     </div>
                   </div>
 
                   <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-                    <div className="text-[10px] text-slate-400">Pelanggan / Member</div>
+                    <div className="text-[10px] text-slate-500">Pelanggan / Member</div>
                     <div className="text-lg font-black font-mono text-slate-900 dark:text-white">
                       {dbStatus?.counts?.customers ?? 0}
                     </div>
                   </div>
 
                   <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-                    <div className="text-[10px] text-slate-400">Pemasok / Supplier</div>
+                    <div className="text-[10px] text-slate-500">Pemasok / Supplier</div>
                     <div className="text-lg font-black font-mono text-slate-900 dark:text-white">
                       {dbStatus?.counts?.suppliers ?? 0}
                     </div>
                   </div>
 
                   <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-                    <div className="text-[10px] text-slate-400">Pesanan Parkir (Held)</div>
+                    <div className="text-[10px] text-slate-500">Pesanan Parkir (Held)</div>
                     <div className="text-lg font-black font-mono text-slate-900 dark:text-white">
                       {dbStatus?.counts?.heldOrders ?? 0}
                     </div>
                   </div>
 
                   <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-                    <div className="text-[10px] text-slate-400">Audit Sync Logs</div>
+                    <div className="text-[10px] text-slate-500">Audit Sync Logs</div>
                     <div className="text-lg font-black font-mono text-blue-600 dark:text-blue-400">
                       {dbStatus?.counts?.auditLogs ?? 0}
                     </div>
@@ -623,9 +623,9 @@ export const OfflineSyncModal: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                       {isOfflineSimulated ? (
-                        <WifiOff className="w-4 h-4 text-amber-600" />
+                        <WifiOff className="w-4 h-4 text-amber-700" />
                       ) : (
-                        <Wifi className="w-4 h-4 text-emerald-600" />
+                        <Wifi className="w-4 h-4 text-emerald-700" />
                       )}
                       Uji Coba: Simulasi Pemadaman Internet (Offline)
                     </span>
@@ -640,12 +640,12 @@ export const OfflineSyncModal: React.FC = () => {
                   </p>
                 </div>
 
-                <button
+                <button aria-label="Status koneksi"
                   id="btn-toggle-offline-simulation"
                   onClick={() => toggleOfflineSimulation()}
                   className={`px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
                     isOfflineSimulated
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs'
+                      ? 'bg-emerald-700 hover:bg-emerald-500 text-white shadow-xs'
                       : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs'
                   }`}
                 >
@@ -673,7 +673,7 @@ export const OfflineSyncModal: React.FC = () => {
                     </h3>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
+                    <button aria-label="Muat Ulang Antrean"
                       onClick={loadPendingList}
                       disabled={isRefreshingList}
                       className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
@@ -686,7 +686,7 @@ export const OfflineSyncModal: React.FC = () => {
                       id="btn-trigger-cloud-sync"
                       onClick={handleManualSync}
                       disabled={isSyncing || pendingList.length === 0 || !isOnline}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
                       <span>{isSyncing ? 'Menyinkronkan...' : 'Sinkronkan Sekarang'}</span>
@@ -710,7 +710,7 @@ export const OfflineSyncModal: React.FC = () => {
                               Antrean Lokal
                             </span>
                             {tx.syncRetryCount && tx.syncRetryCount > 0 ? (
-                              <span className="text-[10px] text-rose-500">
+                              <span className="text-[10px] text-rose-600">
                                 (Percobaan ke-{tx.syncRetryCount})
                               </span>
                             ) : null}
@@ -728,7 +728,7 @@ export const OfflineSyncModal: React.FC = () => {
                           <div className="font-mono font-bold text-slate-900 dark:text-emerald-400">
                             {formatCurrency(tx.finalTotal, settings.currency)}
                           </div>
-                          <div className="text-[10px] text-slate-400 capitalize">
+                          <div className="text-[10px] text-slate-500 capitalize">
                             {tx.payment.method}
                           </div>
                         </div>
@@ -754,7 +754,7 @@ export const OfflineSyncModal: React.FC = () => {
         {/* Footer */}
         <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center justify-between text-xs">
           <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <Clock className="w-3.5 h-3.5 text-slate-500" />
             <span>
               Sinkronisasi Terakhir:{' '}
               <strong className="text-slate-700 dark:text-slate-300">
@@ -762,7 +762,7 @@ export const OfflineSyncModal: React.FC = () => {
               </strong>
             </span>
             <span className="hidden sm:inline">•</span>
-            <span className="hidden sm:inline font-mono text-[10px] text-slate-400">
+            <span className="hidden sm:inline font-mono text-[10px] text-slate-500">
               {autoSyncEnabled ? `Auto-Sync Tiap ${autoSyncIntervalSeconds}s` : 'Auto-Sync Nonaktif'}
             </span>
           </div>

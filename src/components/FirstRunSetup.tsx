@@ -27,7 +27,7 @@ export const FirstRunSetup: React.FC = () => {
     'w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500';
 
   return (
-    <div className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4 overflow-y-auto">
+    <div data-no-escape aria-label="Pendaftaran Owner" className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4 overflow-y-auto">
       <form
         data-testid="first-run-setup"
         onSubmit={handleSubmit}
@@ -103,7 +103,7 @@ export const FirstRunSetup: React.FC = () => {
         <button
           type="submit"
           data-testid="setup-submit"
-          className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold cursor-pointer"
+          className="w-full py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold cursor-pointer"
         >
           Buat Akun Owner &amp; Mulai
         </button>

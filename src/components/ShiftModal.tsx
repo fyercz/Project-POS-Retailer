@@ -175,7 +175,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
               <Clock className="w-5 h-5" />
             </div>
             <div>
@@ -188,10 +188,10 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <button
+          <button aria-label="Tutup"
             id="btn-close-shift-modal"
             onClick={handleCloseModal}
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
+            className="p-2 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -202,7 +202,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
           {shiftClosedResult ? (
             /* Shift Closed Result View */
             <div className="space-y-4 text-center py-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto">
                 <CheckCircle className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -228,7 +228,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700 font-medium">
                   <span className="text-slate-500">Penjualan Tunai (Cash):</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                  <span className="text-emerald-700 dark:text-emerald-400 font-mono font-bold">
                     +{formatRupiah(shiftClosedResult.cashSales)}
                   </span>
                 </div>
@@ -249,7 +249,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                   <span
                     className={
                       (shiftClosedResult.difference || 0) === 0
-                        ? 'text-emerald-600'
+                        ? 'text-emerald-700'
                         : (shiftClosedResult.difference || 0) > 0
                         ? 'text-blue-600'
                         : 'text-rose-600'
@@ -272,7 +272,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                 </button>
                 <button
                   onClick={handleStartFresh}
-                  className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 hover:bg-emerald-700 cursor-pointer"
+                  className="px-5 py-2 bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 hover:bg-emerald-800 cursor-pointer"
                 >
                   Selesai & Buka Shift Baru
                 </button>
@@ -286,7 +286,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-11 h-11 rounded-xl ${
-                      activeEmployee?.avatarColor || 'bg-emerald-600'
+                      activeEmployee?.avatarColor || 'bg-emerald-700'
                     } text-white font-bold flex items-center justify-center text-sm shadow-sm`}
                   >
                     {activeEmployee?.avatar || 'KR'}
@@ -337,7 +337,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                   </div>
                   {isEditingStartingCash ? (
                     <div className="mt-1 space-y-1">
-                      <input
+                      <input aria-label="Uang di laci saat shift dimulai"
                         type="number"
                         min={0}
                         step={1000}
@@ -362,7 +362,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                             }
                             setIsEditingStartingCash(false);
                           }}
-                          className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold cursor-pointer"
+                          className="px-2 py-0.5 rounded-md bg-emerald-700 text-white text-[10px] font-bold cursor-pointer"
                         >
                           Simpan
                         </button>
@@ -414,7 +414,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
               {/* Expected Drawer Total */}
               <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-slate-400">Target Uang Kas di Laci (Modal + Tunai − Uang Keluar):</span>
+                  <span className="text-xs text-slate-500">Target Uang Kas di Laci (Modal + Tunai − Uang Keluar):</span>
                   <div className="text-xl font-bold font-mono text-emerald-400 mt-0.5">
                     {formatRupiah(expectedCash)}
                   </div>
@@ -424,7 +424,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                     </div>
                   )}
                 </div>
-                <div className="text-right text-xs text-slate-400">
+                <div className="text-right text-xs text-slate-500">
                   Total Omzet Shift:{' '}
                   <strong className="text-white block text-sm font-mono">
                     {formatRupiah(currentShift?.totalSales || 0)}
@@ -443,7 +443,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Uang Fisik Dihitung Kasir (Rp) *
                     </label>
-                    <input
+                    <input aria-label="Uang Fisik Dihitung Kasir (Rp)"
                       type="text"
                       required
                       data-testid="shift-actual-cash" value={actualCash}
@@ -452,7 +452,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                         setActualCash(num ? parseInt(num, 10).toLocaleString('id-ID') : '');
                       }}
                       placeholder="misal: 1.500.000"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     />
                   </div>
 
@@ -465,7 +465,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                       <span
                         className={`font-mono ${
                           difference === 0
-                            ? 'text-emerald-600'
+                            ? 'text-emerald-700'
                             : difference > 0
                             ? 'text-blue-600'
                             : 'text-rose-600'
@@ -481,12 +481,12 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Catatan Serah Terima Shift (Opsional)
                   </label>
-                  <textarea
+                  <textarea aria-label="Catatan Serah Terima Shift (Opsional)"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={2}
                     placeholder="misal: Uang receh Rp 2.000 dan Rp 5.000 telah disiapkan untuk kasir shift siang..."
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
 
@@ -503,7 +503,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                     type="submit"
                     id="btn-confirm-close-shift"
                     disabled={!actualCash}
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 transition flex items-center gap-2"
+                    className="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 transition flex items-center gap-2"
                   >
                     <CheckCircle className="w-4 h-4" />
                     Tutup Shift & Rekap Kas

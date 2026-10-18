@@ -203,33 +203,33 @@ export const LoyaltyLedger: React.FC = () => {
       {/* Ledger Stats Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
             Total Poin Diperoleh
           </span>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+            <span className="text-xl font-black font-mono text-emerald-700 dark:text-emerald-400">
               +{totalEarnedPoints.toLocaleString()}
             </span>
-            <span className="text-xs text-slate-400 font-bold">Pts</span>
+            <span className="text-xs text-slate-500 font-bold">Pts</span>
           </div>
           <span className="text-[10px] text-slate-500">Dari belanja transaksi member</span>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
             Total Poin Ditukarkan
           </span>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-xl font-black font-mono text-amber-600 dark:text-amber-400">
+            <span className="text-xl font-black font-mono text-amber-700 dark:text-amber-400">
               -{totalRedeemedPoints.toLocaleString()}
             </span>
-            <span className="text-xs text-slate-400 font-bold">Pts</span>
+            <span className="text-xs text-slate-500 font-bold">Pts</span>
           </div>
           <span className="text-[10px] text-slate-500">Telah ditukar potongan diskon</span>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
             Total Diskon Diberikan
           </span>
           <div className="flex items-baseline gap-1.5">
@@ -241,14 +241,14 @@ export const LoyaltyLedger: React.FC = () => {
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
             Poin Beredar Saat Ini
           </span>
           <div className="flex items-baseline gap-1.5">
             <span className="text-xl font-black font-mono text-purple-600 dark:text-purple-400">
               {customers.reduce((sum, c) => sum + (c.points || 0), 0).toLocaleString()}
             </span>
-            <span className="text-xs text-slate-400 font-bold">Pts</span>
+            <span className="text-xs text-slate-500 font-bold">Pts</span>
           </div>
           <span className="text-[10px] text-slate-500">
             Setara {formatCurrency(customers.reduce((sum, c) => sum + (c.points || 0), 0) * redemptionRate, settings.currency)} diskon
@@ -260,23 +260,23 @@ export const LoyaltyLedger: React.FC = () => {
       <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
         <div className="flex items-center gap-2 flex-1 min-w-[240px] max-w-md">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <input aria-label="Cari member, no. faktur, telepon, atau keterangan..."
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Cari member, no. faktur, telepon, atau keterangan..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap text-xs">
           {/* Filter Type */}
-          <select
+          <select aria-label="Filter jenis poin"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as any)}
-            className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium cursor-pointer"
+            className="p-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium cursor-pointer"
           >
             <option value="all">Semua Jenis Mutasi</option>
             <option value="earned">Perolehan Transaksi (+)</option>
@@ -286,10 +286,10 @@ export const LoyaltyLedger: React.FC = () => {
           </select>
 
           {/* Filter Customer */}
-          <select
+          <select aria-label="Filter member"
             value={customerFilter}
             onChange={(e) => setCustomerFilter(e.target.value)}
-            className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium cursor-pointer max-w-[160px]"
+            className="p-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium cursor-pointer max-w-[160px]"
           >
             <option value="all">Semua Member</option>
             {customers.map((c) => (
@@ -305,7 +305,7 @@ export const LoyaltyLedger: React.FC = () => {
             onClick={handleExportCSV}
             className="px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1.5 cursor-pointer transition shadow-2xs"
           >
-            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <Download className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
             <span>Ekspor CSV</span>
           </button>
         </div>
@@ -330,7 +330,7 @@ export const LoyaltyLedger: React.FC = () => {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400 text-xs">
+                  <td colSpan={8} className="p-8 text-center text-slate-500 text-xs">
                     Belum ada riwayat mutasi poin yang cocok dengan kriteria pencarian.
                   </td>
                 </tr>
@@ -353,11 +353,11 @@ export const LoyaltyLedger: React.FC = () => {
                           <span className="font-bold text-slate-900 dark:text-white">
                             {row.customerName}
                           </span>
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full border bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full border bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300">
                             {row.customerTier}
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-[10px] text-slate-500 font-mono">
                           {row.customerPhone}
                         </span>
                       </td>
@@ -389,8 +389,8 @@ export const LoyaltyLedger: React.FC = () => {
                         <span
                           className={
                             isPositive
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-amber-600 dark:text-amber-400'
+                              ? 'text-emerald-700 dark:text-emerald-400'
+                              : 'text-amber-700 dark:text-amber-400'
                           }
                         >
                           {isPositive ? `+${row.points}` : row.points} Pts
@@ -399,7 +399,7 @@ export const LoyaltyLedger: React.FC = () => {
 
                       <td className="p-3 text-right font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">
                         {discountVal > 0 ? (
-                          <span className="font-bold text-amber-600 dark:text-amber-400">
+                          <span className="font-bold text-amber-700 dark:text-amber-400">
                             {formatCurrency(discountVal, settings.currency)}
                           </span>
                         ) : (
