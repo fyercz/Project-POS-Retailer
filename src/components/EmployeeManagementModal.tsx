@@ -288,6 +288,7 @@ export const EmployeeManagementModal: React.FC = () => {
 
           {notification && (
           <div
+            data-testid="employee-notification"
             className={`px-6 py-2.5 flex items-center gap-2 text-xs font-medium ${
               notification.type === 'success'
                 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border-b border-emerald-200'
@@ -456,6 +457,7 @@ export const EmployeeManagementModal: React.FC = () => {
                             )}
                             <button
                               id={`btn-edit-emp-${emp.id}`}
+                              aria-label={`Edit ${emp.name}`}
                               onClick={() => handleOpenEditForm(emp)}
                               className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition"
                               title="Edit Karyawan"
@@ -835,7 +837,7 @@ export const EmployeeManagementModal: React.FC = () => {
                   <input
                     type="text"
                     required
-                    value={name}
+                    data-testid="employee-name" value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="misal: Rian Pratama"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -863,7 +865,7 @@ export const EmployeeManagementModal: React.FC = () => {
                     Jabatan / Role *
                   </label>
                   <select
-                    value={role}
+                    data-testid="employee-role" value={role}
                     onChange={(e) => setRole(e.target.value as EmployeeRole)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   >
@@ -924,7 +926,7 @@ export const EmployeeManagementModal: React.FC = () => {
                       type="password"
                       maxLength={6}
                       required={!editingEmployee}
-                      value={pin}
+                      data-testid="employee-pin" value={pin}
                       onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                       placeholder={editingEmployee ? 'Kosongkan bila PIN tidak diubah' : '4-6 angka, jangan yang mudah ditebak'}
                       className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono tracking-widest"

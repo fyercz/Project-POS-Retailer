@@ -56,3 +56,26 @@ export async function waitForStoredArray(page: Page, key: string, minLength = 0)
     )
     .toBe(1);
 }
+
+/** Tambah karyawan lewat menu akun -> Kelola Karyawan (dijalankan sebagai Owner/Supervisor). */
+export async function addEmployee(page: Page, emp: { name: string; role: 'cashier' | 'supervisor' | 'inventory' | 'owner'; pin: string }) {
+  await page.locator('#btn-employee-menu').click();
+  await page.locator('#menu-item-manage-employees').click();
+  await page.locator('#btn-add-employee-open').click();
+  await page.getByTestId('employee-name').fill(emp.name);
+  await page.getByTestId('employee-role').selectOption(emp.role);
+  await page.getByTestId('employee-pin').fill(emp.pin);
+  await page.locator('#btn-save-employee').click();
+  await expect(page.getByTestId('employee-notification')).toBeVisible();
+  await page.locator('#btn-close-employee-modal').click();
+}
+
+/** Kunci layar lalu masuk sebagai karyawan tertentu dengan PIN (diketik lewat keyboard). */
+export async function lockAndLogin(page: Page, name: string, pin: string) {
+  await page.locator('#btn-header-quick-lock').click();
+  await expect(page.locator('#employee-lock-screen')).toBeVisible();
+  await page.getByRole('button', { name: `Pilih ${name}` }).click();
+  await page.keyboard.type(pin);
+  await expect(page.locator('#employee-lock-screen')).toBeHidden();
+  await expect(page.locator('#btn-employee-menu')).toContainText(name);
+}

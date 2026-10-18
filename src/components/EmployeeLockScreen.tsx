@@ -219,6 +219,7 @@ export const EmployeeLockScreen: React.FC = () => {
                     <button
                       key={emp.id}
                       id={`lock-select-emp-${emp.id}`}
+                      aria-label={`Pilih ${emp.name}`}
                       onClick={() => {
                         setSelectedEmp(emp);
                         setPinInput('');
@@ -325,7 +326,7 @@ export const EmployeeLockScreen: React.FC = () => {
                   className="w-full p-2.5 mb-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 flex items-center gap-2 text-rose-700 dark:text-rose-300 text-xs"
                 >
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  <span className="flex-1">{errorMessage}</span>
+                  <span className="flex-1" data-testid="lock-error">{errorMessage}</span>
                 </motion.div>
               )}
             </AnimatePresence>
