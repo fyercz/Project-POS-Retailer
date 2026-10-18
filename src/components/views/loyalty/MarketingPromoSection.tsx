@@ -10,7 +10,6 @@ import {
   TrendingUp,
   MessageCircle,
   Smartphone,
-  Instagram,
   RefreshCw,
   Crown,
   HeartHandshake,
@@ -23,6 +22,7 @@ import {
   ChevronRight,
   UserCheck,
   Send,
+  Camera,
 } from 'lucide-react';
 import { usePOS } from '../../../context/POSContext';
 import {
@@ -403,7 +403,7 @@ export const MarketingPromoSection: React.FC = () => {
               type="button"
               disabled={isGenerating}
               onClick={handleGeneratePromo}
-              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-400 text-slate-950 font-black text-sm flex items-center gap-2 shadow-md shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="px-5 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm flex items-center gap-2 shadow-md shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {isGenerating ? (
                 <>
@@ -846,7 +846,7 @@ export const MarketingPromoSection: React.FC = () => {
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
-                    <Instagram className="w-3.5 h-3.5" />
+                    <Camera className="w-3.5 h-3.5" />
                     <span>Story / Media Sosial</span>
                   </button>
                 </div>

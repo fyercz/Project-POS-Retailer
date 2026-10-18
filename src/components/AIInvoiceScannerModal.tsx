@@ -24,6 +24,7 @@ import { AIInvoiceScanResult, SupplierPurchaseItem } from '../types';
 import { formatCurrency, toLocalDateString } from '../utils/formatters';
 import { compressImageForAI, formatBytes } from '../utils/imageCompressor';
 import { getResilientCameraStream, getCameraErrorMessage } from '../utils/cameraHelper';
+import { errorMessage } from '../utils/errors';
 
 interface AIInvoiceScannerModalProps {
   isOpen: boolean;
@@ -191,12 +192,12 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
 
       const result: AIInvoiceScanResult = await response.json();
       setScanResult(result);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setScanResult(null);
       setScanError(
-        err?.message && !String(err.message).startsWith('Failed to fetch')
-          ? err.message
+        errorMessage(err) && !String(errorMessage(err)).startsWith('Failed to fetch')
+          ? errorMessage(err)
           : 'Server AI tidak dapat dihubungi. Isi penerimaan barang secara manual atau coba lagi nanti.'
       );
     } finally {
@@ -516,7 +517,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                   id="btn-trigger-ai-invoice-scan"
                   onClick={handleProcessScan}
                   disabled={!selectedImage || isScanning}
-                  className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 transition cursor-pointer"
+                  className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 transition cursor-pointer"
                 >
                   {isScanning ? (
                     <>

@@ -40,7 +40,7 @@ async function stopServer() {
 }
 
 async function restartServer() {
-  await new Promise((r) => setTimeout(r, 1300)); // beri waktu simpanan JSON terjadwal (1 detik)
+  await new Promise((r) => setTimeout(r, 300)); // beri waktu tulis SQLite yang tidak ditunggu (mis. pesanan parkir)
   await stopServer();
   await startServer();
 }
@@ -284,4 +284,16 @@ test('AI faktur & opname visual: tanpa AI menjawab error, tidak mengarang data',
   const opname = await post('/api/ai/visual-stock-opname', { imagesBase64: ['aGVsbG8='], catalogProducts: catalog });
   assert.equal(opname.status, 503);
   assert.equal(opname.data.items, undefined, 'tidak boleh ada hitungan stok karangan');
+});
+
+test('SQLite satu-satunya penyimpanan: pesanan parkir bertahan setelah restart, tanpa snapshot JSON', async () => {
+  const id = `held-${Date.now()}`;
+  const res = await post('/api/lan/orders/held', { heldOrder: { id, items: [], note: 'uji' }, clientName: 'Kasir 2' });
+  assert.equal(res.status, 200);
+  await restartServer();
+  const list = await (await fetch(`${BASE}/api/lan/orders/held`)).json();
+  const orders = list.heldOrders || list.orders || list.data || [];
+  assert.ok(orders.some((o: any) => o.id === id), 'pesanan parkir dimuat ulang dari SQLite');
+  await new Promise((r) => setTimeout(r, 1500));
+  assert.equal(fs.existsSync(path.join(dataDir, 'lan-database.json')), false, 'snapshot JSON tidak lagi ditulis');
 });

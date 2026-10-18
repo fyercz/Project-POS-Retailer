@@ -86,7 +86,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
       });
 
       setCandidates(mappedCandidates);
-    } catch (err: any) {
+    } catch (err) {
       console.warn('Analysis error:', err);
     } finally {
       setIsAnalyzing(false);

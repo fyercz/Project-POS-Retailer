@@ -631,7 +631,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
             <button
               type="button"
               onClick={() => setIsQrShelfOpen(true)}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer transition active:scale-95"
+              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer transition active:scale-95"
               title="Beralih ke format Label Rak QR Dinamis (Link Real-Time Stok & Update Harga)"
             >
               <QrCode className="w-3.5 h-3.5 text-indigo-200" />

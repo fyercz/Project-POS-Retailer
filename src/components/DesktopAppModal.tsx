@@ -58,6 +58,7 @@ import {
   CleanupExecuteResponse,
   DEFAULT_GITHUB_REPO_URL,
 } from '../utils/desktopHelper';
+import { errorMessage } from '../utils/errors';
 
 interface DesktopAppModalProps {
   isOpen: boolean;
@@ -185,13 +186,13 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
       setCleanupScanData(updatedScan);
       // Also refresh verification
       await handleRunVerification();
-    } catch (err: any) {
+    } catch (err) {
       setCleanupResult({
         success: false,
         deletedCount: 0,
         bytesFreed: 0,
         deletedList: [],
-        message: 'Gagal menjalankan pembersihan: ' + (err?.message || String(err)),
+        message: 'Gagal menjalankan pembersihan: ' + (errorMessage(err) || String(err)),
       });
     } finally {
       setIsExecutingCleanup(false);
@@ -205,8 +206,8 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
       const res = await configureGitRemote();
       setConfigureMsg(res.message);
       await loadGitStatus();
-    } catch (err: any) {
-      setConfigureMsg('Gagal: ' + (err?.message || String(err)));
+    } catch (err) {
+      setConfigureMsg('Gagal: ' + (errorMessage(err) || String(err)));
     } finally {
       setIsConfiguringGit(false);
       setTimeout(() => setConfigureMsg(null), 5000);
@@ -266,11 +267,11 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
         await loadGitStatus();
         await handleRunVerification();
       }
-    } catch (err: any) {
+    } catch (err) {
       setPullResult({
         success: false,
         message: 'Terjadi kesalahan saat memproses update.',
-        details: err?.message,
+        details: errorMessage(err),
       });
     } finally {
       setIsPulling(false);

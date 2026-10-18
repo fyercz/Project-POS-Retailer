@@ -324,7 +324,7 @@ export const BarcodeScannerModal: React.FC = () => {
             }
           }
         } catch {}
-      } catch (err: any) {
+      } catch (err) {
         console.error('Camera start error:', err);
         setIsStartingCamera(false);
         setIsCameraActive(false);
@@ -371,7 +371,7 @@ export const BarcodeScannerModal: React.FC = () => {
           actionType: 'native_capture',
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       console.warn('Barcode photo scan failed:', err);
       setCameraError('Gagal memproses foto barcode.');
     } finally {
@@ -564,7 +564,7 @@ export const BarcodeScannerModal: React.FC = () => {
                     type="button"
                     onClick={() => nativeCameraInputRef.current?.click()}
                     disabled={isScanningPhoto}
-                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-950/50 cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-950/50 cursor-pointer"
                   >
                     <Camera className="w-4 h-4" />
                     <span>

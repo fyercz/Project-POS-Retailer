@@ -218,7 +218,7 @@ export const CustomersView: React.FC = () => {
           <button
             id="btn-open-marketing-promo"
             onClick={() => setActiveCustomersTab('marketing')}
-            className="hidden sm:flex px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95"
+            className="hidden sm:flex px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95"
             title="Buka Pusat Pemasaran & Generate Promo AI"
           >
             <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
@@ -614,7 +614,7 @@ export const CustomersView: React.FC = () => {
                       setDetailCustomer(null);
                       setActiveCustomersTab('marketing');
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1"
+                    className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                     <span>Draft Promo AI</span>

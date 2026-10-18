@@ -1,4 +1,5 @@
 import { Transaction, OfflineSyncState, CloudSyncResult } from '../types';
+import { errorMessage } from './errors';
 
 const DB_NAME = 'pos_retail_offline_db';
 const DB_VERSION = 1;
@@ -391,7 +392,7 @@ class OfflineSyncManager {
 
       console.log(`[OfflineManager] Successfully synced ${result.syncedCount} transactions to cloud.`);
       return result;
-    } catch (err: any) {
+    } catch (err) {
       console.warn('[OfflineManager] Cloud sync failed:', err);
       // Increment retry counts
       for (const tx of pending) {
@@ -402,7 +403,7 @@ class OfflineSyncManager {
         success: false,
         syncedCount: 0,
         syncedIds: [],
-        error: err.message || 'Gagal terhubung ke cloud server',
+        error: errorMessage(err) || 'Gagal terhubung ke cloud server',
       };
     } finally {
       this.isSyncingNow = false;

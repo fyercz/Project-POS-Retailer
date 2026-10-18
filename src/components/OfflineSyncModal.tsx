@@ -25,6 +25,7 @@ import { usePOS } from '../context/POSContext';
 import { offlineSyncManager } from '../utils/offlineSyncManager';
 import { Transaction } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import { errorMessage } from '../utils/errors';
 
 export const OfflineSyncModal: React.FC = () => {
   const {
@@ -142,9 +143,9 @@ export const OfflineSyncModal: React.FC = () => {
           type: 'error',
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       setSyncFeedback({
-        message: err.message || 'Terjadi kesalahan saat sinkronisasi.',
+        message: errorMessage(err) || 'Terjadi kesalahan saat sinkronisasi.',
         type: 'error',
       });
     }
@@ -158,7 +159,7 @@ export const OfflineSyncModal: React.FC = () => {
         message: 'Detak sinkronisasi otomatis berhasil dijalankan.',
         type: 'success',
       });
-    } catch (err: any) {
+    } catch (err) {
       setSyncFeedback({
         message: 'Gagal menjalankan detak sinkronisasi.',
         type: 'error',

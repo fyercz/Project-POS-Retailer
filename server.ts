@@ -1,3 +1,5 @@
+// Muat .env lebih dulu sebelum modul lain membaca process.env
+import './src/server/loadEnv.ts';
 import express from 'express';
 import path from 'path';
 import os from 'os';
@@ -39,12 +41,19 @@ import { aiRouter } from './src/server/routes/ai.ts';
 import { onlineRouter } from './src/server/routes/online.ts';
 import { systemRouter } from './src/server/routes/system.ts';
 import { saleStockDeltas } from './src/domain/stockMovements.ts';
+import { errorMessage } from './src/utils/errors.ts';
 
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: '50mb' }));
+// Express 5: req.body = undefined bila tidak ada body JSON (Express 4: {}). Samakan agar handler
+// yang membaca req.body tetap menjawab 400 dengan pesan jelas, bukan crash 500.
+app.use((req, _res, next) => {
+  if (req.body === undefined) req.body = {};
+  next();
+});
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Pembatasan origin: hanya halaman dari server ini sendiri yang boleh memakai API
@@ -66,9 +75,13 @@ app.use('/api/online', createRateLimiter(60, 60_000));
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   let version = 'unknown';
-  try {
-    version = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8')).version;
-  } catch {}
+  // Cari package.json di folder kerja, lalu di folder aplikasi (dist/server.cjs -> ..)
+  for (const dir of [process.cwd(), path.resolve(path.dirname(process.argv[1] || '.'), '..')]) {
+    try {
+      version = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf-8')).version;
+      break;
+    } catch {}
+  }
   res.json({ status: 'ok', version, hasGeminiKey: Boolean(process.env.GEMINI_API_KEY) });
 });
 
@@ -129,36 +142,14 @@ function addLanLog(level: 'info' | 'success' | 'warn', message: string) {
   console.log(`[LAN Server] [${level.toUpperCase()}] ${message}`);
 }
 
-// Helper to save server database snapshot to disk
-let saveTimeout: any = null;
+// Tandai data server berubah (nomor versi dipakai kasir untuk mendeteksi pembaruan).
+// SQLite adalah SATU-SATUNYA penyimpanan permanen; Map di atas hanya cache baca cepat.
+// Dulu seluruh isi (puluhan ribu produk/transaksi) ditulis ulang ke lan-database.json setiap
+// perubahan: berat (beberapa MB per transaksi) dan hanya duplikat SQLite. File JSON lama tetap
+// dibaca sekali saat start sebagai cadangan migrasi bila SQLite gagal.
 function scheduleLanDbSave() {
-  if (saveTimeout) clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => {
-    try {
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
-      lanLastUpdated = new Date().toISOString();
-      lanDatabaseVersion++;
-
-      const payload = {
-        version: lanDatabaseVersion,
-        lastUpdated: lanLastUpdated,
-        products: Array.from(lanProductsStore.values()),
-        transactions: Array.from(lanTransactionsStore.values()),
-        customers: Array.from(lanCustomersStore.values()),
-        suppliers: Array.from(lanSuppliersStore.values()),
-        heldOrders: Array.from(lanHeldOrdersStore.values()),
-      };
-
-      // Tulis ke file sementara lalu rename, agar file tidak rusak bila listrik mati saat menulis.
-      const tmpFile = `${LAN_DB_FILE}.tmp`;
-      fs.writeFileSync(tmpFile, JSON.stringify(payload), 'utf-8');
-      fs.renameSync(tmpFile, LAN_DB_FILE);
-    } catch (err: any) {
-      console.warn('[LAN Server] Error saving database file:', err?.message || err);
-    }
-  }, 1000);
+  lanLastUpdated = new Date().toISOString();
+  lanDatabaseVersion++;
 }
 
 // Initial Database Bootstrapper
@@ -202,8 +193,8 @@ async function initLanDatabase() {
       `Basis Data Relasional SQLite (WAL Mode) aktif: ${lanProductsStore.size} produk, ${lanTransactionsStore.size} transaksi, ${lanCustomersStore.size} member.`
     );
     return;
-  } catch (err: any) {
-    console.warn('[LAN Server] Error initializing SQLite DB, checking fallback JSON:', err?.message || err);
+  } catch (err) {
+    console.warn('[LAN Server] Error initializing SQLite DB, checking fallback JSON:', errorMessage(err) || err);
   }
 
   // Fallback to legacy JSON if SQLite initialization fails
@@ -228,86 +219,15 @@ async function initLanDatabase() {
       }
       lanDatabaseVersion = data.version || 1;
       lanLastUpdated = data.lastUpdated || new Date().toISOString();
-      addLanLog('info', `Database master berhasil dimuat dari disk: ${lanProductsStore.size} produk, ${lanTransactionsStore.size} transaksi.`);
+      addLanLog('warn', `SQLite gagal dibuka; memakai salinan lama lan-database.json (${lanProductsStore.size} produk, ${lanTransactionsStore.size} transaksi). Perubahan baru TIDAK tersimpan permanen sampai SQLite pulih.`);
       return;
     }
-  } catch (err: any) {
-    console.warn('[LAN Server] Failed loading existing LAN DB, initializing fresh:', err?.message || err);
+  } catch (err) {
+    console.warn('[LAN Server] Failed loading existing LAN DB, initializing fresh:', errorMessage(err) || err);
   }
 
-  // Fallback initial FMCG catalog if DB file is fresh
-  const initialFmcgCatalog = [
-    {
-      id: 'prod-001',
-      name: 'Indomie Mi Goreng Spesial 85g',
-      brand: 'Indomie',
-      sku: 'IND-MIE-GOR',
-      barcode: '8998866200115',
-      categoryId: 'instant',
-      price: 3500,
-      costPrice: 2800,
-      stock: 120,
-      minStock: 24,
-      unit: 'Bungkus',
-      aisle: 'Lorong 1 - Rak A1',
-      expiryDate: '2026-11-20',
-      batchNumber: 'IND-2026-B1',
-      isPopular: true,
-      promoBadge: 'Best Seller',
-      image: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&auto=format&fit=crop&q=60',
-      description: 'Mi instan goreng legendaris dengan bumbu gurih dan bawang goreng renyah.',
-      wholesaleUnits: [
-        { id: 'wh-ind-dus', name: 'Dus (40 Pcs)', multiplier: 40, price: 130000, costPrice: 110000, barcode: '8998866200115-40' },
-      ],
-    },
-    {
-      id: 'prod-002',
-      name: 'Aqua Air Mineral Botol 600ml',
-      brand: 'Aqua',
-      sku: 'AQU-600ML',
-      barcode: '8992775211114',
-      categoryId: 'beverages',
-      price: 4000,
-      costPrice: 2900,
-      stock: 96,
-      minStock: 24,
-      unit: 'Botol',
-      aisle: 'Lorong 2 - Rak Dingin',
-      expiryDate: '2027-04-15',
-      batchNumber: 'AQU-2026-C4',
-      isPopular: true,
-      image: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=400&auto=format&fit=crop&q=60',
-      description: 'Air mineral pegunungan alami kemasan botol praktis.',
-      wholesaleUnits: [
-        { id: 'wh-aqu-dus', name: 'Dus (24 Botol)', multiplier: 24, price: 88000, costPrice: 68000, barcode: '8992775211114-24' },
-      ],
-    },
-    {
-      id: 'prod-003',
-      name: 'Bimoli Minyak Goreng Pouch 2 Liter',
-      brand: 'Bimoli',
-      sku: 'BIM-2L',
-      barcode: '8992775211018',
-      categoryId: 'groceries',
-      price: 38500,
-      costPrice: 33500,
-      stock: 45,
-      minStock: 12,
-      unit: 'Pouch',
-      aisle: 'Lorong 1 - Rak Sembako',
-      expiryDate: '2027-02-28',
-      isPopular: true,
-      image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop&q=60',
-      description: 'Minyak kelapa sawit murni berkualitas tinggi.',
-      wholesaleUnits: [
-        { id: 'wh-bim-dus', name: 'Dus (6 Pouch)', multiplier: 6, price: 224000, costPrice: 200000, barcode: '8992775211018-6' },
-      ],
-    },
-  ];
-
-  initialFmcgCatalog.forEach((p) => lanProductsStore.set(p.id, p));
-  scheduleLanDbSave();
-  addLanLog('info', 'Server Database LAN Toko diinisialisasi dengan master produk ritel.');
+  // Tanpa SQLite dan tanpa berkas lama: server mulai KOSONG (dulu diisi katalog FMCG contoh).
+  addLanLog('warn', 'Database SQLite tidak dapat dibuka dan tidak ada data lama. Server berjalan tanpa data; periksa folder data/.');
 }
 
 // Server baru menerima request setelah database siap (lihat setupViteOrStatic).
@@ -424,8 +344,8 @@ app.post('/api/lan/client/register', (req, res) => {
       client: clientRecord,
       serverTime: new Date().toISOString(),
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -502,8 +422,8 @@ async function applyStockMovement(
     const r = await applySqliteStockMovement(key, kind, items);
     if (r.duplicate) return { duplicate: true, updatedStocks: [] };
     fromDb = new Map(r.updatedStocks.map((u) => [u.productId, u.newStock]));
-  } catch (err: any) {
-    console.warn('[Stok] SQLite tidak tersedia, memakai stok di memori:', err?.message || err);
+  } catch (err) {
+    console.warn('[Stok] SQLite tidak tersedia, memakai stok di memori:', errorMessage(err) || err);
     if (memoryAppliedMovements.has(key)) return { duplicate: true, updatedStocks: [] };
     memoryAppliedMovements.add(key);
   }
@@ -618,9 +538,9 @@ app.post('/api/lan/data/push-transaction', async (req, res) => {
       updatedStocks,
       serverTime: now,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error processing LAN transaction push:', err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -674,9 +594,9 @@ app.post('/api/lan/data/stock-return', async (req, res) => {
       addLanLog('info', `${movementKind === 'void' ? 'Void' : 'Retur'} ${key} dari ${clientName || 'Kasir'}: stok ${result.updatedStocks.length} produk dikembalikan.`);
     }
     res.json({ success: true, duplicate: result.duplicate, updatedStocks: result.updatedStocks, transaction: updatedTx });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error processing stock return:', err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -712,8 +632,8 @@ app.post('/api/lan/data/sync-products', async (req, res) => {
       totalProductsInServer: lanProductsStore.size,
       serverTime: new Date().toISOString(),
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -744,9 +664,9 @@ app.post('/api/lan/data/stock-adjust', async (req, res) => {
       addLanLog('info', `Penyesuaian stok ${movement.length} produk dari ${clientName || 'Kasir'}${typeof reason === 'string' && reason ? ` (${reason.slice(0, 100)})` : ''}.`);
     }
     res.json({ success: true, duplicate: result.duplicate, updatedStocks: result.updatedStocks });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error processing stock adjust:', err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -825,8 +745,8 @@ app.get('/api/shelf/:productId', async (req, res) => {
       aisle: product.aisle || null,
       serverTime: new Date().toISOString(),
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -856,9 +776,9 @@ app.post('/api/lan/database/seed', adminOnly, async (req, res) => {
     const persist = async (label: string, run: () => Promise<unknown>) => {
       try {
         await run();
-      } catch (e: any) {
-        persistErrors.push(`${label}: ${e?.message || e}`);
-        console.error(`[SQLite Server] Gagal menyimpan ${label} saat seed:`, e?.message || e);
+      } catch (e) {
+        persistErrors.push(`${label}: ${errorMessage(e) || e}`);
+        console.error(`[SQLite Server] Gagal menyimpan ${label} saat seed:`, errorMessage(e) || e);
       }
     };
     if (Array.isArray(products) && products.length > 0) await persist('produk', () => upsertSqliteProducts(products));
@@ -881,8 +801,8 @@ app.post('/api/lan/database/seed', adminOnly, async (req, res) => {
         transactions: lanTransactionsStore.size,
       },
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -908,7 +828,7 @@ app.post('/api/lan/orders/held', (req, res) => {
     };
 
     lanHeldOrdersStore.set(heldOrder.id, orderWithTerminal);
-    saveSqliteHeldOrder(orderWithTerminal).catch(() => {});
+    saveSqliteHeldOrder(orderWithTerminal).catch((e) => addLanLog('warn', `Gagal menyimpan pesanan parkir ke database: ${e?.message || e}`));
     scheduleLanDbSave();
     addLanLog('info', `Pesanan #${heldOrder.id.slice(-6)} diparkir oleh ${clientName || 'Kasir'}. Bisa dipanggil di kasir manapun.`);
 
@@ -917,8 +837,8 @@ app.post('/api/lan/orders/held', (req, res) => {
       heldOrder: orderWithTerminal,
       totalHeldOrders: lanHeldOrdersStore.size,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -926,7 +846,7 @@ app.delete('/api/lan/orders/held/:id', (req, res) => {
   const { id } = req.params;
   const existed = lanHeldOrdersStore.has(id);
   lanHeldOrdersStore.delete(id);
-  deleteSqliteHeldOrder(id).catch(() => {});
+  deleteSqliteHeldOrder(id).catch((e) => addLanLog('warn', `Gagal menghapus pesanan parkir dari database: ${e?.message || e}`));
   if (existed) {
     scheduleLanDbSave();
     addLanLog('info', `Pesanan parkir #${id.slice(-6)} telah diambil & diselesaikan.`);
@@ -975,8 +895,8 @@ app.get('/api/pos/database/status', async (req, res) => {
       success: true,
       ...status,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -987,8 +907,8 @@ app.post('/api/pos/database/check-integrity', adminOnly, async (req, res) => {
       success: true,
       ...check,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -999,8 +919,8 @@ app.post('/api/pos/database/clean-obsolete', adminOnly, async (req, res) => {
     res.json({
       ...result,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -1045,11 +965,11 @@ app.post('/api/pos/transactions/sync', async (req, res) => {
         const key = String(tx.id || tx.invoiceNumber);
         try {
           await upsertSqliteTransactions([tx], deviceId || 'pos-terminal', cashierName || 'Kasir');
-        } catch (e: any) {
-          console.error('[SQLite Server] Gagal menyimpan transaksi', key, e?.message || e);
+        } catch (e) {
+          console.error('[SQLite Server] Gagal menyimpan transaksi', key, errorMessage(e) || e);
           const idx = syncedIds.indexOf(key);
           if (idx > -1) syncedIds.splice(idx, 1);
-          rejected.push({ id: key, error: 'Gagal disimpan di database server: ' + (e?.message || e) });
+          rejected.push({ id: key, error: 'Gagal disimpan di database server: ' + (errorMessage(e) || e) });
         }
       }
     }
@@ -1064,8 +984,8 @@ app.post('/api/pos/transactions/sync', async (req, res) => {
       database: 'SQLite Relational (WAL Mode)',
       totalCloudTransactions: lanTransactionsStore.size,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -1085,16 +1005,16 @@ app.post('/api/pos/transactions', async (req, res) => {
     // Simpan ke SQLite; bila gagal, jawab error agar kasir menyimpannya di antrean offline
     try {
       await upsertSqliteTransactions([stored]);
-    } catch (e: any) {
-      console.error('[SQLite Server] Gagal menyimpan transaksi:', e?.message || e);
+    } catch (e) {
+      console.error('[SQLite Server] Gagal menyimpan transaksi:', errorMessage(e) || e);
       scheduleLanDbSave();
       return res.status(500).json({ success: false, error: 'Transaksi gagal disimpan di database server.' });
     }
 
     scheduleLanDbSave();
     res.json({ success: true, transaction: tx, serverTime: new Date().toISOString() });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -1151,8 +1071,8 @@ app.get('/api/pos/transactions', async (req, res) => {
       ...paginated,
       count: paginated.transactions.length,
     });
-  } catch (err: any) {
-    console.warn('[Transactions API] Error in paginated query, using fallback:', err?.message || err);
+  } catch (err) {
+    console.warn('[Transactions API] Error in paginated query, using fallback:', errorMessage(err) || err);
     const list = Array.from(lanTransactionsStore.values()).sort(
       (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
     );
@@ -1209,7 +1129,8 @@ async function setupViteOrStatic() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    // Express 5: penangkap semua rute memakai sintaks path-to-regexp v8
+    app.get('/{*splat}', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

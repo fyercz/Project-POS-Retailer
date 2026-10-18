@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 import util from 'util';
 import { adminOnly } from '../security.ts';
 import { cleanAndPruneDatabase as cleanSqliteDatabase } from '../sqliteMasterDb.ts';
+import { errorMessage } from '../../utils/errors.ts';
 
 const execPromise = util.promisify(exec);
 
@@ -307,8 +308,8 @@ router.get('/api/system/git-status', async (req, res) => {
       nodeVersion: process.version,
       platform: process.platform,
     });
-  } catch (err: any) {
-    res.status(500).json({ isGitRepo: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ isGitRepo: false, error: errorMessage(err) });
   }
 });
 
@@ -334,9 +335,9 @@ async function protectStoreDataBeforeReset(): Promise<string | null> {
         fs.rmSync(path.join(backupRoot, name), { recursive: true, force: true });
       }
     }
-  } catch (e: any) {
+  } catch (e) {
     // Jika cadangan gagal, jangan lanjutkan operasi yang bisa menimpa data.
-    throw new Error('Gagal membuat cadangan data toko sebelum update: ' + (e?.message || e));
+    throw new Error('Gagal membuat cadangan data toko sebelum update: ' + (errorMessage(e) || e));
   }
   await execPromise('git rm -r --cached --ignore-unmatch -q data', { cwd: root }).catch(() => {});
   return backupPath;
@@ -371,8 +372,8 @@ router.post('/api/system/git-configure', adminOnly, async (req, res) => {
       message: `Repositori Git berhasil dikonfigurasi ke ${OFFICIAL_GITHUB_REPO_URL}`,
       officialRepoUrl: OFFICIAL_GITHUB_REPO_URL,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -385,8 +386,8 @@ router.post('/api/system/git-pull', adminOnly, async (req, res) => {
           cwd: process.cwd(),
           timeout: 15000,
         });
-      } catch (initErr: any) {
-        console.warn('Git init warning:', initErr.message);
+      } catch (initErr) {
+        console.warn('Git init warning:', errorMessage(initErr));
       }
     }
 
@@ -407,11 +408,11 @@ router.post('/api/system/git-pull', adminOnly, async (req, res) => {
     let dataBackupPath: string | null = null;
     try {
       dataBackupPath = await protectStoreDataBeforeReset();
-    } catch (backupErr: any) {
+    } catch (backupErr) {
       return res.status(500).json({
         success: false,
         step: 'backup data',
-        message: 'Update dibatalkan: ' + backupErr.message,
+        message: 'Update dibatalkan: ' + errorMessage(backupErr),
       });
     }
     let pullOutput = '';
@@ -441,12 +442,12 @@ router.post('/api/system/git-pull', adminOnly, async (req, res) => {
           timeout: 45000,
         });
         pullOutput = 'Berhasil disinkronkan ke cabang master.';
-      } catch (fallbackErr: any) {
+      } catch (fallbackErr) {
         return res.status(500).json({
           success: false,
           step: 'git fetch & reset',
           message: 'Gagal memperbarui kode dari GitHub. Periksa koneksi internet Anda.',
-          details: pullErr.message || fallbackErr.message,
+          details: pullErr.message || errorMessage(fallbackErr),
         });
       }
     }
@@ -460,8 +461,8 @@ router.post('/api/system/git-pull', adminOnly, async (req, res) => {
     let buildOk = true;
     try {
       await execPromise('npm install --no-audit --no-fund', { cwd: process.cwd(), timeout: 300000 });
-    } catch (installErr: any) {
-      console.warn('npm install warning after pull:', installErr?.message);
+    } catch (installErr) {
+      console.warn('npm install warning after pull:', errorMessage(installErr));
     }
     try {
       const { stdout, stderr } = await execPromise('npm run build', {
@@ -469,10 +470,10 @@ router.post('/api/system/git-pull', adminOnly, async (req, res) => {
         timeout: 180000,
       });
       buildOutput = (stdout || stderr || '').trim();
-    } catch (buildErr: any) {
+    } catch (buildErr) {
       buildOk = false;
-      console.warn('Build gagal setelah update:', buildErr?.message);
-      buildOutput = 'Build gagal: ' + buildErr?.message;
+      console.warn('Build gagal setelah update:', errorMessage(buildErr));
+      buildOutput = 'Build gagal: ' + errorMessage(buildErr);
     }
 
     // Read new commit
@@ -496,8 +497,8 @@ router.post('/api/system/git-pull', adminOnly, async (req, res) => {
       cleanedFilesCount: cleanupResult.count,
       cleanedBytesFreed: cleanupResult.bytesFreed,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -632,8 +633,8 @@ router.get('/api/system/verify-files', adminOnly, async (req, res) => {
       envPrerequisites,
       files: results,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -649,8 +650,8 @@ router.get('/api/system/cleanup-scan', adminOnly, async (req, res) => {
       totalBytes,
       items,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -661,8 +662,8 @@ router.post('/api/system/cleanup-execute', adminOnly, async (req, res) => {
     let dbCleanup: any = null;
     try {
       dbCleanup = await cleanSqliteDatabase();
-    } catch (e: any) {
-      console.warn('DB cleanup warning in system cleanup:', e?.message);
+    } catch (e) {
+      console.warn('DB cleanup warning in system cleanup:', errorMessage(e));
     }
 
     const totalFreed = cleanup.bytesFreed + (dbCleanup?.freedBytes || 0);
@@ -676,8 +677,8 @@ router.post('/api/system/cleanup-execute', adminOnly, async (req, res) => {
       dbCleanup,
       message: `Pembersihan selesai! ${cleanup.count} file usang dihapus (${(cleanup.bytesFreed / 1024).toFixed(1)} KB dibebaskan).${dbMsg}`,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 

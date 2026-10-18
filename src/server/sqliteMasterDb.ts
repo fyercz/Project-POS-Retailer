@@ -267,7 +267,7 @@ export async function initSqliteMasterDatabase(): Promise<void> {
     console.log(
       `[SQLite Server] Relational Master DB Initialized in WAL Mode. Path: ${SQLITE_FILE}. Integrity: ${databaseEngineInfo.integrity}`
     );
-  } catch (err: any) {
+  } catch (err) {
     console.error('[SQLite Server] Error during database initialization:', err);
     throw err;
   }

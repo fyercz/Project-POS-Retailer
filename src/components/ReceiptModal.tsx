@@ -33,6 +33,7 @@ import {
   savePrinterConfig,
   ThermalPaperWidth,
 } from '../utils/escposPrinter';
+import { errorMessage } from '../utils/errors';
 
 interface ReceiptModalProps {
   transaction: Transaction | null;
@@ -98,8 +99,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         } else {
           setPrinterFeedback({ type: 'error', message: res.message });
         }
-      } catch (err: any) {
-        setPrinterFeedback({ type: 'error', message: err?.message || 'Gagal cetak thermal langsung.' });
+      } catch (err) {
+        setPrinterFeedback({ type: 'error', message: errorMessage(err) || 'Gagal cetak thermal langsung.' });
       } finally {
         setDirectPrinting(false);
         setTimeout(() => setPrinterFeedback(null), 5000);
@@ -152,7 +153,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       const mode = printMode === 'bluetooth' ? 'bluetooth' : 'serial';
       const res = await kickCashDrawerOnly(mode, 9600);
       setPrinterFeedback({ type: res.success ? 'success' : 'error', message: res.message });
-    } catch (err: any) {
+    } catch (err) {
       setPrinterFeedback({ type: 'error', message: 'Gagal membuka laci kas: ' + String(err) });
     } finally {
       setDirectPrinting(false);
