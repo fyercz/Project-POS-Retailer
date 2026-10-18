@@ -129,36 +129,14 @@ function addLanLog(level: 'info' | 'success' | 'warn', message: string) {
   console.log(`[LAN Server] [${level.toUpperCase()}] ${message}`);
 }
 
-// Helper to save server database snapshot to disk
-let saveTimeout: any = null;
+// Tandai data server berubah (nomor versi dipakai kasir untuk mendeteksi pembaruan).
+// SQLite adalah SATU-SATUNYA penyimpanan permanen; Map di atas hanya cache baca cepat.
+// Dulu seluruh isi (puluhan ribu produk/transaksi) ditulis ulang ke lan-database.json setiap
+// perubahan: berat (beberapa MB per transaksi) dan hanya duplikat SQLite. File JSON lama tetap
+// dibaca sekali saat start sebagai cadangan migrasi bila SQLite gagal.
 function scheduleLanDbSave() {
-  if (saveTimeout) clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => {
-    try {
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
-      lanLastUpdated = new Date().toISOString();
-      lanDatabaseVersion++;
-
-      const payload = {
-        version: lanDatabaseVersion,
-        lastUpdated: lanLastUpdated,
-        products: Array.from(lanProductsStore.values()),
-        transactions: Array.from(lanTransactionsStore.values()),
-        customers: Array.from(lanCustomersStore.values()),
-        suppliers: Array.from(lanSuppliersStore.values()),
-        heldOrders: Array.from(lanHeldOrdersStore.values()),
-      };
-
-      // Tulis ke file sementara lalu rename, agar file tidak rusak bila listrik mati saat menulis.
-      const tmpFile = `${LAN_DB_FILE}.tmp`;
-      fs.writeFileSync(tmpFile, JSON.stringify(payload), 'utf-8');
-      fs.renameSync(tmpFile, LAN_DB_FILE);
-    } catch (err: any) {
-      console.warn('[LAN Server] Error saving database file:', err?.message || err);
-    }
-  }, 1000);
+  lanLastUpdated = new Date().toISOString();
+  lanDatabaseVersion++;
 }
 
 // Initial Database Bootstrapper
@@ -228,86 +206,15 @@ async function initLanDatabase() {
       }
       lanDatabaseVersion = data.version || 1;
       lanLastUpdated = data.lastUpdated || new Date().toISOString();
-      addLanLog('info', `Database master berhasil dimuat dari disk: ${lanProductsStore.size} produk, ${lanTransactionsStore.size} transaksi.`);
+      addLanLog('warn', `SQLite gagal dibuka; memakai salinan lama lan-database.json (${lanProductsStore.size} produk, ${lanTransactionsStore.size} transaksi). Perubahan baru TIDAK tersimpan permanen sampai SQLite pulih.`);
       return;
     }
   } catch (err: any) {
     console.warn('[LAN Server] Failed loading existing LAN DB, initializing fresh:', err?.message || err);
   }
 
-  // Fallback initial FMCG catalog if DB file is fresh
-  const initialFmcgCatalog = [
-    {
-      id: 'prod-001',
-      name: 'Indomie Mi Goreng Spesial 85g',
-      brand: 'Indomie',
-      sku: 'IND-MIE-GOR',
-      barcode: '8998866200115',
-      categoryId: 'instant',
-      price: 3500,
-      costPrice: 2800,
-      stock: 120,
-      minStock: 24,
-      unit: 'Bungkus',
-      aisle: 'Lorong 1 - Rak A1',
-      expiryDate: '2026-11-20',
-      batchNumber: 'IND-2026-B1',
-      isPopular: true,
-      promoBadge: 'Best Seller',
-      image: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400&auto=format&fit=crop&q=60',
-      description: 'Mi instan goreng legendaris dengan bumbu gurih dan bawang goreng renyah.',
-      wholesaleUnits: [
-        { id: 'wh-ind-dus', name: 'Dus (40 Pcs)', multiplier: 40, price: 130000, costPrice: 110000, barcode: '8998866200115-40' },
-      ],
-    },
-    {
-      id: 'prod-002',
-      name: 'Aqua Air Mineral Botol 600ml',
-      brand: 'Aqua',
-      sku: 'AQU-600ML',
-      barcode: '8992775211114',
-      categoryId: 'beverages',
-      price: 4000,
-      costPrice: 2900,
-      stock: 96,
-      minStock: 24,
-      unit: 'Botol',
-      aisle: 'Lorong 2 - Rak Dingin',
-      expiryDate: '2027-04-15',
-      batchNumber: 'AQU-2026-C4',
-      isPopular: true,
-      image: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=400&auto=format&fit=crop&q=60',
-      description: 'Air mineral pegunungan alami kemasan botol praktis.',
-      wholesaleUnits: [
-        { id: 'wh-aqu-dus', name: 'Dus (24 Botol)', multiplier: 24, price: 88000, costPrice: 68000, barcode: '8992775211114-24' },
-      ],
-    },
-    {
-      id: 'prod-003',
-      name: 'Bimoli Minyak Goreng Pouch 2 Liter',
-      brand: 'Bimoli',
-      sku: 'BIM-2L',
-      barcode: '8992775211018',
-      categoryId: 'groceries',
-      price: 38500,
-      costPrice: 33500,
-      stock: 45,
-      minStock: 12,
-      unit: 'Pouch',
-      aisle: 'Lorong 1 - Rak Sembako',
-      expiryDate: '2027-02-28',
-      isPopular: true,
-      image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop&q=60',
-      description: 'Minyak kelapa sawit murni berkualitas tinggi.',
-      wholesaleUnits: [
-        { id: 'wh-bim-dus', name: 'Dus (6 Pouch)', multiplier: 6, price: 224000, costPrice: 200000, barcode: '8992775211018-6' },
-      ],
-    },
-  ];
-
-  initialFmcgCatalog.forEach((p) => lanProductsStore.set(p.id, p));
-  scheduleLanDbSave();
-  addLanLog('info', 'Server Database LAN Toko diinisialisasi dengan master produk ritel.');
+  // Tanpa SQLite dan tanpa berkas lama: server mulai KOSONG (dulu diisi katalog FMCG contoh).
+  addLanLog('warn', 'Database SQLite tidak dapat dibuka dan tidak ada data lama. Server berjalan tanpa data; periksa folder data/.');
 }
 
 // Server baru menerima request setelah database siap (lihat setupViteOrStatic).
@@ -908,7 +815,7 @@ app.post('/api/lan/orders/held', (req, res) => {
     };
 
     lanHeldOrdersStore.set(heldOrder.id, orderWithTerminal);
-    saveSqliteHeldOrder(orderWithTerminal).catch(() => {});
+    saveSqliteHeldOrder(orderWithTerminal).catch((e) => addLanLog('warn', `Gagal menyimpan pesanan parkir ke database: ${e?.message || e}`));
     scheduleLanDbSave();
     addLanLog('info', `Pesanan #${heldOrder.id.slice(-6)} diparkir oleh ${clientName || 'Kasir'}. Bisa dipanggil di kasir manapun.`);
 
@@ -926,7 +833,7 @@ app.delete('/api/lan/orders/held/:id', (req, res) => {
   const { id } = req.params;
   const existed = lanHeldOrdersStore.has(id);
   lanHeldOrdersStore.delete(id);
-  deleteSqliteHeldOrder(id).catch(() => {});
+  deleteSqliteHeldOrder(id).catch((e) => addLanLog('warn', `Gagal menghapus pesanan parkir dari database: ${e?.message || e}`));
   if (existed) {
     scheduleLanDbSave();
     addLanLog('info', `Pesanan parkir #${id.slice(-6)} telah diambil & diselesaikan.`);
