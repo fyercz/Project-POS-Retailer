@@ -440,29 +440,29 @@ export const BarcodeScannerModal: React.FC = () => {
   return (
     <div
       id="barcode-scanner-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
     >
       <div
         id="barcode-scanner-modal-content"
-        className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[95vh]"
+        className="relative w-full max-w-lg bg-slate-50 dark:bg-slate-900 border border-slate-300/80 dark:border-slate-700/80 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[95vh]"
       >
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-900/90">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
               <ScanBarcode className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span>Scanner Barcode Kasir</span>
-                <span className="text-[11px] px-1.5 py-0.2 rounded-md font-mono bg-emerald-950 text-emerald-400 border border-emerald-700/50">
+                <span className="text-[11px] px-1.5 py-0.2 rounded-md font-mono bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/50">
                   AUTO ADD
                 </span>
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-600 dark:text-slate-500">
                 Pindai barcode barang fisik untuk otomatis masuk ke keranjang belanja
               </p>
             </div>
@@ -479,11 +479,7 @@ export const BarcodeScannerModal: React.FC = () => {
                   playScannerSound('success', { volume: 0.08 });
                 }
               }}
-              className={`p-1.5 rounded-xl border text-xs transition-colors cursor-pointer ${
-                soundEnabled
-                  ? 'bg-slate-800 border-slate-700 text-emerald-400'
-                  : 'bg-slate-800/50 border-slate-800 text-slate-500'
-              }`}
+              className={`p-1.5 rounded-xl border text-xs transition-colors cursor-pointer ${ soundEnabled ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-700 dark:text-emerald-400' : 'bg-slate-100/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-500' }`}
               title={soundEnabled ? 'Suara Chirp Kasir Aktif (Berhasil & Gagal)' : 'Suara Dimatikan'}
             >
               {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
@@ -494,7 +490,7 @@ export const BarcodeScannerModal: React.FC = () => {
               type="button"
               id="btn-close-barcode-scanner"
               onClick={handleClose}
-              className="p-1.5 rounded-xl text-slate-500 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -521,7 +517,7 @@ export const BarcodeScannerModal: React.FC = () => {
 
                 {/* Reticle Helper Text */}
                 <div className="absolute bottom-2 inset-x-0 text-center">
-                  <span className="text-[11px] uppercase font-mono tracking-widest text-emerald-400 bg-slate-950/80 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  <span className="text-[11px] uppercase font-mono tracking-widest text-emerald-700 dark:text-emerald-400 bg-white/80 dark:bg-slate-950/80 px-2 py-0.5 rounded-full border border-emerald-500/30">
                     Arahkan Barcode Kemari
                   </span>
                 </div>
@@ -531,10 +527,10 @@ export const BarcodeScannerModal: React.FC = () => {
 
           {/* Loading / Starting State */}
           {isStartingCamera && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 text-slate-300 gap-3 z-10">
-              <RefreshCw className="w-8 h-8 text-emerald-400 animate-spin" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-slate-950/90 text-slate-700 dark:text-slate-300 gap-3 z-10">
+              <RefreshCw className="w-8 h-8 text-emerald-700 dark:text-emerald-400 animate-spin" />
               <p className="text-xs font-semibold">Mengaktifkan kamera kasir...</p>
-              <p className="text-[11px] text-slate-500 text-center max-w-xs px-4">
+              <p className="text-[11px] text-slate-600 dark:text-slate-500 text-center max-w-xs px-4">
                 Mohon tunggu atau izinkan akses kamera jika diminta browser.
               </p>
             </div>
@@ -542,22 +538,22 @@ export const BarcodeScannerModal: React.FC = () => {
 
           {/* Dedicated Insecure Context & Android Camera Troubleshooting Screen */}
           {cameraError && (
-            <div role="alert" className="absolute inset-0 flex flex-col items-center justify-start bg-slate-950/95 p-4 text-center z-10 overflow-y-auto">
+            <div role="alert" className="absolute inset-0 flex flex-col items-center justify-start bg-white/95 dark:bg-slate-950/95 p-4 text-center z-10 overflow-y-auto">
               <div className="w-full max-w-md mx-auto my-auto space-y-3 pt-2 pb-4">
                 {/* Error Header Icon */}
-                <div className="inline-flex p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <div className="inline-flex p-2.5 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                   {cameraErrorDetails?.isInsecureContext ? (
                     <ShieldAlert className="w-6 h-6" />
                   ) : (
-                    <AlertCircle className="w-6 h-6 text-rose-400" />
+                    <AlertCircle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
                   )}
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold text-white">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                     {cameraErrorDetails?.title || 'Kamera Belum Dapat Dinyalakan'}
                   </h4>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed px-2">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed px-2">
                     {cameraError}
                   </p>
                 </div>
@@ -574,7 +570,7 @@ export const BarcodeScannerModal: React.FC = () => {
                     <span>
                       {isScanningPhoto
                         ? 'Sedang Memproses Foto Barcode...'
-                        : '📸 Buka Kamera HP (Langsung Scan Tanpa Perlu HTTPS)'}
+                        : 'Buka Kamera HP (Langsung Scan Tanpa Perlu HTTPS)'}
                     </span>
                   </button>
                   <p className="text-[11px] text-emerald-400/90 leading-tight">
@@ -587,9 +583,9 @@ export const BarcodeScannerModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => startCamera(selectedCameraId)}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-700"
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
                   >
-                    <RotateCcw className="w-3.5 h-3.5 text-emerald-400" />
+                    <RotateCcw className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
                     <span>Coba Nyalakan Lagi</span>
                   </button>
 
@@ -597,9 +593,9 @@ export const BarcodeScannerModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => window.open(window.location.href, '_blank')}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-700"
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
                     >
-                      <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
+                      <ExternalLink className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                       <span>Buka di Tab Baru</span>
                     </button>
                   )}
@@ -611,31 +607,31 @@ export const BarcodeScannerModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowFlagsGuide(!showFlagsGuide)}
-                      className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center justify-between text-xs text-slate-300 font-semibold cursor-pointer transition-colors"
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-700 flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 font-semibold cursor-pointer transition-colors"
                     >
-                      <span className="flex items-center gap-2 text-amber-400">
+                      <span className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>Cara Mengaktifkan Live Video Stream di Chrome Android</span>
                       </span>
                       {showFlagsGuide ? (
-                        <ChevronUp className="w-4 h-4 text-slate-500" />
+                        <ChevronUp className="w-4 h-4 text-slate-600 dark:text-slate-500" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-slate-500" />
+                        <ChevronDown className="w-4 h-4 text-slate-600 dark:text-slate-500" />
                       )}
                     </button>
 
                     {showFlagsGuide && (
-                      <div className="mt-2 p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 space-y-2.5">
-                        <p className="text-slate-300 leading-snug">
+                      <div className="mt-2 p-3.5 rounded-xl bg-slate-50/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-700 dark:text-slate-300 space-y-2.5">
+                        <p className="text-slate-700 dark:text-slate-300 leading-snug">
                           Karena Anda membuka kasir via alamat IP lokal HTTP (bukan HTTPS), Chrome menyembunyikan izin kamera. Ikuti 3 langkah 1-menit ini untuk membukanya:
                         </p>
 
-                        <div className="space-y-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                        <div className="space-y-2 bg-white dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
                           {/* Step 1: Copy URL */}
                           <div className="space-y-1">
-                            <span className="font-semibold text-white">1. Salin Alamat Kasir Ini:</span>
+                            <span className="font-semibold text-slate-900 dark:text-white">1. Salin Alamat Kasir Ini:</span>
                             <div className="flex items-center gap-1.5">
-                              <code className="flex-1 px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-[11px] text-emerald-400 font-mono select-all truncate">
+                              <code className="flex-1 px-2 py-1 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] text-emerald-700 dark:text-emerald-400 font-mono select-all truncate">
                                 {flagsInstructions.targetOrigin}
                               </code>
                               <button
@@ -643,10 +639,10 @@ export const BarcodeScannerModal: React.FC = () => {
                                 onClick={() =>
                                   copyToClipboard(flagsInstructions.targetOrigin, 'origin')
                                 }
-                                className="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] text-white font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                                className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[11px] text-slate-900 dark:text-white font-bold flex items-center gap-1 shrink-0 cursor-pointer"
                               >
                                 {copiedText === 'origin' ? (
-                                  <Check className="w-3 h-3 text-emerald-400" />
+                                  <Check className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
                                 ) : (
                                   <Copy className="w-3 h-3" />
                                 )}
@@ -657,9 +653,9 @@ export const BarcodeScannerModal: React.FC = () => {
 
                           {/* Step 2: Copy Flags URL */}
                           <div className="space-y-1 pt-1">
-                            <span className="font-semibold text-white">2. Buka Tab Baru Chrome &amp; Ketik:</span>
+                            <span className="font-semibold text-slate-900 dark:text-white">2. Buka Tab Baru Chrome &amp; Ketik:</span>
                             <div className="flex items-center gap-1.5">
-                              <code className="flex-1 px-2 py-1 rounded-md bg-slate-900 border border-slate-800 text-[11px] text-blue-300 font-mono select-all truncate">
+                              <code className="flex-1 px-2 py-1 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] text-blue-600 dark:text-blue-300 font-mono select-all truncate">
                                 {flagsInstructions.flagsUrl}
                               </code>
                               <button
@@ -667,10 +663,10 @@ export const BarcodeScannerModal: React.FC = () => {
                                 onClick={() =>
                                   copyToClipboard(flagsInstructions.flagsUrl, 'flags')
                                 }
-                                className="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] text-white font-bold flex items-center gap-1 shrink-0 cursor-pointer"
+                                className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[11px] text-slate-900 dark:text-white font-bold flex items-center gap-1 shrink-0 cursor-pointer"
                               >
                                 {copiedText === 'flags' ? (
-                                  <Check className="w-3 h-3 text-emerald-400" />
+                                  <Check className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
                                 ) : (
                                   <Copy className="w-3 h-3" />
                                 )}
@@ -680,9 +676,9 @@ export const BarcodeScannerModal: React.FC = () => {
                           </div>
 
                           {/* Step 3: Enable & Relaunch */}
-                          <div className="space-y-0.5 pt-1 text-slate-300">
-                            <span className="font-semibold text-white">3. Tempel URL Kasir, Pilih "Enabled", lalu Relaunch:</span>
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                          <div className="space-y-0.5 pt-1 text-slate-700 dark:text-slate-300">
+                            <span className="font-semibold text-slate-900 dark:text-white">3. Tempel URL Kasir, Pilih "Enabled", lalu Relaunch:</span>
+                            <p className="text-[11px] text-slate-600 dark:text-slate-500 leading-relaxed">
                               Tempel URL kasir ke kotak teks Chrome Flags, ubah menu menjadi <strong>Enabled</strong>, lalu ketuk tombol biru <strong>Relaunch</strong> di pojok kanan bawah Chrome.
                             </p>
                           </div>
@@ -709,9 +705,9 @@ export const BarcodeScannerModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowTroubleshootHelp(!showTroubleshootHelp)}
-                      className="text-[11px] text-slate-500 hover:text-slate-200 flex items-center gap-1 mx-auto underline cursor-pointer"
+                      className="text-[11px] text-slate-600 dark:text-slate-500 hover:text-slate-200 flex items-center gap-1 mx-auto underline cursor-pointer"
                     >
-                      <Info className="w-3.5 h-3.5 text-blue-400" />
+                      <Info className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                       <span>
                         {showTroubleshootHelp
                           ? 'Sembunyikan Panduan Izin'
@@ -720,13 +716,13 @@ export const BarcodeScannerModal: React.FC = () => {
                     </button>
 
                     {showTroubleshootHelp && (
-                      <div className="mt-2 p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-300 space-y-1.5">
-                        <p className="font-semibold text-white text-xs">
+                      <div className="mt-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-700 dark:text-slate-300 space-y-1.5">
+                        <p className="font-semibold text-slate-900 dark:text-white text-xs">
                           Langkah di Google Chrome / Browser HP:
                         </p>
-                        <ol className="list-decimal pl-4 space-y-1 text-slate-300">
+                        <ol className="list-decimal pl-4 space-y-1 text-slate-700 dark:text-slate-300">
                           <li>
-                            Ketuk ikon <strong>Gembok (🔒)</strong> atau ikon setelan di sebelah kiri kolom URL browser.
+                            Ketuk ikon <strong>Gembok ()</strong> atau ikon setelan di sebelah kiri kolom URL browser.
                           </li>
                           <li>
                             Pilih menu <strong>Izin situs (Permissions)</strong>.
@@ -751,17 +747,13 @@ export const BarcodeScannerModal: React.FC = () => {
           {lastFeedback && (
             <div role="status"
               key={lastFeedback.timestamp}
-              className={`absolute top-3 inset-x-3 z-20 p-2.5 rounded-xl border backdrop-blur-md shadow-md transition-all animate-slide-down flex items-center justify-between gap-2 ${
-                lastFeedback.type === 'success'
-                  ? 'bg-emerald-950/90 border-emerald-500/60 text-emerald-100'
-                  : 'bg-rose-950/90 border-rose-500/60 text-rose-100'
-              }`}
+              className={`absolute top-3 inset-x-3 z-20 p-2.5 rounded-xl border backdrop-blur-md shadow-md transition-all animate-slide-down flex items-center justify-between gap-2 ${ lastFeedback.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/60 text-emerald-100' : 'bg-rose-950/90 border-rose-500/60 text-rose-100' }`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 {lastFeedback.type === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
                 ) : (
-                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                 )}
                 <div className="min-w-0">
                   <p className="text-xs font-bold truncate">
@@ -773,7 +765,7 @@ export const BarcodeScannerModal: React.FC = () => {
 
               {lastFeedback.product ? (
                 <div className="text-right shrink-0">
-                  <span className="text-xs font-mono font-bold text-emerald-300">
+                  <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-300">
                     +{formatCurrency(lastFeedback.product.price, settings.currency)}
                   </span>
                 </div>
@@ -798,11 +790,7 @@ export const BarcodeScannerModal: React.FC = () => {
                 <button aria-label="Senter kamera"
                   type="button"
                   onClick={toggleTorch}
-                  className={`p-2 rounded-xl backdrop-blur-md border text-xs transition-colors cursor-pointer ${
-                    isTorchOn
-                      ? 'bg-amber-500/90 border-amber-400 text-slate-950 font-bold'
-                      : 'bg-slate-900/80 border-slate-700 text-white hover:bg-slate-800'
-                  }`}
+                  className={`p-2 rounded-xl backdrop-blur-md border text-xs transition-colors cursor-pointer ${ isTorchOn ? 'bg-amber-500/90 border-amber-400 text-slate-950 font-bold' : 'bg-slate-50/80 dark:bg-slate-900/80 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800' }`}
                   title={isTorchOn ? 'Matikan Lampu' : 'Nyalakan Lampu'}
                 >
                   {isTorchOn ? <Zap className="w-4 h-4" /> : <ZapOff className="w-4 h-4" />}
@@ -814,7 +802,7 @@ export const BarcodeScannerModal: React.FC = () => {
                 <select aria-label="Pilih kamera"
                   value={selectedCameraId}
                   onChange={(e) => switchCamera(e.target.value)}
-                  className="bg-slate-900/90 backdrop-blur-md border border-slate-700 text-white text-[11px] py-1.5 px-2.5 rounded-xl focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-600"
+                  className="bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-[11px] py-1.5 px-2.5 rounded-xl focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-600"
                 >
                   {availableCameras.map((cam, idx) => (
                     <option key={cam.id} value={cam.id}>
@@ -828,28 +816,28 @@ export const BarcodeScannerModal: React.FC = () => {
         </div>
 
         {/* Current Cart Status Mini-Bar */}
-        <div className="px-4 py-2 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 text-slate-300">
-            <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="px-4 py-2 bg-white/80 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+            <ShoppingBag className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
             <span>
               Isi Keranjang:{' '}
-              <strong className="text-white">
+              <strong className="text-slate-900 dark:text-white">
                 {cart.reduce((s, i) => s + i.quantity, 0)} item
               </strong>
             </span>
           </div>
-          <div className="font-mono text-emerald-400 font-bold">
+          <div className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">
             Total: {formatCurrency(finalTotal, settings.currency)}
           </div>
         </div>
 
         {/* Controls & Manual Input Fallback */}
-        <div className="p-3 space-y-3 bg-slate-900 overflow-y-auto max-h-56">
+        <div className="p-3 space-y-3 bg-slate-50 dark:bg-slate-900 overflow-y-auto max-h-56">
           {/* Continuous Mode Switcher */}
-          <div className="flex items-center justify-between bg-slate-800/60 p-2 rounded-xl border border-slate-700/60 text-xs">
+          <div className="flex items-center justify-between bg-slate-100/60 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-300/60 dark:border-slate-700/60 text-xs">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <span className="text-slate-300 font-medium">Mode Scan Beruntun (Continuous)</span>
+              <span className="text-slate-700 dark:text-slate-300 font-medium">Mode Scan Beruntun (Continuous)</span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -858,7 +846,7 @@ export const BarcodeScannerModal: React.FC = () => {
                 onChange={(e) => setContinuousMode(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-600"></div>
+              <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-600"></div>
             </label>
           </div>
 
@@ -878,9 +866,9 @@ export const BarcodeScannerModal: React.FC = () => {
               type="button"
               onClick={() => nativeCameraInputRef.current?.click()}
               disabled={isScanningPhoto}
-              className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
+              className="w-full py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
             >
-              <Camera className="w-3.5 h-3.5 text-emerald-400" />
+              <Camera className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
               <span>
                 {isScanningPhoto
                   ? 'Sedang Membaca Barcode...'
@@ -896,7 +884,7 @@ export const BarcodeScannerModal: React.FC = () => {
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
               placeholder="Atau ketik/paste nomor barcode..."
-              className="flex-1 px-3 py-1.5 text-xs rounded-xl border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+              className="flex-1 px-3 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
             />
             <button
               type="submit"
@@ -909,15 +897,15 @@ export const BarcodeScannerModal: React.FC = () => {
         </div>
 
         {/* Footer Navigation Button */}
-        <div className="px-4 py-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
-          <span className="text-[11px] text-slate-500">
-            Tekan <kbd className="px-1.5 py-0.5 rounded-md bg-slate-800 font-mono text-slate-200">Esc</kbd>{' '}
+        <div className="px-4 py-2.5 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <span className="text-[11px] text-slate-600 dark:text-slate-500">
+            Tekan <kbd className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-slate-800 dark:text-slate-200">Esc</kbd>{' '}
             atau tombol selesai saat rampung.
           </span>
           <button
             type="button"
             onClick={handleClose}
-            className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-700"
+            className="px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
           >
             <span>Selesai &amp; Ke Kasir</span>
             <ArrowRight className="w-3.5 h-3.5" />
