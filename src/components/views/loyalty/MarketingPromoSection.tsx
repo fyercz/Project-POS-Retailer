@@ -398,7 +398,7 @@ export const MarketingPromoSection: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <button
+            <button aria-label="Buat ulang dengan AI"
               id="btn-generate-promo"
               type="button"
               disabled={isGenerating}
@@ -685,7 +685,7 @@ export const MarketingPromoSection: React.FC = () => {
             </div>
 
             {/* ACTION BUTTON */}
-            <button
+            <button aria-label="Buat ulang dengan AI"
               id="btn-generate-promo-sidebar"
               type="button"
               disabled={isGenerating}
@@ -865,7 +865,7 @@ export const MarketingPromoSection: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <button
+                          <button aria-label="Salin"
                             type="button"
                             onClick={() =>
                               handleCopyToClipboard(currentPromo.brandMessageWhatsApp, 'wa')
@@ -925,7 +925,7 @@ export const MarketingPromoSection: React.FC = () => {
                           Karakter: {currentPromo.brandMessageSMS.length} / 160
                         </span>
 
-                        <button
+                        <button aria-label="Salin"
                           type="button"
                           onClick={() => handleCopyToClipboard(currentPromo.brandMessageSMS, 'sms')}
                           className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer hover:bg-slate-50"
@@ -953,7 +953,7 @@ export const MarketingPromoSection: React.FC = () => {
                       </div>
 
                       <div className="flex justify-end">
-                        <button
+                        <button aria-label="Salin"
                           type="button"
                           onClick={() =>
                             handleCopyToClipboard(currentPromo.brandMessageSocial, 'social')

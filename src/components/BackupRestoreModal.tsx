@@ -2192,7 +2192,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
 
             {/* Modal actions */}
             <div className="flex items-center justify-between gap-3 pt-1 shrink-0">
-              <button
+              <button aria-label="Salin"
                 type="button"
                 onClick={handleCopyJsonToClipboard}
                 className={`px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${

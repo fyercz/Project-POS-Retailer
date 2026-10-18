@@ -344,7 +344,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                       placeholder="••••"
                       className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-center tracking-[0.4em] font-black text-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
-                    <button
+                    <button aria-label="Tampilkan atau sembunyikan PIN"
                       type="button"
                       onClick={() => setShowPin(!showPin)}
                       className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-600 dark:hover:text-slate-200"

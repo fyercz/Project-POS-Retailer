@@ -687,7 +687,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900 text-emerald-400 font-mono text-[11px]">
                     <span className="truncate mr-2">git pull origin main && npm i && npm run build</span>
-                    <button
+                    <button aria-label="Salin Perintah"
                       type="button"
                       onClick={() =>
                         handleCopyText(
@@ -1108,7 +1108,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Pembersihan Standar:</span>
-                      <button
+                      <button aria-label="Salin Perintah"
                         type="button"
                         onClick={() => {
                           navigator.clipboard.writeText('npm run clean');
@@ -1129,7 +1129,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Pembersihan Penuh (+dist):</span>
-                      <button
+                      <button aria-label="Salin Perintah"
                         type="button"
                         onClick={() => {
                           navigator.clipboard.writeText('npm run clean:all');
@@ -1150,7 +1150,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Cek Saja (Tanpa Hapus):</span>
-                      <button
+                      <button aria-label="Salin Perintah"
                         type="button"
                         onClick={() => {
                           navigator.clipboard.writeText('npm run clean:dry');
@@ -1363,7 +1363,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       Mengunci tampilan ke layar penuh untuk mencegah kasir membuka tab lain saat antrean transaksi.
                     </p>
                   </div>
-                  <button
+                  <button aria-label="Layar penuh"
                     onClick={handleToggleKiosk}
                     className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md transition-all active:scale-95 ${
                       isFullscreen

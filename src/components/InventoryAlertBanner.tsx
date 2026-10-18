@@ -236,7 +236,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
             </button>
           </div>
 
-          <button
+          <button aria-label="Tampilkan atau sembunyikan detail"
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-amber-200/50 dark:hover:bg-slate-800 transition cursor-pointer"

@@ -862,7 +862,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                   </div>
                 </div>
 
-                <button
+                <button aria-label="Buat ulang dengan AI"
                   type="button"
                   id="btn-run-ai-stock-audit"
                   onClick={handleRunAiStockAudit}

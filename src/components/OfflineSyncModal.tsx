@@ -640,7 +640,7 @@ export const OfflineSyncModal: React.FC = () => {
                   </p>
                 </div>
 
-                <button
+                <button aria-label="Status koneksi"
                   id="btn-toggle-offline-simulation"
                   onClick={() => toggleOfflineSimulation()}
                   className={`px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${

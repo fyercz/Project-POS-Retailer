@@ -1557,7 +1557,7 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                       {/* PO Action Buttons */}
                       <div className="flex items-center gap-1.5 flex-wrap ml-auto">
-                        <button
+                        <button aria-label="Salin teks purchase order untuk seluruh barang terpilih via WhatsApp"
                           type="button"
                           onClick={() => handleCopyPOText()}
                           disabled={selectedPOProductIds.length === 0}
@@ -1642,7 +1642,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                           >
                             <div className="flex items-start gap-2.5">
                               {/* Checkbox */}
-                              <button
+                              <button aria-label="Pilih"
                                 type="button"
                                 onClick={() => handleToggleSelectPOItem(itemKey)}
                                 className="mt-0.5 text-slate-500 hover:text-emerald-600 cursor-pointer shrink-0"
@@ -1929,7 +1929,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                   {/* Supplier Section Header Card */}
                                   <div className="flex items-center justify-between gap-3 flex-wrap bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
                                     <div className="flex items-center gap-2.5 min-w-0">
-                                      <button
+                                      <button aria-label="Pilih"
                                         type="button"
                                         onClick={() => handleToggleSelectSupplierPO(group.supplierName)}
                                         className="text-slate-500 hover:text-emerald-600 cursor-pointer shrink-0"
@@ -1996,7 +1996,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                         </div>
                                       </div>
 
-                                      <button
+                                      <button aria-label="Salin"
                                         type="button"
                                         onClick={() => handleCopyPOText(group.supplierName)}
                                         className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
@@ -2347,7 +2347,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                     </div>
                   </div>
 
-                  <button
+                  <button aria-label="Tambahkan"
                     onClick={handleApplyPromoVoucher}
                     className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-800 dark:text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
                   >

@@ -511,7 +511,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                 </div>
 
                 {/* Scan Button */}
-                <button
+                <button aria-label="Proses dengan AI"
                   type="button"
                   id="btn-trigger-ai-invoice-scan"
                   onClick={handleProcessScan}

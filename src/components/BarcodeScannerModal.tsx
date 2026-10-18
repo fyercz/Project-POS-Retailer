@@ -470,7 +470,7 @@ export const BarcodeScannerModal: React.FC = () => {
 
           <div className="flex items-center gap-1">
             {/* Audio Toggle */}
-            <button
+            <button aria-label="Suara bip scanner"
               type="button"
               onClick={() => {
                 const next = !soundEnabled;
@@ -795,7 +795,7 @@ export const BarcodeScannerModal: React.FC = () => {
             <div className="absolute bottom-3 right-3 flex items-center gap-1.5 z-10">
               {/* Torch Button if supported */}
               {hasTorchCapability && (
-                <button
+                <button aria-label="Senter kamera"
                   type="button"
                   onClick={toggleTorch}
                   className={`p-2 rounded-lg backdrop-blur-md border text-xs transition-colors cursor-pointer ${

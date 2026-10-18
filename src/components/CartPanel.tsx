@@ -402,6 +402,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     <button
                       type="button"
                       onClick={() => updateCartItemQuantity(item.id, -1)}
+                      aria-label={item.quantity === 1 ? `Hapus ${item.product.name} dari keranjang` : `Kurangi jumlah ${item.product.name}`}
                       className="w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                     >
                       {item.quantity === 1 ? <Trash2 className="w-3 h-3 text-rose-600" /> : <Minus className="w-3 h-3" />}
@@ -409,7 +410,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     <span className="w-6 text-center font-bold text-xs font-mono text-slate-900 dark:text-slate-100">
                       {item.quantity}
                     </span>
-                    <button aria-label="Tambah"
+                    <button aria-label={`Tambah jumlah ${item.product.name}`}
                       type="button"
                       onClick={() => updateCartItemQuantity(item.id, 1)}
                       className="w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-slate-950 flex items-center justify-center transition-colors cursor-pointer"

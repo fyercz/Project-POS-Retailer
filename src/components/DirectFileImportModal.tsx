@@ -358,7 +358,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                         }`}
                       >
                         <td className="py-2 px-3 text-center">
-                          <button
+                          <button aria-label="Pilih"
                             type="button"
                             onClick={() => handleToggleSelect(item.id)}
                             className="cursor-pointer text-slate-500 hover:text-emerald-600"

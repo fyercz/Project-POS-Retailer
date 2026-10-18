@@ -609,7 +609,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               <span>{whatsappSent ? 'Sent to WhatsApp!' : 'WhatsApp'}</span>
             </button>
 
-            <button
+            <button aria-label="Copy Invoice ID"
               onClick={handleCopyInvoice}
               className="px-2.5 py-2 rounded-xl text-xs border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-850 cursor-pointer"
               title="Copy Invoice ID"

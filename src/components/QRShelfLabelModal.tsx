@@ -875,7 +875,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                               }`}
                             >
                               <td className="py-2 px-3 text-center">
-                                <button
+                                <button aria-label="Pilih"
                                   type="button"
                                   onClick={() => handleToggleProduct(p.id)}
                                   className="cursor-pointer text-indigo-600"

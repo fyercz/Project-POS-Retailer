@@ -1200,7 +1200,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <button
+                            <button aria-label="Pilih"
                               type="button"
                               onClick={() => handleToggleSelect(p.id)}
                               className="text-slate-500 hover:text-emerald-500 cursor-pointer"
