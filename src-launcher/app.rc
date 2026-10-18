@@ -1,8 +1,8 @@
 1 ICON "../ulilmart.ico"
 
 1 VERSIONINFO
-FILEVERSION     1,0,0,0
-PRODUCTVERSION  1,0,0,0
+FILEVERSION     1,1,1,0
+PRODUCTVERSION  1,1,1,0
 FILEFLAGSMASK   0X3FL
 FILEFLAGS       0
 FILEOS          0X40004L
@@ -15,11 +15,11 @@ BEGIN
         BEGIN
             VALUE "CompanyName",      "Ulilmart Retail System"
             VALUE "FileDescription",  "Terminal Kasir Desktop - Ulilmart POS"
-            VALUE "FileVersion",      "1.0.0.0"
+            VALUE "FileVersion",      "1.1.1.0"
             VALUE "InternalName",     "UlilmartPOS"
             VALUE "OriginalFilename", "UlilmartPOS.exe"
             VALUE "ProductName",      "Ulilmart POS"
-            VALUE "ProductVersion",   "1.0.0.0"
+            VALUE "ProductVersion",   "1.1.1.0"
             VALUE "LegalCopyright",   "Copyright (C) 2026 Ulilmart"
         END
     END
