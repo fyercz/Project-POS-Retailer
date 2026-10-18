@@ -5,9 +5,10 @@
  * putus dikirim ulang otomatis tanpa dobel setelah jaringan kembali.
  */
 import { test, expect, type APIRequestContext } from '@playwright/test';
-import { registerOwner, addProduct, sellFirstProduct } from './helpers';
+import { registerOwner, addProduct, sellProductByName } from './helpers';
 
 const BARCODE = '2000000000022';
+const NAME = 'Teh Botol 450ml';
 
 async function serverStock(request: APIRequestContext): Promise<number | null> {
   const res = await request.get('/api/lan/data/pull');
@@ -31,7 +32,7 @@ test('dua kasir: stok server benar, katalog tersinkron, penjualan offline dikiri
 
   // Kasir A: daftar & tambah produk -> otomatis terkirim ke server
   await registerOwner(a, { owner: 'Kasir A', pin: '2580' });
-  await addProduct(a, { name: 'Teh Botol 450ml', sku: 'TEH-450', barcode: BARCODE, cost: 3000, price: 5000, stock: 20 });
+  await addProduct(a, { name: NAME, sku: 'TEH-450', barcode: BARCODE, cost: 3000, price: 5000, stock: 20 });
   await expect.poll(() => serverStock(request), { timeout: 20_000 }).toBe(20);
 
   // Kasir B: daftar & tarik katalog dari server
@@ -42,17 +43,18 @@ test('dua kasir: stok server benar, katalog tersinkron, penjualan offline dikiri
   await b.locator('#btn-pull-master-db').click();
   await b.locator('#btn-close-lan-modal').click();
   await b.locator('#nav-btn-pos').click();
-  await expect(b.locator('[id^="product-card-"]')).toHaveCount(1);
+  // Server dipakai bersama tes E2E lain, jadi bisa ada produk lain: cari produk ini berdasarkan nama
+  await expect(b.locator('[id^="product-card-"]', { hasText: NAME })).toHaveCount(1);
 
   // Masing-masing menjual 1 -> stok server 18 (tidak ada yang tertimpa)
-  await sellFirstProduct(a, 5000);
+  await sellProductByName(a, NAME, 5000);
   await expect.poll(() => serverStock(request), { timeout: 20_000 }).toBe(19);
-  await sellFirstProduct(b, 5000);
+  await sellProductByName(b, NAME, 5000);
   await expect.poll(() => serverStock(request), { timeout: 20_000 }).toBe(18);
 
   // Jaringan kasir A putus: penjualan masuk antrean, stok server belum berubah
   await ctxA.setOffline(true);
-  await sellFirstProduct(a, 5000);
+  await sellProductByName(a, NAME, 5000);
   await a.waitForTimeout(2_000);
   expect(await serverStock(request)).toBe(18);
 

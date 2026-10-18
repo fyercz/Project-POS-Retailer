@@ -80,10 +80,10 @@ export async function lockAndLogin(page: Page, name: string, pin: string) {
   await expect(page.locator('#btn-employee-menu')).toContainText(name);
 }
 
-/** Jual 1 produk pertama di layar kasir, bayar tunai pas. */
-export async function sellFirstProduct(page: Page, cashAmount: number) {
+/** Jual 1 produk (berdasarkan nama) di layar kasir, bayar tunai. */
+export async function sellProductByName(page: Page, productName: string, cashAmount: number) {
   await page.locator('#nav-btn-pos').click();
-  await page.locator('[id^="product-card-"]').first().click();
+  await page.locator('[id^="product-card-"]', { hasText: productName }).first().click();
   await page.locator('#btn-checkout-pay').click();
   await page.getByTestId('payment-cash-input').fill(String(cashAmount));
   await page.locator('#btn-confirm-complete-payment').click();
