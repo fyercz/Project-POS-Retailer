@@ -70,11 +70,14 @@ export function getDefaultCompetitorBenchmarks(product: Product): CompetitorPric
 
   const now = toLocalDateString();
 
+  // ESTIMASI: dihitung dari harga modal + variasi tipikal, BUKAN harga asli di toko pesaing.
+  // (Dulu diberi keterangan sumber palsu seperti 'Harga Toko Fisik' / 'Survei Pasar Lokal'.)
+  const note = 'Estimasi otomatis dari harga modal, bukan harga asli';
   return [
-    { competitorName: 'Indomaret', price: indomaretPrice, lastUpdated: now, notes: 'Harga Toko Fisik' },
-    { competitorName: 'Alfamart', price: alfamartPrice, lastUpdated: now, notes: 'Harga Aplikasi Alfagift' },
-    { competitorName: 'Toko Grosir Lokal', price: Math.max(product.costPrice, grosirPrice), lastUpdated: now, notes: 'Grosir & Eceran' },
-    { competitorName: 'Pasar Tradisional', price: Math.max(product.costPrice, pasarPrice), lastUpdated: now, notes: 'Survei Pasar Lokal' },
+    { competitorName: 'Indomaret', price: indomaretPrice, lastUpdated: now, notes: note, isEstimate: true },
+    { competitorName: 'Alfamart', price: alfamartPrice, lastUpdated: now, notes: note, isEstimate: true },
+    { competitorName: 'Toko Grosir Lokal', price: Math.max(product.costPrice, grosirPrice), lastUpdated: now, notes: note, isEstimate: true },
+    { competitorName: 'Pasar Tradisional', price: Math.max(product.costPrice, pasarPrice), lastUpdated: now, notes: note, isEstimate: true },
   ];
 }
 
@@ -305,7 +308,7 @@ export function generateDynamicPricingSuggestions(
       } else if (suggestedPrice < currentPrice) {
         actionType = 'decrease';
         strategyTag = 'Penyelarasan Pasar';
-        aiReasoning = `Harga toko saat ini ${priceVsMarketPercent}% lebih mahal dibanding Indomaret/Alfamart. Turunkan ke rata-rata pasar untuk mencegah pelanggan beralih ke minimarket sekitar.`;
+        aiReasoning = `Harga toko saat ini ${priceVsMarketPercent}% lebih mahal dibanding harga pesaing. Turunkan ke rata-rata pasar untuk mencegah pelanggan beralih ke minimarket sekitar.`;
       } else {
         actionType = 'maintain';
         strategyTag = 'Harga Optimal';
@@ -389,6 +392,11 @@ export function generateDynamicPricingSuggestions(
     const currentMonthlyProfit = (currentPrice - costPrice) * turnover.unitsSold30d;
     const newMonthlyProfit = (suggestedPrice - costPrice) * (turnover.unitsSold30d * volumeMultiplier);
     const projectedProfitImpact = Math.round(newMonthlyProfit - currentMonthlyProfit);
+
+    // Perbandingan pasar memakai estimasi? Katakan terus terang di rekomendasi
+    if (competitors.length > 0 && competitors.every((c) => c.isEstimate)) {
+      aiReasoning += ' Catatan: perbandingan memakai ESTIMASI harga pesaing (bukan harga asli). Masukkan harga pesaing yang Anda lihat sendiri lewat tombol Ubah agar rekomendasi akurat.';
+    }
 
     suggestions.push({
       productId: product.id,

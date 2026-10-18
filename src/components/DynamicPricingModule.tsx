@@ -338,8 +338,16 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
   // Save competitor changes
   const handleSaveCompetitors = () => {
     if (!competitorModalItem) return;
+    // Harga yang diubah pengguna = input manual (bukan lagi estimasi); yang tidak diubah tetap estimasi
+    const original = competitorModalItem.competitors || [];
+    const today = new Date().toISOString().slice(0, 10);
+    const saved = editableCompetitors.map((c, i) => {
+      const before = original[i];
+      const changed = !before || before.price !== c.price || !before.isEstimate;
+      return changed ? { ...c, isEstimate: false, notes: 'Input manual', lastUpdated: today } : c;
+    });
     if (onUpdateProductCompetitors) {
-      onUpdateProductCompetitors(competitorModalItem.productId, editableCompetitors);
+      onUpdateProductCompetitors(competitorModalItem.productId, saved);
     }
     // Update local state item
     setSuggestions((prev) =>
@@ -349,7 +357,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
         const avg = compPrices.length > 0 ? Math.round(compPrices.reduce((a, b) => a + b, 0) / compPrices.length) : s.currentPrice;
         return {
           ...s,
-          competitors: editableCompetitors,
+          competitors: saved,
           competitorAvgPrice: avg,
           competitorMinPrice: compPrices.length > 0 ? Math.min(...compPrices) : s.currentPrice,
           competitorMaxPrice: compPrices.length > 0 ? Math.max(...compPrices) : s.currentPrice,
@@ -413,7 +421,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Penyesuaian harga jual eceran otomatis berdasarkan riset harga kompetitor (Indomaret, Alfamart, Pasar) & kecepatan perputaran stok toko.
+                Rekomendasi harga jual berdasarkan perputaran stok, kedaluwarsa, dan harga pesaing. Harga pesaing berlabel Estimasi dihitung dari harga modal (bukan harga asli) sampai Anda memasukkan harga yang Anda lihat sendiri.
               </p>
             </div>
           </div>
@@ -532,7 +540,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
             {kpis.avgMarketDiff > 0 ? `+${kpis.avgMarketDiff}%` : `${kpis.avgMarketDiff}%`}
           </div>
           <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-            vs Indomaret, Alfamart & Pasar
+            vs harga pesaing (estimasi / input manual)
           </div>
         </div>
       </div>
@@ -647,7 +655,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
               Menganalisis Harga Kompetitor & Perputaran Stok...
             </h3>
             <p className="text-xs text-slate-500 mt-1 max-w-md">
-              Gemini AI sedang menghitung elastisitas harga, membandingkan indeks ritel Indomaret/Alfamart, dan Days Sales of Inventory (DSI).
+              Menghitung perputaran stok (DSI), kedaluwarsa, dan selisih dengan harga pesaing.
             </p>
           </div>
         ) : filteredSuggestions.length === 0 ? (
@@ -924,6 +932,14 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                         <span className="flex items-center gap-1">
                           <Store className="w-3 h-3 text-indigo-500" />
                           Harga Pasar & Kompetitor
+                          {item.competitors.some((c) => c.isEstimate) && (
+                            <span
+                              className="ml-1 px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold"
+                              title="Dihitung otomatis dari harga modal, bukan harga asli di toko pesaing. Klik Ubah untuk memasukkan harga yang Anda lihat sendiri."
+                            >
+                              Estimasi
+                            </span>
+                          )}
                         </span>
                         <button
                           onClick={() => handleOpenCompetitors(item)}
@@ -1288,11 +1304,18 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
               </div>
             </div>
 
+            <p className="text-xs text-slate-600 dark:text-slate-300 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-xl p-2.5">
+              Harga berlabel <strong>Estimasi</strong> dihitung otomatis dari harga modal, <strong>bukan</strong> harga asli
+              di toko pesaing. Ganti dengan harga yang Anda lihat sendiri; harga yang diubah tersimpan sebagai input manual.
+            </p>
             <div className="space-y-3 my-4">
               {editableCompetitors.map((comp, idx) => (
                 <div key={idx} className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl">
                   <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 min-w-[130px]">
                     {comp.competitorName}
+                    <span className={`block text-[11px] font-normal ${comp.isEstimate ? 'text-amber-700 dark:text-amber-400' : 'text-slate-500'}`}>
+                      {comp.isEstimate ? 'Estimasi (bukan harga asli)' : `Input manual${comp.lastUpdated ? ` · ${comp.lastUpdated}` : ''}`}
+                    </span>
                   </span>
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs text-slate-500">Rp</span>

@@ -51,6 +51,7 @@ import {
   formatYMD,
 } from '../utils/salesForecaster';
 import { activateOnKey } from '../utils/a11y';
+import { nextMovableDate } from '../domain/religiousHolidays';
 
 interface ProjectedSalesWidgetProps {
   transactions: Transaction[];
@@ -71,6 +72,19 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
   const [eventsList, setEventsList] = useState<DemandCalendarEvent[]>(() => getAllDemandEvents());
   const [isEventModalOpen, setIsEventModalOpen] = useState<boolean>(false);
   const [simulatedDate, setSimulatedDate] = useState<Date | null>(null);
+  // Tombol simulasi cepat dihitung dari hari ini (dulu tertanam tanggal 2026)
+  const quickDates = useMemo(() => {
+    const today = new Date();
+    const lebaran = nextMovableDate('idul_fitri', today, -2); // H-2: puncak belanja
+    const newYear = new Date(today.getFullYear(), 11, 29);
+    const payday = new Date(today.getFullYear(), today.getMonth() + (today.getDate() > 24 ? 1 : 0), 24);
+    return {
+      lebaran: lebaran ? new Date(lebaran.date + 'T00:00:00') : null,
+      lebaranLabel: lebaran ? `${lebaran.year}${lebaran.official ? '' : ' (perkiraan)'}` : '',
+      newYear,
+      payday,
+    };
+  }, []);
 
   // Custom Event Form State
   const [newEventName, setNewEventName] = useState('');
@@ -833,20 +847,20 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSimulatedDate(new Date(2026, 2, 19))}
+                    onClick={() => quickDates.lebaran && setSimulatedDate(quickDates.lebaran)}
                     className={`px-2.5 py-1.5 rounded-xl font-semibold transition cursor-pointer ${
-                      simulatedDate && formatYMD(simulatedDate) === '2026-03-19'
+                      simulatedDate && quickDates.lebaran && formatYMD(simulatedDate) === formatYMD(quickDates.lebaran)
                         ? 'bg-indigo-600 text-white shadow-sm font-bold'
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    🌙 Hari Raya Idul Fitri (Lebaran 2026)
+                    🌙 Menjelang Idul Fitri {quickDates.lebaranLabel}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSimulatedDate(new Date(2026, 11, 29))}
+                    onClick={() => setSimulatedDate(quickDates.newYear)}
                     className={`px-2.5 py-1.5 rounded-xl font-semibold transition cursor-pointer ${
-                      simulatedDate && formatYMD(simulatedDate) === '2026-12-29'
+                      simulatedDate && formatYMD(simulatedDate) === formatYMD(quickDates.newYear)
                         ? 'bg-indigo-600 text-white shadow-sm font-bold'
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
@@ -855,9 +869,9 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSimulatedDate(new Date(2026, 9, 24))}
+                    onClick={() => setSimulatedDate(quickDates.payday)}
                     className={`px-2.5 py-1.5 rounded-xl font-semibold transition cursor-pointer ${
-                      simulatedDate && formatYMD(simulatedDate) === '2026-10-24'
+                      simulatedDate && formatYMD(simulatedDate) === formatYMD(quickDates.payday)
                         ? 'bg-indigo-600 text-white shadow-sm font-bold'
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
