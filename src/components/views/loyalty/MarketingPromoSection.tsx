@@ -10,7 +10,6 @@ import {
   TrendingUp,
   MessageCircle,
   Smartphone,
-  Instagram,
   RefreshCw,
   Crown,
   HeartHandshake,
@@ -23,6 +22,7 @@ import {
   ChevronRight,
   UserCheck,
   Send,
+  Camera,
 } from 'lucide-react';
 import { usePOS } from '../../../context/POSContext';
 import {
@@ -846,7 +846,7 @@ export const MarketingPromoSection: React.FC = () => {
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
-                    <Instagram className="w-3.5 h-3.5" />
+                    <Camera className="w-3.5 h-3.5" />
                     <span>Story / Media Sosial</span>
                   </button>
                 </div>
