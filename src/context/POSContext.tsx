@@ -95,6 +95,15 @@ import {
   mergeSuppliersKeepExisting,
   mergeCustomersKeepExisting,
 } from '../domain/restore';
+// Data demo dari versi lama: HANYA dipakai untuk mengenali & menghapus sisa data contoh
+import {
+  INITIAL_CUSTOMERS as DEMO_CUSTOMERS,
+  INITIAL_VOUCHERS as DEMO_VOUCHERS,
+  INITIAL_SUPPLIERS as DEMO_SUPPLIERS,
+  INITIAL_SUPPLIER_PURCHASES as DEMO_SUPPLIER_PURCHASES,
+  INITIAL_EXPENSES as DEMO_EXPENSES,
+  INITIAL_PRODUCTS as DEMO_PRODUCTS,
+} from '../data/mockData';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -333,6 +342,10 @@ export interface POSUIContextType {
   }) => void;
   /** Hapus transaksi latihan/uji coba (Owner). Membuat titik pulih lebih dulu. */
   clearTrialTransactions: () => { success: boolean; message: string };
+  /** Jumlah data contoh lama (dari versi yang dulu memuat data demo) yang masih tersimpan */
+  legacyDemoSummary: { customers: number; vouchers: number; suppliers: number; purchases: number; expenses: number; transactions: number; products: number; total: number };
+  /** Hapus data contoh lama (hanya yang ID/kodenya cocok dengan data demo). Owner; titik pulih dibuat dulu. */
+  removeLegacyDemoData: () => { success: boolean; message: string };
   /** Pendaftaran pertama: buat akun Owner (nama + PIN sendiri) dan nama toko. */
   completeFirstRunSetup: (data: { ownerName: string; pin: string; storeName?: string }) => { success: boolean; message: string };
   // Accounting & Financial Statements (Double-Entry & Balance Sheet)
@@ -3125,6 +3138,52 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
    * Menghapus transaksi, retur penjualan, keranjang, pesanan parkir, dan riwayat shift, lalu memulai
    * shift baru. Produk, member, supplier, karyawan, dan pengaturan TIDAK disentuh. Titik pulih dibuat dulu.
    */
+  // -------------------------------------------------------------
+  // Data contoh lama: instalasi versi lama memuat data demo yang tetap tersimpan setelah update.
+  // Dikenali dari ID/kode tetap di data demo (produk, member, supplier, faktur, pengeluaran,
+  // voucher) dan awalan ID transaksi contoh "tx-sample-". Akun karyawan TIDAK dihapus otomatis.
+  // -------------------------------------------------------------
+  const legacyDemoSummary = useMemo(() => {
+    const ids = (list: Array<{ id?: string }>) => new Set(list.map((x) => x.id).filter(Boolean) as string[]);
+    const demoCustomers = ids(DEMO_CUSTOMERS);
+    const demoSuppliers = ids(DEMO_SUPPLIERS);
+    const demoPurchases = ids(DEMO_SUPPLIER_PURCHASES);
+    const demoExpenses = ids(DEMO_EXPENSES);
+    const demoProducts = ids(DEMO_PRODUCTS);
+    const demoVoucherCodes = new Set(DEMO_VOUCHERS.map((v) => v.code.toUpperCase()));
+    const counts = {
+      customers: customers.filter((c) => demoCustomers.has(c.id)).length,
+      vouchers: vouchers.filter((v) => demoVoucherCodes.has(v.code.toUpperCase())).length,
+      suppliers: suppliers.filter((x) => demoSuppliers.has(x.id)).length,
+      purchases: supplierPurchases.filter((x) => demoPurchases.has(x.id)).length,
+      expenses: expenses.filter((x) => demoExpenses.has(x.id)).length,
+      transactions: transactions.filter((t) => String(t.id).startsWith('tx-sample-')).length,
+      products: products.filter((x) => demoProducts.has(x.id)).length,
+    };
+    return { ...counts, total: Object.values(counts).reduce((a, b) => a + b, 0) };
+  }, [customers, vouchers, suppliers, supplierPurchases, expenses, transactions, products]);
+
+  const removeLegacyDemoData = useCallback((): { success: boolean; message: string } => {
+    if (activeEmployee?.role !== 'owner') return { success: false, message: 'Hanya Owner yang boleh menghapus data contoh.' };
+    if (legacyDemoSummary.total === 0) return { success: true, message: 'Tidak ada data contoh lama.' };
+    createRestorePoint('Otomatis: Sebelum Hapus Data Contoh Lama', 'Cadangan otomatis sebelum menghapus data demo lama.', 'auto_pre_reset');
+    const ids = (list: Array<{ id?: string }>) => new Set(list.map((x) => x.id).filter(Boolean) as string[]);
+    const demoCustomers = ids(DEMO_CUSTOMERS);
+    const demoSuppliers = ids(DEMO_SUPPLIERS);
+    const demoPurchases = ids(DEMO_SUPPLIER_PURCHASES);
+    const demoExpenses = ids(DEMO_EXPENSES);
+    const demoProducts = ids(DEMO_PRODUCTS);
+    const demoVoucherCodes = new Set(DEMO_VOUCHERS.map((v) => v.code.toUpperCase()));
+    setCustomers((prev) => prev.filter((c) => !demoCustomers.has(c.id)));
+    setVouchers((prev) => prev.filter((v) => !demoVoucherCodes.has(v.code.toUpperCase())));
+    setSuppliers((prev) => prev.filter((x) => !demoSuppliers.has(x.id)));
+    setSupplierPurchases((prev) => prev.filter((x) => !demoPurchases.has(x.id)));
+    setExpenses((prev) => prev.filter((x) => !demoExpenses.has(x.id)));
+    setTransactions((prev) => prev.filter((t) => !String(t.id).startsWith('tx-sample-')));
+    setProducts((prev) => prev.filter((x) => !demoProducts.has(x.id)));
+    return { success: true, message: `${legacyDemoSummary.total.toLocaleString('id-ID')} data contoh dihapus. Titik pulih otomatis sudah dibuat.` };
+  }, [activeEmployee, legacyDemoSummary, createRestorePoint]);
+
   const clearTrialTransactions = useCallback((): { success: boolean; message: string } => {
     if (activeEmployee?.role !== 'owner') {
       return { success: false, message: 'Hanya Owner yang boleh menghapus transaksi uji coba.' };
@@ -3497,6 +3556,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       applyMasterLANData,
       clearTrialTransactions,
       completeFirstRunSetup,
+      legacyDemoSummary,
+      removeLegacyDemoData,
       // Accounting & Financial Statements
       expenses,
       addExpense,
@@ -3535,6 +3596,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       applyMasterLANData,
       clearTrialTransactions,
       completeFirstRunSetup,
+      legacyDemoSummary,
+      removeLegacyDemoData,
       expenses,
       journalEntries,
       balanceSheet,

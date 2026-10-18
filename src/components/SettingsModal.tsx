@@ -64,6 +64,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
     heldOrders,
     activeEmployee,
     clearTrialTransactions,
+    legacyDemoSummary,
+    removeLegacyDemoData,
     setIsSyncModalOpen,
     autoSyncEnabled,
     autoSyncIntervalSeconds,
@@ -1088,6 +1090,43 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
 
         {activeTab === 'launch' && (
           <div className="p-5 space-y-4 text-xs overflow-y-auto">
+            {legacyDemoSummary.total > 0 && (
+              <div className="p-3.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 space-y-2">
+                <div className="text-sm font-bold text-slate-900 dark:text-white">Data Contoh dari Versi Lama</div>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                  Masih tersimpan data demo bawaan versi lama:{' '}
+                  {[
+                    [legacyDemoSummary.customers, 'member'],
+                    [legacyDemoSummary.vouchers, 'voucher'],
+                    [legacyDemoSummary.suppliers, 'supplier'],
+                    [legacyDemoSummary.purchases, 'faktur pembelian'],
+                    [legacyDemoSummary.expenses, 'pengeluaran'],
+                    [legacyDemoSummary.transactions, 'transaksi contoh'],
+                    [legacyDemoSummary.products, 'produk contoh'],
+                  ]
+                    .filter(([n]) => (n as number) > 0)
+                    .map(([n, label]) => `${(n as number).toLocaleString('id-ID')} ${label}`)
+                    .join(', ')}
+                  . Data ini ikut masuk laporan & daftar member. Hanya data dengan ID/kode demo yang dihapus; data toko Anda
+                  tidak tersentuh. Akun karyawan contoh tidak dihapus otomatis — ganti PIN-nya di Kelola Karyawan.
+                </p>
+                <button
+                  type="button"
+                  id="btn-remove-legacy-demo"
+                  onClick={() => {
+                    if (!confirm('Hapus semua data contoh lama? Titik pulih otomatis dibuat lebih dulu.')) return;
+                    const res = removeLegacyDemoData();
+                    if (res.success) {
+                      setLaunchSuccessMessage(res.message);
+                      setLaunchErrorMessage(null);
+                    } else setLaunchErrorMessage(res.message);
+                  }}
+                  className="px-3 py-1.5 rounded-xl border border-amber-400 dark:border-amber-700 bg-white dark:bg-slate-900 text-amber-800 dark:text-amber-300 font-bold cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-950/50"
+                >
+                  Hapus {legacyDemoSummary.total.toLocaleString('id-ID')} Data Contoh Lama
+                </button>
+              </div>
+            )}
             <div className="space-y-1">
               <div className="text-sm font-bold text-slate-900 dark:text-white">Hapus Transaksi Uji Coba</div>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
