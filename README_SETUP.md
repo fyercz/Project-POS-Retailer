@@ -114,29 +114,6 @@ Aplikasi otomatis membuka browser ke `http://localhost:3000`.
 
 ---
 
-## 🌐 Alternatif Melalui Perintah Node.js (Cross-Platform)
-
-Jika Anda terbiasa menggunakan terminal/command prompt, script launcher universal dapat dijalankan dengan:
-
-```bash
-# Auto-Install & Setup
-npm run app:install
-# atau: node scripts/launcher.mjs install
-
-# Auto-Update
-npm run app:update
-# atau: node scripts/launcher.mjs update
-
-# Run Aplikasi Kasir
-npm run app:run
-# atau: node scripts/launcher.mjs run
-
-# Mode Development
-node scripts/launcher.mjs dev
-```
-
----
-
 ## 🗑️ Menghapus Aplikasi (Uninstall)
 
 **Windows:** klik ganda **`HAPUS-APLIKASI.bat`**. Skrip akan:
@@ -184,13 +161,6 @@ Aplikasi akan langsung meluncurkan jendela aplikasi desktop tersendiri menggunak
 - Klik tombol **"Desktop"** di pojok kanan atas layar kasir (atau tekan `Alt + D`).
 - Klik **"Pasang Sekarang"** untuk membuat ikon aplikasi di Desktop dan Start Menu komputer.
 
-### 4. Mode Native Electron (.EXE / Package):
-Berkas Electron sudah tersedia di folder `electron/`:
-```bash
-# Jalankan jendela Electron:
-npm run desktop:electron
-```
-
 ---
 
 ## 📖 Buku Panduan Pengguna & Log Pembaruan (User Manual & Changelog)
@@ -217,3 +187,13 @@ npm run desktop:electron
 - Hanya aplikasi kasir (port 3000) di jaringan lokal yang boleh memanggil API; halaman web lain di jaringan (mis. panel router) ditolak. Tambahan origin bisa didaftarkan lewat `ALLOWED_ORIGINS`.
 - Endpoint AI dibatasi lajunya per perangkat untuk melindungi kuota Gemini.
 - Menjalankan tes: `npm test`.
+
+
+---
+
+## 🏷️ Versi & Rilis
+
+- Versi aplikasi ada di `package.json` dan tampil di menu akun (kanan atas).
+- Setiap kali versi di `package.json` dinaikkan dan semua tes CI lulus di `main`, CI membuat tag rilis `vX.Y.Z`.
+- `update.bat` / `./update.sh` memasang **rilis terbaru**. Untuk kembali ke versi tertentu: `update.bat v1.0.0`.
+- Dependensi dipasang dengan `npm ci` dari `package-lock.json`, sehingga semua komputer kasir memakai versi yang sama persis dengan yang diuji CI.

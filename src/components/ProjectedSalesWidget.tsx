@@ -42,7 +42,6 @@ import { Transaction } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import {
   computeSalesProjection,
-  generate14DaysSampleTransactions,
   SalesProjectionSummary,
   CombinedChartPoint,
   DemandCalendarEvent,
@@ -56,14 +55,12 @@ import { activateOnKey } from '../utils/a11y';
 interface ProjectedSalesWidgetProps {
   transactions: Transaction[];
   currency?: string;
-  onLoadSampleData?: (sampleTx: Transaction[]) => void;
   className?: string;
 }
 
 export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
   transactions,
   currency = 'IDR',
-  onLoadSampleData,
   className = '',
 }) => {
   const [scenario, setScenario] = useState<'realistic' | 'optimistic' | 'conservative'>('realistic');
@@ -149,12 +146,6 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
     return projection.projectedDays.find((d) => d.dayIndex === selectedDayIndex) || projection.projectedDays[0];
   }, [selectedDayIndex, projection]);
 
-  const handleSeedSample = () => {
-    if (onLoadSampleData) {
-      const sample = generate14DaysSampleTransactions();
-      onLoadSampleData(sample);
-    }
-  };
 
   return (
     <div
@@ -218,18 +209,6 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             <span>Demand Event: {enableEventMultiplier ? 'Aktif' : 'Nonaktif'}</span>
           </button>
 
-          {hasFewHistoricalData && onLoadSampleData && (
-            <button
-              type="button"
-              id="btn-seed-forecasting-sample"
-              onClick={handleSeedSample}
-              className="px-2.5 py-1.5 rounded-xl border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition active:scale-95"
-              title="Isi riwayat transaksi 14 hari realistis untuk menguji ketepatan visualisasi proyeksi"
-            >
-              <Zap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>Simulasikan 14 Hari</span>
-            </button>
-          )}
 
           {/* Scenario Tabs */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">

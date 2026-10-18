@@ -226,7 +226,6 @@ Fitur ini memungkinkan toko mengoperasikan banyak kasir sekaligus (PC Kasir 1, L
 * **Peluncur Desktop 1-Klik (`MULAI-KASIR.bat` & `run.sh`):** Menjalankan aplikasi dalam jendela desktop mandiri tanpa address bar browser.
 * **Proteksi Konfirmasi Restore ("Are you sure?"):** Dialog verifikasi visual dengan checkbox persetujuan wajib sebelum menimpa database.
 * **Pusat Kontrol Desktop Hub (`Alt + D`):** Pengujian cetak struk thermal, perintah buka laci uang (*Cash Drawer Kick*), dan panduan *Silent Printing*.
-* **Konfigurasi Native Electron (`electron/main.cjs`):** Fondasi paket instalasi desktop `.exe`.
 
 ### Versi v2.3.0 (September 2026)
 * **Pusat Backup & Restore Point (F9):** Pembuatan snapshot titik pemulihan darurat otomatis.

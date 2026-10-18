@@ -68,7 +68,7 @@ import { lineCogs, baseUnitsOf, unitMultiplierOf } from '../../utils/cogs';
 
 export const ReportsView: React.FC = () => {
   const { products, categories, recordProductPriceChange, updateProduct } = usePOSCatalog();
-  const { transactions, salesReturns, setActiveReceipt, loadSampleTransactions } = usePOSTransactions();
+  const { transactions, salesReturns, setActiveReceipt } = usePOSTransactions();
   const {
     settings,
     openGeminiCopilot,

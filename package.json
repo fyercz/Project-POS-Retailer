@@ -13,13 +13,6 @@
     "clean:dry": "node scripts/cleaner.mjs --dry-run",
     "clean:all": "node scripts/cleaner.mjs --all",
     "lint": "tsc --noEmit && eslint .",
-    "app:install": "node scripts/launcher.mjs install",
-    "app:update": "node scripts/launcher.mjs update",
-    "app:clean": "node scripts/launcher.mjs clean",
-    "app:run": "node scripts/launcher.mjs run",
-    "autorun": "node scripts/launcher.mjs autorun",
-    "desktop": "node scripts/launcher.mjs desktop",
-    "desktop:electron": "electron electron/main.cjs",
     "test": "tsx --test \"tests/*.test.ts\"",
     "test:e2e": "playwright test"
   },

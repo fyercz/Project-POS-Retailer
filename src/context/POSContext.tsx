@@ -228,7 +228,6 @@ export interface POSTransactionsContextType {
   vouchers: Voucher[];
   addVoucher: (v: Voucher) => void;
   clearAllTransactions: () => void;
-  loadSampleTransactions: (sampleTx?: Transaction[]) => void;
 }
 
 export interface POSAuthShiftContextType {
@@ -2768,15 +2767,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     posStorage.setItem('pos_retail_tx_v3', []).catch(console.warn);
   };
 
-  const loadSampleTransactions = (customSample?: Transaction[]) => {
-    // Tidak ada lagi 'data contoh': hanya transaksi yang diberikan pemanggil
-    const list = customSample || [];
-    setTransactions((prev) => {
-      const existingIds = new Set(prev.map((t) => t.id));
-      const newItems = list.filter((t) => !existingIds.has(t.id));
-      return [...newItems, ...prev];
-    });
-  };
+
 
 
 
@@ -3397,7 +3388,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       vouchers,
       addVoucher,
       clearAllTransactions,
-      loadSampleTransactions,
     }),
     [
       isPaymentModalOpen,
