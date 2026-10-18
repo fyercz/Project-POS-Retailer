@@ -170,7 +170,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/50">
@@ -329,7 +329,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                           setStartingCashError('');
                           setIsEditingStartingCash(true);
                         }}
-                        className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                        className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
                       >
                         Ubah
                       </button>
@@ -345,7 +345,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                         value={startingCashInput}
                         onChange={(e) => setStartingCashInput(e.target.value)}
                         placeholder="Uang di laci saat shift dimulai"
-                        className="w-full px-2 py-1 text-xs font-mono font-bold rounded-lg border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                        className="w-full px-2 py-1 text-xs font-mono font-bold rounded-xl border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                       />
                       <div className="flex gap-1">
                         <button
@@ -362,19 +362,19 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                             }
                             setIsEditingStartingCash(false);
                           }}
-                          className="px-2 py-0.5 rounded-md bg-emerald-700 text-white text-[10px] font-bold cursor-pointer"
+                          className="px-2 py-0.5 rounded-md bg-emerald-700 text-white text-[11px] font-bold cursor-pointer"
                         >
                           Simpan
                         </button>
                         <button
                           type="button"
                           onClick={() => setIsEditingStartingCash(false)}
-                          className="px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-700 text-[10px] font-bold cursor-pointer"
+                          className="px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-700 text-[11px] font-bold cursor-pointer"
                         >
                           Batal
                         </button>
                       </div>
-                      {startingCashError && <p className="text-[10px] text-rose-600 dark:text-rose-400">{startingCashError}</p>}
+                      {startingCashError && <p className="text-[11px] text-rose-600 dark:text-rose-400">{startingCashError}</p>}
                     </div>
                   ) : (
                     <div className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-1 font-mono">
@@ -383,8 +383,8 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                   )}
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-teal-50/60 dark:bg-teal-950/20 border border-teal-200/60 dark:border-teal-900/40">
-                  <span className="text-[11px] font-medium text-teal-700 dark:text-teal-400">
+                <div className="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
+                  <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
                     Penjualan Tunai
                   </span>
                   <div className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-1 font-mono">
@@ -401,8 +401,8 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-900/40">
-                  <span className="text-[11px] font-medium text-purple-700 dark:text-purple-400">
+                <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200/60 dark:border-indigo-900/40">
+                  <span className="text-[11px] font-medium text-indigo-700 dark:text-indigo-400">
                     Total Transaksi
                   </span>
                   <div className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-1">

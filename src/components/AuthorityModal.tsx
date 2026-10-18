@@ -83,7 +83,7 @@ export const AuthorityModal: React.FC<AuthorityModalProps> = ({
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+        className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden"
       >
         {/* Modal Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-amber-500/10 dark:bg-amber-500/5">
@@ -95,14 +95,14 @@ export const AuthorityModal: React.FC<AuthorityModalProps> = ({
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 Otoritas Diperlukan
               </h3>
-              <p className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
+              <p className="text-[11px] text-amber-700 dark:text-amber-400 font-semibold">
                 Perlu Izin {requiredRole === 'owner' ? 'Owner' : 'Supervisor / Owner'}
               </p>
             </div>
           </div>
           <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition"
+            className="p-1.5 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl transition"
           >
             <X className="w-4 h-4" />
           </button>

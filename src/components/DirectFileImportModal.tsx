@@ -169,7 +169,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[94vh] overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-5xl shadow-xl flex flex-col max-h-[94vh] overflow-hidden">
         {/* Modal Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/90">
           <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Impor File Produk Langsung (As-Is / Tanpa Auto-Koreksi)
                 </h3>
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                <span className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                   Data Asli Dipertahankan
                 </span>
               </div>
@@ -192,7 +192,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
           </div>
           <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -289,7 +289,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
           <details className="rounded-xl border border-slate-200 dark:border-slate-800 p-3 bg-white dark:bg-slate-950 text-xs">
             <summary className="font-bold text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-2">
               <span>Atau Tempel / Ketik Teks CSV Langsung</span>
-              <span className="text-[10px] text-slate-500 font-normal">
+              <span className="text-[11px] text-slate-500 font-normal">
                 ({rawText ? `${rawText.split('\n').filter((l) => l.trim()).length} baris` : 'Kosong'})
               </span>
             </summary>
@@ -330,7 +330,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                     value={filterQuery}
                     onChange={(e) => setFilterQuery(e.target.value)}
                     placeholder="Cari nama/barcode..."
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-emerald-500"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-emerald-500"
                   />
                 </div>
               </div>
@@ -414,7 +414,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
                           <button aria-label="Hapus baris"
                             type="button"
                             onClick={() => handleDeleteItem(item.id)}
-                            className="p-1.5 rounded text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                            className="p-1.5 rounded-md text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
                             title="Hapus baris"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -463,7 +463,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
               type="button"
               disabled={totalSelected === 0 || isProcessing}
               onClick={handleExecuteImport}
-              className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold shadow-lg shadow-emerald-600/20 flex items-center gap-2 cursor-pointer transition active:scale-98"
+              className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center gap-2 cursor-pointer transition active:scale-98"
             >
               <Upload className="w-4 h-4" />
               <span>Impor {totalSelected} Produk Langsung (As-Is)</span>

@@ -53,12 +53,19 @@ test('5 kali PIN salah: dikunci sementara, PIN benar pun ditolak selama jeda', a
   await expect(page.locator('#employee-lock-screen')).toBeVisible();
 });
 
-test('kasir tidak bisa membuka Backup & Restore dari layar kasir', async ({ page }) => {
+test('kasir tidak melihat Backup & Restore; Alt+B meminta PIN otoritas', async ({ page }) => {
   await lockAndLogin(page, KASIR.name, KASIR.pin);
   await page.locator('#nav-btn-pos').click();
-  // Ada dua tombol (layar lebar & kecil); pilih yang terlihat
-  await page.locator('#btn-catalog-backup-restore:visible').first().click();
-  await expect(page.getByRole('alertdialog')).toContainText('Akses Dibatasi');
+  await expect(page.locator('#btn-catalog-backup-restore')).toHaveCount(0);
+  await page.locator('#nav-btn-transactions').click();
+  await expect(page.locator('#btn-transactions-backup-restore')).toHaveCount(0);
+  // Menu alat kasir tidak berisi alat sistem
+  await page.locator('#btn-tools-menu').click();
+  await expect(page.getByRole('button', { name: /Server LAN Multi-Kasir/ })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  // Pintasan Alt+B: kasir diminta PIN otoritas, jendela Backup tidak terbuka
+  await page.keyboard.press('Alt+b');
+  await expect(page.locator('#backup-restore-modal')).toHaveCount(0);
 });
 
 test('Supervisor tidak bisa mengubah akun Owner', async ({ page }) => {

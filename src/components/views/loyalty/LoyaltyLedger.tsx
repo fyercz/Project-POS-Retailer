@@ -202,8 +202,8 @@ export const LoyaltyLedger: React.FC = () => {
     <div className="space-y-4">
       {/* Ledger Stats Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
             Total Poin Diperoleh
           </span>
           <div className="flex items-baseline gap-1.5">
@@ -212,11 +212,11 @@ export const LoyaltyLedger: React.FC = () => {
             </span>
             <span className="text-xs text-slate-500 font-bold">Pts</span>
           </div>
-          <span className="text-[10px] text-slate-500">Dari belanja transaksi member</span>
+          <span className="text-[11px] text-slate-500">Dari belanja transaksi member</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
             Total Poin Ditukarkan
           </span>
           <div className="flex items-baseline gap-1.5">
@@ -225,11 +225,11 @@ export const LoyaltyLedger: React.FC = () => {
             </span>
             <span className="text-xs text-slate-500 font-bold">Pts</span>
           </div>
-          <span className="text-[10px] text-slate-500">Telah ditukar potongan diskon</span>
+          <span className="text-[11px] text-slate-500">Telah ditukar potongan diskon</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
             Total Diskon Diberikan
           </span>
           <div className="flex items-baseline gap-1.5">
@@ -237,27 +237,27 @@ export const LoyaltyLedger: React.FC = () => {
               {formatCurrency(totalDiscountRupiah, settings.currency)}
             </span>
           </div>
-          <span className="text-[10px] text-slate-500">Hemat belanja yang dinikmati pembeli</span>
+          <span className="text-[11px] text-slate-500">Hemat belanja yang dinikmati pembeli</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
             Poin Beredar Saat Ini
           </span>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-xl font-black font-mono text-purple-600 dark:text-purple-400">
+            <span className="text-xl font-black font-mono text-indigo-600 dark:text-indigo-400">
               {customers.reduce((sum, c) => sum + (c.points || 0), 0).toLocaleString()}
             </span>
             <span className="text-xs text-slate-500 font-bold">Pts</span>
           </div>
-          <span className="text-[10px] text-slate-500">
+          <span className="text-[11px] text-slate-500">
             Setara {formatCurrency(customers.reduce((sum, c) => sum + (c.points || 0), 0) * redemptionRate, settings.currency)} diskon
           </span>
         </div>
       </div>
 
       {/* Filter and Export Bar */}
-      <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+      <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-2 flex-1 min-w-[240px] max-w-md">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -303,7 +303,7 @@ export const LoyaltyLedger: React.FC = () => {
           <button
             type="button"
             onClick={handleExportCSV}
-            className="px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1.5 cursor-pointer transition shadow-2xs"
+            className="px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
           >
             <Download className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
             <span>Ekspor CSV</span>
@@ -312,11 +312,11 @@ export const LoyaltyLedger: React.FC = () => {
       </div>
 
       {/* Ledger Table */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs overflow-hidden">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
                 <th className="p-3">Waktu & Tanggal</th>
                 <th className="p-3">Member</th>
                 <th className="p-3">No. Faktur / Ref</th>
@@ -353,11 +353,11 @@ export const LoyaltyLedger: React.FC = () => {
                           <span className="font-bold text-slate-900 dark:text-white">
                             {row.customerName}
                           </span>
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full border bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                          <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-full border bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300">
                             {row.customerTier}
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-500 font-mono">
+                        <span className="text-[11px] text-slate-500 font-mono">
                           {row.customerPhone}
                         </span>
                       </td>

@@ -45,14 +45,14 @@ export const OfflineNotificationBanner: React.FC = () => {
     return (
       <div
         id="offline-status-banner"
-        className={`px-4 py-1.5 text-xs font-medium flex items-center justify-between shadow-xs border-b z-40 transition-colors ${
+        className={`px-4 py-1.5 text-xs font-medium flex items-center justify-between shadow-sm border-b z-40 transition-colors ${
           isOfflineSimulated
-            ? 'bg-purple-900/90 text-purple-100 border-purple-800'
+            ? 'bg-indigo-900/90 text-indigo-100 border-indigo-800'
             : 'bg-amber-500/90 text-slate-950 border-amber-600 font-semibold'
         }`}
       >
         <div className="flex items-center gap-2">
-          <CloudOff className="w-4 h-4 shrink-0 animate-pulse" />
+          <CloudOff className="w-4 h-4 shrink-0" />
           <span>
             {isOfflineSimulated ? (
               <>
@@ -64,7 +64,7 @@ export const OfflineNotificationBanner: React.FC = () => {
               </>
             )}
             {pendingSyncCount > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.2 rounded bg-black/20 text-[10px] font-mono font-bold">
+              <span className="ml-1.5 px-1.5 py-0.2 rounded-md bg-black/20 text-[11px] font-mono font-bold">
                 {pendingSyncCount} transaksi di antrean lokal
               </span>
             )}
@@ -74,9 +74,9 @@ export const OfflineNotificationBanner: React.FC = () => {
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setIsSyncModalOpen(true)}
-            className={`px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer transition-colors ${
+            className={`px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition-colors ${
               isOfflineSimulated
-                ? 'bg-purple-800 hover:bg-purple-700 text-white'
+                ? 'bg-indigo-800 hover:bg-indigo-700 text-white'
                 : 'bg-slate-900 hover:bg-slate-800 text-amber-300'
             }`}
           >

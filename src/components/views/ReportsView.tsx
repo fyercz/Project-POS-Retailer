@@ -416,10 +416,10 @@ export const ReportsView: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-100 dark:bg-slate-950 overflow-y-auto select-none p-4 space-y-4">
       {/* Top Header */}
-      <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+      <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
               EDC BRI Settlement &amp; Kasir
             </span>
             <span className="text-xs text-slate-500">•</span>
@@ -448,7 +448,7 @@ export const ReportsView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleExportJournalCSV}
-                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
               >
                 <Download className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>Ekspor Jurnal CSV</span>
@@ -460,14 +460,14 @@ export const ReportsView: React.FC = () => {
             <>
               <button
                 onClick={() => openPrintWith('payments')}
-                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
               >
                 <Printer className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 <span>Cetak Rekap Pembayaran</span>
               </button>
               <button
                 onClick={handleExportPaymentsCSV}
-                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
               >
                 <FileSpreadsheet className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                 <span>Ekspor CSV</span>
@@ -478,7 +478,7 @@ export const ReportsView: React.FC = () => {
           {(activeTab === 'performance' || activeTab === 'forecast') && (
             <button
               onClick={() => openPrintWith('summary')}
-              className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
             >
               <Printer className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span>Cetak Ikhtisar Omzet</span>
@@ -488,7 +488,7 @@ export const ReportsView: React.FC = () => {
           {activeTab === 'accounting' && (
             <button
               onClick={() => window.print()}
-              className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
             >
               <Printer className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
               <span>Cetak Laporan Keuangan</span>
@@ -500,7 +500,7 @@ export const ReportsView: React.FC = () => {
             onClick={() => openGeminiCopilot('insights')}
             className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-600/20 transition-all active:scale-95"
           >
-            <Sparkles className="w-4 h-4 fill-current animate-pulse" />
+            <Sparkles className="w-4 h-4 fill-current" />
             <span className="hidden sm:inline">Analisis AI</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
@@ -508,7 +508,7 @@ export const ReportsView: React.FC = () => {
           <button
             id="btn-reports-backup-restore"
             onClick={() => setIsBackupRestoreOpen(true)}
-            className="hidden lg:flex px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-xs transition-colors active:scale-95"
+            className="hidden lg:flex px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-sm transition-colors active:scale-95"
             title="Cadangkan Data Toko & Titik Pemulihan (Backup & Restore - F9)"
           >
             <Database className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
@@ -518,7 +518,7 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* Primary Sub-Tab Switcher (6 Tabs) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-1.5 shadow-2xs gap-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl p-1.5 shadow-sm gap-1.5">
         <button aria-pressed={activeTab === 'performance'}
           type="button"
           onClick={() => setActiveTab('performance')}
@@ -544,7 +544,7 @@ export const ReportsView: React.FC = () => {
           <CreditCard className="w-4 h-4 shrink-0" />
           <span className="truncate">Pembayaran &amp; EDC</span>
           <span
-            className={`px-1.5 py-0.2 rounded-full text-[10px] font-black shrink-0 ${
+            className={`px-1.5 py-0.2 rounded-full text-[11px] font-black shrink-0 ${
               activeTab === 'payments'
                 ? 'bg-white/20 text-white'
                 : 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
@@ -565,7 +565,7 @@ export const ReportsView: React.FC = () => {
         >
           <TrendingUp className="w-4 h-4 shrink-0 text-indigo-500" />
           <span className="truncate">Proyeksi 7 Hari</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 shrink-0">
+          <span className="px-1.5 py-0.2 rounded-full text-[11px] font-black bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 shrink-0">
             AI Forecast
           </span>
         </button>
@@ -581,7 +581,7 @@ export const ReportsView: React.FC = () => {
         >
           <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />
           <span className="truncate">Harga Dinamis</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 shrink-0">
+          <span className="px-1.5 py-0.2 rounded-full text-[11px] font-black bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 shrink-0">
             AI PRO
           </span>
         </button>
@@ -597,7 +597,7 @@ export const ReportsView: React.FC = () => {
         >
           <Scale className="w-4 h-4 shrink-0 text-emerald-500" />
           <span className="truncate">Neraca &amp; Laba Rugi</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shrink-0">
+          <span className="px-1.5 py-0.2 rounded-full text-[11px] font-black bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shrink-0">
             Owner
           </span>
         </button>
@@ -614,7 +614,7 @@ export const ReportsView: React.FC = () => {
           <BookOpen className="w-4 h-4 shrink-0 text-indigo-500" />
           <span className="truncate">Buku Jurnal Umum</span>
           <span
-            className={`px-1.5 py-0.2 rounded-full text-[10px] font-black shrink-0 ${
+            className={`px-1.5 py-0.2 rounded-full text-[11px] font-black shrink-0 ${
               activeTab === 'journal'
                 ? 'bg-white/20 text-white'
                 : 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
@@ -662,9 +662,9 @@ export const ReportsView: React.FC = () => {
           />
 
           {/* Quick Projected Sales Insight Banner */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-white to-blue-50/60 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-900/60 flex items-center justify-between gap-3 text-xs shadow-2xs">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-white to-blue-50/60 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-900/60 flex items-center justify-between gap-3 text-xs shadow-sm">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="p-2 rounded-xl bg-indigo-600 text-white shrink-0 shadow-xs">
+              <div className="p-2 rounded-xl bg-indigo-600 text-white shrink-0 shadow-sm">
                 <TrendingUp className="w-4 h-4" />
               </div>
               <div className="min-w-0">
@@ -672,7 +672,7 @@ export const ReportsView: React.FC = () => {
                   <span className="font-bold text-slate-900 dark:text-slate-100">
                     Proyeksi Penjualan 7 Hari Mendatang (AI Forecasting)
                   </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300">
+                  <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300">
                     Next 7 Days
                   </span>
                 </div>
@@ -684,7 +684,7 @@ export const ReportsView: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('forecast')}
-              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1 shrink-0 cursor-pointer transition shadow-2xs active:scale-95"
+              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1 shrink-0 cursor-pointer transition shadow-sm active:scale-95"
             >
               <span>Buka Proyeksi</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -694,60 +694,60 @@ export const ReportsView: React.FC = () => {
           {/* 4 Summary Cards: Cash, QRIS EDC BRI, Card EDC, and GRAND TOTAL EDC SETTLEMENT */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* 1. Uang Tunai (Cash) */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
                   Uang Tunai (Cash)
                 </span>
-                <span className="p-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+                <span className="p-1 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
                   <Banknote className="w-4 h-4" />
                 </span>
               </div>
               <div className="text-lg font-black font-mono text-emerald-700 dark:text-emerald-400 mt-1">
                 {formatCurrency(paymentMetrics.totalCash, settings.currency)}
               </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
                 <span>{paymentMetrics.cashCount} Transaksi</span>
                 <span>Laci Kasir Fisik</span>
               </div>
             </div>
 
             {/* 2. QRIS Mesin EDC BRI */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
                   <span>QRIS EDC BRI</span>
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300">
+                  <span className="px-1.5 py-0.2 rounded-md text-[11px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300">
                     EDC BRI
                   </span>
                 </span>
-                <span className="p-1 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+                <span className="p-1 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
                   <QrCode className="w-4 h-4" />
                 </span>
               </div>
               <div className="text-lg font-black font-mono text-blue-600 dark:text-blue-400 mt-1">
                 {formatCurrency(paymentMetrics.totalQris, settings.currency)}
               </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
                 <span>{paymentMetrics.qrisCount} Transaksi</span>
                 <span>Scan Mesin EDC</span>
               </div>
             </div>
 
             {/* 3. Kartu EDC (Debit / Kredit) */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
                   Kartu EDC (Debit/Kredit)
                 </span>
-                <span className="p-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                <span className="p-1 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
                   <CreditCard className="w-4 h-4" />
                 </span>
               </div>
               <div className="text-lg font-black font-mono text-indigo-600 dark:text-indigo-400 mt-1">
                 {formatCurrency(paymentMetrics.totalCard, settings.currency)}
               </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
                 <span>{paymentMetrics.cardCount} Transaksi</span>
                 <span>Gesek / Dip EDC</span>
               </div>
@@ -760,14 +760,14 @@ export const ReportsView: React.FC = () => {
                   <ShieldCheck className="w-3.5 h-3.5 text-blue-200" />
                   <span>TOTAL SETTLEMENT EDC BRI</span>
                 </span>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-white/20 text-white uppercase">
+                <span className="px-1.5 py-0.5 rounded-md text-[11px] font-black bg-white/20 text-white uppercase">
                   Closing Kasir
                 </span>
               </div>
               <div className="text-xl font-black font-mono text-white mt-1">
                 {formatCurrency(paymentMetrics.totalEdcSettlement, settings.currency)}
               </div>
-              <div className="flex items-center justify-between text-[10px] text-blue-100 mt-1 font-mono">
+              <div className="flex items-center justify-between text-[11px] text-blue-100 mt-1 font-mono">
                 <span>{paymentMetrics.totalEdcTxCount} Struk (QRIS + Kartu)</span>
                 <span className="font-semibold underline">Struk Mesin EDC</span>
               </div>
@@ -775,7 +775,7 @@ export const ReportsView: React.FC = () => {
           </div>
 
           {/* Interactive Settlement Reconciliation Tool */}
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50/50 dark:from-blue-950/40 dark:to-indigo-950/30 rounded-2xl border border-blue-200 dark:border-blue-900/60 shadow-2xs">
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50/50 dark:from-blue-950/40 dark:to-indigo-950/30 rounded-2xl border border-blue-200 dark:border-blue-900/60 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -830,7 +830,7 @@ export const ReportsView: React.FC = () => {
           </div>
 
           {/* Payment Method Filter Pills & Search */}
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               {/* Channel Tabs */}
               <div className="flex flex-wrap gap-1.5">
@@ -846,13 +846,13 @@ export const ReportsView: React.FC = () => {
                     onClick={() => setMethodChannelFilter(item.id)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                       methodChannelFilter === item.id
-                        ? 'bg-blue-600 text-white font-bold shadow-xs'
+                        ? 'bg-blue-600 text-white font-bold shadow-sm'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-750'
                     }`}
                   >
                     <span>{item.label}</span>
                     <span
-                      className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      className={`px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
                         methodChannelFilter === item.id
                           ? 'bg-white/20 text-white'
                           : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -880,7 +880,7 @@ export const ReportsView: React.FC = () => {
             {/* Payment Transactions Table */}
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">
+                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="py-2.5 px-3">No. Faktur / Waktu</th>
                     <th className="py-2.5 px-3">Kanal Pembayaran</th>
@@ -907,7 +907,7 @@ export const ReportsView: React.FC = () => {
                             <span className="font-mono font-bold text-slate-900 dark:text-white block">
                               {tx.invoiceNumber}
                             </span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                               {formatDate(tx.createdAt)}
                             </span>
                           </td>
@@ -915,25 +915,25 @@ export const ReportsView: React.FC = () => {
                           {/* Channel Badge */}
                           <td className="py-2.5 px-3">
                             {tx.payment?.method === 'qris' && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
                                 <QrCode className="w-3 h-3" />
                                 <span>QRIS EDC BRI</span>
                               </span>
                             )}
                             {tx.payment?.method === 'card' && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800">
                                 <CreditCard className="w-3 h-3" />
                                 <span>{tx.payment?.bankName || 'Kartu EDC BRI'}</span>
                               </span>
                             )}
                             {tx.payment?.method === 'cash' && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
                                 <Banknote className="w-3 h-3" />
                                 <span>Tunai (Cash)</span>
                               </span>
                             )}
                             {tx.payment?.method === 'transfer' && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800">
                                 <Building2 className="w-3 h-3" />
                                 <span>Transfer Bank</span>
                               </span>
@@ -956,7 +956,7 @@ export const ReportsView: React.FC = () => {
                             <span className="font-semibold text-slate-800 dark:text-slate-200 block">
                               {tx.cashierName}
                             </span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400">
                               {tx.customer?.name ? `Pelanggan: ${tx.customer.name}` : 'Pelanggan Umum'}
                             </span>
                           </td>
@@ -971,11 +971,11 @@ export const ReportsView: React.FC = () => {
                           {/* Status */}
                           <td className="py-2.5 px-3 text-center">
                             {tx.status === 'completed' ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                                 Selesai
                               </span>
                             ) : (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
                                 {tx.status}
                               </span>
                             )}
@@ -986,7 +986,7 @@ export const ReportsView: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setActiveReceipt(tx)}
-                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                              className="px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
                             >
                               Nota
                             </button>
@@ -1017,55 +1017,55 @@ export const ReportsView: React.FC = () => {
           {/* Primary KPI Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Gross Revenue */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">
                 Total Omzet Kotor
               </span>
               <div className="text-xl font-black font-mono text-emerald-700 dark:text-emerald-400 mt-1">
                 {formatCurrency(reportMetrics.grossSales, settings.currency)}
               </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
                 <span>Bersih: {formatCurrency(reportMetrics.netSales, settings.currency)}</span>
                 <span>{reportMetrics.totalUnitsSold} Pcs Terjual</span>
               </div>
             </div>
 
             {/* Total Orders & Ticket */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">
                 Total Transaksi Selesai
               </span>
               <div className="text-xl font-black font-mono text-slate-900 dark:text-white mt-1">
                 {completedTransactions.length} Struk Nota
               </div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block font-mono">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block font-mono">
                 Rata-rata Nota: {formatCurrency(reportMetrics.averageTicket, settings.currency)}
               </span>
             </div>
 
             {/* Gross Profit & Margin */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">
                 Estimasi Laba Kotor (Cuan)
               </span>
-              <div className="text-xl font-black font-mono text-teal-600 dark:text-teal-400 mt-1">
+              <div className="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
                 {formatCurrency(reportMetrics.grossProfit, settings.currency)}
               </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
                 <span>Margin: {reportMetrics.profitMargin}%</span>
                 <span>Modal: {formatCurrency(reportMetrics.totalCOGS, settings.currency)}</span>
               </div>
             </div>
 
             {/* Retur Penjualan & Diskon */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">
                 Retur &amp; Promo Diskon
               </span>
               <div className="text-xl font-black font-mono text-amber-700 dark:text-amber-400 mt-1">
                 {formatCurrency(reportMetrics.totalDiscounts + reportMetrics.totalSalesReturnAmount, settings.currency)}
               </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
                 <span>Retur: {formatCurrency(reportMetrics.totalSalesReturnAmount, settings.currency)}</span>
                 <span>Diskon: {formatCurrency(reportMetrics.totalDiscounts, settings.currency)}</span>
               </div>
@@ -1079,17 +1079,17 @@ export const ReportsView: React.FC = () => {
           />
 
           {/* Quick AI Dynamic Pricing Banner */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-white to-blue-50/60 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-white to-blue-50/60 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-800/60 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-xs shrink-0">
-                <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-sm shrink-0">
+                <Sparkles className="w-5 h-5 text-amber-300" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white">
                     AI Dynamic Pricing &amp; Margin Optimizer
                   </h4>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                     Gemini AI
                   </span>
                 </div>
@@ -1101,7 +1101,7 @@ export const ReportsView: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('pricing')}
-              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer self-start sm:self-auto shrink-0"
+              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer self-start sm:self-auto shrink-0"
             >
               <span>Buka Modul Harga Dinamis</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -1111,7 +1111,7 @@ export const ReportsView: React.FC = () => {
           {/* Grid: Payment Method Breakdown & Top Sellers */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {/* Top 6 Products Leaderboard */}
-            <div className="lg:col-span-7 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="lg:col-span-7 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
               <h3 className="font-bold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider">
                 Produk Ritel Terlaris (Fast-Moving)
               </h3>
@@ -1124,7 +1124,7 @@ export const ReportsView: React.FC = () => {
                       className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-black text-[10px] flex items-center justify-center font-mono shrink-0">
+                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-black text-[11px] flex items-center justify-center font-mono shrink-0">
                           #{idx + 1}
                         </span>
                         <span className="font-semibold text-slate-800 dark:text-slate-100 truncate">{p.name}</span>
@@ -1133,7 +1133,7 @@ export const ReportsView: React.FC = () => {
                         <span className="font-bold text-blue-600 dark:text-blue-400 block">
                           {p.quantity} terjual
                         </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-300">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-300">
                           {formatCurrency(p.revenue, settings.currency)}
                         </span>
                       </div>
@@ -1148,14 +1148,14 @@ export const ReportsView: React.FC = () => {
             </div>
 
             {/* Quick Actions & Settlement Guide */}
-            <div className="lg:col-span-5 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="lg:col-span-5 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
               <h3 className="font-bold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider">
                 SOP Rekonsiliasi EDC BRI Toko
               </h3>
 
               <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-2 text-xs text-slate-700 dark:text-slate-300">
                 <div className="flex items-start gap-2">
-                  <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                     1
                   </span>
                   <span>
@@ -1163,7 +1163,7 @@ export const ReportsView: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                     2
                   </span>
                   <span>
@@ -1171,7 +1171,7 @@ export const ReportsView: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                     3
                   </span>
                   <span>
@@ -1250,14 +1250,14 @@ export const ReportsView: React.FC = () => {
       {activeTab === 'accounting' && (
         <div className="space-y-4">
           {/* Sub-Switch: Balance Sheet vs Income Statement */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl gap-1">
               <button aria-pressed={accountingSubTab === 'balance_sheet'}
                 type="button"
                 onClick={() => setAccountingSubTab('balance_sheet')}
-                className={`py-2 px-3.5 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`py-2 px-3.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                   accountingSubTab === 'balance_sheet'
-                    ? 'bg-emerald-700 text-white shadow-xs'
+                    ? 'bg-emerald-700 text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
                 }`}
               >
@@ -1268,9 +1268,9 @@ export const ReportsView: React.FC = () => {
               <button aria-pressed={accountingSubTab === 'income_statement'}
                 type="button"
                 onClick={() => setAccountingSubTab('income_statement')}
-                className={`py-2 px-3.5 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`py-2 px-3.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                   accountingSubTab === 'income_statement'
-                    ? 'bg-emerald-700 text-white shadow-xs'
+                    ? 'bg-emerald-700 text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
                 }`}
               >
@@ -1312,25 +1312,25 @@ export const ReportsView: React.FC = () => {
             <div className="space-y-4">
               {/* Top KPI Cards for Balance Sheet */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 dark:from-emerald-950/40 dark:to-slate-900 border border-emerald-200 dark:border-emerald-800 shadow-2xs">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 dark:from-emerald-950/40 dark:to-slate-900 border border-emerald-200 dark:border-emerald-800 shadow-sm">
                   <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400 text-xs font-bold">
                     <span className="flex items-center gap-1.5">
                       <Building2 className="w-4 h-4" />
                       <span>Total Aset (Aktiva)</span>
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
+                    <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
                       Riil Toko
                     </span>
                   </div>
                   <div className="text-2xl font-black font-mono text-slate-900 dark:text-white mt-1.5">
                     {formatCurrency(balanceSheet.assets.totalAssets, settings.currency)}
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                     Kas + Bank + EDC + Valuasi Stok Fisik Toko
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                   <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 text-xs font-bold">
                     <span className="flex items-center gap-1.5">
                       <Coins className="w-4 h-4 text-rose-600" />
@@ -1340,12 +1340,12 @@ export const ReportsView: React.FC = () => {
                   <div className="text-2xl font-black font-mono text-rose-600 dark:text-rose-400 mt-1.5">
                     {formatCurrency(balanceSheet.liabilities.totalLiabilities, settings.currency)}
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                     Utang Supplier Tempo ({formatCurrency(balanceSheet.liabilities.accountsPayable)}) + Poin Member
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                   <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 text-xs font-bold">
                     <span className="flex items-center gap-1.5">
                       <Wallet className="w-4 h-4 text-blue-500" />
@@ -1355,12 +1355,12 @@ export const ReportsView: React.FC = () => {
                   <div className="text-2xl font-black font-mono text-blue-600 dark:text-blue-400 mt-1.5">
                     {formatCurrency(balanceSheet.equity.totalEquity, settings.currency)}
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                     Modal Pemilik + Laba Berjalan + Laba Ditahan
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                   <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 text-xs font-bold">
                     <span className="flex items-center gap-1.5">
                       <ShoppingBag className="w-4 h-4 text-indigo-500" />
@@ -1370,7 +1370,7 @@ export const ReportsView: React.FC = () => {
                   <div className="text-2xl font-black font-mono text-indigo-600 dark:text-indigo-400 mt-1.5">
                     {formatCurrency(balanceSheet.assets.merchandiseInventory, settings.currency)}
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                     Nilai modal modal HPP persediaan barang
                   </p>
                 </div>
@@ -1379,10 +1379,10 @@ export const ReportsView: React.FC = () => {
               {/* Dual-Column Balance Sheet Statement Table */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* AKTIVA (ASSETS) */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                   <div className="p-3.5 bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="p-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                      <span className="p-1 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                         <Building2 className="w-4 h-4" />
                       </span>
                       <h3 className="font-bold text-sm text-slate-900 dark:text-white">ASET / AKTIVA</h3>
@@ -1403,7 +1403,7 @@ export const ReportsView: React.FC = () => {
                       <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                         <div>
                           <span className="font-medium text-slate-800 dark:text-slate-200">1010 • Kas di Laci Kasir (Cash on Hand)</span>
-                          <p className="text-[10px] text-slate-500">Uang tunai fisik siap edar di laci</p>
+                          <p className="text-[11px] text-slate-500">Uang tunai fisik siap edar di laci</p>
                         </div>
                         <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                           {formatCurrency(balanceSheet.assets.cashOnHand, settings.currency)}
@@ -1413,7 +1413,7 @@ export const ReportsView: React.FC = () => {
                       <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                         <div>
                           <span className="font-medium text-slate-800 dark:text-slate-200">1020 • Bank &amp; Rekening QRIS</span>
-                          <p className="text-[10px] text-slate-500">Saldo dana kliring QRIS &amp; transfer bank</p>
+                          <p className="text-[11px] text-slate-500">Saldo dana kliring QRIS &amp; transfer bank</p>
                         </div>
                         <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                           {formatCurrency(balanceSheet.assets.bankAndQris, settings.currency)}
@@ -1423,7 +1423,7 @@ export const ReportsView: React.FC = () => {
                       <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                         <div>
                           <span className="font-medium text-slate-800 dark:text-slate-200">1030 • Piutang Kliring EDC Kartu</span>
-                          <p className="text-[10px] text-slate-500">Settlement kartu debit/kredit mesin EDC</p>
+                          <p className="text-[11px] text-slate-500">Settlement kartu debit/kredit mesin EDC</p>
                         </div>
                         <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                           {formatCurrency(balanceSheet.assets.edcCardReceivables, settings.currency)}
@@ -1433,7 +1433,7 @@ export const ReportsView: React.FC = () => {
                       <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                         <div>
                           <span className="font-medium text-slate-800 dark:text-slate-200">1050 • Persediaan Barang Dagang</span>
-                          <p className="text-[10px] text-slate-500">Total nilai modal stok barang di rak &amp; gudang</p>
+                          <p className="text-[11px] text-slate-500">Total nilai modal stok barang di rak &amp; gudang</p>
                         </div>
                         <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
                           {formatCurrency(balanceSheet.assets.merchandiseInventory, settings.currency)}
@@ -1451,10 +1451,10 @@ export const ReportsView: React.FC = () => {
                 </div>
 
                 {/* PASIVA & EKUITAS (LIABILITIES & EQUITY) */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                   <div className="p-3.5 bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="p-1 rounded-lg bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                      <span className="p-1 rounded-xl bg-blue-500/20 text-blue-600 dark:text-blue-400">
                         <Scale className="w-4 h-4" />
                       </span>
                       <h3 className="font-bold text-sm text-slate-900 dark:text-white">KEWAJIBAN &amp; EKUITAS (PASIVA)</h3>
@@ -1477,7 +1477,7 @@ export const ReportsView: React.FC = () => {
                         <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                           <div>
                             <span className="font-medium text-slate-800 dark:text-slate-200">2010 • Utang Dagang Supplier</span>
-                            <p className="text-[10px] text-slate-500">Faktur pembelian PO tempo distributor belum lunas</p>
+                            <p className="text-[11px] text-slate-500">Faktur pembelian PO tempo distributor belum lunas</p>
                           </div>
                           <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
                             {formatCurrency(balanceSheet.liabilities.accountsPayable, settings.currency)}
@@ -1488,7 +1488,7 @@ export const ReportsView: React.FC = () => {
                           <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                             <div>
                               <span className="font-medium text-slate-800 dark:text-slate-200">2030 • Utang Titipan / Konsinyasi</span>
-                              <p className="text-[10px] text-slate-500">Titipan barang konsinyasi supplier menunggu rekonsiliasi</p>
+                              <p className="text-[11px] text-slate-500">Titipan barang konsinyasi supplier menunggu rekonsiliasi</p>
                             </div>
                             <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
                               {formatCurrency(balanceSheet.liabilities.consignmentPayable || 0, settings.currency)}
@@ -1499,7 +1499,7 @@ export const ReportsView: React.FC = () => {
                         <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                           <div>
                             <span className="font-medium text-slate-800 dark:text-slate-200">2020 • Liabilitas Poin Member</span>
-                            <p className="text-[10px] text-slate-500">Titipan nilai poin beredar pelanggan</p>
+                            <p className="text-[11px] text-slate-500">Titipan nilai poin beredar pelanggan</p>
                           </div>
                           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                             {formatCurrency(balanceSheet.liabilities.pointsLiability, settings.currency)}
@@ -1525,7 +1525,7 @@ export const ReportsView: React.FC = () => {
                         <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                           <div>
                             <span className="font-medium text-slate-800 dark:text-slate-200">3010 • Modal Awal Pemilik Toko</span>
-                            <p className="text-[10px] text-slate-500">Investasi awal usaha ritel Ulilmart</p>
+                            <p className="text-[11px] text-slate-500">Investasi awal usaha ritel Ulilmart</p>
                           </div>
                           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                             {formatCurrency(balanceSheet.equity.ownerInitialCapital, settings.currency)}
@@ -1535,7 +1535,7 @@ export const ReportsView: React.FC = () => {
                         <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                           <div>
                             <span className="font-medium text-slate-800 dark:text-slate-200">Laba Bersih Periode Berjalan</span>
-                            <p className="text-[10px] text-slate-500">Hasil laba bersih dari Laporan Laba Rugi</p>
+                            <p className="text-[11px] text-slate-500">Hasil laba bersih dari Laporan Laba Rugi</p>
                           </div>
                           <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                             {formatCurrency(balanceSheet.equity.currentPeriodNetIncome, settings.currency)}
@@ -1545,7 +1545,7 @@ export const ReportsView: React.FC = () => {
                         <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                           <div>
                             <span className="font-medium text-slate-800 dark:text-slate-200">3020 • Akumulasi Laba Ditahan</span>
-                            <p className="text-[10px] text-slate-500">Laba ditahan dari akumulasi aset &amp; persediaan</p>
+                            <p className="text-[11px] text-slate-500">Laba ditahan dari akumulasi aset &amp; persediaan</p>
                           </div>
                           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                             {formatCurrency(balanceSheet.equity.retainedEarnings, settings.currency)}
@@ -1570,7 +1570,7 @@ export const ReportsView: React.FC = () => {
               </div>
 
               {/* Accounting Equation Summary Bar */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 border border-emerald-300 dark:border-emerald-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-emerald-50 to-blue-50 dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 border border-emerald-300 dark:border-emerald-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2.5">
                   <ShieldCheck className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0" />
                   <div>
@@ -1583,7 +1583,7 @@ export const ReportsView: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 self-start md:self-auto font-mono text-xs">
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-bold">
+                  <span className="px-2.5 py-1 rounded-xl bg-emerald-700 text-white font-bold">
                     SEIMBANG (Diff: {formatCurrency(balanceSheet.difference)})
                   </span>
                 </div>
@@ -1596,67 +1596,67 @@ export const ReportsView: React.FC = () => {
             <div className="space-y-4">
               {/* Income Statement 4-KPIs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
                     Penjualan Bersih (Net Sales)
                   </span>
                   <div className="text-xl font-black font-mono text-slate-900 dark:text-white mt-1">
                     {formatCurrency(dateFilteredIncome.netSales, settings.currency)}
                   </div>
-                  <span className="text-[10px] text-slate-500 mt-1 block">
+                  <span className="text-[11px] text-slate-500 mt-1 block">
                     Omzet Kotor {formatCurrency(dateFilteredIncome.grossSales)} - Diskon {formatCurrency(dateFilteredIncome.salesDiscounts)}
                   </span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
                     Harga Pokok Penjualan (HPP)
                   </span>
                   <div className="text-xl font-black font-mono text-amber-700 dark:text-amber-400 mt-1">
                     {formatCurrency(dateFilteredIncome.costOfGoodsSold, settings.currency)}
                   </div>
-                  <span className="text-[10px] text-slate-500 mt-1 block">
+                  <span className="text-[11px] text-slate-500 mt-1 block">
                     Modal barang yang terjual pada periode ini
                   </span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
                       Laba Kotor (Gross Profit)
                     </span>
-                    <span className="px-1.5 py-0.2 rounded bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 font-mono text-[10px] font-bold">
+                    <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-mono text-[11px] font-bold">
                       {dateFilteredIncome.grossProfitMarginPercent.toFixed(1)}% Margin
                     </span>
                   </div>
-                  <div className="text-xl font-black font-mono text-teal-600 dark:text-teal-400 mt-1">
+                  <div className="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
                     {formatCurrency(dateFilteredIncome.grossProfit, settings.currency)}
                   </div>
-                  <span className="text-[10px] text-slate-500 mt-1 block">
+                  <span className="text-[11px] text-slate-500 mt-1 block">
                     Penjualan Bersih dikurangi HPP Barang
                   </span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 shadow-2xs">
+                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 shadow-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
                       Laba Bersih Operasional
                     </span>
-                    <span className="px-1.5 py-0.2 rounded bg-emerald-200/80 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 font-mono text-[10px] font-bold">
+                    <span className="px-1.5 py-0.2 rounded-md bg-emerald-200/80 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 font-mono text-[11px] font-bold">
                       {dateFilteredIncome.netProfitMarginPercent.toFixed(1)}% Net
                     </span>
                   </div>
                   <div className="text-2xl font-black font-mono text-emerald-700 dark:text-emerald-400 mt-1">
                     {formatCurrency(dateFilteredIncome.netOperatingProfit, settings.currency)}
                   </div>
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 mt-1 block">
+                  <span className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-1 block">
                     Setelah dikurangi seluruh beban operasional
                   </span>
                 </div>
               </div>
 
               {/* Comprehensive Financial Statement Table */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                 <div className="p-4 bg-slate-100/70 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                   <div>
                     <h3 className="font-bold text-sm text-slate-900 dark:text-white">
@@ -1669,7 +1669,7 @@ export const ReportsView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsExpenseModalOpen(true)}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Catat Biaya Toko</span>
@@ -1697,7 +1697,7 @@ export const ReportsView: React.FC = () => {
                           <span>-{formatCurrency(dateFilteredIncome.salesReturns, settings.currency)}</span>
                         </div>
                       )}
-                      <div className="flex justify-between py-1.5 font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800/50 px-2 rounded-lg">
+                      <div className="flex justify-between py-1.5 font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800/50 px-2 rounded-xl">
                         <span className="font-sans">TOTAL PENJUALAN BERSIH (NET SALES)</span>
                         <span>{formatCurrency(dateFilteredIncome.netSales, settings.currency)}</span>
                       </div>
@@ -1714,7 +1714,7 @@ export const ReportsView: React.FC = () => {
                         <span className="font-sans">5010 • Beban Pokok Penjualan (Modal Barang Terjual) (-)</span>
                         <span>-{formatCurrency(dateFilteredIncome.costOfGoodsSold, settings.currency)}</span>
                       </div>
-                      <div className="flex justify-between py-1.5 font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 px-2 rounded-lg">
+                      <div className="flex justify-between py-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 rounded-xl">
                         <span className="font-sans">LABA KOTOR TOKO (GROSS PROFIT)</span>
                         <span>{formatCurrency(dateFilteredIncome.grossProfit, settings.currency)} ({dateFilteredIncome.grossProfitMarginPercent.toFixed(1)}%)</span>
                       </div>
@@ -1745,7 +1745,7 @@ export const ReportsView: React.FC = () => {
                         </div>
                       )}
 
-                      <div className="flex justify-between py-1.5 font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-2 rounded-lg">
+                      <div className="flex justify-between py-1.5 font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-2 rounded-xl">
                         <span className="font-sans">TOTAL BEBAN OPERASIONAL TOKO</span>
                         <span>-{formatCurrency(dateFilteredIncome.operatingExpenses.totalOperatingExpenses, settings.currency)}</span>
                       </div>
@@ -1754,7 +1754,7 @@ export const ReportsView: React.FC = () => {
 
                   {/* IV. LABA BERSIH OPERASIONAL */}
                   <div className="pt-2">
-                    <div className="flex justify-between py-3 px-4 font-black text-sm text-emerald-950 dark:text-emerald-100 bg-gradient-to-r from-emerald-100 via-teal-100 to-emerald-100 dark:from-emerald-900/60 dark:via-teal-900/40 dark:to-emerald-900/60 rounded-xl border border-emerald-300 dark:border-emerald-700">
+                    <div className="flex justify-between py-3 px-4 font-black text-sm text-emerald-950 dark:text-emerald-100 bg-gradient-to-r from-emerald-100 via-emerald-100 to-emerald-100 dark:from-emerald-900/60 dark:via-emerald-900/40 dark:to-emerald-900/60 rounded-xl border border-emerald-300 dark:border-emerald-700">
                       <span className="font-sans">LABA BERSIH OPERASIONAL BERJALAN (NET PROFIT)</span>
                       <span className="text-base">{formatCurrency(dateFilteredIncome.netOperatingProfit, settings.currency)}</span>
                     </div>
@@ -1772,7 +1772,7 @@ export const ReportsView: React.FC = () => {
       {activeTab === 'journal' && (
         <div className="space-y-4">
           {/* Top Controls & Search Bar */}
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             {/* Search Input */}
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -1833,29 +1833,29 @@ export const ReportsView: React.FC = () => {
 
             return (
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                   <span className="text-[11px] font-bold text-slate-500">Total Transaksi Jurnal</span>
                   <div className="text-xl font-black font-mono text-indigo-600 dark:text-indigo-400 mt-1">
                     {dateFilteredJournal.length} Entri
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                   <span className="text-[11px] font-bold text-slate-500">Total Mutasi Debit</span>
                   <div className="text-xl font-black font-mono text-slate-900 dark:text-white mt-1">
                     {formatCurrency(sumDebit, settings.currency)}
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                   <span className="text-[11px] font-bold text-slate-500">Total Mutasi Kredit</span>
                   <div className="text-xl font-black font-mono text-slate-900 dark:text-white mt-1">
                     {formatCurrency(sumCredit, settings.currency)}
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 shadow-2xs flex flex-col justify-center">
-                  <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300">Status Pembukuan</span>
+                <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 shadow-sm flex flex-col justify-center">
+                  <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">Status Pembukuan</span>
                   <div className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400 mt-1 text-xs">
                     <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
                     <span>{isAllBalanced ? 'SEIMBANG (Debit = Kredit)' : 'PERIKSA SELISIH'}</span>
@@ -1866,7 +1866,7 @@ export const ReportsView: React.FC = () => {
           })()}
 
           {/* Journal Entries List Table */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div className="p-3.5 bg-slate-100/70 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -1886,11 +1886,11 @@ export const ReportsView: React.FC = () => {
                     entry.sourceType === 'sale'
                       ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950 dark:text-blue-300'
                       : entry.sourceType === 'purchase_order'
-                      ? 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-950 dark:text-teal-300'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'
                       : entry.sourceType === 'sales_return'
                       ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950 dark:text-amber-300'
                       : entry.sourceType === 'expense'
-                      ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950 dark:text-purple-300'
+                      ? 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300'
                       : 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300';
 
                   return (
@@ -1898,7 +1898,7 @@ export const ReportsView: React.FC = () => {
                       {/* Entry Header */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border uppercase tracking-wider ${sourceBadge}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-black border uppercase tracking-wider ${sourceBadge}`}>
                             {entry.sourceType.replace('_', ' ')}
                           </span>
                           <span className="font-bold text-xs font-mono text-slate-900 dark:text-white">
@@ -1911,7 +1911,7 @@ export const ReportsView: React.FC = () => {
                         <div className="flex items-center gap-2 text-[11px] text-slate-500 font-mono shrink-0">
                           <Clock className="w-3.5 h-3.5" />
                           <span>{formatDate(entry.date)}</span>
-                          <span className="px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
+                          <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
                             Balanced
                           </span>
                         </div>
@@ -1921,7 +1921,7 @@ export const ReportsView: React.FC = () => {
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs font-mono">
                           <thead>
-                            <tr className="text-slate-500 text-[10px] border-b border-slate-100 dark:border-slate-800">
+                            <tr className="text-slate-500 text-[11px] border-b border-slate-100 dark:border-slate-800">
                               <th className="text-left py-1 w-20">Kode</th>
                               <th className="text-left py-1">Nama Akun &amp; Keterangan</th>
                               <th className="text-right py-1 w-32">Debit</th>
@@ -1934,7 +1934,7 @@ export const ReportsView: React.FC = () => {
                                 <td className="py-1 text-slate-500 font-semibold">{line.accountCode}</td>
                                 <td className={`py-1 ${line.credit > 0 ? 'pl-6 text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-slate-100 font-semibold'}`}>
                                   {line.accountName}
-                                  {line.memo && <span className="text-[10px] text-slate-500 ml-2 font-normal italic font-sans">({line.memo})</span>}
+                                  {line.memo && <span className="text-[11px] text-slate-500 ml-2 font-normal italic font-sans">({line.memo})</span>}
                                 </td>
                                 <td className="text-right py-1 font-bold text-slate-900 dark:text-white">
                                   {line.debit > 0 ? formatCurrency(line.debit, settings.currency) : '-'}
@@ -1965,8 +1965,8 @@ export const ReportsView: React.FC = () => {
       {/* ============================================================== */}
       {isExpenseModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-4 bg-gradient-to-r from-indigo-600 to-indigo-600 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Plus className="w-5 h-5" />
                 <h3 className="font-bold text-sm">Catat Beban Kas Keluar (OpEx)</h3>
@@ -1974,7 +1974,7 @@ export const ReportsView: React.FC = () => {
               <button aria-label="Tutup"
                 type="button"
                 onClick={() => setIsExpenseModalOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-white/20 text-white cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-white/20 text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>

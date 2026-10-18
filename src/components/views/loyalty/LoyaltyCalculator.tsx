@@ -241,7 +241,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
     <div className="space-y-6">
       {/* Notification Toast */}
       {appliedSuccessMsg && (
-        <div role="status" className="p-3.5 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-between shadow-lg shadow-emerald-500/20 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div role="status" className="p-3.5 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-between shadow-md shadow-emerald-500/20 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <span>{appliedSuccessMsg}</span>
@@ -249,7 +249,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
           <button
             onClick={() => setAppliedSuccessMsg(null)}
             aria-label="Tutup pesan"
-            className="p-1.5 hover:bg-emerald-600/30 rounded-lg cursor-pointer"
+            className="p-1.5 hover:bg-emerald-600/30 rounded-xl cursor-pointer"
           >
             ×
           </button>
@@ -261,7 +261,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
         {/* Left Column: Member Selection & Transaction Input */}
         <div className="lg:col-span-6 space-y-5">
           {/* Card 1: Member Selection & Profile Card */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
@@ -279,14 +279,14 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
 
               {customer && (
                 <span
-                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                  className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${
                     customer.tier === 'Platinum'
-                      ? 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800'
+                      ? 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800'
                       : customer.tier === 'Gold'
                       ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800'
                       : customer.tier === 'Silver'
                       ? 'bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700'
-                      : 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800'
+                      : 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800'
                   }`}
                 >
                   Tier {customer.tier || 'Bronze'} ({tierMultiplier}x Poin)
@@ -318,37 +318,37 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">
+                    <span className="text-[11px] text-slate-500 uppercase font-bold block mb-0.5">
                       Saldo Poin
                     </span>
                     <span className="text-base font-black font-mono text-amber-700 dark:text-amber-400 block">
                       {(customer.points || 0).toLocaleString()}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-mono">
+                    <span className="text-[11px] text-slate-500 font-mono">
                       ={formatCurrency((customer.points || 0) * redemptionRate, settings.currency)}
                     </span>
                   </div>
 
                   <div className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">
+                    <span className="text-[11px] text-slate-500 uppercase font-bold block mb-0.5">
                       Total Belanja
                     </span>
                     <span className="text-xs font-bold font-mono text-slate-900 dark:text-white block mt-1">
                       {formatCurrency(customer.totalSpent || 0, settings.currency)}
                     </span>
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[11px] text-slate-500">
                       {customer.ordersCount || 0}x Order
                     </span>
                   </div>
 
                   <div className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">
+                    <span className="text-[11px] text-slate-500 uppercase font-bold block mb-0.5">
                       Multiplier Tier
                     </span>
                     <span className="text-base font-black font-mono text-emerald-700 dark:text-emerald-400 block">
                       {tierMultiplier}x
                     </span>
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[11px] text-slate-500">
                       +{Math.round((tierMultiplier - 1) * 100)}% Bonus Pts
                     </span>
                   </div>
@@ -374,7 +374,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                       />
                     </div>
                     {tierProgress.remaining > 0 && (
-                      <span className="text-[10px] text-slate-500 mt-1 block">
+                      <span className="text-[11px] text-slate-500 mt-1 block">
                         Belanja {formatCurrency(tierProgress.remaining, settings.currency)} lagi untuk naik tier.
                       </span>
                     )}
@@ -385,7 +385,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
           </div>
 
           {/* Card 2: Transaction Total Input */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400">
@@ -405,7 +405,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                 <button
                   type="button"
                   onClick={() => setTransactionTotal(cartSubtotal)}
-                  className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 cursor-pointer flex items-center gap-1 transition"
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 cursor-pointer flex items-center gap-1 transition"
                   title="Gunakan subtotal keranjang POS saat ini"
                 >
                   <ShoppingCart className="w-3 h-3" />
@@ -437,13 +437,13 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
 
             {/* Quick Increment Buttons */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] text-slate-500 font-medium">Preset Cepat:</span>
+              <span className="text-[11px] text-slate-500 font-medium">Preset Cepat:</span>
               {[25000, 50000, 100000, 250000, 500000].map((amt) => (
                 <button
                   key={amt}
                   type="button"
                   onClick={() => setTransactionTotal(amt)}
-                  className={`px-2 py-1 text-[11px] font-mono rounded-lg border transition cursor-pointer ${
+                  className={`px-2 py-1 text-[11px] font-mono rounded-xl border transition cursor-pointer ${
                     transactionTotal === amt
                       ? 'bg-slate-900 text-white dark:bg-emerald-600 dark:text-white border-transparent'
                       : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
@@ -479,9 +479,9 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                 step={5}
                 value={eligibleRatioPercent}
                 onChange={(e) => setEligibleRatioPercent(Number(e.target.value))}
-                className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg"
+                className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-200 dark:bg-slate-700 rounded-xl"
               />
-              <span className="text-[10px] text-slate-500 block">
+              <span className="text-[11px] text-slate-500 block">
                 Sesuai aturan ritel pintar, poin hanya diberikan dari produk dengan profit &ge; {minProfitMargin}%.
               </span>
             </div>
@@ -491,7 +491,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
         {/* Right Column: Automated Calculation Breakdown & Discount Applicator */}
         <div className="lg:col-span-6 space-y-5">
           {/* Card 3: Automated Points Calculation Results */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-50/50 via-white to-teal-50/50 dark:from-emerald-950/20 dark:via-slate-900 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-900/60 shadow-xs space-y-4">
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/50 via-white to-emerald-50/50 dark:from-emerald-950/20 dark:via-slate-900 dark:to-emerald-950/20 border border-emerald-200 dark:border-emerald-900/60 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-emerald-500 text-slate-950">
@@ -507,7 +507,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                 </div>
               </div>
 
-              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
                 Formula Aktif
               </span>
             </div>
@@ -540,7 +540,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                   <span className="font-bold text-slate-900 dark:text-white block">
                     Total Poin Didapat Transaksi Ini:
                   </span>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[11px] text-slate-500">
                     Setara potensi diskon masa depan {formatCurrency(futureDiscountValue, settings.currency)}
                   </span>
                 </div>
@@ -555,7 +555,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
           </div>
 
           {/* Card 4: Apply Points Discount to This Transaction */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400">
@@ -576,7 +576,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                 onClick={() => setIsApplyingDiscount(!isApplyingDiscount)}
                 className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
                   isApplyingDiscount
-                    ? 'bg-amber-500 text-slate-950 shadow-xs'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -620,7 +620,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                                 Math.min(maxPossibleRedeem, Math.max(0, Number(e.target.value)))
                               )
                             }
-                            className="w-20 p-1 text-right text-xs font-bold font-mono rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400"
+                            className="w-20 p-1 text-right text-xs font-bold font-mono rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400"
                           />
                           <span className="text-slate-500 text-xs font-bold">Pts</span>
                         </div>
@@ -633,16 +633,16 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                         step={1}
                         value={effectivePointsToRedeem}
                         onChange={(e) => setRedeemPointsInput(Number(e.target.value))}
-                        className="w-full accent-amber-500 cursor-pointer h-2 bg-slate-200 dark:bg-slate-700 rounded-lg"
+                        className="w-full accent-amber-500 cursor-pointer h-2 bg-slate-200 dark:bg-slate-700 rounded-xl"
                       />
 
                       {/* Presets */}
                       <div className="flex items-center gap-1.5 pt-1">
-                        <span className="text-[10px] text-slate-500 font-medium">Preset:</span>
+                        <span className="text-[11px] text-slate-500 font-medium">Preset:</span>
                         <button
                           type="button"
                           onClick={() => setRedeemPointsInput(0)}
-                          className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-400 cursor-pointer"
+                          className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-400 cursor-pointer"
                         >
                           0 Pts
                         </button>
@@ -652,7 +652,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                               key={roundPts}
                               type="button"
                               onClick={() => setRedeemPointsInput(roundPts)}
-                              className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-md border transition cursor-pointer ${
+                              className={`px-2 py-0.5 text-[11px] font-mono font-bold rounded-md border transition cursor-pointer ${
                                 effectivePointsToRedeem === roundPts
                                   ? 'bg-amber-500 text-slate-950 border-amber-600'
                                   : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-400'
@@ -668,7 +668,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                             onClick={() =>
                               setRedeemPointsInput(Math.floor(maxPossibleRedeem * 0.25))
                             }
-                            className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-400 cursor-pointer"
+                            className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-400 cursor-pointer"
                           >
                             25%
                           </button>
@@ -679,7 +679,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                             onClick={() =>
                               setRedeemPointsInput(Math.floor(maxPossibleRedeem * 0.5))
                             }
-                            className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-400 cursor-pointer"
+                            className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-400 cursor-pointer"
                           >
                             50%
                           </button>
@@ -687,7 +687,7 @@ export const LoyaltyCalculator: React.FC<LoyaltyCalculatorProps> = ({
                         <button
                           type="button"
                           onClick={() => setRedeemPointsInput(maxPossibleRedeem)}
-                          className="px-2.5 py-0.5 text-[10px] font-bold rounded-md bg-amber-500 text-slate-950 hover:bg-amber-400 cursor-pointer"
+                          className="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-amber-500 text-slate-950 hover:bg-amber-400 cursor-pointer"
                         >
                           Maksimal ({maxPossibleRedeem} Pts)
                         </button>

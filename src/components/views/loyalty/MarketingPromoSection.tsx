@@ -380,7 +380,7 @@ export const MarketingPromoSection: React.FC = () => {
   return (
     <div className="space-y-6 pb-12">
       {/* SECTION HEADER BANNER */}
-      <div className="p-5 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white shadow-md relative overflow-hidden border border-emerald-500/30">
+      <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white shadow-md relative overflow-hidden border border-emerald-500/30">
         <div className="absolute right-0 top-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5 max-w-2xl">
@@ -403,7 +403,7 @@ export const MarketingPromoSection: React.FC = () => {
               type="button"
               disabled={isGenerating}
               onClick={handleGeneratePromo}
-              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-400 text-slate-950 font-black text-sm flex items-center gap-2 shadow-md shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {isGenerating ? (
                 <>
@@ -469,24 +469,24 @@ export const MarketingPromoSection: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div
-                      className={`w-7 h-7 rounded-xl bg-gradient-to-br ${seg.color} text-white flex items-center justify-center shadow-2xs`}
+                      className={`w-7 h-7 rounded-xl bg-gradient-to-br ${seg.color} text-white flex items-center justify-center shadow-sm`}
                     >
                       <IconComponent className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                       {seg.stats.customerCount} Member
                     </span>
                   </div>
                   <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 line-clamp-1">
                     {seg.label}
                   </h4>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
                     {seg.badge}
                   </p>
                 </div>
 
                 {isSelected && (
-                  <div className="mt-2 pt-1 border-t border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                  <div className="mt-2 pt-1 border-t border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
                     <span>Terpilih</span>
                     <Check className="w-3 h-3" />
                   </div>
@@ -499,13 +499,13 @@ export const MarketingPromoSection: React.FC = () => {
 
       {/* INDIVIDUAL CUSTOMER SELECTOR (IF INDIVIDUAL SELECTED) */}
       {selectedSegment === 'individual' && (
-        <div className="p-4 rounded-2xl border border-violet-200 dark:border-violet-900/50 bg-violet-50/50 dark:bg-violet-950/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="p-4 rounded-2xl border border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-violet-600 text-white font-bold flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center shrink-0">
               {currentIndividualCustomer?.name?.charAt(0) || 'M'}
             </div>
             <div className="min-w-0">
-              <label className="text-[11px] font-bold text-violet-900 dark:text-violet-300 block">
+              <label className="text-[11px] font-bold text-indigo-900 dark:text-indigo-300 block">
                 Pilih Member Spesifik untuk Penawaran 1-on-1:
               </label>
               <select aria-label="Pilih Member Spesifik untuk Penawaran 1-on-1"
@@ -515,7 +515,7 @@ export const MarketingPromoSection: React.FC = () => {
                   const cust = customers.find((c) => c.id === e.target.value) || null;
                   setSelectedMarketingCustomer(cust);
                 }}
-                className="mt-0.5 px-3 py-1.5 rounded-xl border border-violet-300 dark:border-violet-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="mt-0.5 px-3 py-1.5 rounded-xl border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {customers.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -527,11 +527,11 @@ export const MarketingPromoSection: React.FC = () => {
           </div>
 
           {currentIndividualCustomer && (
-            <div className="flex items-center gap-2 text-xs text-violet-800 dark:text-violet-300 font-medium">
-              <span className="px-2.5 py-1 rounded-lg bg-violet-200/60 dark:bg-violet-900/60 font-bold">
+            <div className="flex items-center gap-2 text-xs text-indigo-800 dark:text-indigo-300 font-medium">
+              <span className="px-2.5 py-1 rounded-xl bg-indigo-200/60 dark:bg-indigo-900/60 font-bold">
                 Total Belanja: {formatCurrency(currentIndividualCustomer.totalSpent || 0, settings.currency)}
               </span>
-              <span className="px-2.5 py-1 rounded-lg bg-violet-200/60 dark:bg-violet-900/60 font-bold">
+              <span className="px-2.5 py-1 rounded-xl bg-indigo-200/60 dark:bg-indigo-900/60 font-bold">
                 {currentIndividualCustomer.points} Poin
               </span>
             </div>
@@ -544,7 +544,7 @@ export const MarketingPromoSection: React.FC = () => {
         {/* LEFT COLUMN: SEGMENT INSIGHTS & CAMPAIGN CONTROLS */}
         <div className="lg:col-span-5 space-y-4">
           {/* SEGMENT PURCHASE HISTORY INSIGHTS CARD */}
-          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3 shadow-2xs">
+          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Profil Riwayat Belanja Segmen
@@ -560,7 +560,7 @@ export const MarketingPromoSection: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
               <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">
                   Rata-rata Basket Belanja
                 </span>
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100 font-mono">
@@ -569,7 +569,7 @@ export const MarketingPromoSection: React.FC = () => {
               </div>
 
               <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">
                   Total Omzet Segmen Ini
                 </span>
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100 font-mono">
@@ -588,7 +588,7 @@ export const MarketingPromoSection: React.FC = () => {
                 {currentSegmentData.stats.topProducts.map((p, idx) => (
                   <span
                     key={idx}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
+                    className="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
                   >
                     {p}
                   </span>
@@ -598,7 +598,7 @@ export const MarketingPromoSection: React.FC = () => {
           </div>
 
           {/* CAMPAIGN TUNING OPTIONS */}
-          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3.5 shadow-2xs">
+          <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3.5 shadow-sm">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
               <span>2. Kustomisasi Parameter Kampanye</span>
@@ -650,7 +650,7 @@ export const MarketingPromoSection: React.FC = () => {
                   onClick={() => setDiscountTypePreference('percentage')}
                   className={`py-1.5 px-3 rounded-xl text-xs font-bold border transition cursor-pointer ${
                     discountTypePreference === 'percentage'
-                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-xs'
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-sm'
                       : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                   }`}
                 >
@@ -661,7 +661,7 @@ export const MarketingPromoSection: React.FC = () => {
                   onClick={() => setDiscountTypePreference('fixed')}
                   className={`py-1.5 px-3 rounded-xl text-xs font-bold border transition cursor-pointer ${
                     discountTypePreference === 'fixed'
-                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-xs'
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-sm'
                       : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                   }`}
                 >
@@ -710,9 +710,9 @@ export const MarketingPromoSection: React.FC = () => {
         {/* RIGHT COLUMN: GENERATED PROMO DISPLAY OR EMPTY STATE */}
         <div className="lg:col-span-7">
           {isGenerating ? (
-            <div className="p-8 rounded-3xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-950/20 text-center flex flex-col items-center justify-center min-h-[420px] space-y-4">
+            <div className="p-8 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-950/20 text-center flex flex-col items-center justify-center min-h-[420px] space-y-4">
               <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg animate-pulse">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white shadow-md">
                   <Sparkles className="w-8 h-8 animate-spin" />
                 </div>
               </div>
@@ -726,16 +726,16 @@ export const MarketingPromoSection: React.FC = () => {
               </div>
             </div>
           ) : currentPromo ? (
-            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs space-y-4">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm space-y-4">
               {/* Promo Card Header */}
-              <div className="p-5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-5 bg-gradient-to-r from-emerald-600 via-emerald-600 to-emerald-700 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 uppercase tracking-wider text-white">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-white/20 uppercase tracking-wider text-white">
                       Target: {currentPromo.targetSegment}
                     </span>
                     {currentPromo.isAiGenerated && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-400 text-slate-950 flex items-center gap-1">
                         <Sparkles className="w-3 h-3" /> Gemini 3.8 Flash
                       </span>
                     )}
@@ -766,13 +766,13 @@ export const MarketingPromoSection: React.FC = () => {
 
               {/* VOUCHER TICKET BADGE */}
               <div className="px-5">
-                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border border-amber-300 dark:border-amber-800/60 flex flex-wrap items-center justify-between gap-3">
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-amber-50 dark:from-amber-950/30 dark:to-amber-950/20 border border-amber-300 dark:border-amber-800/60 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-white font-black flex items-center justify-center text-sm shadow-xs">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-white font-black flex items-center justify-center text-sm shadow-sm">
                       %
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-amber-800 dark:text-amber-400 block">
+                      <span className="text-[11px] uppercase font-bold text-amber-800 dark:text-amber-400 block">
                         Kupon Diskon POS
                       </span>
                       <span className="text-sm font-black font-mono tracking-wider text-slate-900 dark:text-white">
@@ -783,7 +783,7 @@ export const MarketingPromoSection: React.FC = () => {
 
                   <div className="flex items-center gap-3 text-xs">
                     <div>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Nilai Diskon</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Nilai Diskon</span>
                       <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
                         {currentPromo.discountType === 'percentage'
                           ? `${currentPromo.value}%`
@@ -792,14 +792,14 @@ export const MarketingPromoSection: React.FC = () => {
                     </div>
 
                     <div className="border-l border-amber-200 dark:border-amber-800 pl-3">
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Min. Belanja</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Min. Belanja</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
                         {formatCurrency(currentPromo.minSpend, settings.currency)}
                       </span>
                     </div>
 
                     <div className="border-l border-amber-200 dark:border-amber-800 pl-3">
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Masa Berlaku</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Masa Berlaku</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100">
                         {currentPromo.expiryDays} Hari
                       </span>
@@ -861,7 +861,7 @@ export const MarketingPromoSection: React.FC = () => {
 
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Placeholder <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{'{{nama}}'}</code> otomatis diganti dengan nama pelanggan.
+                          Placeholder <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded-md">{'{{nama}}'}</code> otomatis diganti dengan nama pelanggan.
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -894,7 +894,7 @@ export const MarketingPromoSection: React.FC = () => {
                               )}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                              className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
                             >
                               <Send className="w-3.5 h-3.5" />
                               <span>Kirim ke {currentIndividualCustomer.name}</span>
@@ -903,7 +903,7 @@ export const MarketingPromoSection: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setShowRecipientModal(true)}
-                              className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                              className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
                             >
                               <Send className="w-3.5 h-3.5" />
                               <span>Kirim WA ke Member ({currentSegmentData.members.length})</span>
@@ -948,7 +948,7 @@ export const MarketingPromoSection: React.FC = () => {
 
                   {activeChannelTab === 'social' && (
                     <div className="space-y-3">
-                      <div className="p-4 rounded-2xl bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-950/20 dark:to-purple-950/20 border border-pink-200 dark:border-pink-900/40 text-xs whitespace-pre-line text-slate-800 dark:text-slate-200 leading-relaxed">
+                      <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-50 to-indigo-50 dark:from-rose-950/20 dark:to-indigo-950/20 border border-rose-200 dark:border-rose-900/40 text-xs whitespace-pre-line text-slate-800 dark:text-slate-200 leading-relaxed">
                         {currentPromo.brandMessageSocial}
                       </div>
 
@@ -990,8 +990,8 @@ export const MarketingPromoSection: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="p-8 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 text-center flex flex-col items-center justify-center min-h-[420px] space-y-3 bg-slate-50/50 dark:bg-slate-900/50">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shadow-xs">
+            <div className="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-center flex flex-col items-center justify-center min-h-[420px] space-y-3 bg-slate-50/50 dark:bg-slate-900/50">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shadow-sm">
                 <Sparkles className="w-7 h-7" />
               </div>
               <div className="space-y-1 max-w-sm">
@@ -1006,7 +1006,7 @@ export const MarketingPromoSection: React.FC = () => {
               <button
                 type="button"
                 onClick={handleGeneratePromo}
-                className="mt-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="mt-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Mulai Rancang Promo Sekarang</span>
@@ -1019,7 +1019,7 @@ export const MarketingPromoSection: React.FC = () => {
       {/* RECIPIENT BROADCAST MODAL */}
       {showRecipientModal && currentPromo && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -1046,7 +1046,7 @@ export const MarketingPromoSection: React.FC = () => {
                 >
                   <div>
                     <span className="font-bold text-slate-900 dark:text-slate-100 block">{m.name}</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                       {m.phone} ({m.tier})
                     </span>
                   </div>
@@ -1059,7 +1059,7 @@ export const MarketingPromoSection: React.FC = () => {
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1 shadow-2xs"
+                    className="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1 shadow-sm"
                   >
                     <Send className="w-3 h-3" />
                     <span>Kirim WA</span>

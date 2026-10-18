@@ -301,7 +301,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
       <div
         id="lan-server-modal-card"
-        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden"
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-xl overflow-hidden"
       >
         {/* Modal Header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 flex items-center justify-between shrink-0">
@@ -314,7 +314,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 leading-none">
                   Server Database Multi-Client LAN
                 </h2>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   LAN Aktif
                 </span>
@@ -397,7 +397,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
             <Laptop className="w-4 h-4" />
             <span>Perangkat Terhubung</span>
             {serverStatus?.connectedClients && (
-              <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">
+              <span className="px-1.5 py-0.2 text-[11px] rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">
                 {serverStatus.connectedClients.filter((c) => c.isOnline).length}
               </span>
             )}
@@ -418,7 +418,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
             <ShoppingBag className="w-4 h-4" />
             <span>Parkir Antar-Kasir</span>
             {sharedHeldOrders.length > 0 && (
-              <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-amber-500 text-white font-bold">
+              <span className="px-1.5 py-0.2 text-[11px] rounded-full bg-amber-500 text-white font-bold">
                 {sharedHeldOrders.length}
               </span>
             )}
@@ -461,7 +461,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
           >
             <AlertTriangle className="w-4 h-4 text-amber-500" />
             <span>Solusi Kasir HP / Wi-Fi</span>
-            <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold">
+            <span className="px-1.5 py-0.2 text-[11px] rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold">
               Penting
             </span>
           </button>
@@ -483,11 +483,11 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                     onClick={() => handleRoleChange('HOST')}
                     className={`p-3 rounded-xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
                       config.role === 'HOST'
-                        ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/40 dark:border-indigo-500 text-indigo-900 dark:text-indigo-200 shadow-xs'
+                        ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/40 dark:border-indigo-500 text-indigo-900 dark:text-indigo-200 shadow-sm'
                         : 'border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
                     }`}
                   >
-                    <div className="w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-7 h-7 rounded-xl bg-indigo-500 text-white flex items-center justify-center shrink-0 mt-0.5">
                       <Server className="w-4 h-4" />
                     </div>
                     <div>
@@ -506,11 +506,11 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                     onClick={() => handleRoleChange('CLIENT')}
                     className={`p-3 rounded-xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
                       config.role === 'CLIENT'
-                        ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 dark:border-blue-500 text-blue-900 dark:text-blue-200 shadow-xs'
+                        ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/40 dark:border-blue-500 text-blue-900 dark:text-blue-200 shadow-sm'
                         : 'border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
                     }`}
                   >
-                    <div className="w-7 h-7 rounded-lg bg-blue-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-7 h-7 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 mt-0.5">
                       <Laptop className="w-4 h-4" />
                     </div>
                     <div>
@@ -529,11 +529,11 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                     onClick={() => handleRoleChange('STANDALONE')}
                     className={`p-3 rounded-xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
                       config.role === 'STANDALONE'
-                        ? 'border-slate-600 bg-slate-100 dark:bg-slate-800 dark:border-slate-500 text-slate-900 dark:text-slate-100 shadow-xs'
+                        ? 'border-slate-600 bg-slate-100 dark:bg-slate-800 dark:border-slate-500 text-slate-900 dark:text-slate-100 shadow-sm'
                         : 'border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
                     }`}
                   >
-                    <div className="w-7 h-7 rounded-lg bg-slate-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-7 h-7 rounded-xl bg-slate-500 text-white flex items-center justify-center shrink-0 mt-0.5">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                     <div>
@@ -558,7 +558,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                       {serverStatus.pairing.key ? (
                         <>
                           <div>Buka link ini sekali di setiap HP / komputer kasir lain:</div>
-                          <div className="font-mono break-all select-all bg-white dark:bg-slate-950 border border-amber-200 dark:border-amber-900 rounded-lg px-2 py-1.5">
+                          <div className="font-mono break-all select-all bg-white dark:bg-slate-950 border border-amber-200 dark:border-amber-900 rounded-xl px-2 py-1.5">
                             {`${localWifiUrl}/?pair=${encodeURIComponent(serverStatus.pairing.key)}`}
                           </div>
                           <div>Untuk kasir yang menjalankan aplikasinya sendiri, isi Kunci LAN di pengaturan Terminal Klien.</div>
@@ -580,9 +580,9 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                       <button aria-pressed={accessMode === 'wifi_lan'}
                         id="btn-mode-wifi-lan"
                         onClick={() => setAccessMode('wifi_lan')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                           accessMode === 'wifi_lan'
-                            ? 'bg-indigo-600 text-white shadow-xs'
+                            ? 'bg-indigo-600 text-white shadow-sm'
                             : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
                         }`}
                       >
@@ -593,15 +593,15 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                       <button aria-pressed={accessMode === 'cloud'}
                         id="btn-mode-cloud"
                         onClick={() => setAccessMode('cloud')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                           accessMode === 'cloud'
-                            ? 'bg-indigo-600 text-white shadow-xs'
+                            ? 'bg-indigo-600 text-white shadow-sm'
                             : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
                         }`}
                       >
                         <Globe className="w-3.5 h-3.5" />
                         <span>Akses Cloud / Online</span>
-                        <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-emerald-700 text-white font-bold">
+                        <span className="px-1.5 py-0.2 text-[11px] rounded-full bg-emerald-700 text-white font-bold">
                           Termudah
                         </span>
                       </button>
@@ -647,7 +647,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                             <button
                               type="button"
                               onClick={() => setActiveTab('troubleshoot')}
-                              className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                              className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
                             >
                               <HelpCircle className="w-3 h-3" />
                               <span>Cara cek IP di Windows</span>
@@ -659,12 +659,12 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                               value={customIpInput}
                               onChange={(e) => setCustomIpInput(e.target.value)}
                               placeholder="Contoh: 192.168.1.15"
-                              className="flex-1 px-3 py-1.5 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-indigo-500"
+                              className="flex-1 px-3 py-1.5 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-indigo-500"
                             />
                             <button
                               type="button"
                               onClick={() => handleSaveCustomIp(customIpInput)}
-                              className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors cursor-pointer shrink-0"
+                              className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors cursor-pointer shrink-0"
                             >
                               Terapkan IP
                             </button>
@@ -682,7 +682,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                                     setCustomIpInput(ip);
                                     handleSaveCustomIp(ip);
                                   }}
-                                  className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-mono text-[10px] hover:bg-indigo-100 cursor-pointer border border-indigo-200 dark:border-indigo-800"
+                                  className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-mono text-[11px] hover:bg-indigo-100 cursor-pointer border border-indigo-200 dark:border-indigo-800"
                                 >
                                   {ip}
                                 </button>
@@ -698,14 +698,14 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                           : 'Buka link publik ini langsung dari HP mana saja (bisa lewat Wi-Fi toko maupun Kuota Seluler 4G/5G):'}
                       </p>
 
-                      <div className="flex items-center gap-2 bg-white dark:bg-slate-950 p-2 rounded-xl border border-indigo-200 dark:border-indigo-900/80 shadow-xs">
+                      <div className="flex items-center gap-2 bg-white dark:bg-slate-950 p-2 rounded-xl border border-indigo-200 dark:border-indigo-900/80 shadow-sm">
                         <span className="text-xs font-mono font-bold text-indigo-700 dark:text-indigo-300 px-2 flex-1 select-all break-all">
                           {activeDisplayUrl}
                         </span>
                         <button
                           id="btn-copy-lan-url"
                           onClick={() => handleCopyUrl(activeDisplayUrl)}
-                          className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                          className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
                         >
                           {copiedUrl ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                           <span>{copiedUrl ? 'Tersalin' : 'Salin Link'}</span>
@@ -714,7 +714,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                           href={activeDisplayUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+                          className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
                           title="Buka di Tab Baru"
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -727,7 +727,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                           <button
                             type="button"
                             onClick={handleCopyFirewall}
-                            className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer"
+                            className="px-2.5 py-1 text-[11px] font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer"
                           >
                             <Terminal className="w-3 h-3 text-indigo-500" />
                             <span>{copiedFirewall ? 'Perintah Firewall Tersalin!' : 'Salin Perintah Buka Firewall Port 3000'}</span>
@@ -737,7 +737,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setActiveTab('troubleshoot')}
-                          className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 text-amber-900 dark:text-amber-200 flex items-center gap-1.5 cursor-pointer"
+                          className="px-2.5 py-1 text-[11px] font-bold rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 text-amber-900 dark:text-amber-200 flex items-center gap-1.5 cursor-pointer"
                         >
                           <AlertTriangle className="w-3 h-3 text-amber-700" />
                           <span>Masih Gagal Terhubung di HP? Buka Solusi &rarr;</span>
@@ -755,12 +755,12 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                     </div>
 
                     {/* QR Code Quick Scan for Mobile/Tablet */}
-                    <div className="flex flex-col items-center bg-white dark:bg-slate-950 p-4 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 shadow-xs shrink-0 text-center w-full sm:w-48">
-                      <div className="p-1 rounded-xl bg-white border border-slate-200 dark:border-slate-800 shadow-xs">
+                    <div className="flex flex-col items-center bg-white dark:bg-slate-950 p-4 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 shadow-sm shrink-0 text-center w-full sm:w-48">
+                      <div className="p-1 rounded-xl bg-white border border-slate-200 dark:border-slate-800 shadow-sm">
                         <img
                           src={qrCodeUrl}
                           alt="QR Code Sambungan Kasir"
-                          className="w-36 h-36 rounded-lg bg-white"
+                          className="w-36 h-36 rounded-xl bg-white"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = 'none';
                           }}
@@ -770,7 +770,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                         <QrCode className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                         <span>Scan Kamera HP / Tablet</span>
                       </div>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                         {accessMode === 'wifi_lan' ? 'Buka instan via Wi-Fi toko' : 'Buka instan lewat internet cloud'}
                       </span>
                     </div>
@@ -783,7 +783,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                       <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                         {serverStatus?.stats?.totalProducts ?? products.length}
                       </div>
-                      <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">Stok Terpusat</span>
+                      <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">Stok Terpusat</span>
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
@@ -791,7 +791,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                       <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                         {serverStatus?.stats?.totalTransactions ?? transactions.length}
                       </div>
-                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Terkumpul di Server</span>
+                      <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">Terkumpul di Server</span>
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
@@ -799,7 +799,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                       <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                         {serverStatus?.stats?.totalCustomers ?? customers.length}
                       </div>
-                      <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">Poin &amp; Diskon Berbagi</span>
+                      <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">Poin &amp; Diskon Berbagi</span>
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
@@ -807,7 +807,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                       <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                         {serverStatus?.connectedClients?.filter((c) => c.isOnline).length || 1}
                       </div>
-                      <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">Online di Jaringan</span>
+                      <span className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">Online di Jaringan</span>
                     </div>
                   </div>
 
@@ -877,13 +877,13 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                               setConfig(updated);
                             }}
                             placeholder="http://192.168.1.105:3000"
-                            className="flex-1 px-3 py-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
+                            className="flex-1 px-3 py-2 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
                           />
                           <button
                             id="btn-ping-server"
                             onClick={handleTestPing}
                             disabled={isPinging}
-                            className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0 disabled:opacity-50"
+                            className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0 disabled:opacity-50"
                           >
                             <RefreshCw className={`w-3.5 h-3.5 ${isPinging ? 'animate-spin' : ''}`} />
                             <span>{isPinging ? 'Uji...' : 'Ping'}</span>
@@ -904,7 +904,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                             setConfig(updated);
                           }}
                           placeholder="Kasir 2 (Meja Depan)"
-                          className="w-full px-3 py-2 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
+                          className="w-full px-3 py-2 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
                         />
                       </div>
                     </div>
@@ -922,14 +922,14 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                           setConfig(updated);
                         }}
                         placeholder="Sama dengan LAN_KEY di file .env komputer server"
-                        className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
+                        className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-blue-500"
                       />
                     </div>
 
                     {/* Ping Result Indicator */}
                     {pingResult && (
                       <div
-                        className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${
+                        className={`p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 ${
                           pingResult.success
                             ? 'bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                             : 'bg-rose-100/70 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
@@ -975,7 +975,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                           const updated = saveLANConfig({ autoSync: e.target.checked });
                           setConfig(updated);
                         }}
-                        className="rounded-sm accent-blue-600 cursor-pointer"
+                        className="rounded-md accent-blue-600 cursor-pointer"
                       />
                       <label htmlFor="check-auto-sync" className="cursor-pointer font-medium">
                         Auto-Sync Real-Time (Setiap {config.syncInterval} detik)
@@ -1014,7 +1014,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                 </div>
                 <button
                   onClick={refreshStatus}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Segarkan</span>
@@ -1026,7 +1026,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                 <div className="p-4 rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
                         👑
                       </div>
                       <div>
@@ -1034,12 +1034,12 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                           <span>Server Kasir 1 (Master Hub)</span>
                           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         </div>
-                        <span className="text-[10px] text-indigo-700 dark:text-indigo-300 font-mono">
+                        <span className="text-[11px] text-indigo-700 dark:text-indigo-300 font-mono">
                           {serverStatus?.primaryIp || '127.0.0.1'}:{serverStatus?.port || 3000}
                         </span>
                       </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold">
+                    <span className="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold">
                       Host Toko
                     </span>
                   </div>
@@ -1067,7 +1067,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 dark:bg-blue-400/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-blue-400/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                             {client.deviceType === 'mobile' ? (
                               <Smartphone className="w-4 h-4" />
                             ) : client.deviceType === 'tablet' ? (
@@ -1083,13 +1083,13 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                                 className={`w-2 h-2 rounded-full ${client.isOnline ? 'bg-emerald-500' : 'bg-slate-400'}`}
                               ></span>
                             </div>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                               IP: {client.ip || '192.168.1.X'}
                             </span>
                           </div>
                         </div>
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                             client.isOnline
                               ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400'
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
@@ -1135,7 +1135,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                 <button
                   onClick={refreshHeldOrders}
                   disabled={isLoadingHeldOrders}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-50"
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoadingHeldOrders ? 'animate-spin' : ''}`} />
                   <span>Segarkan</span>
@@ -1147,14 +1147,14 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                   {sharedHeldOrders.map((order) => (
                     <div
                       key={order.id}
-                      className="p-4 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/50 dark:bg-amber-950/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs"
+                      className="p-4 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/50 dark:bg-amber-950/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-xs text-amber-900 dark:text-amber-200">
                             {order.referenceNumber || `#${order.id.slice(-6)}`}
                           </span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200/60 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold">
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-200/60 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold">
                             Diparkir di: {order.parkedAtTerminal || 'Kasir 1'}
                           </span>
                         </div>
@@ -1174,7 +1174,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           onClick={() => handleRecallOrder(order)}
-                          className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+                          className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer transition-colors"
                         >
                           <ShoppingBag className="w-3.5 h-3.5" />
                           <span>Buka di Kasir Ini</span>
@@ -1184,7 +1184,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                             await deleteLANSharedHeldOrder(order.id);
                             refreshHeldOrders();
                           }}
-                          className="p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
                           title="Batalkan Pesanan Parkir"
                         >
                           <X className="w-4 h-4" />
@@ -1221,7 +1221,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                 </div>
                 <button
                   onClick={refreshStatus}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Segarkan</span>
@@ -1266,7 +1266,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold">
                       1
                     </span>
                     <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -1280,7 +1280,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
 
                 <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold">
                       2
                     </span>
                     <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -1294,7 +1294,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
 
                 <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold">
                       3
                     </span>
                     <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -1308,7 +1308,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
 
                 <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold">
                       4
                     </span>
                     <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">

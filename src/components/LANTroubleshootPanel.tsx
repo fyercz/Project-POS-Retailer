@@ -105,7 +105,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
               Uji Coba Ping Sambungan URL Kasir
             </h4>
           </div>
-          <span className="text-[10px] text-slate-500">Verifikasi apakah URL merespons secara real-time</span>
+          <span className="text-[11px] text-slate-500">Verifikasi apakah URL merespons secara real-time</span>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
@@ -114,13 +114,13 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
             value={testUrl}
             onChange={(e) => setTestUrl(e.target.value)}
             placeholder="http://192.168.1.15:3000 atau https://..."
-            className="flex-1 px-3 py-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-indigo-500"
+            className="flex-1 px-3 py-2 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-indigo-500"
           />
           <button
             id="btn-run-troubleshoot-ping"
             onClick={handleRunPingTest}
             disabled={isPinging}
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isPinging ? 'animate-spin' : ''}`} />
             <span>{isPinging ? 'Menguji...' : 'Uji Koneksi Sekarang'}</span>
@@ -129,7 +129,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
 
         {pingTestResult && (
           <div
-            className={`p-3 rounded-lg text-xs flex items-center justify-between gap-2 ${
+            className={`p-3 rounded-xl text-xs flex items-center justify-between gap-2 ${
               pingTestResult.success
                 ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                 : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
@@ -148,7 +148,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
               </span>
             </div>
             {pingTestResult.success && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
                 Online
               </span>
             )}
@@ -165,13 +165,13 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
             className="w-full p-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs">
+              <div className="w-7 h-7 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs">
                 1
               </div>
               <div>
                 <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span>Jangan Ketik &ldquo;localhost&rdquo; atau &ldquo;127.0.0.1&rdquo; di Browser HP!</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
                     Penyebab Paling Sering
                   </span>
                 </h4>
@@ -189,7 +189,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                 Kata <strong>&ldquo;localhost&rdquo;</strong> di dalam bahasa jaringan komputer berarti <em>&ldquo;perangkat saya saat ini&rdquo;</em>. Jika Anda mengetik <code>http://localhost:3000</code> di HP, HP akan mencari server di dalam HP itu sendiri, bukan di komputer kasir!
               </p>
 
-              <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2">
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2">
                 <div className="font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
                   <span>Solusi Benar: Gunakan IP Wi-Fi PC Kasir</span>
@@ -227,7 +227,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
             className="w-full p-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+              <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
                 2
               </div>
               <div>
@@ -248,7 +248,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                 Jika Anda sudah mengetikkan IP yang benar (misal <code>192.168.1.15:3000</code>), namun browser di HP berputar terus dan akhirnya <em>Connection Timed Out</em>, berarti <strong>Windows Firewall di PC Kasir menolak sambungan HP</strong>.
               </p>
 
-              <div className="p-3.5 rounded-lg bg-slate-900 text-slate-200 font-mono text-[11px] space-y-2 border border-slate-800">
+              <div className="p-3.5 rounded-xl bg-slate-900 text-slate-200 font-mono text-[11px] space-y-2 border border-slate-800">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500 font-bold flex items-center gap-1.5">
                     <Terminal className="w-3.5 h-3.5 text-indigo-400" />
@@ -256,13 +256,13 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                   </span>
                   <button
                     onClick={() => handleCopy(FIREWALL_CMD, 'firewall')}
-                    className="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    className="px-2.5 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     {copiedItem === 'firewall' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                     <span>{copiedItem === 'firewall' ? 'Tersalin!' : 'Salin Perintah'}</span>
                   </button>
                 </div>
-                <div className="p-2 rounded bg-black/40 text-emerald-400 select-all break-all">
+                <div className="p-2 rounded-md bg-black/40 text-emerald-400 select-all break-all">
                   {FIREWALL_CMD}
                 </div>
               </div>
@@ -283,7 +283,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
             className="w-full p-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+              <div className="w-7 h-7 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
                 3
               </div>
               <div>
@@ -303,7 +303,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
               <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
                 Jaringan lokal (IP 192.168.x.x) hanya ada di dalam router Wi-Fi toko Anda. Jika HP Anda menggunakan data Telkomsel / Indosat / XL, HP berada di internet publik dan tidak bisa melihat komputer kasir Anda.
               </p>
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200 text-[11px]">
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200 text-[11px]">
                 <Wifi className="w-4 h-4 text-blue-600 shrink-0" />
                 <span>
                   Trik: Matikan Data Seluler di HP &rarr; Sambungkan ke Wi-Fi Toko &rarr; Buka browser Chrome di HP.
@@ -320,13 +320,13 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
             className="w-full p-4 text-left flex items-center justify-between hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
+              <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
                 4
               </div>
               <div>
                 <h4 className="text-xs font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-2">
                   <span>Solusi Termudah: Buka Lewat Link Cloud (Bisa dari HP Mana Saja Tanpa Wi-Fi)</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
                     Rekomendasi Instan
                   </span>
                 </h4>
@@ -351,7 +351,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => handleCopy(publicCloudUrl, 'cloud_url')}
-                    className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                    className="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer"
                   >
                     {copiedItem === 'cloud_url' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedItem === 'cloud_url' ? 'Tersalin' : 'Salin'}</span>
@@ -360,7 +360,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                     href={publicCloudUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+                    className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
                     title="Buka di Tab Baru"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -382,13 +382,13 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
             className="w-full p-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
                 5
               </div>
               <div>
                 <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span>HP Android: Kamera Tidak Berfungsi &amp; Prompt "Izinkan Kamera" Tidak Muncul</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
                     Koneksi HTTP
                   </span>
                 </h4>
@@ -411,7 +411,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                 <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-1">
                   <div className="font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5 text-xs">
                     <span>Solusi 1 (Paling Cepat &amp; Instan):</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
+                    <span className="text-[11px] px-1.5 py-0.2 rounded-md bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
                       Rekomendasi
                     </span>
                   </div>
@@ -454,7 +454,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
             className="w-full p-4 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-xs">
+              <div className="w-7 h-7 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-xs">
                 6
               </div>
               <div>
@@ -472,7 +472,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
           {expandedCard === 'issue_find_ip' && (
             <div className="px-4 pb-4 pt-1 space-y-3 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-950/30 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1.5">
                   <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <Laptop className="w-3.5 h-3.5 text-indigo-500" />
                     <span>Di Komputer Windows 10 / 11:</span>
@@ -485,7 +485,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                   </ol>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1.5">
                   <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <Laptop className="w-3.5 h-3.5 text-blue-500" />
                     <span>Di Komputer macOS / Apple:</span>

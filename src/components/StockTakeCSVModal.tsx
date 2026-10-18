@@ -463,7 +463,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
     >
       <div
-        className="relative w-full max-w-5xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        className="relative w-full max-w-5xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -509,7 +509,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                 id="btn-mode-set"
                 type="button"
                 onClick={() => setMode('set')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   mode === 'set'
                     ? 'bg-emerald-700 text-white shadow-sm'
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
@@ -522,7 +522,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                 id="btn-mode-add"
                 type="button"
                 onClick={() => setMode('add')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   mode === 'add'
                     ? 'bg-emerald-700 text-white shadow-sm'
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
@@ -535,7 +535,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                 id="btn-mode-subtract"
                 type="button"
                 onClick={() => setMode('subtract')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   mode === 'subtract'
                     ? 'bg-rose-600 text-white shadow-sm'
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
@@ -552,7 +552,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                 id="btn-load-sample-csv"
                 type="button"
                 onClick={handleLoadSampleData}
-                className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 title="Muat contoh barcode produk dari toko Anda"
               >
                 <Sparkles className="w-3.5 h-3.5" />
@@ -563,7 +563,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                 id="btn-download-csv-template"
                 type="button"
                 onClick={handleDownloadTemplate}
-                className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 title="Download file CSV berisi barcode & nama seluruh produk toko Anda"
               >
                 <Download className="w-3.5 h-3.5 text-slate-500" />
@@ -574,7 +574,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                 id="btn-copy-format-guide"
                 type="button"
                 onClick={handleCopyFormat}
-                className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 title="Salin contoh format kolom"
               >
                 {copiedNotification ? (
@@ -738,9 +738,9 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                   <button aria-pressed={filterTab === 'all'}
                     type="button"
                     onClick={() => setFilterTab('all')}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       filterTab === 'all'
-                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs'
+                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
@@ -749,9 +749,9 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                   <button aria-pressed={filterTab === 'matched'}
                     type="button"
                     onClick={() => setFilterTab('matched')}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       filterTab === 'matched'
-                        ? 'bg-emerald-700 text-white shadow-2xs'
+                        ? 'bg-emerald-700 text-white shadow-sm'
                         : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
                     }`}
                   >
@@ -760,9 +760,9 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                   <button aria-pressed={filterTab === 'unmatched'}
                     type="button"
                     onClick={() => setFilterTab('unmatched')}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       filterTab === 'unmatched'
-                        ? 'bg-amber-600 text-white shadow-2xs'
+                        ? 'bg-amber-600 text-white shadow-sm'
                         : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
                     }`}
                   >
@@ -784,7 +784,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
               </div>
 
               {/* Table Container */}
-              <div className="border border-slate-200 dark:border-slate-700/80 rounded-xl overflow-hidden shadow-2xs">
+              <div className="border border-slate-200 dark:border-slate-700/80 rounded-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto max-h-[300px]">
                   <table className="w-full text-left text-xs">
                     <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-700 z-10">
@@ -822,17 +822,17 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                               {/* Status */}
                               <td className="py-2 px-3">
                                 {isMatched ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                                     <Check className="w-2.5 h-2.5" />
                                     <span>Cocok</span>
                                   </span>
                                 ) : isInvalidQty ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
                                     <AlertCircle className="w-2.5 h-2.5" />
                                     <span>Qty Tidak Valid</span>
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                                     <AlertTriangle className="w-2.5 h-2.5" />
                                     <span>Tidak Ditemukan</span>
                                   </span>
@@ -851,7 +851,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                                     <div className="font-semibold text-slate-900 dark:text-white line-clamp-1">
                                       {row.matchedProduct.name}
                                     </div>
-                                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
                                       SKU: {row.matchedProduct.sku} • {formatCurrency(row.matchedProduct.price, settings.currency)}
                                     </div>
                                   </div>
@@ -881,7 +881,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                               <td className="py-2 px-3 text-center">
                                 {isMatched ? (
                                   <span
-                                    className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-mono font-bold ${
+                                    className={`inline-block px-1.5 py-0.5 rounded-md text-[11px] font-mono font-bold ${
                                       row.diff > 0
                                         ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
                                         : row.diff < 0
@@ -914,7 +914,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                                 <button aria-label="Keluarkan baris ini dari eksekusi"
                                   type="button"
                                   onClick={() => handleToggleExcludeRow(row.id)}
-                                  className="text-slate-500 hover:text-rose-500 p-1.5 rounded transition-colors cursor-pointer"
+                                  className="text-slate-500 hover:text-rose-500 p-1.5 rounded-md transition-colors cursor-pointer"
                                   title="Keluarkan baris ini dari eksekusi"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />

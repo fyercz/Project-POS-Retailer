@@ -382,7 +382,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
     <div
       id="ai-dynamic-pricing-module"
       data-testid="ai-dynamic-pricing-module"
-      className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden flex flex-col ${className}`}
+      className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col ${className}`}
     >
       {/* Toast Notification */}
       {toastMessage && (
@@ -397,7 +397,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
-              <Sparkles className="w-6 h-6 animate-pulse" />
+              <Sparkles className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
@@ -422,7 +422,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
             <button
               onClick={() => loadRecommendations(strategy, selectedCategory)}
               disabled={isLoading}
-              className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-2 shadow-xs transition-all disabled:opacity-60 cursor-pointer"
+              className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-2 shadow-sm transition-all disabled:opacity-60 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 ${isLoading ? 'animate-spin' : ''}`} />
               {isLoading ? 'Menganalisis...' : 'Analisis Ulang'}
@@ -457,7 +457,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                 onClick={() => setStrategy(strat.id as DynamicPricingStrategy)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   strategy === strat.id
-                    ? 'bg-indigo-600 text-white shadow-xs'
+                    ? 'bg-indigo-600 text-white shadow-sm'
                     : 'bg-white/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                 }`}
                 title={strat.desc}
@@ -476,10 +476,10 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
 
       {/* KPI METRICS OVERVIEW */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800">
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-750 shadow-xs">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-750 shadow-sm">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
             <span>Potensi Tambahan Laba</span>
-            <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 flex items-center justify-center">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -491,10 +491,10 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
           </div>
         </div>
 
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-750 shadow-xs">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-750 shadow-sm">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
             <span>Peluang Naikkan Margin</span>
-            <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center">
               <Flame className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -506,10 +506,10 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
           </div>
         </div>
 
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-750 shadow-xs">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-750 shadow-sm">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
             <span>Perlu Pangkas / Diskon</span>
-            <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 flex items-center justify-center">
               <TrendingDown className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -521,10 +521,10 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
           </div>
         </div>
 
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-750 shadow-xs">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-750 shadow-sm">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs">
             <span>Rata-Rata Selisih Pasar</span>
-            <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
               <Building2 className="w-3.5 h-3.5" />
             </div>
           </div>
@@ -576,9 +576,9 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
               <button
                 key={f.id}
                 onClick={() => setFilterAction(f.id as any)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                   filterAction === f.id
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-semibold'
+                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm font-semibold'
                     : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
@@ -593,9 +593,9 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
             <button aria-pressed={viewMode === 'compact'}
               onClick={() => setViewMode('compact')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                 viewMode === 'compact'
-                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
               title="Tabel Ringkas (Cepat & Ringan)"
@@ -605,9 +605,9 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
             </button>
             <button aria-pressed={viewMode === 'cards'}
               onClick={() => setViewMode('cards')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                 viewMode === 'cards'
-                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
               title="Kartu Analisis Mendalam"
@@ -623,7 +623,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
             <select aria-label="Jumlah baris per halaman"
               value={pageSize}
               onChange={(e) => setPageSize(Number(e.target.value))}
-              className="px-2 py-1 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-600"
+              className="px-2 py-1 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-600"
             >
               <option value={8}>8</option>
               <option value={15}>15</option>
@@ -658,10 +658,10 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
           </div>
         ) : viewMode === 'compact' ? (
           /* FAST COMPACT TABLE MODE (Zero-lag, ultra lightweight) */
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-900 shadow-xs">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-900 shadow-sm">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-750 bg-slate-50/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-wider">
+                <tr className="border-b border-slate-200 dark:border-slate-750 bg-slate-50/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold uppercase text-[11px] tracking-wider">
                   <th className="py-3 px-3.5">Produk</th>
                   <th className="py-3 px-3">Kecepatan Stok (DSI)</th>
                   <th className="py-3 px-3">Harga Toko Saat Ini</th>
@@ -705,7 +705,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                       {/* VELOCITY */}
                       <td className="py-3 px-3 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold ${
                             item.turnoverSpeed === 'fast'
                               ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
                               : item.turnoverSpeed === 'moderate'
@@ -720,7 +720,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                           {item.turnoverSpeed === 'slow' && '🐢 Lambat'}
                           {item.turnoverSpeed === 'dead_stock' && '⚠️ Macet'}
                         </span>
-                        <div className="text-[10px] text-slate-500 mt-0.5">
+                        <div className="text-[11px] text-slate-500 mt-0.5">
                           DSI: {item.daysOfInventory > 100 ? '>90' : item.daysOfInventory} hari ({item.unitsSold30d} terjual)
                         </div>
                       </td>
@@ -730,7 +730,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                         <div className="font-extrabold text-slate-900 dark:text-white">
                           {formatCurrency(item.currentPrice, currency)}
                         </div>
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[11px] text-slate-500">
                           HPP: {formatCurrency(item.costPrice, currency)} (Margin {item.currentMarginPercent}%)
                         </div>
                       </td>
@@ -740,9 +740,9 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                         <div className="font-bold text-slate-800 dark:text-slate-200">
                           {formatCurrency(item.competitorAvgPrice, currency)}
                         </div>
-                        <div className="text-[10px] flex items-center gap-1 mt-0.5">
+                        <div className="text-[11px] flex items-center gap-1 mt-0.5">
                           <span
-                            className={`font-bold px-1 rounded ${
+                            className={`font-bold px-1 rounded-md ${
                               item.priceVsMarketPercent > 0
                                 ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
                                 : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
@@ -752,7 +752,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                           </span>
                           <button
                             onClick={() => handleOpenCompetitors(item)}
-                            className="text-indigo-600 dark:text-indigo-400 hover:underline text-[10px] cursor-pointer"
+                            className="text-indigo-600 dark:text-indigo-400 hover:underline text-[11px] cursor-pointer"
                           >
                             Riset
                           </button>
@@ -765,7 +765,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                           {formatCurrency(item.suggestedPrice, currency)}
                         </div>
                         <span
-                          className={`inline-block px-1.5 py-0.2 rounded text-[10px] font-bold mt-0.5 ${
+                          className={`inline-block px-1.5 py-0.2 rounded-md text-[11px] font-bold mt-0.5 ${
                             item.strategyTag === 'Peluang Margin'
                               ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
                               : item.strategyTag === 'Percepat Stok'
@@ -792,7 +792,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                         >
                           {item.priceDelta > 0 ? `+${formatCurrency(item.priceDelta, currency)}` : item.priceDelta < 0 ? formatCurrency(item.priceDelta, currency) : 'Sama'}
                         </div>
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[11px] text-slate-500">
                           Margin: <strong className="text-indigo-600 font-bold">{item.suggestedMarginPercent}%</strong>
                         </div>
                       </td>
@@ -801,14 +801,14 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                       <td className="py-3 px-3 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
                           {isApplied ? (
-                            <span className="px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1">
+                            <span className="px-2.5 py-1 rounded-xl bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1">
                               <Check className="w-3 h-3" />
                               Diterapkan
                             </span>
                           ) : (
                             <button
                               onClick={() => handleApplySingle(item)}
-                              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-xs cursor-pointer"
+                              className="px-2.5 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm cursor-pointer"
                             >
                               <Check className="w-3 h-3" />
                               Terapkan
@@ -817,14 +817,14 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                           <button aria-label="Simulasi Elastisitas"
                             onClick={() => handleOpenSimulator(item)}
                             title="Simulasi Elastisitas"
-                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
+                            className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
                           >
                             <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500" />
                           </button>
                           <button aria-label="Edit Harga Manual"
                             onClick={() => handleOpenCustomEdit(item)}
                             title="Edit Harga Manual"
-                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
+                            className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
                           >
                             <Edit2 className="w-3.5 h-3.5 text-slate-500" />
                           </button>
@@ -881,14 +881,14 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                         {/* TURNOVER METRIC BADGE */}
                         <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
                           <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-bold ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl text-[11px] font-bold ${
                               item.turnoverSpeed === 'fast'
                                 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
                                 : item.turnoverSpeed === 'moderate'
                                 ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
                                 : item.turnoverSpeed === 'slow'
                                 ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 animate-pulse'
+                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
                             }`}
                           >
                             {item.turnoverSpeed === 'fast' && '🔥 Fast Moving'}
@@ -951,7 +951,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                           {formatCurrency(item.competitorAvgPrice, currency)}
                         </span>
                         <span
-                          className={`font-extrabold px-1.5 py-0.2 rounded text-[10px] ${
+                          className={`font-extrabold px-1.5 py-0.2 rounded-md text-[11px] ${
                             item.priceVsMarketPercent > 0
                               ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
                               : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
@@ -970,7 +970,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                           Saran AI
                         </span>
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                          className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
                             item.strategyTag === 'Peluang Margin'
                               ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
                               : item.strategyTag === 'Percepat Stok'
@@ -1014,7 +1014,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                     {/* ACTION BUTTONS */}
                     <div className="flex lg:flex-col items-center gap-2 self-center shrink-0">
                       {isApplied ? (
-                        <div className="px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs">
+                        <div className="px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm">
                           <Check className="w-4 h-4" />
                           Diterapkan
                         </div>
@@ -1032,7 +1032,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                         <button
                           onClick={() => handleOpenSimulator(item)}
                           title="Simulasi Elastisitas Harga"
-                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center justify-center gap-1 flex-1 cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center justify-center gap-1 flex-1 cursor-pointer"
                         >
                           <SlidersHorizontal className="w-3 h-3 text-indigo-500" />
                           Simulasi
@@ -1041,7 +1041,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                         <button aria-label="Edit Harga Manual"
                           onClick={() => handleOpenCustomEdit(item)}
                           title="Edit Harga Manual"
-                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center justify-center cursor-pointer"
+                          className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center justify-center cursor-pointer"
                         >
                           <Edit2 className="w-3 h-3 text-slate-500" />
                         </button>
@@ -1074,7 +1074,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
               {/* Page action: apply current page */}
               <button
                 onClick={handleApplyCurrentPagePending}
-                className="px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-semibold border border-indigo-200 dark:border-indigo-800 transition cursor-pointer flex items-center gap-1"
+                className="px-3 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-semibold border border-indigo-200 dark:border-indigo-800 transition cursor-pointer flex items-center gap-1"
               >
                 <Check className="w-3 h-3" />
                 Terapkan Hal Ini ({paginatedSuggestions.filter((s) => s.actionType !== 'maintain' && !appliedProductIds.has(s.productId)).length})
@@ -1086,7 +1086,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
               <button aria-label="Halaman Pertama"
                 onClick={() => setCurrentPage(1)}
                 disabled={safeCurrentPage <= 1}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 title="Halaman Pertama"
               >
                 <ChevronsLeft className="w-4 h-4" />
@@ -1094,7 +1094,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
               <button aria-label="Halaman Sebelumnya"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={safeCurrentPage <= 1}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 title="Halaman Sebelumnya"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -1111,9 +1111,9 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                       {showEllipsis && <span className="px-1 text-slate-500 text-xs">...</span>}
                       <button
                         onClick={() => setCurrentPage(p)}
-                        className={`w-7 h-7 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        className={`w-7 h-7 rounded-xl text-xs font-bold transition cursor-pointer ${
                           safeCurrentPage === p
-                            ? 'bg-indigo-600 text-white shadow-xs'
+                            ? 'bg-indigo-600 text-white shadow-sm'
                             : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
                         }`}
                       >
@@ -1126,7 +1126,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
               <button aria-label="Halaman Berikutnya"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={safeCurrentPage >= totalPages}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 title="Halaman Berikutnya"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -1134,7 +1134,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
               <button aria-label="Halaman Terakhir"
                 onClick={() => setCurrentPage(totalPages)}
                 disabled={safeCurrentPage >= totalPages}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 title="Halaman Terakhir"
               >
                 <ChevronsRight className="w-4 h-4" />
@@ -1147,7 +1147,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
       {/* MODAL 1: WHAT-IF PRICE ELASTICITY SIMULATOR */}
       {simulatorItem && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-xl relative">
             <button aria-label="Tutup"
               onClick={() => setSimulatorItem(null)}
               className="absolute top-5 right-5 p-2 rounded-xl text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
@@ -1186,7 +1186,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                 step={100}
                 value={simulatedPrice}
                 onChange={(e) => setSimulatedPrice(Number(e.target.value))}
-                className="w-full accent-indigo-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+                className="w-full accent-indigo-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-xl cursor-pointer"
               />
 
               <div className="flex justify-between text-[11px] text-slate-500 mt-1">
@@ -1215,7 +1215,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                     <div className="text-lg font-black text-slate-800 dark:text-slate-100 mt-0.5">
                       {simMargin}%
                     </div>
-                    <div className="text-[10px] text-slate-500">
+                    <div className="text-[11px] text-slate-500">
                       Laba per unit: {formatCurrency(unitProfit, currency)}
                     </div>
                   </div>
@@ -1225,7 +1225,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                     <div className={`text-lg font-black mt-0.5 ${profitDelta >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
                       {profitDelta >= 0 ? `+${formatCurrency(profitDelta, currency)}` : formatCurrency(profitDelta, currency)}
                     </div>
-                    <div className="text-[10px] text-slate-500">
+                    <div className="text-[11px] text-slate-500">
                       Est. Volume: {expectedUnitsSold} unit/bln
                     </div>
                   </div>
@@ -1266,7 +1266,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
       {/* MODAL 2: EDIT COMPETITOR BENCHMARKS */}
       {competitorModalItem && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl relative">
             <button aria-label="Tutup"
               onClick={() => setCompetitorModalItem(null)}
               className="absolute top-5 right-5 p-2 rounded-xl text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
@@ -1305,7 +1305,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                           prev.map((c, i) => (i === idx ? { ...c, price: val } : c))
                         );
                       }}
-                      className="w-28 px-2 py-1 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-right"
+                      className="w-28 px-2 py-1 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-right"
                     />
                   </div>
                 </div>
@@ -1333,7 +1333,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
       {/* MODAL 3: CUSTOM PRICE OVERRIDE */}
       {customEditItem && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-xl relative">
             <button aria-label="Tutup"
               onClick={() => setCustomEditItem(null)}
               className="absolute top-5 right-5 p-2 rounded-xl text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
@@ -1342,7 +1342,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
             </button>
 
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                 <Edit2 className="w-5 h-5" />
               </div>
               <div>

@@ -112,7 +112,7 @@ export const ProductPriceChart: React.FC<ProductPriceChartProps> = ({
 
           {/* Cost Price Legend */}
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm bg-amber-500 ring-2 ring-amber-500/20"></span>
+            <span className="w-3 h-3 rounded-md bg-amber-500 ring-2 ring-amber-500/20"></span>
             <span className="font-bold text-slate-800 dark:text-slate-200">
               Harga Modal (HPP Kulakan)
             </span>
@@ -140,14 +140,14 @@ export const ProductPriceChart: React.FC<ProductPriceChartProps> = ({
             Modal: {formatCurrency(activeRecord.costPrice, currency)}
           </span>
           <span className="text-slate-300 dark:text-slate-700">|</span>
-          <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-black text-[10px]">
+          <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-black text-[11px]">
             Margin +{activeMarginPercent}%
           </span>
         </div>
       </div>
 
       {/* SVG Container */}
-      <div className="relative w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 sm:p-4 overflow-hidden shadow-xs">
+      <div className="relative w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 sm:p-4 overflow-hidden shadow-sm">
         <svg
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           className="w-full h-auto overflow-visible select-none"
@@ -183,7 +183,7 @@ export const ProductPriceChart: React.FC<ProductPriceChartProps> = ({
                 x={paddingLeft - 8}
                 y={tick.y + 4}
                 textAnchor="end"
-                className="text-[10px] font-mono fill-slate-400 dark:fill-slate-500 font-semibold"
+                className="text-[11px] font-mono fill-slate-400 dark:fill-slate-500 font-semibold"
               >
                 Rp {tick.val >= 1000 ? `${(tick.val / 1000).toFixed(tick.val % 1000 !== 0 ? 1 : 0)}k` : tick.val}
               </text>
@@ -305,7 +305,7 @@ export const ProductPriceChart: React.FC<ProductPriceChartProps> = ({
                 x={x}
                 y={svgHeight - 12}
                 textAnchor="middle"
-                className={`text-[10px] font-mono font-medium ${
+                className={`text-[11px] font-mono font-medium ${
                   hoveredIndex === idx
                     ? 'fill-indigo-600 dark:fill-indigo-400 font-bold'
                     : 'fill-slate-400 dark:fill-slate-500'

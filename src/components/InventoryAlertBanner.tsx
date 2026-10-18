@@ -151,7 +151,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
         </div>
         <button
           onClick={() => onOpenBulkAdjust(products.slice(0, 10).map((p) => p.id))}
-          className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/50 dark:hover:bg-emerald-800 text-emerald-900 dark:text-emerald-200 font-semibold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+          className="px-2.5 py-1 rounded-xl bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/50 dark:hover:bg-emerald-800 text-emerald-900 dark:text-emerald-200 font-semibold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
         >
           <SlidersHorizontal className="w-3 h-3" />
           <span>Audit Stok Opname</span>
@@ -172,8 +172,8 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
       {/* Alert Header Summary Strip */}
       <div className="px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap bg-amber-100/60 dark:bg-amber-950/40 border-b border-amber-200/80 dark:border-amber-900/50">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[11px] shadow-xs">
-            <Bell className="w-3.5 h-3.5 animate-bounce" />
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[11px] shadow-sm">
+            <Bell className="w-3.5 h-3.5" />
             <span>{totalUniqueAlertCount} PERINGATAN INVENTARIS</span>
           </div>
 
@@ -184,7 +184,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
           {currentAlertFilter !== 'all' && (
             <button
               onClick={() => onSelectAlertFilter('all')}
-              className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 text-[10px] font-bold border border-slate-300 dark:border-slate-600 flex items-center gap-1 cursor-pointer transition shadow-2xs"
+              className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 text-[11px] font-bold border border-slate-300 dark:border-slate-600 flex items-center gap-1 cursor-pointer transition shadow-sm"
             >
               <span>Filter Aktif: {currentAlertFilter.replace('-', ' ').toUpperCase()}</span>
               <X className="w-3 h-3 text-rose-600" />
@@ -194,13 +194,13 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
 
         <div className="flex items-center gap-2">
           {/* Quick Filter Buttons */}
-          <div className="flex items-center gap-1 bg-white/80 dark:bg-slate-800/80 p-0.5 rounded-xl border border-amber-200 dark:border-slate-700 text-xs shadow-2xs">
+          <div className="flex items-center gap-1 bg-white/80 dark:bg-slate-800/80 p-0.5 rounded-xl border border-amber-200 dark:border-slate-700 text-xs shadow-sm">
             <button
               type="button"
               onClick={() => onSelectAlertFilter('all')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer ${
                 currentAlertFilter === 'all'
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -211,9 +211,9 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
               onClick={() =>
                 onSelectAlertFilter(currentAlertFilter === 'low-stock' ? 'all' : 'low-stock')
               }
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
                 currentAlertFilter === 'low-stock'
-                  ? 'bg-amber-500 text-slate-950 shadow-xs font-black'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
                   : 'text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/60'
               }`}
             >
@@ -225,9 +225,9 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
               onClick={() =>
                 onSelectAlertFilter(currentAlertFilter === 'all-exp' ? 'all' : 'all-exp')
               }
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
                 currentAlertFilter === 'all-exp'
-                  ? 'bg-rose-500 text-white shadow-xs font-black'
+                  ? 'bg-rose-500 text-white shadow-sm font-black'
                   : 'text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950/60'
               }`}
             >
@@ -239,7 +239,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
           <button aria-label="Tampilkan atau sembunyikan detail"
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-amber-200/50 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-amber-200/50 dark:hover:bg-slate-800 transition cursor-pointer"
             title={isExpanded ? 'Sembunyikan detail peringatan' : 'Buka detail peringatan'}
           >
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -255,18 +255,18 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
             className={`rounded-2xl p-3.5 border transition-all ${
               isLowStockActive
                 ? 'bg-amber-50/90 dark:bg-amber-950/30 border-amber-400 dark:border-amber-600 shadow-md'
-                : 'bg-white dark:bg-slate-900 border-amber-200/90 dark:border-slate-800 shadow-xs'
+                : 'bg-white dark:bg-slate-900 border-amber-200/90 dark:border-slate-800 shadow-sm'
             }`}
           >
             <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-amber-200/60 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shadow-xs">
+                <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shadow-sm">
                   <AlertTriangle className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <span>Peringatan Kuantitas Stok</span>
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-200 text-amber-900 dark:bg-amber-900/80 dark:text-amber-200">
+                    <span className="px-1.5 py-0.2 rounded-full text-[11px] font-mono font-bold bg-amber-200 text-amber-900 dark:bg-amber-900/80 dark:text-amber-200">
                       {allLowStockItems.length} Produk
                     </span>
                   </h3>
@@ -278,13 +278,13 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
 
               {/* Status Badges */}
               <div className="flex items-center gap-1.5">
-                <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded-md text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                   Rule 50% PO
                 </span>
                 {outOfStockItems.length > 0 && (
                   <button
                     onClick={() => onSelectAlertFilter('out-of-stock')}
-                    className="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-bold text-[10px] border border-rose-300 dark:border-rose-800 cursor-pointer hover:scale-105 transition"
+                    className="px-2 py-0.5 rounded-xl bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-bold text-[11px] border border-rose-300 dark:border-rose-800 cursor-pointer hover:scale-105 transition"
                     title="Klik untuk menyaring produk habis"
                   >
                     {outOfStockItems.length} Habis (0)
@@ -293,7 +293,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                 {lowStockItems.length > 0 && (
                   <button
                     onClick={() => onSelectAlertFilter('low-stock')}
-                    className="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-bold text-[10px] border border-amber-300 dark:border-amber-800 cursor-pointer hover:scale-105 transition"
+                    className="px-2 py-0.5 rounded-xl bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-bold text-[11px] border border-amber-300 dark:border-amber-800 cursor-pointer hover:scale-105 transition"
                     title="Klik untuk menyaring produk menipis"
                   >
                     {lowStockItems.length} Menipis
@@ -327,7 +327,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                             {p.name}
                           </p>
                         </div>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                           SKU: {p.sku} • Min: {p.minStock}
                           {p.lastOrderQuantity ? ` (50% PO: ${p.lastOrderQuantity})` : ''}
                         </span>
@@ -344,7 +344,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                           >
                             {isZero ? '0 (HABIS)' : `${p.stock}`}
                           </span>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[11px] text-slate-500">
                             Modal: {formatCurrency(p.costPrice, currency)}
                           </span>
                         </div>
@@ -352,7 +352,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                         <button
                           type="button"
                           onClick={() => onOpenReceiving(p)}
-                          className="px-2 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                          className="px-2 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition shadow-sm"
                           title="Buat pesanan terima barang untuk produk ini"
                         >
                           <Truck className="w-3 h-3" />
@@ -392,7 +392,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                   <button
                     type="button"
                     onClick={onGenerateRestockPlan}
-                    className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-black text-[11px] flex items-center gap-1 transition cursor-pointer shadow-xs active:scale-95"
+                    className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-black text-[11px] flex items-center gap-1 transition cursor-pointer shadow-sm active:scale-95"
                     title="Analisis tingkat stok menipis dengan Gemini AI dan buat rencana Purchase Order (PO)"
                   >
                     <Sparkles className="w-3.5 h-3.5 fill-current" />
@@ -411,7 +411,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                 <button
                   type="button"
                   onClick={() => onOpenReceiving()}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer shadow-sm"
                 >
                   <Truck className="w-3 h-3" />
                   <span>+ Terima Barang Masuk</span>
@@ -425,18 +425,18 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
             className={`rounded-2xl p-3.5 border transition-all ${
               isExpActive
                 ? 'bg-rose-50/90 dark:bg-rose-950/30 border-rose-400 dark:border-rose-600 shadow-md'
-                : 'bg-white dark:bg-slate-900 border-rose-200/80 dark:border-slate-800 shadow-xs'
+                : 'bg-white dark:bg-slate-900 border-rose-200/80 dark:border-slate-800 shadow-sm'
             }`}
           >
             <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-rose-200/60 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold shadow-xs">
+                <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold shadow-sm">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <span>Notifikasi Kadaluarsa (FEFO)</span>
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-rose-200 text-rose-900 dark:bg-rose-900/80 dark:text-rose-200">
+                    <span className="px-1.5 py-0.2 rounded-full text-[11px] font-mono font-bold bg-rose-200 text-rose-900 dark:bg-rose-900/80 dark:text-rose-200">
                       {allExpItems.length} Produk
                     </span>
                   </h3>
@@ -451,7 +451,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                 {expiredItems.length > 0 && (
                   <button
                     onClick={() => onSelectAlertFilter('critical-exp')}
-                    className="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 font-bold text-[10px] border border-rose-300 dark:border-rose-800 cursor-pointer hover:scale-105 transition"
+                    className="px-2 py-0.5 rounded-xl bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 font-bold text-[11px] border border-rose-300 dark:border-rose-800 cursor-pointer hover:scale-105 transition"
                     title="Sudah lewat tanggal kadaluarsa"
                   >
                     {expiredItems.length} Expired
@@ -460,7 +460,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                 {criticalExpItems.length > 0 && (
                   <button
                     onClick={() => onSelectAlertFilter('critical-exp')}
-                    className="px-2 py-0.5 rounded-lg bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200 font-bold text-[10px] border border-red-300 dark:border-red-800 cursor-pointer hover:scale-105 transition"
+                    className="px-2 py-0.5 rounded-xl bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 font-bold text-[11px] border border-rose-300 dark:border-rose-800 cursor-pointer hover:scale-105 transition"
                     title="Kadaluarsa dalam ≤ 30 hari"
                   >
                     {criticalExpItems.length} ≤30 Hari
@@ -469,7 +469,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                 {approachingExpItems.length > 0 && (
                   <button
                     onClick={() => onSelectAlertFilter('approaching-exp')}
-                    className="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-bold text-[10px] border border-amber-300 dark:border-amber-800 cursor-pointer hover:scale-105 transition"
+                    className="px-2 py-0.5 rounded-xl bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-bold text-[11px] border border-amber-300 dark:border-amber-800 cursor-pointer hover:scale-105 transition"
                     title="Kadaluarsa dalam 31-90 hari"
                   >
                     {approachingExpItems.length} ≤90 Hari
@@ -501,7 +501,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                               isPast
                                 ? 'bg-rose-600'
                                 : isCritical
-                                ? 'bg-red-500 animate-pulse'
+                                ? 'bg-rose-500'
                                 : 'bg-amber-500'
                             }`}
                           />
@@ -509,7 +509,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                             {p.name}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                           <span>Stok: {p.stock}</span>
                           <span>• Batch: {p.batchNumber || '-'}</span>
                         </div>
@@ -518,11 +518,11 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                       <div className="flex items-center gap-2 shrink-0">
                         <div className="text-right">
                           <span
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold font-mono inline-block border ${
+                            className={`px-2 py-0.5 rounded-md text-[11px] font-bold font-mono inline-block border ${
                               isPast
                                 ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'
                                 : isCritical
-                                ? 'bg-red-100 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-300'
+                                ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'
                                 : 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300'
                             }`}
                           >
@@ -532,7 +532,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                               ? 'Hari Ini!'
                               : `${daysLeft} hari lagi`}
                           </span>
-                          <span className="text-[10px] text-slate-500 block mt-0.5 font-mono">
+                          <span className="text-[11px] text-slate-500 block mt-0.5 font-mono">
                             Exp: {p.expiryDate}
                           </span>
                         </div>
@@ -542,7 +542,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                           <button
                             type="button"
                             onClick={() => onOpenReturn(p)}
-                            className="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                            className="px-2 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition shadow-sm"
                             title="Buat formulir retur supplier untuk barang kadaluarsa ini"
                           >
                             <RotateCcw className="w-3 h-3" />
@@ -552,7 +552,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                           <button
                             type="button"
                             onClick={() => onOpenPriceTagPromo(p)}
-                            className="px-2 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                            className="px-2 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition shadow-sm"
                             title="Cetak label promo diskon obral cuci gudang"
                           >
                             <Tag className="w-3 h-3" />
@@ -601,7 +601,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                 <button
                   type="button"
                   onClick={() => onOpenReturn()}
-                  className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] flex items-center gap-1 transition cursor-pointer shadow-sm"
                 >
                   <RotateCcw className="w-3 h-3" />
                   <span>+ Form Retur Supplier</span>

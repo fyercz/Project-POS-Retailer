@@ -68,13 +68,13 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
   const getTierBadge = (t?: MemberTier) => {
     switch (t) {
       case 'Platinum':
-        return 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-800';
+        return 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950/70 dark:text-indigo-300 dark:border-indigo-800';
       case 'Gold':
         return 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800';
       case 'Silver':
         return 'bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700';
       default:
-        return 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-950/70 dark:text-orange-300 dark:border-orange-800';
+        return 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800';
     }
   };
 
@@ -84,12 +84,12 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div
         id="customer-selection-dialog"
-        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"
+        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[88vh]"
       >
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
           <div className="flex items-center space-x-2">
-            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <div className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <User className="w-5 h-5" />
             </div>
             <div>
@@ -103,7 +103,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
           </div>
           <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -126,13 +126,13 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                   Buku Poin: {viewingCustomerLedger.name}
                 </span>
               </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getTierBadge(viewingCustomerLedger.tier)}`}>
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${getTierBadge(viewingCustomerLedger.tier)}`}>
                 {viewingCustomerLedger.tier || 'Bronze'}
               </span>
             </div>
 
             {/* Summary card */}
-            <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-slate-900 border-b border-amber-200 dark:border-amber-900/40 flex items-center justify-between">
+            <div className="p-4 bg-gradient-to-br from-amber-50 to-amber-50 dark:from-amber-950/30 dark:to-slate-900 border-b border-amber-200 dark:border-amber-900/40 flex items-center justify-between">
               <div>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Saldo Poin Aktif</span>
                 <div className="text-xl font-black font-mono text-amber-700 dark:text-amber-400 flex items-baseline gap-1.5">
@@ -150,7 +150,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                   setSelectedCustomer(viewingCustomerLedger);
                   onClose();
                 }}
-                className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold shadow-xs cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold shadow-sm cursor-pointer"
               >
                 Pilih Untuk Kasir
               </button>
@@ -169,11 +169,11 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                   return (
                     <div
                       key={item.id}
-                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs flex items-start justify-between gap-2 shadow-2xs"
+                      className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs flex items-start justify-between gap-2 shadow-sm"
                     >
                       <div className="flex items-start gap-2">
                         <div
-                          className={`p-1.5 rounded-lg mt-0.5 ${
+                          className={`p-1.5 rounded-xl mt-0.5 ${
                             isPositive
                               ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
                               : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
@@ -185,7 +185,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                           <p className="font-semibold text-slate-900 dark:text-slate-100 leading-tight">
                             {item.description}
                           </p>
-                          <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-1">
+                          <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1">
                             <span className="flex items-center gap-1 font-mono">
                               <Clock className="w-2.5 h-2.5" />
                               {item.date ? item.date.slice(0, 16).replace('T', ' ') : '-'}
@@ -207,7 +207,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                         >
                           {isPositive ? `+${item.points}` : item.points} Pts
                         </span>
-                        <span className="text-[10px] text-slate-500 font-mono">
+                        <span className="text-[11px] text-slate-500 font-mono">
                           Saldo: {item.balanceAfter}
                         </span>
                       </div>
@@ -227,9 +227,9 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
             <div className="p-3 border-b border-slate-200 dark:border-slate-800 grid grid-cols-2 gap-2 bg-slate-50/50 dark:bg-slate-950">
               <button aria-pressed={activeTab === 'select'}
                 onClick={() => setActiveTab('select')}
-                className={`py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                className={`py-2 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
                   activeTab === 'select'
-                    ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-emerald-400 shadow-xs'
+                    ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-emerald-400 shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                 }`}
               >
@@ -237,9 +237,9 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
               </button>
               <button aria-pressed={activeTab === 'new'}
                 onClick={() => setActiveTab('new')}
-                className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                className={`py-2 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                   activeTab === 'new'
-                    ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-emerald-400 shadow-xs'
+                    ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-emerald-400 shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                 }`}
               >
@@ -306,7 +306,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                         >
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-sm text-slate-900 dark:text-white">{cust.name}</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.2 rounded-full border ${getTierBadge(cust.tier)}`}>
+                            <span className={`text-[11px] font-bold px-2 py-0.2 rounded-full border ${getTierBadge(cust.tier)}`}>
                               {cust.tier || 'Bronze'}
                             </span>
                           </div>
@@ -329,7 +329,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                               e.stopPropagation();
                               setViewingCustomerLedger(cust);
                             }}
-                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:text-emerald-500 text-slate-600 dark:text-slate-300 text-[10px] flex items-center gap-1 cursor-pointer"
+                            className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:text-emerald-500 text-slate-600 dark:text-slate-300 text-[11px] flex items-center gap-1 cursor-pointer"
                             title="Lihat riwayat transaksi dan perolehan poin"
                           >
                             <History className="w-3.5 h-3.5" />
@@ -342,7 +342,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                               setSelectedCustomer(cust);
                               onClose();
                             }}
-                            className={`px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer ${
+                            className={`px-3 py-1.5 rounded-xl font-bold text-xs cursor-pointer ${
                               isSelected
                                 ? 'bg-emerald-700 text-white'
                                 : 'bg-emerald-700 hover:bg-emerald-400 text-slate-950'
@@ -430,7 +430,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, onClose })
                       title={canAdjustBonus ? undefined : 'Diatur pemilik di Pengaturan Toko'}
                       className="w-full p-2.5 text-xs rounded-xl border border-slate-500 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono disabled:opacity-60 disabled:cursor-not-allowed"
                     />
-                    <p className="text-[10px] text-slate-500 mt-1">
+                    <p className="text-[11px] text-slate-500 mt-1">
                       {canAdjustBonus ? 'Bawaan dari Pengaturan Toko' : 'Diatur pemilik di Pengaturan Toko'}
                     </p>
                   </div>

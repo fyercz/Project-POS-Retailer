@@ -791,7 +791,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
     >
       <div
         id="report-print-modal-container"
-        className="w-full max-w-5xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        className="w-full max-w-5xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[92vh]"
       >
         {/* Modal Top Header */}
         <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
@@ -830,10 +830,10 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               onChange={(e) => setReportType(e.target.value as ReportType)}
               className="w-full text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 cursor-pointer"
             >
-              <option value="summary">📊 Ringkasan Penjualan & Laba Kotor</option>
-              <option value="transactions">🧾 Rincian Transaksi Selesai</option>
-              <option value="products">🏆 Produk Terlaris & Margin</option>
-              <option value="payments">💳 Laporan Pembayaran &amp; Settlement EDC BRI</option>
+              <option value="summary">Ringkasan Penjualan & Laba Kotor</option>
+              <option value="transactions">Rincian Transaksi Selesai</option>
+              <option value="products">Produk Terlaris & Margin</option>
+              <option value="payments">Laporan Pembayaran &amp; Settlement EDC BRI</option>
             </select>
           </div>
 
@@ -848,12 +848,12 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               onChange={(e) => setPeriod(e.target.value as PeriodFilter)}
               className="w-full text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 cursor-pointer"
             >
-              <option value="today">📅 Hari Ini (Real-Time)</option>
+              <option value="today">Hari Ini (Real-Time)</option>
               <option value="yesterday">⏪ Kemarin</option>
-              <option value="last7days">🗓️ 7 Hari Terakhir</option>
-              <option value="last30days">🗓️ 30 Hari Terakhir</option>
-              <option value="thismonth">📆 Bulan Ini</option>
-              <option value="all">🌐 Semua Periode</option>
+              <option value="last7days">7 Hari Terakhir</option>
+              <option value="last30days">30 Hari Terakhir</option>
+              <option value="thismonth">Bulan Ini</option>
+              <option value="all">Semua Periode</option>
             </select>
           </div>
 
@@ -869,7 +869,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                 onClick={() => setPaperFormat('a4')}
                 className={`px-2 py-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
                   paperFormat === 'a4'
-                    ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                    ? 'bg-emerald-500 text-slate-950 shadow-sm'
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
                 }`}
               >
@@ -880,7 +880,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                 onClick={() => setPaperFormat('80mm')}
                 className={`px-2 py-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
                   paperFormat === '80mm'
-                    ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                    ? 'bg-emerald-500 text-slate-950 shadow-sm'
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
                 }`}
               >
@@ -891,7 +891,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                 onClick={() => setPaperFormat('58mm')}
                 className={`px-2 py-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
                   paperFormat === '58mm'
-                    ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                    ? 'bg-emerald-500 text-slate-950 shadow-sm'
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
                 }`}
               >
@@ -949,7 +949,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
             <button
               onClick={handlePrintDocument}
               disabled={isPrinting}
-              className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/25 transition-all"
+              className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-500/25 transition-all"
             >
               <Printer className="w-4 h-4" />
               <span>{isPrinting ? 'Menyiapkan Cetak...' : 'Cetak Dokumen Sekarang'}</span>

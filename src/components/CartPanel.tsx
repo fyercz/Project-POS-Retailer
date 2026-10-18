@@ -91,6 +91,15 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
   const [activeEditingNoteId, setActiveEditingNoteId] = useState<string | null>(null);
   const [itemNoteText, setItemNoteText] = useState('');
   const [isDiscountSuggestionsOpen, setIsDiscountSuggestionsOpen] = useState(true);
+  // Voucher, diskon member, dan poin dilipat dalam satu baris (terbuka otomatis saat member dipilih)
+  const [isExtrasOpen, setIsExtrasOpen] = useState(false);
+  useEffect(() => {
+    if (selectedCustomer) setIsExtrasOpen(true);
+  }, [selectedCustomer]);
+  // Margin keuntungan hanya untuk Owner/Supervisor DAN bila diaktifkan di Pengaturan
+  // (layar kasir sering terlihat oleh pembeli)
+  const canSeeMargin =
+    Boolean(settings.showMarginInCart) && (activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor');
 
   // Keyboard shortcuts (F4: Hold, F9: Checkout)
   useEffect(() => {
@@ -173,7 +182,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
           <div
             className={`w-5 h-5 rounded-md ${
               activeEmployee?.avatarColor || 'bg-emerald-700'
-            } text-white font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs`}
+            } text-white font-bold text-[11px] flex items-center justify-center shrink-0 shadow-sm`}
           >
             {activeEmployee?.avatar || 'KR'}
           </div>
@@ -181,21 +190,12 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
               {activeEmployee?.name || 'Kasir 01'}
             </span>
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+            <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
               {activeEmployee?.roleTitle || (activeEmployee?.role === 'owner' ? 'Owner' : activeEmployee?.role === 'supervisor' ? 'Supervisor' : 'Kasir')}
             </span>
           </div>
         </div>
-        <button
-          type="button"
-          id="btn-cart-switch-employee"
-          onClick={lockScreen}
-          className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-[11px] font-semibold transition cursor-pointer shrink-0 active:scale-95 shadow-2xs"
-          title="Ganti Akun Kasir atau Login Otoritas Supervisor / Owner (Alt+L)"
-        >
-          <Lock className="w-3 h-3 text-amber-700 dark:text-amber-400" />
-          <span>Ganti Akun</span>
-        </button>
+        {/* "Ganti Akun" cukup di menu profil & tombol kunci layar di header */}
       </div>
 
       {/* Top Order Header - Retail direct sale & Customer */}
@@ -225,7 +225,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
           type="button"
           id="btn-select-customer"
           onClick={() => setIsCustomerModalOpen(true)}
-          className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-850 text-left flex items-center justify-between text-xs transition-colors cursor-pointer shadow-2xs"
+          className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-850 text-left flex items-center justify-between text-xs transition-colors cursor-pointer shadow-sm"
         >
           <div className="flex items-center gap-2.5 truncate">
             <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center justify-center shrink-0">
@@ -235,7 +235,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
               <p className="font-semibold text-slate-900 dark:text-slate-100 truncate leading-tight">
                 {selectedCustomer ? selectedCustomer.name : 'Pelanggan Umum (Walk-in)'}
               </p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                 {selectedCustomer
                   ? `Member ${selectedCustomer.tier} • ${selectedCustomer.points} Poin (Dapat +${estimatedPoints} Poin)`
                   : 'Klik untuk pilih / tambah member (kumpulkan poin)'}
@@ -248,7 +248,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
         {/* Customer Discount Quick Highlight */}
         {selectedCustomer && (
           customerDiscount ? (
-            <div className="flex items-center justify-between p-2 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/30 border border-indigo-200 dark:border-indigo-800 text-[11px] shadow-2xs animate-in fade-in duration-150">
+            <div className="flex items-center justify-between p-2 rounded-xl bg-gradient-to-r from-indigo-50 to-indigo-50 dark:from-indigo-950/40 dark:to-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-[11px] shadow-sm animate-in fade-in duration-150">
               <div className="flex items-center gap-1.5 min-w-0">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                 <span className="font-bold text-indigo-950 dark:text-indigo-200 truncate">
@@ -268,9 +268,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
               </button>
             </div>
           ) : customerDiscountSuggestions.filter((s) => s.isApplicable).length > 0 ? (
-            <div className="flex items-center justify-between p-2 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 dark:from-amber-950/30 dark:to-emerald-950/20 border border-amber-200 dark:border-emerald-800/60 text-[11px] shadow-2xs animate-in fade-in duration-150">
+            <div className="flex items-center justify-between p-2 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 dark:from-amber-950/30 dark:to-emerald-950/20 border border-amber-200 dark:border-emerald-800/60 text-[11px] shadow-sm animate-in fade-in duration-150">
               <div className="flex items-center gap-1.5 min-w-0">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0 animate-bounce" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
                   Tersedia <strong>{customerDiscountSuggestions.filter((s) => s.isApplicable).length}</strong> saran diskon untuk {selectedCustomer.name}
                 </span>
@@ -281,7 +281,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   const top = customerDiscountSuggestions.find((s) => s.isApplicable);
                   if (top) applyCustomerDiscount(top);
                 }}
-                className="px-2 py-0.5 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[10px] cursor-pointer shrink-0 transition-transform active:scale-95 shadow-2xs"
+                className="px-2 py-0.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer shrink-0 transition-transform active:scale-95 shadow-sm"
                 title="Klaim diskon rekomendasi terbaik"
               >
                 Klaim Cepat
@@ -301,11 +301,11 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             return (
               <div
                 key={item.id}
-                className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800/90 bg-white dark:bg-slate-950/70 hover:border-emerald-500/50 transition-all flex flex-col gap-1.5 shadow-2xs"
+                className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800/90 bg-white dark:bg-slate-950/70 hover:border-emerald-500/50 transition-all flex flex-col gap-1.5 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h5 className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
+                    <h5 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">
                       {item.product.name}
                     </h5>
 
@@ -315,7 +315,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                         <button
                           type="button"
                           onClick={() => updateCartItemUnit(item.id, undefined)}
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium border cursor-pointer transition-colors ${
+                          className={`px-1.5 py-0.5 rounded-md text-[11px] font-medium border cursor-pointer transition-colors ${
                             !item.selectedUnit
                               ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
                               : 'bg-slate-100 dark:bg-slate-850 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
@@ -328,7 +328,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                             key={wu.id}
                             type="button"
                             onClick={() => updateCartItemUnit(item.id, wu)}
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-medium border cursor-pointer transition-colors ${
+                            className={`px-1.5 py-0.5 rounded-md text-[11px] font-medium border cursor-pointer transition-colors ${
                               item.selectedUnit?.id === wu.id
                                 ? 'bg-emerald-500 text-slate-950 border-emerald-500 font-bold'
                                 : 'bg-slate-100 dark:bg-slate-850 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
@@ -342,33 +342,33 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
 
                     {/* Selected Modifiers */}
                     {item.selectedOptions && item.selectedOptions.length > 0 && (
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400 space-x-1 mt-0.5">
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 space-x-1 mt-0.5">
                         {item.selectedOptions.map((opt, idx) => (
-                          <span key={idx} className="bg-slate-200/60 dark:bg-slate-800 px-1.5 py-0.2 rounded">
+                          <span key={idx} className="bg-slate-200/60 dark:bg-slate-800 px-1.5 py-0.2 rounded-md">
                             {opt.choiceName}
                           </span>
                         ))}
                       </div>
                     )}
 
-                    {/* Profit Margin & Points Eligibility Badge */}
-                    <div className="flex items-center gap-1.5 mt-1">
+                    {/* Profit Margin & Points Eligibility Badge (khusus Owner/Supervisor bila diaktifkan) */}
+                    {canSeeMargin && <div className="flex items-center gap-1.5 mt-1">
                       {item.isPointsEligible ? (
-                        <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.2 rounded flex items-center gap-1">
+                        <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.2 rounded-md flex items-center gap-1">
                           <Award className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
                           <span>Margin {(item.profitMarginPercent ?? 0).toFixed(1)}% • Poin Aktif</span>
                         </span>
                       ) : (
-                        <span className="text-[10px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-1.5 py-0.2 rounded flex items-center gap-1">
+                        <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-1.5 py-0.2 rounded-md flex items-center gap-1">
                           <AlertTriangle className="w-2.5 h-2.5 text-amber-500 shrink-0" />
                           <span>Margin {(item.profitMarginPercent ?? 0).toFixed(1)}% • Non-Poin (&lt;15%)</span>
                         </span>
                       )}
-                    </div>
+                    </div>}
 
                     {/* Notes / Special Instructions */}
                     {item.notes && (
-                      <p className="text-[10px] text-amber-700 dark:text-amber-400 italic flex items-center gap-1 mt-0.5">
+                      <p className="text-[11px] text-amber-700 dark:text-amber-400 italic flex items-center gap-1 mt-0.5">
                         <Sparkles className="w-2.5 h-2.5" />
                         {item.notes}
                       </p>
@@ -380,7 +380,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     <div className="text-xs font-bold font-mono text-emerald-700 dark:text-emerald-400">
                       {formatCurrency(item.totalPrice, settings.currency)}
                     </div>
-                    <div className="text-[10px] text-slate-500 font-mono">
+                    <div className="text-[11px] text-slate-500 font-mono">
                       @{formatCurrency(item.unitPrice, settings.currency)}
                       {item.selectedUnit ? `/${item.selectedUnit.name}` : ''}
                     </div>
@@ -403,9 +403,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                       type="button"
                       onClick={() => updateCartItemQuantity(item.id, -1)}
                       aria-label={item.quantity === 1 ? `Hapus ${item.product.name} dari keranjang` : `Kurangi jumlah ${item.product.name}`}
-                      className="w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                      className="w-8 h-8 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                     >
-                      {item.quantity === 1 ? <Trash2 className="w-3 h-3 text-rose-600" /> : <Minus className="w-3 h-3" />}
+                      {item.quantity === 1 ? <Trash2 className="w-4 h-4 text-rose-600" /> : <Minus className="w-4 h-4" />}
                     </button>
                     <span className="w-6 text-center font-bold text-xs font-mono text-slate-900 dark:text-slate-100">
                       {item.quantity}
@@ -413,9 +413,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     <button aria-label={`Tambah jumlah ${item.product.name}`}
                       type="button"
                       onClick={() => updateCartItemQuantity(item.id, 1)}
-                      className="w-6 h-6 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-slate-950 flex items-center justify-center transition-colors cursor-pointer"
+                      className="w-8 h-8 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-slate-950 flex items-center justify-center transition-colors cursor-pointer"
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -428,12 +428,12 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                       value={itemNoteText}
                       onChange={(e) => setItemNoteText(e.target.value)}
                       placeholder="Masukkan catatan item..."
-                      className="flex-1 text-[11px] p-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+                      className="flex-1 text-[11px] p-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                       autoFocus
                     />
                     <button
                       onClick={() => handleSaveNote(item.id)}
-                      className="px-2 py-1 text-[11px] bg-emerald-500 text-slate-950 rounded-lg font-bold cursor-pointer"
+                      className="px-2 py-1 text-[11px] bg-emerald-500 text-slate-950 rounded-xl font-bold cursor-pointer"
                     >
                       Simpan
                     </button>
@@ -460,16 +460,16 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
       </div>
 
       {/* Gemini AI Smart Upsell strip (Desktop/Tablet only) */}
-      {cart.length > 0 && aiUpsellSuggestions.length > 0 && (
+      {settings.showAiUpsellInCart && cart.length > 0 && aiUpsellSuggestions.length > 0 && (
         <div className="hidden sm:block p-2.5 bg-gradient-to-r from-emerald-950/90 via-slate-900 to-slate-950 border-t border-emerald-500/30 text-white space-y-2 shrink-0 animate-in fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
-              <Sparkles className="w-3.5 h-3.5 fill-current animate-pulse" />
+              <Sparkles className="w-3.5 h-3.5 fill-current" />
               <span>Saran Kasir Gemini AI</span>
             </div>
             <button
               onClick={() => openGeminiCopilot('upsell')}
-              className="text-[10px] text-slate-300 hover:text-emerald-300 flex items-center gap-0.5 cursor-pointer underline"
+              className="text-[11px] text-slate-300 hover:text-emerald-300 flex items-center gap-0.5 cursor-pointer underline"
             >
               <span>Lihat Semua</span>
               <ChevronRight className="w-3 h-3" />
@@ -481,14 +481,14 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             <div className="p-2 rounded-xl bg-white/10 border border-white/10 flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500 text-slate-950">
+                  <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-500 text-slate-950">
                     {aiUpsellSuggestions[0].urgency}
                   </span>
                   <span className="text-xs font-semibold truncate text-white">
                     {aiUpsellSuggestions[0].product.name}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-300 line-clamp-1 mt-0.5">
+                <p className="text-[11px] text-slate-300 line-clamp-1 mt-0.5">
                   {aiUpsellSuggestions[0].reason}
                 </p>
                 <div className="text-[11px] font-mono font-bold text-emerald-400">
@@ -498,7 +498,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
 
               <button
                 onClick={() => addToCart(aiUpsellSuggestions[0].product)}
-                className="px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 shrink-0 cursor-pointer shadow-xs transition-colors"
+                className="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 shrink-0 cursor-pointer shadow-sm transition-colors"
                 title="Tambahkan ke Keranjang"
               >
                 <Plus className="w-3 h-3" />
@@ -511,8 +511,30 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
 
       {/* Cart Summary & Checkout Footer */}
       <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/80 space-y-2.5">
-        {/* Voucher & Loyalty Points Accordion */}
+        {/* Voucher, member & poin: satu baris yang bisa dibuka (kurangi kepadatan saat melayani) */}
         {cart.length > 0 && (
+          <button
+            type="button"
+            id="btn-cart-extras"
+            onClick={() => setIsExtrasOpen((v) => !v)}
+            aria-expanded={isExtrasOpen}
+            className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5 min-w-0">
+              <Tag className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 shrink-0" />
+              <span className="truncate">
+                Voucher, Diskon &amp; Poin
+                {(appliedVoucher || totalDiscount > 0) && (
+                  <span className="ml-1.5 text-emerald-700 dark:text-emerald-400">
+                    · hemat {formatCurrency(totalDiscount, settings.currency)}
+                  </span>
+                )}
+              </span>
+            </span>
+            <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isExtrasOpen ? 'rotate-90' : ''}`} />
+          </button>
+        )}
+        {cart.length > 0 && isExtrasOpen && (
           <div className="space-y-1.5">
             {/* Voucher input or applied voucher */}
             {appliedVoucher ? (
@@ -522,7 +544,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   <span className="font-bold">{appliedVoucher.code}</span>
                   <span>(-{formatCurrency(voucherDiscount, settings.currency)})</span>
                   {appliedVoucher.minProfitMargin && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-200/70 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-200">
+                    <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-200/70 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-200">
                       Margin ≥ {appliedVoucher.minProfitMargin}%
                     </span>
                   )}
@@ -559,14 +581,14 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
 
             {/* Customer Loyalty & History-Based Discount Suggestions Accordion */}
             {selectedCustomer ? (
-              <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/50 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 text-xs overflow-hidden shadow-2xs">
+              <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/70 via-white to-indigo-50/50 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 text-xs overflow-hidden shadow-sm">
                 {/* Header */}
                 <div role="button" tabIndex={0} onKeyDown={activateOnKey}
                   onClick={() => setIsDiscountSuggestionsOpen(!isDiscountSuggestionsOpen)}
                   className="p-2.5 flex items-center justify-between cursor-pointer select-none hover:bg-indigo-100/40 dark:hover:bg-indigo-950/40 transition-colors"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="p-1.5 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
+                    <span className="p-1.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
                       <Sparkles className="w-4 h-4" />
                     </span>
                     <div className="truncate">
@@ -575,12 +597,12 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                           Diskon Loyalitas & Riwayat Belanja
                         </span>
                         {customerDiscount && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                          <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
                             Aktif
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                         {customerDiscount
                           ? `Terpasang: ${customerDiscount.title} (-${formatCurrency(customerDiscountAmount, settings.currency)})`
                           : `${customerDiscountSuggestions.filter((s) => s.isApplicable).length} saran promo siap klaim untuk ${selectedCustomer.name}`}
@@ -596,7 +618,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                           e.stopPropagation();
                           removeCustomerDiscount();
                         }}
-                        className="px-2 py-0.5 rounded text-[10px] font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                        className="px-2 py-0.5 rounded-md text-[11px] font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
                         title="Batalkan diskon ini"
                       >
                         Hapus
@@ -615,17 +637,17 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   <div className="p-2.5 pt-0 border-t border-indigo-100 dark:border-indigo-900/40 space-y-2">
                     {/* Active Discount Banner if applied */}
                     {customerDiscount && (
-                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-[11px] flex items-start justify-between gap-2">
+                      <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-[11px] flex items-start justify-between gap-2">
                         <div className="space-y-0.5 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="font-bold text-emerald-900 dark:text-emerald-200">
                               {customerDiscount.title}
                             </span>
-                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-200/80 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300">
+                            <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-200/80 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300">
                               {customerDiscount.badge}
                             </span>
                           </div>
-                          <p className="text-[10px] text-emerald-700 dark:text-emerald-400 leading-tight">
+                          <p className="text-[11px] text-emerald-700 dark:text-emerald-400 leading-tight">
                             {customerDiscount.reason}
                           </p>
                         </div>
@@ -646,9 +668,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                           return (
                             <div
                               key={suggestion.id}
-                              className={`p-2 rounded-lg border transition-all text-[11px] ${
+                              className={`p-2 rounded-xl border transition-all text-[11px] ${
                                 isCurrentlyApplied
-                                  ? 'bg-indigo-50/80 dark:bg-indigo-950/60 border-indigo-400 dark:border-indigo-600 shadow-2xs'
+                                  ? 'bg-indigo-50/80 dark:bg-indigo-950/60 border-indigo-400 dark:border-indigo-600 shadow-sm'
                                   : suggestion.isApplicable
                                   ? 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700'
                                   : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/60 opacity-60'
@@ -660,15 +682,15 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                                     <span className="font-bold text-slate-900 dark:text-slate-100">
                                       {suggestion.title}
                                     </span>
-                                    <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                    <span className="text-[11px] font-semibold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                                       {suggestion.badge}
                                     </span>
                                   </div>
-                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
                                     {suggestion.reason}
                                   </p>
                                   {!suggestion.isApplicable && suggestion.unmetSpendAmount && suggestion.unmetSpendAmount > 0 && (
-                                    <p className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold pt-0.5">
+                                    <p className="text-[11px] text-amber-700 dark:text-amber-400 font-semibold pt-0.5">
                                       Belanja kurang {formatCurrency(suggestion.unmetSpendAmount, settings.currency)} untuk dapat menggunakan promo ini.
                                     </p>
                                   )}
@@ -683,7 +705,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                                     <button
                                       type="button"
                                       onClick={() => removeCustomerDiscount()}
-                                      className="px-2 py-0.5 rounded-md bg-emerald-700 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+                                      className="px-2 py-0.5 rounded-md bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer"
                                     >
                                       <Check className="w-3 h-3" />
                                       <span>Terpasang</span>
@@ -693,9 +715,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                                       type="button"
                                       disabled={!suggestion.isApplicable}
                                       onClick={() => applyCustomerDiscount(suggestion)}
-                                      className={`px-2 py-0.5 rounded-md font-bold text-[10px] transition-all cursor-pointer ${
+                                      className={`px-2 py-0.5 rounded-md font-bold text-[11px] transition-all cursor-pointer ${
                                         suggestion.isApplicable
-                                          ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xs active:scale-95'
+                                          ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm active:scale-95'
                                           : 'bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-not-allowed'
                                       }`}
                                     >
@@ -708,7 +730,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                           );
                         })
                       ) : (
-                        <p className="text-[10px] text-slate-500 italic text-center py-2">
+                        <p className="text-[11px] text-slate-500 italic text-center py-2">
                           Belum ada diskon riwayat yang cocok untuk produk di keranjang saat ini.
                         </p>
                       )}
@@ -726,7 +748,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   <Sparkles className="w-4 h-4 text-indigo-500 group-hover:scale-110 transition-transform" />
                   <span>Pilih Member untuk klaim <strong>Diskon Loyalitas Tier & Riwayat Belanja</strong></span>
                 </span>
-                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
+                <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0">
                   Pilih Member &rarr;
                 </span>
               </button>
@@ -734,20 +756,20 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
 
             {/* Interactive Loyalty Points Redemption Card */}
             {selectedCustomer && selectedCustomer.points > 0 ? (
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/30 dark:to-slate-900 border border-amber-200 dark:border-amber-900/60 text-xs space-y-2">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-50 to-amber-50/50 dark:from-amber-950/30 dark:to-slate-900 border border-amber-200 dark:border-amber-900/60 text-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                    <span className="p-1.5 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
                       <Award className="w-4 h-4" />
                     </span>
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className="font-bold text-slate-800 dark:text-slate-200">Diskon Poin Loyalitas</span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-amber-200/60 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300">
+                        <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-md bg-amber-200/60 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300">
                           {selectedCustomer.tier}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         Saldo: <strong className="text-amber-700 dark:text-amber-400">{selectedCustomer.points} Pts</strong> (Setara {formatCurrency(selectedCustomer.points * (pointRedemptionRate || 100), settings.currency)})
                       </p>
                     </div>
@@ -757,9 +779,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   <button
                     type="button"
                     onClick={() => setUsePoints(!usePoints)}
-                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-xl transition-all cursor-pointer ${
                       usePoints
-                        ? 'bg-amber-500 text-slate-950 shadow-xs'
+                        ? 'bg-amber-500 text-slate-950 shadow-sm'
                         : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-100 dark:hover:bg-amber-900/40'
                     }`}
                   >
@@ -771,14 +793,14 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   <div className="pt-2 border-t border-amber-200/70 dark:border-amber-900/50 space-y-2 animate-in fade-in duration-150">
                     {/* Presets */}
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium shrink-0">Preset:</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium shrink-0">Preset:</span>
                       {[10, 50, 100].map((roundPts) => (
                         maxRedeemablePoints >= roundPts ? (
                           <button
                             key={roundPts}
                             type="button"
                             onClick={() => setPointsToRedeem(roundPts)}
-                            className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-md border transition cursor-pointer ${
+                            className={`px-2 py-0.5 text-[11px] font-mono font-bold rounded-md border transition cursor-pointer ${
                               pointsToRedeem === roundPts
                                 ? 'bg-amber-500 text-slate-950 border-amber-600'
                                 : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-500'
@@ -791,14 +813,14 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                       <button
                         type="button"
                         onClick={() => setPointsToRedeem(Math.floor(maxRedeemablePoints * 0.5))}
-                        className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-500 cursor-pointer"
+                        className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-500 cursor-pointer"
                       >
                         50%
                       </button>
                       <button
                         type="button"
                         onClick={() => setPointsToRedeem(maxRedeemablePoints)}
-                        className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition cursor-pointer ${
+                        className={`px-2 py-0.5 text-[11px] font-bold rounded-md border transition cursor-pointer ${
                           pointsToRedeem === maxRedeemablePoints
                             ? 'bg-amber-500 text-slate-950 border-amber-600'
                             : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-amber-500'
@@ -809,9 +831,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     </div>
 
                     {/* Stepper / Input */}
-                    <div className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900/90 p-1.5 rounded-lg border border-amber-200/80 dark:border-amber-900/60">
+                    <div className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900/90 p-1.5 rounded-xl border border-amber-200/80 dark:border-amber-900/60">
                       <div className="flex items-center gap-1.5 flex-1">
-                        <span className="text-[10px] text-slate-500">Poin Ditukar:</span>
+                        <span className="text-[11px] text-slate-500">Poin Ditukar:</span>
                         <input
                           type="number"
                           min={0}
@@ -822,20 +844,20 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                             const val = e.target.value === '' ? 0 : Number(e.target.value);
                             setPointsToRedeem(Math.min(maxRedeemablePoints, Math.max(0, Math.floor(val))));
                           }}
-                          className="w-20 px-2 py-0.5 text-xs font-mono font-bold rounded border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          className="w-20 px-2 py-0.5 text-xs font-mono font-bold rounded-md border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-amber-500"
                           placeholder="0"
                         />
-                        <span className="text-[10px] text-slate-500">Pts</span>
+                        <span className="text-[11px] text-slate-500">Pts</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] text-slate-500 block leading-tight">Potongan:</span>
+                        <span className="text-[11px] text-slate-500 block leading-tight">Potongan:</span>
                         <span className="font-bold font-mono text-xs text-amber-700 dark:text-amber-400">
                           -{formatCurrency(pointsDiscount, settings.currency)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
+                    <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
                       <span>Sisa Poin: <strong className="text-slate-700 dark:text-slate-300">{Math.max(0, selectedCustomer.points - pointsToRedeem)}</strong> pts</span>
                       <span>Dapat Belanja Ini: <strong className="text-emerald-700 dark:text-emerald-400">+{estimatedPoints}</strong> pts</span>
                     </div>
@@ -848,7 +870,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   <Award className="w-3.5 h-3.5 text-amber-500" />
                   <span>Member: <strong>{selectedCustomer.name}</strong> ({selectedCustomer.points} Poin)</span>
                 </div>
-                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
                   + {estimatedPoints} Poin transaksi ini
                 </span>
               </div>
@@ -862,7 +884,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   <User className="w-3.5 h-3.5 text-emerald-500" />
                   <span>Pilih member untuk klaim diskon poin loyalitas</span>
                 </span>
-                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">Pilih Member &rarr;</span>
+                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">Pilih Member &rarr;</span>
               </button>
             )}
           </div>
@@ -914,9 +936,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             </div>
           )}
 
-          {/* Points Eligibility Breakdown */}
-          {cart.length > 0 && (
-            <div className="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 text-[11px] space-y-1">
+          {/* Estimasi poin: hanya relevan bila ada member */}
+          {cart.length > 0 && selectedCustomer && (
+            <div className="p-2 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 text-[11px] space-y-1">
               <div className="flex justify-between items-center text-emerald-900 dark:text-emerald-300 font-semibold">
                 <span className="flex items-center gap-1">
                   <Award className="w-3.5 h-3.5 text-emerald-500" />
@@ -925,28 +947,20 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                 <span className="font-mono">{formatCurrency(pointsEligibleSpend, settings.currency)}</span>
               </div>
 
-              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 text-[10px]">
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 text-[11px]">
                 <span>Estimasi Poin Diperoleh:</span>
                 <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
                   +{estimatedPoints} Poin
                 </span>
               </div>
 
-              {nonEligibleSpend > 0 && (
-                <p className="hidden sm:flex text-[10px] text-amber-700 dark:text-amber-400/90 leading-tight pt-0.5 items-start gap-1">
-                  <AlertTriangle className="w-2.5 h-2.5 text-amber-500 shrink-0 mt-0.5" />
-                  <span>
-                    Item senilai {formatCurrency(nonEligibleSpend)} memiliki margin &lt;15% (rokok/promo margin tipis) sehingga tidak dihitung dalam akumulasi poin member.
-                  </span>
-                </p>
-              )}
             </div>
           )}
 
           {/* Grand Total */}
           <div className="flex justify-between items-baseline pt-2 border-t border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
-            <span className="font-bold text-sm">Total Tagihan</span>
-            <span className="font-black text-lg text-emerald-700 dark:text-emerald-400 font-mono">
+            <span className="font-bold text-base">Total Tagihan</span>
+            <span className="font-black text-2xl sm:text-3xl text-emerald-700 dark:text-emerald-400 font-mono tracking-tight">
               {formatCurrency(finalTotal, settings.currency)}
             </span>
           </div>
@@ -985,11 +999,11 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             id="btn-checkout-pay"
             onClick={() => setIsPaymentModalOpen(true)}
             disabled={cart.length === 0}
-            className="col-span-2 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95"
+            className="col-span-2 py-3.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-base flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95"
           >
             <CreditCard className="w-4 h-4" />
             <span>Bayar Sekarang</span>
-            <span className="hidden sm:inline text-[10px] px-1 py-0.2 rounded bg-slate-950/20 text-slate-950 font-mono ml-1 font-bold">F9</span>
+            <span className="hidden sm:inline text-[11px] px-1 py-0.2 rounded-md bg-slate-950/20 text-slate-950 font-mono ml-1 font-bold">F9</span>
           </button>
         </div>
       </div>

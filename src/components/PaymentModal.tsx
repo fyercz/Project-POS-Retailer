@@ -133,7 +133,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div
         id="payment-modal-dialog"
-        className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
@@ -147,7 +147,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
           </div>
           <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -173,7 +173,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     onClick={() => setPaymentMethod(item.method)}
                     className={`p-3 rounded-xl border text-center flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-blue-500 bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:border-blue-500 dark:text-blue-300 font-bold ring-2 ring-blue-500/20 shadow-xs'
+                        ? 'border-blue-500 bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:border-blue-500 dark:text-blue-300 font-bold ring-2 ring-blue-500/20 shadow-sm'
                         : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 hover:bg-slate-100 text-slate-700 dark:text-slate-300'
                     }`}
                   >
@@ -221,7 +221,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                         key={preset}
                         type="button"
                         onClick={() => setCashTendered(preset)}
-                        className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-colors cursor-pointer ${
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-mono font-semibold border transition-colors cursor-pointer ${
                           cashTendered === preset
                             ? 'bg-emerald-500 text-slate-950 font-bold border-emerald-500'
                             : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -271,27 +271,27 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 {/* EDC BRI Header Badge */}
                 <div className="flex items-center justify-between border-b border-blue-200/80 dark:border-blue-900/60 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                    <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-sm">
                       BRI
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-blue-950 dark:text-blue-100 leading-tight">
                         QRIS Mesin EDC BRI
                       </h4>
-                      <p className="text-[10px] text-blue-700 dark:text-blue-300">
+                      <p className="text-[11px] text-blue-700 dark:text-blue-300">
                         Proses pada mesin EDC BRI & dicatat ke Laporan Pembayaran
                       </p>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700">
                     EDC Terminal
                   </span>
                 </div>
 
                 {/* SOP Kasir Langkah demi langkah */}
-                <div className="p-2.5 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-blue-100 dark:border-blue-900/40 text-xs space-y-1.5">
+                <div className="p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-blue-100 dark:border-blue-900/40 text-xs space-y-1.5">
                   <div className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       1
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
@@ -299,7 +299,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       2
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
@@ -310,7 +310,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       3
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
@@ -318,7 +318,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-emerald-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       ✓
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
@@ -338,7 +338,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                       value={qrisRefCode}
                       onChange={(e) => setQrisRefCode(e.target.value)}
                       placeholder="Contoh: 002819 / 82910"
-                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                      className="w-full p-2 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                   <div>
@@ -350,12 +350,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                       value={qrisBatch}
                       onChange={(e) => setQrisBatch(e.target.value)}
                       placeholder="Contoh: 0001"
-                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                      className="w-full p-2 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
 
-                <div className="text-[10px] text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                <div className="text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
                   <span>Otomatis masuk Laporan Pembayaran & Rekonsiliasi Settlement EDC BRI.</span>
                 </div>
@@ -367,27 +367,27 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 {/* EDC BRI Header Badge */}
                 <div className="flex items-center justify-between border-b border-blue-200/80 dark:border-blue-900/60 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                    <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-sm">
                       BRI
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-blue-950 dark:text-blue-100 leading-tight">
                         Kartu Debit / Kredit Mesin EDC BRI
                       </h4>
-                      <p className="text-[10px] text-blue-700 dark:text-blue-300">
+                      <p className="text-[11px] text-blue-700 dark:text-blue-300">
                         Proses pada mesin EDC BRI &amp; dicatat ke Laporan Pembayaran
                       </p>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700">
                     EDC Terminal
                   </span>
                 </div>
 
                 {/* SOP Kasir Langkah demi langkah */}
-                <div className="p-2.5 rounded-lg bg-white/90 dark:bg-slate-900/90 border border-blue-100 dark:border-blue-900/40 text-xs space-y-1.5">
+                <div className="p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-blue-100 dark:border-blue-900/40 text-xs space-y-1.5">
                   <div className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       1
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
@@ -395,7 +395,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       2
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
@@ -406,7 +406,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       3
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
@@ -414,7 +414,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-emerald-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       ✓
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
@@ -434,9 +434,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                         key={b}
                         type="button"
                         onClick={() => setCardBank(b)}
-                        className={`p-1.5 text-xs font-semibold rounded-lg border transition-colors cursor-pointer text-center ${
+                        className={`p-1.5 text-xs font-semibold rounded-xl border transition-colors cursor-pointer text-center ${
                           cardBank === b
-                            ? 'bg-blue-600 text-white font-bold border-blue-600 shadow-xs'
+                            ? 'bg-blue-600 text-white font-bold border-blue-600 shadow-sm'
                             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
                         }`}
                       >
@@ -457,7 +457,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                       value={cardRefCode}
                       onChange={(e) => setCardRefCode(e.target.value)}
                       placeholder="Contoh: 009214"
-                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                      className="w-full p-2 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                   <div>
@@ -469,7 +469,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                       value={cardBatch}
                       onChange={(e) => setCardBatch(e.target.value)}
                       placeholder="Contoh: 0001"
-                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                      className="w-full p-2 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                   <div>
@@ -482,12 +482,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                       value={cardLast4}
                       onChange={(e) => setCardLast4(e.target.value.replace(/\D/g, ''))}
                       placeholder="Contoh: 4242"
-                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                      className="w-full p-2 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
 
-                <div className="text-[10px] text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                <div className="text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
                   <span>Otomatis masuk Laporan Pembayaran &amp; Rekonsiliasi Settlement EDC BRI.</span>
                 </div>
@@ -555,7 +555,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 id="btn-confirm-complete-payment"
                 onClick={handleSubmitPayment}
                 disabled={paymentMethod === 'cash' && !isCashSufficient}
-                className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95"
+                className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all active:scale-95"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Selesaikan & Cetak Nota Struk</span>

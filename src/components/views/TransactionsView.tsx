@@ -30,7 +30,7 @@ import {
   Zap,
   ArrowRight,
 } from 'lucide-react';
-import { usePOSTransactions, usePOSUI } from '../../context/POSContext';
+import { usePOSTransactions, usePOSUI, usePOSAuthShift } from '../../context/POSContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { Transaction, SalesReturn, SalesReturnItem } from '../../types';
 import { ReportPrintModal } from '../ReportPrintModal';
@@ -59,6 +59,7 @@ export const TransactionsView: React.FC = () => {
     isOnline,
     setIsBackupRestoreOpen,
   } = usePOSUI();
+  const { activeEmployee } = usePOSAuthShift();
   const [activeTab, setActiveTab] = useState<'sales' | 'returns'>('sales');
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState<string>('all');
@@ -390,7 +391,7 @@ export const TransactionsView: React.FC = () => {
       case 'qris':
         return <QrCode className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />;
       case 'card':
-        return <CreditCard className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" />;
+        return <CreditCard className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />;
       default:
         return <Building2 className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />;
     }
@@ -414,7 +415,7 @@ export const TransactionsView: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-100 dark:bg-slate-950 overflow-hidden select-none">
       {/* Top Filter Bar */}
-      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-4 flex-wrap">
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -427,32 +428,32 @@ export const TransactionsView: React.FC = () => {
           </div>
 
           {/* Ergonomic View Toggle Tabs */}
-          <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs gap-0.5">
+          <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm gap-0.5">
             <button aria-pressed={activeTab === 'sales'}
               onClick={() => setActiveTab('sales')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'sales'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Receipt className="w-3.5 h-3.5 text-emerald-500" />
               <span>Semua Nota</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+              <span className="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
                 {transactions.length}
               </span>
             </button>
             <button aria-pressed={activeTab === 'returns'}
               onClick={() => setActiveTab('returns')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'returns'
-                  ? 'bg-rose-500 text-white shadow-xs'
+                  ? 'bg-rose-500 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400'
               }`}
             >
               <RotateCcw className="w-3.5 h-3.5 text-rose-300" />
               <span>Retur & Refund</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              <span className={`px-1.5 py-0.2 rounded-full text-[11px] font-mono ${
                 activeTab === 'returns' ? 'bg-rose-700 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
               }`}>
                 {salesReturns.length}
@@ -483,9 +484,9 @@ export const TransactionsView: React.FC = () => {
                 className="px-3 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-600"
               >
                 <option value="all">Semua Cara Bayar</option>
-                <option value="cash">💵 Tunai (Cash)</option>
-                <option value="qris">📱 QRIS EDC BRI</option>
-                <option value="card">💳 Kartu EDC BRI</option>
+                <option value="cash">Tunai (Cash)</option>
+                <option value="qris">QRIS EDC BRI</option>
+                <option value="card">Kartu EDC BRI</option>
               </select>
 
               {/* Cloud Sync Filter - Desktop only */}
@@ -496,7 +497,7 @@ export const TransactionsView: React.FC = () => {
                 className="hidden md:inline-block px-3 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-600"
               >
                 <option value="all">Semua Status Cloud</option>
-                <option value="synced">☁️ Tersinkron Cloud</option>
+                <option value="synced">Tersinkron Cloud</option>
                 <option value="pending_sync">⏳ Menunggu Sinkron ({pendingSyncCount})</option>
               </select>
 
@@ -505,7 +506,7 @@ export const TransactionsView: React.FC = () => {
                 <button
                   id="btn-quick-sync-header"
                   onClick={() => setIsSyncModalOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors animate-pulse"
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
                   title="Ada transaksi offline di antrean lokal! Klik untuk sinkronkan."
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -517,21 +518,23 @@ export const TransactionsView: React.FC = () => {
 
           <button
             onClick={() => setIsPrintModalOpen(true)}
-            className="hidden sm:flex px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+            className="hidden sm:flex px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
           >
             <FileText className="w-3.5 h-3.5 text-emerald-500" />
             <span>Cetak / Ekspor</span>
           </button>
 
+          {(activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor') && (
           <button
             id="btn-transactions-backup-restore"
             onClick={() => setIsBackupRestoreOpen(true)}
-            className="hidden md:flex px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-xs transition-colors active:scale-95"
+            className="hidden md:flex px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-sm transition-colors active:scale-95"
             title="Cadangkan Seluruh Riwayat Transaksi & Database Toko (Backup & Restore - F9)"
           >
             <Database className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
             <span>Backup &amp; Restore</span>
           </button>
+          )}
         </div>
       </div>
 
@@ -579,11 +582,11 @@ export const TransactionsView: React.FC = () => {
 
       {/* Transactions Table / List */}
       <div className="flex-1 p-4 overflow-y-auto">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
           {activeTab === 'sales' ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px]">
+                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="py-3 px-4">No. Invoice / Waktu</th>
                     <th className="py-3 px-4">Detail Belanja</th>
@@ -631,7 +634,7 @@ export const TransactionsView: React.FC = () => {
                           {/* Items */}
                           <td className="py-3 px-4">
                             <div className="font-semibold text-slate-800 dark:text-slate-200">
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 mr-1.5">
+                              <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 mr-1.5">
                                 Penjualan
                               </span>
                               <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
@@ -650,7 +653,7 @@ export const TransactionsView: React.FC = () => {
                                 <p className="font-semibold text-slate-900 dark:text-slate-100">
                                   {tx.customer.name}
                                 </p>
-                                <span className="text-[10px] text-amber-700 dark:text-amber-400 font-mono">
+                                <span className="text-[11px] text-amber-700 dark:text-amber-400 font-mono">
                                   Tier: {tx.customer.tier}
                                 </span>
                               </div>
@@ -666,7 +669,7 @@ export const TransactionsView: React.FC = () => {
                               <span className="uppercase font-semibold">{tx.payment?.method || 'cash'}</span>
                             </div>
                             {tx.payment?.referenceCode && (
-                              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate max-w-[110px]">
+                              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate max-w-[110px]">
                                 {tx.payment.referenceCode}
                               </div>
                             )}
@@ -678,13 +681,13 @@ export const TransactionsView: React.FC = () => {
                               {formatCurrency(Number(tx.finalTotal ?? (tx as any).total) || 0, settings.currency)}
                             </div>
                             {(tx.discountAmount || 0) > 0 && (
-                              <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono">
+                              <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-mono">
                                 Diskon: -{formatCurrency(tx.discountAmount, settings.currency)}
                                 {tx.customerDiscount ? ` • ${tx.customerDiscount.badge}` : ''}
                               </div>
                             )}
                             {tx.returnedAmount && tx.returnedAmount > 0 ? (
-                              <div className="text-[10px] text-rose-600 dark:text-rose-400 font-mono font-bold">
+                              <div className="text-[11px] text-rose-600 dark:text-rose-400 font-mono font-bold">
                                 Retur: -{formatCurrency(tx.returnedAmount, settings.currency)}
                               </div>
                             ) : null}
@@ -693,15 +696,15 @@ export const TransactionsView: React.FC = () => {
                           {/* Status */}
                           <td className="py-3 px-4 text-center">
                             {isVoid ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
                                 BATAL / VOID
                               </span>
                             ) : isRefunded ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                                 ADA RETUR
                               </span>
                             ) : (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                                 SELESAI
                               </span>
                             )}
@@ -710,14 +713,14 @@ export const TransactionsView: React.FC = () => {
                             {tx.syncStatus === 'pending_sync' ? (
                               <div role="button" tabIndex={0} onKeyDown={activateOnKey}
                                 onClick={() => setIsSyncModalOpen(true)}
-                                className="mt-1 flex items-center justify-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 cursor-pointer hover:underline"
+                                className="mt-1 flex items-center justify-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 cursor-pointer hover:underline"
                                 title="Transaksi disimpan lokal, menunggu koneksi cloud untuk diunggah"
                               >
                                 <CloudOff className="w-3 h-3" />
                                 <span>Antrean Lokal</span>
                               </div>
                             ) : (
-                              <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+                              <div className="mt-1 flex items-center justify-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
                                 <Cloud className="w-3 h-3 text-emerald-500" />
                                 <span>Cloud Synced</span>
                               </div>
@@ -730,7 +733,7 @@ export const TransactionsView: React.FC = () => {
                               {/* Struk Kasir */}
                               <button
                                 onClick={() => setActiveReceipt(tx)}
-                                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 dark:hover:bg-emerald-500 dark:hover:text-slate-950 text-slate-700 dark:text-slate-200 flex items-center gap-1 cursor-pointer transition-colors font-semibold"
+                                className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 dark:hover:bg-emerald-500 dark:hover:text-slate-950 text-slate-700 dark:text-slate-200 flex items-center gap-1 cursor-pointer transition-colors font-semibold"
                                 title="Lihat & Cetak Struk"
                               >
                                 <Eye className="w-3.5 h-3.5" />
@@ -741,7 +744,7 @@ export const TransactionsView: React.FC = () => {
                               {!isVoid && (
                                 <button
                                   onClick={() => openReturnModal(tx)}
-                                  className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-500 hover:text-slate-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1 cursor-pointer transition-colors font-semibold"
+                                  className="px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-500 hover:text-slate-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1 cursor-pointer transition-colors font-semibold"
                                   title="Retur Item Penjualan"
                                 >
                                   <RotateCcw className="w-3.5 h-3.5" />
@@ -753,7 +756,7 @@ export const TransactionsView: React.FC = () => {
                               {!isVoid && (
                                 <button aria-label="Batalkan / Void Transaksi"
                                   onClick={() => setSelectedTxForVoid(tx)}
-                                  className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
+                                  className="p-1.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
                                   title="Batalkan / Void Transaksi"
                                 >
                                   <Ban className="w-3.5 h-3.5" />
@@ -783,7 +786,7 @@ export const TransactionsView: React.FC = () => {
                                 setStartDate('');
                                 setEndDate('');
                               }}
-                              className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition"
+                              className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition"
                             >
                               <span>Tampilkan Seluruh Nota ({transactions.length})</span>
                             </button>
@@ -801,7 +804,7 @@ export const TransactionsView: React.FC = () => {
             /* Sales Returns Table */
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px]">
+                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="py-3 px-4">No. Retur / Waktu</th>
                     <th className="py-3 px-4">Referensi Invoice</th>
@@ -843,15 +846,15 @@ export const TransactionsView: React.FC = () => {
                                 <span className="font-bold text-slate-800 dark:text-slate-100">
                                   {i.quantity}x {i.productName}
                                 </span>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
+                                <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
                                   @{formatCurrency(i.unitPrice, settings.currency)}
                                 </span>
                                 {i.restockToInventory ? (
-                                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                                  <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
                                     (Restock)
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold">
+                                  <span className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
                                     (Bad Stock)
                                   </span>
                                 )}
@@ -861,10 +864,10 @@ export const TransactionsView: React.FC = () => {
                         </td>
 
                         <td className="py-3 px-4">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold uppercase text-[11px]">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold uppercase text-[11px]">
                             {ret.refundMethod === 'cash' && <Banknote className="w-3.5 h-3.5 text-emerald-500" />}
                             {ret.refundMethod === 'transfer' && <Building2 className="w-3.5 h-3.5 text-blue-500" />}
-                            {ret.refundMethod === 'store_credit' && <CheckCircle2 className="w-3.5 h-3.5 text-purple-500" />}
+                            {ret.refundMethod === 'store_credit' && <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />}
                             <span>
                               {ret.refundMethod === 'cash'
                                 ? 'Uang Tunai'
@@ -885,7 +888,7 @@ export const TransactionsView: React.FC = () => {
                           <p className="text-xs text-slate-700 dark:text-slate-200 font-medium">
                             {ret.note || (ret.items || []).map((i) => i.reason).join(', ')}
                           </p>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">
                             Kasir: {ret.cashierName}
                           </span>
                         </td>
@@ -910,7 +913,7 @@ export const TransactionsView: React.FC = () => {
                                 setStartDate('');
                                 setEndDate('');
                               }}
-                              className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-xs transition"
+                              className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition"
                             >
                               <span>Tampilkan Seluruh Retur ({salesReturns.length})</span>
                             </button>
@@ -932,7 +935,7 @@ export const TransactionsView: React.FC = () => {
               <div className="flex items-center gap-2.5 flex-wrap text-slate-500 dark:text-slate-400">
                 {activeTab === 'sales' && (
                   <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${
                       isServerModeActive
                         ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
                         : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
@@ -945,7 +948,7 @@ export const TransactionsView: React.FC = () => {
 
                 {/* Mode Selector for Sales */}
                 {activeTab === 'sales' && isServerModeActive && (
-                  <div className="hidden sm:inline-flex p-0.5 rounded-lg bg-slate-200/80 dark:bg-slate-750 text-[10px] font-bold">
+                  <div className="hidden sm:inline-flex p-0.5 rounded-xl bg-slate-200/80 dark:bg-slate-750 text-[11px] font-bold">
                     <button
                       type="button"
                       onClick={() => {
@@ -954,7 +957,7 @@ export const TransactionsView: React.FC = () => {
                       }}
                       className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
                         paginationMode === 'page'
-                          ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
+                          ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
@@ -968,7 +971,7 @@ export const TransactionsView: React.FC = () => {
                       }}
                       className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
                         paginationMode === 'cursor'
-                          ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-2xs'
+                          ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
@@ -997,7 +1000,7 @@ export const TransactionsView: React.FC = () => {
                       setCurrentPage(1);
                       handleResetCursor();
                     }}
-                    className="px-2 py-0.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                    className="px-2 py-0.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                   >
                     <option value={15}>15</option>
                     <option value={25}>25</option>
@@ -1014,7 +1017,7 @@ export const TransactionsView: React.FC = () => {
                   <button
                     onClick={handleResetCursor}
                     disabled={!activeCursor && cursorStack.length === 0}
-                    className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-semibold transition cursor-pointer shadow-2xs"
+                    className="px-2 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-semibold transition cursor-pointer shadow-sm"
                     title="Kembali ke urutan data teratas"
                   >
                     Awal
@@ -1023,21 +1026,21 @@ export const TransactionsView: React.FC = () => {
                   <button
                     onClick={handlePrevCursor}
                     disabled={cursorStack.length === 0}
-                    className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition cursor-pointer shadow-2xs"
+                    className="px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition cursor-pointer shadow-sm"
                     title="Cursor Sebelumnya"
                   >
                     <ChevronLeft className="w-3.5 h-3.5" />
                     <span>Sebelumnya</span>
                   </button>
 
-                  <span className="px-2 font-mono font-bold text-[11px] text-slate-700 dark:text-slate-300 bg-slate-200/60 dark:bg-slate-800 py-1 rounded-lg">
+                  <span className="px-2 font-mono font-bold text-[11px] text-slate-700 dark:text-slate-300 bg-slate-200/60 dark:bg-slate-800 py-1 rounded-xl">
                     {activeCursor ? 'Cursor Berjalan' : 'Halaman Awal'}
                   </span>
 
                   <button
                     onClick={handleNextCursor}
                     disabled={!serverNextCursor}
-                    className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition cursor-pointer shadow-2xs"
+                    className="px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition cursor-pointer shadow-sm"
                     title="Muat data lebih banyak dengan cursor"
                   >
                     <span>Berikutnya</span>
@@ -1050,7 +1053,7 @@ export const TransactionsView: React.FC = () => {
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage <= 1}
-                    className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition cursor-pointer shadow-2xs"
+                    className="px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition cursor-pointer shadow-sm"
                     title="Halaman Sebelumnya"
                   >
                     <ChevronLeft className="w-3.5 h-3.5" />
@@ -1062,7 +1065,7 @@ export const TransactionsView: React.FC = () => {
                   <button
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage >= totalPages}
-                    className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition cursor-pointer shadow-2xs"
+                    className="px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-medium transition cursor-pointer shadow-sm"
                     title="Halaman Berikutnya"
                   >
                     <span className="hidden sm:inline">Next</span>
@@ -1078,7 +1081,7 @@ export const TransactionsView: React.FC = () => {
       {/* Interactive Sales Return Modal */}
       {selectedTxForReturn && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
-          <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-5 max-h-[90vh] flex flex-col">
+          <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-xl space-y-5 max-h-[90vh] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div>
@@ -1093,7 +1096,7 @@ export const TransactionsView: React.FC = () => {
               <button
                 onClick={() => setSelectedTxForReturn(null)}
                 aria-label="Tutup"
-                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 ✕
               </button>
@@ -1129,7 +1132,7 @@ export const TransactionsView: React.FC = () => {
                       <button aria-label="Kurangi"
                         onClick={() => handleUpdateItemReturnQty(item.productId, -1)}
                         disabled={item.returnQty <= 0}
-                        className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center font-bold disabled:opacity-30 cursor-pointer"
+                        className="w-7 h-7 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center font-bold disabled:opacity-30 cursor-pointer"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
@@ -1139,7 +1142,7 @@ export const TransactionsView: React.FC = () => {
                       <button aria-label="Tambah"
                         onClick={() => handleUpdateItemReturnQty(item.productId, 1)}
                         disabled={item.returnQty >= item.maxQty}
-                        className="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold disabled:opacity-30 cursor-pointer"
+                        className="w-7 h-7 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold disabled:opacity-30 cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -1150,13 +1153,13 @@ export const TransactionsView: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-amber-200/60 dark:border-amber-900/60 text-xs">
                       {/* Reason */}
                       <div>
-                        <label className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block mb-1">
+                        <label className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block mb-1">
                           Alasan Retur:
                         </label>
                         <select aria-label="Alasan Retur"
                           value={item.reason}
                           onChange={(e) => handleUpdateItemReason(item.productId, e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+                          className="w-full px-2.5 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                         >
                           <option value="Barang Cacat / Rusak Fisik">Barang Cacat / Rusak Fisik</option>
                           <option value="Kadaluarsa / Near Expired">Kadaluarsa / Near Expired</option>
@@ -1173,7 +1176,7 @@ export const TransactionsView: React.FC = () => {
                             type="checkbox"
                             checked={item.restockToInventory}
                             onChange={() => handleToggleRestock(item.productId)}
-                            className="w-4 h-4 rounded text-emerald-700 focus:ring-emerald-500 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer"
+                            className="w-4 h-4 rounded-md text-emerald-700 focus:ring-emerald-500 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer"
                           />
                           <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
                             Kembalikan ke stok etalase (Restock)
@@ -1204,7 +1207,7 @@ export const TransactionsView: React.FC = () => {
                         key={m.id}
                         type="button"
                         onClick={() => setRefundMethod(m.id as any)}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-semibold cursor-pointer border transition-colors text-center ${
+                        className={`py-1.5 px-2 rounded-xl text-xs font-semibold cursor-pointer border transition-colors text-center ${
                           refundMethod === m.id
                             ? 'bg-amber-500 text-slate-950 border-amber-600 font-bold'
                             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
@@ -1226,7 +1229,7 @@ export const TransactionsView: React.FC = () => {
                     value={returnNote}
                     onChange={(e) => setReturnNote(e.target.value)}
                     placeholder="Contoh: Barang diganti uang cash oleh SPV..."
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                   />
                 </div>
               </div>
@@ -1265,7 +1268,7 @@ export const TransactionsView: React.FC = () => {
       {/* Void Confirmation Modal */}
       {selectedTxForVoid && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
-          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 shadow-2xl space-y-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 shadow-xl space-y-4">
             <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
               <AlertCircle className="w-6 h-6" />
             </div>

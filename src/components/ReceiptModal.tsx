@@ -197,7 +197,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div
         id="receipt-modal-dialog"
-        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Modal Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
@@ -216,7 +216,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             onClick={onClose}
             data-testid="receipt-close"
             aria-label="Tutup struk"
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -226,13 +226,13 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         <div className="px-4 py-2 bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-slate-500 dark:text-slate-400 font-medium text-[11px]">Metode Cetak:</span>
-            <div className="flex items-center p-0.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center p-0.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
               <button aria-pressed={printMode === 'browser'}
                 type="button"
                 onClick={() => setPrintMode('browser')}
                 className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
                   printMode === 'browser'
-                    ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-emerald-400 shadow-2xs'
+                    ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-emerald-400 shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                 }`}
               >
@@ -246,7 +246,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   onClick={() => setPrintMode('serial')}
                   className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
                     printMode === 'serial'
-                      ? 'bg-emerald-700 text-white shadow-2xs'
+                      ? 'bg-emerald-700 text-white shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600'
                   }`}
                   title="Direct ESC/POS via USB/Serial Virtual COM Port"
@@ -262,7 +262,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   onClick={() => setPrintMode('bluetooth')}
                   className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
                     printMode === 'bluetooth'
-                      ? 'bg-blue-600 text-white shadow-2xs'
+                      ? 'bg-blue-600 text-white shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-blue-600'
                   }`}
                   title="Direct ESC/POS via Bluetooth Mini Printer"
@@ -278,7 +278,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             <span className="text-slate-500 dark:text-slate-400 font-medium text-[11px]">Ukuran:</span>
             <button
               onClick={() => handlePaperSizeChange('58mm')}
-              className={`px-2.5 py-1 rounded-lg font-mono text-[11px] font-semibold cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl font-mono text-[11px] font-semibold cursor-pointer ${
                 paperSize === '58mm'
                   ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-emerald-400'
                   : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
@@ -288,7 +288,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             </button>
             <button
               onClick={() => handlePaperSizeChange('80mm')}
-              className={`px-2.5 py-1 rounded-lg font-mono text-[11px] font-semibold cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl font-mono text-[11px] font-semibold cursor-pointer ${
                 paperSize === '80mm'
                   ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-emerald-400'
                   : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
@@ -300,7 +300,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
           {/* User-configurable auto-print toggle */}
           <label
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[11px] font-medium cursor-pointer transition select-none ${
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-xl border text-[11px] font-medium cursor-pointer transition select-none ${
               settings.autoPrintReceipt !== false
                 ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
                 : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -316,7 +316,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 updateSettings({ autoPrintReceipt: val });
                 savePrinterConfig({ ...getSavedPrinterConfig(), autoPrintReceipt: val });
               }}
-              className="w-3.5 h-3.5 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer"
+              className="w-3.5 h-3.5 rounded-md text-emerald-700 focus:ring-emerald-500 cursor-pointer"
             />
             <Zap className="w-3 h-3 text-amber-500" />
             <span>Auto-Cetak</span>
@@ -369,26 +369,26 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                     />
                   </div>
                   {settings.branchName && (
-                    <p className="text-[10px] text-slate-700 font-semibold">{settings.branchName}</p>
+                    <p className="text-[11px] text-slate-700 font-semibold">{settings.branchName}</p>
                   )}
-                  <p className="text-[10px] text-slate-600 leading-tight">{settings.address}</p>
-                  <p className="text-[10px] text-slate-600 font-medium">Telp/WA: {settings.phone}</p>
+                  <p className="text-[11px] text-slate-600 leading-tight">{settings.address}</p>
+                  <p className="text-[11px] text-slate-600 font-medium">Telp/WA: {settings.phone}</p>
                 </>
               ) : (
                 <>
                   <h2 className="font-bold text-sm tracking-wider uppercase">{settings.storeName}</h2>
-                  <p className="text-[10px] text-slate-600 font-semibold">{settings.storeTagline || 'Lengkap & Hemat'}</p>
+                  <p className="text-[11px] text-slate-600 font-semibold">{settings.storeTagline || 'Lengkap & Hemat'}</p>
                   {settings.branchName && (
-                    <p className="text-[10px] text-slate-600">{settings.branchName}</p>
+                    <p className="text-[11px] text-slate-600">{settings.branchName}</p>
                   )}
-                  <p className="text-[10px] text-slate-600 leading-tight">{settings.address}</p>
-                  <p className="text-[10px] text-slate-600">Telp/WA: {settings.phone}</p>
+                  <p className="text-[11px] text-slate-600 leading-tight">{settings.address}</p>
+                  <p className="text-[11px] text-slate-600">Telp/WA: {settings.phone}</p>
                 </>
               )}
             </div>
 
             {/* Meta Info */}
-            <div className="py-2 space-y-0.5 text-[10px] text-slate-700 border-b border-dashed border-slate-400">
+            <div className="py-2 space-y-0.5 text-[11px] text-slate-700 border-b border-dashed border-slate-400">
               <div className="flex justify-between">
                 <span>No. Nota:</span>
                 <span className="font-bold">{transaction.invoiceNumber}</span>
@@ -419,18 +419,18 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                     <span className="truncate pr-2">{item.product.name}</span>
                     <span>{formatCurrency(item.totalPrice, settings.currency)}</span>
                   </div>
-                  <div className="flex justify-between text-[10px] text-slate-600">
+                  <div className="flex justify-between text-[11px] text-slate-600">
                     <span>
                       {item.quantity} x {formatCurrency(item.unitPrice, settings.currency)}
                     </span>
                   </div>
                   {item.selectedOptions && item.selectedOptions.length > 0 && (
-                    <div className="text-[10px] text-slate-500 pl-2 italic">
+                    <div className="text-[11px] text-slate-500 pl-2 italic">
                       + {item.selectedOptions.map((o) => o.choiceName).join(', ')}
                     </div>
                   )}
                   {item.notes && (
-                    <div className="text-[10px] text-slate-500 pl-2 italic">Note: {item.notes}</div>
+                    <div className="text-[11px] text-slate-500 pl-2 italic">Note: {item.notes}</div>
                   )}
                 </div>
               ))}
@@ -461,7 +461,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             </div>
 
             {/* Payment Details */}
-            <div className="py-2 space-y-0.5 text-[10px] border-b border-dashed border-slate-400">
+            <div className="py-2 space-y-0.5 text-[11px] border-b border-dashed border-slate-400">
               <div className="flex justify-between">
                 <span>Metode Bayar:</span>
                 <span className="uppercase font-bold">
@@ -494,7 +494,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
             {/* Loyalty Points info */}
             {((transaction.pointsEarned && transaction.pointsEarned > 0) || (transaction.pointsUsed && transaction.pointsUsed > 0)) && (
-              <div className="py-1.5 px-2 text-center text-[10px] text-slate-700 bg-slate-100 my-2 rounded space-y-0.5">
+              <div className="py-1.5 px-2 text-center text-[11px] text-slate-700 bg-slate-100 my-2 rounded-md space-y-0.5">
                 {transaction.pointsUsed && transaction.pointsUsed > 0 ? (
                   <div className="flex justify-between font-mono">
                     <span>Poin Ditukar:</span>
@@ -512,7 +512,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
             {/* Footer Message */}
             <div className="pt-3 text-center space-y-2">
-              <p className="text-[10px] text-slate-600">{settings.receiptFooterMessage}</p>
+              <p className="text-[11px] text-slate-600">{settings.receiptFooterMessage}</p>
               {/* Simulated Thermal Barcode */}
               <div className="flex flex-col items-center">
                 <div className="h-6 w-3/4 flex items-center justify-between">
@@ -523,7 +523,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                     />
                   ))}
                 </div>
-                <span className="text-[10px] tracking-widest text-slate-500 mt-0.5">
+                <span className="text-[11px] tracking-widest text-slate-500 mt-0.5">
                   {transaction.invoiceNumber}
                 </span>
               </div>
@@ -546,7 +546,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   : 'bg-emerald-700 hover:bg-emerald-400 text-slate-950'
               } disabled:opacity-50`}
             >
-              <Printer className={`w-4 h-4 ${directPrinting ? 'animate-bounce' : ''}`} />
+              <Printer className={`w-4 h-4 ${directPrinting ? '' : ''}`} />
               <span>
                 {directPrinting
                   ? 'Mencetak...'
@@ -595,7 +595,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   updateSettings({ autoPrintReceipt: val });
                   savePrinterConfig({ ...getSavedPrinterConfig(), autoPrintReceipt: val });
                 }}
-                className="w-3.5 h-3.5 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer"
+                className="w-3.5 h-3.5 rounded-md text-emerald-700 focus:ring-emerald-500 cursor-pointer"
               />
               <Zap className="w-3.5 h-3.5 text-amber-500" />
               <span className="hidden md:inline font-semibold">Auto-Cetak</span>

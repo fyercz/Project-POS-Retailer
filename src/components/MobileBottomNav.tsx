@@ -27,7 +27,7 @@ export const MobileBottomNav: React.FC = () => {
     <nav
       id="mobile-bottom-nav"
       aria-label="Navigasi Bawah Mobile"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 safe-area-bottom shadow-lg"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 safe-area-bottom shadow-md"
     >
       <div className="grid grid-cols-5 h-14 items-stretch">
         {NAV_ITEMS.map((item) => {
@@ -48,7 +48,7 @@ export const MobileBottomNav: React.FC = () => {
             >
               {/* Active Indicator Top Bar */}
               {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-emerald-500 rounded-b-full shadow-xs" />
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-emerald-500 rounded-b-full shadow-sm" />
               )}
 
               <div className="relative">
@@ -56,20 +56,20 @@ export const MobileBottomNav: React.FC = () => {
 
                 {/* Cart Badge */}
                 {item.id === 'pos' && totalCartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 px-1.5 min-w-[16px] h-4 rounded-full bg-emerald-500 text-slate-950 font-mono font-black text-[10px] flex items-center justify-center shadow-xs">
+                  <span className="absolute -top-1.5 -right-2 px-1.5 min-w-[16px] h-4 rounded-full bg-emerald-500 text-slate-950 font-mono font-black text-[11px] flex items-center justify-center shadow-sm">
                     {totalCartCount > 99 ? '99+' : totalCartCount}
                   </span>
                 )}
 
                 {/* Lock Badge if permission restricted */}
                 {!isAllowed && (
-                  <span className="absolute -bottom-1 -right-1.5 p-0.5 rounded-full bg-amber-500 text-slate-950 shadow-xs">
+                  <span className="absolute -bottom-1 -right-1.5 p-0.5 rounded-full bg-amber-500 text-slate-950 shadow-sm">
                     <Lock className="w-2.5 h-2.5" />
                   </span>
                 )}
               </div>
 
-              <span className="text-[10px] mt-0.5 tracking-tight truncate max-w-full px-0.5">
+              <span className="text-[11px] mt-0.5 tracking-tight truncate max-w-full px-0.5">
                 {item.label}
               </span>
             </button>

@@ -291,7 +291,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-4xl w-full overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 max-w-4xl w-full overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 text-white">
           <div className="flex items-center gap-3">
@@ -302,12 +302,12 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-base text-white">Pusat Aplikasi Desktop &amp; Pemeliharaan Sistem</h3>
                 {isDesktop ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 text-[10px] font-bold">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 text-[11px] font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                     Mode Desktop Aktif
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/25 border border-amber-400/40 text-amber-200 text-[10px] font-bold">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/25 border border-amber-400/40 text-amber-200 text-[11px] font-bold">
                     Mode Browser Web
                   </span>
                 )}
@@ -319,7 +319,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
           </div>
           <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -331,7 +331,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
             onClick={() => setActiveTab('autoupdate')}
             className={`px-3 py-2.5 rounded-t-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer border-b-2 whitespace-nowrap ${
               activeTab === 'autoupdate'
-                ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900 shadow-2xs'
+                ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900 shadow-sm'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -346,7 +346,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
             onClick={() => setActiveTab('verify')}
             className={`px-3 py-2.5 rounded-t-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer border-b-2 whitespace-nowrap ${
               activeTab === 'verify'
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900 shadow-2xs'
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900 shadow-sm'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -361,14 +361,14 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
             onClick={() => setActiveTab('cleanup')}
             className={`px-3 py-2.5 rounded-t-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer border-b-2 whitespace-nowrap ${
               activeTab === 'cleanup'
-                ? 'border-rose-600 text-rose-600 dark:text-rose-400 bg-white dark:bg-slate-900 shadow-2xs'
+                ? 'border-rose-600 text-rose-600 dark:text-rose-400 bg-white dark:bg-slate-900 shadow-sm'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <Trash2 className="w-3.5 h-3.5 text-rose-600" />
             <span>Bersihkan File Sampah</span>
             {(cleanupScanData?.totalFiles ?? 0) > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+              <span className="px-1.5 py-0.2 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
                 {cleanupScanData?.totalFiles}
               </span>
             )}
@@ -378,7 +378,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
             onClick={() => setActiveTab('install')}
             className={`px-3 py-2.5 rounded-t-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer border-b-2 whitespace-nowrap ${
               activeTab === 'install'
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 shadow-2xs'
+                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 shadow-sm'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -390,7 +390,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
             onClick={() => setActiveTab('kiosk')}
             className={`px-3 py-2.5 rounded-t-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer border-b-2 whitespace-nowrap ${
               activeTab === 'kiosk'
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 shadow-2xs'
+                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 shadow-sm'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -402,7 +402,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
             onClick={() => setActiveTab('hardware')}
             className={`px-3 py-2.5 rounded-t-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer border-b-2 whitespace-nowrap ${
               activeTab === 'hardware'
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 shadow-2xs'
+                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 shadow-sm'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
@@ -417,7 +417,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
           {activeTab === 'autoupdate' && (
             <div className="space-y-4">
               {/* Repository Official Banner */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/10 to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                     <GitBranch className="w-5 h-5" />
@@ -427,7 +427,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       <h4 className="font-bold text-sm text-slate-900 dark:text-white">
                         Repositori Resmi GitHub Toko
                       </h4>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                         main branch
                       </span>
                     </div>
@@ -491,7 +491,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       type="button"
                       onClick={() => loadGitStatus(true)}
                       disabled={isLoadingGitStatus}
-                      className="px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 cursor-pointer transition disabled:opacity-50"
+                      className="px-2 py-0.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 cursor-pointer transition disabled:opacity-50"
                       title="Periksa data rilis terkini langsung dari server GitHub"
                     >
                       <RefreshCw className={`w-3 h-3 ${isLoadingGitStatus ? 'animate-spin text-emerald-500' : 'text-slate-500'}`} />
@@ -504,7 +504,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       Versi Terbaru Aktual (Up-to-Date)
                     </span>
                   ) : gitStatus?.hasUpdate ? (
-                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 flex items-center gap-1.5 animate-pulse">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 flex items-center gap-1.5">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
                       Tersedia Pembaruan Baru di GitHub!
                     </span>
@@ -517,27 +517,27 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px]">
-                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-500 block text-[10px] uppercase font-bold">Branch Aktif:</span>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-500 block text-[11px] uppercase font-bold">Branch Aktif:</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">
                       {gitStatus?.branch || 'main'}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-500 block text-[10px] uppercase font-bold">Commit Lokal:</span>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-500 block text-[11px] uppercase font-bold">Commit Lokal:</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">
                       {gitStatus?.currentCommit ? `${gitStatus.currentCommit} (${gitStatus.commitDate || 'saat ini'})` : '-'}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-500 block text-[10px] uppercase font-bold">Rilis Aktual GitHub:</span>
+                      <span className="text-slate-500 block text-[11px] uppercase font-bold">Rilis Aktual GitHub:</span>
                       {gitStatus?.remoteHtmlUrl && (
                         <a
                           href={gitStatus.remoteHtmlUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[10px] text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-0.5"
+                          className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
                         >
                           Lihat <ExternalLink className="w-2.5 h-2.5" />
                         </a>
@@ -546,7 +546,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                     <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-xs flex items-center gap-1.5 mt-0.5">
                       <span>{gitStatus?.remoteLatestCommit || gitStatus?.currentCommit || 'Memeriksa...'}</span>
                       {gitStatus?.remoteCommitDate && (
-                        <span className="text-[10px] text-slate-500 font-sans font-normal truncate">
+                        <span className="text-[11px] text-slate-500 font-sans font-normal truncate">
                           ({new Date(gitStatus.remoteCommitDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })})
                         </span>
                       )}
@@ -556,8 +556,8 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
 
                 {/* Actual GitHub Commit Message */}
                 {gitStatus?.remoteCommitMessage && (
-                  <div className="p-2.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 text-[11px] space-y-0.5">
-                    <div className="flex items-center justify-between text-[10px] font-bold">
+                  <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 text-[11px] space-y-0.5">
+                    <div className="flex items-center justify-between text-[11px] font-bold">
                       <span className="text-emerald-800 dark:text-emerald-300">Pembaruan Terkini di GitHub (Aktual):</span>
                       {gitStatus.remoteCommitAuthor && (
                         <span className="text-slate-500 dark:text-slate-400 font-normal">Oleh: {gitStatus.remoteCommitAuthor}</span>
@@ -571,8 +571,8 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
 
                 {/* Local Commit Message if different */}
                 {gitStatus?.commitMessage && gitStatus.commitMessage !== gitStatus.remoteCommitMessage && (
-                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px]">
-                    <span className="text-slate-500 block text-[10px] uppercase font-bold">Pesan Terakhir di Lokal:</span>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px]">
+                    <span className="text-slate-500 block text-[11px] uppercase font-bold">Pesan Terakhir di Lokal:</span>
                     <span className="italic text-slate-700 dark:text-slate-300">
                       &ldquo;{gitStatus.commitMessage}&rdquo;
                     </span>
@@ -581,7 +581,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
 
                 {/* Not a git repo notice & 1-click connect */}
                 {!gitStatus?.isGitRepo && (
-                  <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <span className="text-amber-900 dark:text-amber-200">
                       Direktori lokal belum dikaitkan ke Git. Klik tombol di samping untuk mengaktifkan sinkronisasi otomatis ke GitHub.
                     </span>
@@ -589,7 +589,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       type="button"
                       onClick={handleConfigureGitOrigin}
                       disabled={isConfiguringGit}
-                      className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 cursor-pointer disabled:opacity-50"
+                      className="px-3 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 cursor-pointer disabled:opacity-50"
                     >
                       {isConfiguringGit ? 'Menghubungkan...' : 'Hubungkan ke GitHub'}
                     </button>
@@ -638,14 +638,14 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                         <span>{pullResult.message}</span>
                       </div>
                       {pullResult.cleanedFilesCount ? (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-200/60 dark:bg-emerald-900/60">
+                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-200/60 dark:bg-emerald-900/60">
                           {pullResult.cleanedFilesCount} file sampah dibersihkan
                         </span>
                       ) : null}
                     </div>
 
                     {pullResult.pullOutput && (
-                      <pre className="p-2.5 rounded-lg bg-slate-950 text-slate-200 font-mono text-[10px] overflow-x-auto max-h-36">
+                      <pre className="p-2.5 rounded-xl bg-slate-950 text-slate-200 font-mono text-[11px] overflow-x-auto max-h-36">
                         {pullResult.pullOutput}
                       </pre>
                     )}
@@ -685,7 +685,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       Jalankan perintah ini di Command Prompt atau PowerShell kasir:
                     </p>
                   </div>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900 text-emerald-400 font-mono text-[11px]">
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900 text-emerald-400 font-mono text-[11px]">
                     <span className="truncate mr-2">git pull origin main && npm i && npm run build</span>
                     <button aria-label="Salin Perintah"
                       type="button"
@@ -695,7 +695,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                           'cmd_git'
                         )
                       }
-                      className="p-1 hover:bg-slate-800 text-slate-300 rounded cursor-pointer shrink-0"
+                      className="p-1 hover:bg-slate-800 text-slate-300 rounded-md cursor-pointer shrink-0"
                       title="Salin Perintah"
                     >
                       {copiedCmd === 'cmd_git' ? (
@@ -714,7 +714,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
           {activeTab === 'verify' && (
             <div className="space-y-4">
               {/* Header and Action Card */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-500/20 dark:border-blue-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-indigo-500/10 border border-blue-500/20 dark:border-blue-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
                     <FileCheck className="w-5 h-5" />
@@ -752,7 +752,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                         : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'
                     }`}
                   >
-                    <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">
+                    <span className="text-[11px] uppercase font-bold tracking-wider opacity-80">
                       Status Integritas
                     </span>
                     <span className="text-base font-extrabold flex items-center gap-1.5 mt-1">
@@ -776,7 +776,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
+                    <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">
                       File Utuh &amp; Valid
                     </span>
                     <span className="text-base font-bold text-slate-800 dark:text-slate-200 block mt-1">
@@ -785,7 +785,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
+                    <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">
                       Dimodifikasi Lokal
                     </span>
                     <span className="text-base font-bold text-blue-600 dark:text-blue-400 block mt-1">
@@ -794,7 +794,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
+                    <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">
                       File Hilang
                     </span>
                     <span
@@ -815,14 +815,14 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                     Pemeriksaan Lingkungan Sistem (Prerequisites):
                   </span>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                    <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                       <span className="text-slate-500">Node.js Runtime</span>
                       <span className="font-mono font-bold text-emerald-700">
                         {verificationData.envPrerequisites.nodeVersion}
                       </span>
                     </div>
 
-                    <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                       <span className="text-slate-500">Git CLI</span>
                       <span
                         className={`font-bold ${
@@ -833,7 +833,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       </span>
                     </div>
 
-                    <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                       <span className="text-slate-500">Node Modules</span>
                       <span
                         className={`font-bold ${
@@ -844,7 +844,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       </span>
                     </div>
 
-                    <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                       <span className="text-slate-500">Database Toko</span>
                       <span
                         className={`font-bold ${
@@ -871,7 +871,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   <button
                     key={cat.id}
                     onClick={() => setVerificationCategoryFilter(cat.id)}
-                    className={`px-2.5 py-1 rounded-lg font-medium text-[11px] whitespace-nowrap cursor-pointer transition ${
+                    className={`px-2.5 py-1 rounded-xl font-medium text-[11px] whitespace-nowrap cursor-pointer transition ${
                       verificationCategoryFilter === cat.id
                         ? 'bg-blue-600 text-white font-bold'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
@@ -886,7 +886,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden text-xs">
                 <div className="overflow-x-auto max-h-72">
                   <table className="w-full text-left">
-                    <thead className="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 text-[10px] uppercase font-bold sticky top-0">
+                    <thead className="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 text-[11px] uppercase font-bold sticky top-0">
                       <tr>
                         <th className="p-2.5">File Sistem</th>
                         <th className="p-2.5">Kategori &amp; Fungsi</th>
@@ -909,28 +909,28 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                           </td>
                           <td className="p-2.5 font-sans text-slate-500 dark:text-slate-400 text-[11px]">
                             <div>{file.description}</div>
-                            <span className="text-[10px] text-slate-500 font-mono">{file.category}</span>
+                            <span className="text-[11px] text-slate-500 font-mono">{file.category}</span>
                           </td>
-                          <td className="p-2.5 text-slate-500 text-[10px]">
+                          <td className="p-2.5 text-slate-500 text-[11px]">
                             {file.exists ? `${(file.size / 1024).toFixed(1)} KB` : '-'}
                           </td>
                           <td className="p-2.5">
                             {file.status === 'ok' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                                 <CheckCircle2 className="w-3 h-3" />
                                 Valid / Utuh
                               </span>
                             ) : file.status === 'modified' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
                                 <FileCheck className="w-3 h-3" />
                                 Termodifikasi Lokal
                               </span>
                             ) : file.status === 'untracked' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
                                 File Baru Lokal
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
                                 <AlertTriangle className="w-3 h-3" />
                                 File Hilang
                               </span>
@@ -1014,7 +1014,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">
+                      <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider block">
                         File Sampah Ditemukan
                       </span>
                       <span className="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5 block">
@@ -1028,7 +1028,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
 
                   <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">
+                      <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider block">
                         Ruang yang Dapat Dibebaskan
                       </span>
                       <span className="text-xl font-extrabold text-emerald-700 dark:text-emerald-400 mt-0.5 block">
@@ -1064,8 +1064,8 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                             {item.relativePath}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 shrink-0 text-[10px]">
-                          <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                        <div className="flex items-center gap-3 shrink-0 text-[11px]">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                             {item.category}
                           </span>
                           <span className="font-mono text-slate-500">
@@ -1097,7 +1097,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200">
                         Setup Pembersihan Mandiri (.bat &amp; Perintah Terminal)
                       </h5>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         Jalankan pembersihan dari terminal di folder aplikasi tanpa membuka web browser.
                       </p>
                     </div>
@@ -1105,7 +1105,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs">
-                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Pembersihan Standar:</span>
                       <button aria-label="Salin Perintah"
@@ -1121,12 +1121,12 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                         {copiedCmd === 'clean' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
+                    <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded-md font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
                       npm run clean
                     </code>
                   </div>
 
-                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Pembersihan Penuh (+dist):</span>
                       <button aria-label="Salin Perintah"
@@ -1142,12 +1142,12 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                         {copiedCmd === 'clean:all' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
+                    <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded-md font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
                       npm run clean:all
                     </code>
                   </div>
 
-                  <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Cek Saja (Tanpa Hapus):</span>
                       <button aria-label="Salin Perintah"
@@ -1163,7 +1163,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                         {copiedCmd === 'bat' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded font-mono text-[11px] text-blue-600 dark:text-blue-400 truncate">
+                    <code className="block px-2 py-1 bg-slate-100 dark:bg-slate-950 rounded-md font-mono text-[11px] text-blue-600 dark:text-blue-400 truncate">
                       npm run clean:dry
                     </code>
                   </div>
@@ -1222,14 +1222,14 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                 </h4>
 
                 {/* Primary Choice: Windows Native .EXE */}
-                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border-2 border-emerald-500/30 dark:border-emerald-500/40 space-y-2.5">
+                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/10 to-blue-500/10 border-2 border-emerald-500/30 dark:border-emerald-500/40 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
-                      <span className="w-6 h-6 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs font-black shadow-xs">
+                      <span className="w-6 h-6 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs font-black shadow-sm">
                         1
                       </span>
                       <span>Program Eksekusi Windows Asli (.EXE)</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] uppercase tracking-wide border border-emerald-300 dark:border-emerald-800">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] uppercase tracking-wide border border-emerald-300 dark:border-emerald-800">
                         Paling Direkomendasikan
                       </span>
                     </div>
@@ -1280,7 +1280,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       <span>Instal Ulilmart POS ke Desktop</span>
                     </button>
                   ) : (
-                    <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
+                    <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
                       💡 <strong>Petunjuk Manual:</strong> Pada Google Chrome atau Microsoft Edge, klik titik tiga menu &rarr; pilih <strong>"Simpan &amp; bagikan"</strong> &rarr; pilih <strong>"Instal situs ini sebagai aplikasi"</strong>.
                     </div>
                   )}
@@ -1301,21 +1301,21 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   <div className="flex flex-wrap gap-2 pt-1">
                     <button
                       onClick={() => downloadWindowsDesktopLauncher({ kioskMode: false })}
-                      className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Download className="w-3.5 h-3.5 text-blue-500" />
                       <span>Unduh Launcher Windows (.bat)</span>
                     </button>
                     <button
                       onClick={() => downloadWindowsDesktopLauncher({ kioskMode: true })}
-                      className="px-3.5 py-1.5 rounded-xl border border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-800 dark:text-indigo-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      className="px-3.5 py-1.5 rounded-xl border border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-800 dark:text-indigo-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Download className="w-3.5 h-3.5 text-indigo-500" />
                       <span>Unduh Launcher Kiosk (.bat)</span>
                     </button>
                     <button
                       onClick={() => downloadUnixDesktopLauncher({ kioskMode: false })}
-                      className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Terminal className="w-3.5 h-3.5 text-emerald-500" />
                       <span>Unduh Linux / Mac (.sh)</span>
@@ -1333,14 +1333,14 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                     </div>
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Saat <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 font-mono text-[11px]">MULAI-KASIR.bat</code> pertama kali dijalankan, Anda akan ditanya apakah kasir mau menyala otomatis setiap Windows dinyalakan. Shortcut <strong>Ulilmart POS</strong> di Desktop juga dibuat otomatis.
+                    Saat <code className="px-1 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/50 font-mono text-[11px]">MULAI-KASIR.bat</code> pertama kali dijalankan, Anda akan ditanya apakah kasir mau menyala otomatis setiap Windows dinyalakan. Shortcut <strong>Ulilmart POS</strong> di Desktop juga dibuat otomatis.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px]">
-                    <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60">
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60">
                       <div className="font-bold text-slate-700 dark:text-slate-300 mb-1">Aktifkan auto-start:</div>
                       <code className="font-mono text-amber-700 dark:text-amber-300">MULAI-KASIR.bat --startup</code>
                     </div>
-                    <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60">
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60">
                       <div className="font-bold text-slate-700 dark:text-slate-300 mb-1">Matikan auto-start:</div>
                       <code className="font-mono text-amber-700 dark:text-amber-300">MULAI-KASIR.bat --remove-startup</code>
                     </div>
@@ -1411,21 +1411,21 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   Navigasi Cepat Keyboard Kasir Terminal Desktop:
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-                  <div className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-between">
+                  <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between">
                     <span className="text-slate-500">F2</span>
                     <span className="font-bold text-emerald-400">Bayar / Kasir</span>
                   </div>
-                  <div className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-between">
+                  <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between">
                     <span className="text-slate-500">F4</span>
                     <span className="font-bold text-amber-400">Parkir Order</span>
                   </div>
-                  <div className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-between">
+                  <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between">
                     <span className="text-slate-500">F8</span>
                     <span className="font-bold text-blue-400">Scanner Barcode</span>
                   </div>
-                  <div className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-between">
+                  <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between">
                     <span className="text-slate-500">F9</span>
-                    <span className="font-bold text-purple-400">Backup &amp; Restore</span>
+                    <span className="font-bold text-indigo-400">Backup &amp; Restore</span>
                   </div>
                 </div>
               </div>
@@ -1478,7 +1478,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                 <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
                   Gunakan flag <code>--kiosk-printing</code> agar struk langsung dicetak tanpa menampilkan dialog popup browser:
                 </p>
-                <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-[11px] text-slate-700 dark:text-slate-300">
                   chrome.exe --kiosk --kiosk-printing http://localhost:3000
                 </div>
               </div>

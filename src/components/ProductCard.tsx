@@ -70,30 +70,30 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
             <div className="flex items-center gap-1 shrink-0">
               {cartQuantity > 0 && (
-                <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 text-[11px] font-black flex items-center justify-center shadow-xs">
+                <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 text-[11px] font-black flex items-center justify-center shadow-sm">
                   {cartQuantity}
                 </span>
               )}
               {hasWholesale && (
-                <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                <span className="flex items-center gap-0.5 text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                   <Boxes className="w-2.5 h-2.5 text-emerald-500" />
                   Grosir
                 </span>
               )}
               {product.isPopular && (
-                <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                <span className="flex items-center gap-0.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                   <Flame className="w-2.5 h-2.5 fill-current text-amber-500" />
                   Hot
                 </span>
               )}
               {isLowStock && (
-                <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                <span className="flex items-center gap-0.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                   <AlertTriangle className="w-2.5 h-2.5 text-rose-600" />
                   Sisa {product.stock}
                 </span>
               )}
               {isOutOfStock && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400">
                   Habis
                 </span>
               )}
@@ -101,38 +101,25 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </div>
 
           {/* Product Name */}
-          <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 line-clamp-2 leading-snug">
+          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 line-clamp-2 leading-snug">
             {product.name}
           </h4>
 
-          {/* SKU, Stok & Exp */}
-          <div className="mt-2 space-y-1 text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-            <div className="flex items-center justify-between">
-              <span>SKU: {product.sku}</span>
-              <span className="font-sans font-medium text-slate-600 dark:text-slate-300">
-                Stok: {product.stock}
-              </span>
-            </div>
-            {product.expiryDate && (
-              <div className="flex items-center justify-end text-[10px] text-slate-500">
-                <span>Exp: {product.expiryDate}</span>
-              </div>
-            )}
-          </div>
+          {/* Stok (SKU & tanggal kedaluwarsa ada di halaman Katalog & Stok; kartu fokus ke nama & harga) */}
+          <div className="mt-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">Stok: {product.stock}</div>
         </div>
 
         {/* Card Footer: Price & Add Button */}
         <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between relative">
           <div>
-            <span className="text-[10px] text-slate-500 block font-medium">Harga Eceran</span>
-            <span className="font-black text-sm text-emerald-700 dark:text-emerald-400 font-mono">
+            <span className="font-black text-base text-emerald-700 dark:text-emerald-400 font-mono">
               {formatCurrency(product.price, currency)}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
             {hasOptions && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium flex items-center gap-1">
+              <span className="px-1.5 py-0.5 rounded-md text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium flex items-center gap-1">
                 <SlidersHorizontal className="w-2.5 h-2.5 text-emerald-500" />
                 Varian
               </span>
@@ -146,7 +133,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                     e.stopPropagation();
                     setShowWholesaleDropdown(!showWholesaleDropdown);
                   }}
-                  className="px-2 py-1 text-[10px] font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1 cursor-pointer transition-colors"
+                  className="px-2 py-1 text-[11px] font-bold rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1 cursor-pointer transition-colors"
                   title="Pilih Kemasan Grosir"
                 >
                   <Boxes className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
@@ -158,7 +145,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                     onClick={(e) => e.stopPropagation()}
                     className="absolute right-0 bottom-full mb-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-2 z-30 space-y-1.5 animate-in fade-in zoom-in-95 duration-100"
                   >
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1">
+                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1">
                       Pilih Satuan Grosir:
                     </div>
                     {product.wholesaleUnits?.map((wu) => (
@@ -166,13 +153,13 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                         key={wu.id}
                         type="button"
                         onClick={(e) => handleAddWholesale(e, wu)}
-                        className="w-full text-left p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-xs flex items-center justify-between border border-slate-100 dark:border-slate-800 cursor-pointer transition-colors"
+                        className="w-full text-left p-1.5 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-xs flex items-center justify-between border border-slate-100 dark:border-slate-800 cursor-pointer transition-colors"
                       >
                         <div>
                           <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">
                             {wu.name}
                           </div>
-                          <div className="text-[10px] text-slate-500">
+                          <div className="text-[11px] text-slate-500">
                             Isi {wu.multiplier} {product.unit}
                           </div>
                         </div>
