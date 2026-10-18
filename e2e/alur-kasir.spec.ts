@@ -16,6 +16,7 @@ test('instalasi baru kosong: tanpa produk contoh, tanpa akun bawaan', async ({ p
 
 test('pendaftaran Owner menolak PIN yang mudah ditebak dan konfirmasi yang berbeda', async ({ page }) => {
   await page.goto('/');
+  await page.getByTestId('setup-store').fill('Toko Uji');
   await page.getByTestId('setup-owner').fill('Pak Uji');
   await page.getByTestId('setup-pin').fill('1234');
   await page.getByTestId('setup-pin-confirm').fill('1234');
@@ -31,6 +32,9 @@ test('pendaftaran Owner menolak PIN yang mudah ditebak dan konfirmasi yang berbe
 
 test('alur lengkap: daftar Owner -> tambah produk -> jual tunai -> tutup shift sesuai', async ({ page }) => {
   await registerOwner(page, { store: 'Toko Uji E2E' });
+  // Instalasi baru netral: header memakai nama toko yang didaftarkan, bukan identitas bawaan
+  await expect(page.getByRole('img', { name: 'Toko Uji E2E' }).first()).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('ULIL Mart');
   await addProduct(page, { name: 'Gula Pasir 1kg', sku: 'GULA-1KG', barcode: '2000000000015', cost: 13000, price: 15000, stock: 10 });
 
   // Jual 1 pcs tunai

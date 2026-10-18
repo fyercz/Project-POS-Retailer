@@ -4,7 +4,7 @@ import { expect, type Page } from '@playwright/test';
 export async function registerOwner(page: Page, opts: { owner?: string; pin?: string; store?: string } = {}) {
   await page.goto('/');
   await expect(page.getByTestId('first-run-setup')).toBeVisible();
-  if (opts.store) await page.getByTestId('setup-store').fill(opts.store);
+  await page.getByTestId('setup-store').fill(opts.store ?? 'Toko Uji');
   await page.getByTestId('setup-owner').fill(opts.owner ?? 'Pak Uji');
   await page.getByTestId('setup-pin').fill(opts.pin ?? '2580');
   await page.getByTestId('setup-pin-confirm').fill(opts.pin ?? '2580');

@@ -161,7 +161,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </div>
               <h2 className="text-sm font-black text-white">
-                {settings.storeName || 'Ulilmart Magetan'}
+                {settings.storeName || 'Toko'}
               </h2>
             </div>
           </div>

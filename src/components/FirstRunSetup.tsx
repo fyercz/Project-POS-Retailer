@@ -6,8 +6,10 @@ import { usePOS } from '../context/POSContext';
  * Owner mengisi namanya sendiri dan PIN pilihannya, tanpa akun contoh atau PIN bawaan.
  */
 export const FirstRunSetup: React.FC = () => {
-  const { completeFirstRunSetup, settings } = usePOS();
+  const { completeFirstRunSetup } = usePOS();
   const [storeName, setStoreName] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [pin, setPin] = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
@@ -19,7 +21,7 @@ export const FirstRunSetup: React.FC = () => {
       setError('Konfirmasi PIN tidak sama.');
       return;
     }
-    const res = completeFirstRunSetup({ ownerName, pin, storeName });
+    const res = completeFirstRunSetup({ ownerName, pin, storeName, address, phone });
     if (!res.success) setError(res.message);
   };
 
@@ -36,27 +38,39 @@ export const FirstRunSetup: React.FC = () => {
         <div>
           <h1 className="text-lg font-bold text-slate-900 dark:text-white">Selamat datang di aplikasi kasir</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Buat akun Pemilik Toko (Owner) terlebih dahulu. Karyawan lain bisa ditambahkan setelah ini lewat menu Kelola
-            Karyawan.
+            Isi data toko dan buat akun Pemilik Toko (Owner). Data toko tampil di struk dan bisa diubah kapan saja di
+            Pengaturan. Karyawan lain ditambahkan setelah ini lewat menu Kelola Karyawan.
           </p>
         </div>
 
         <label className="block space-y-1">
-          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Nama Toko (opsional)</span>
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Nama Toko</span>
           <input
             className={inputClass}
+            required
+            autoFocus
             data-testid="setup-store" value={storeName}
             onChange={(e) => setStoreName(e.target.value)}
-            placeholder={settings.storeName || 'Nama toko'}
+            placeholder="Mis. Toko Berkah Jaya"
           />
         </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block space-y-1">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Alamat (opsional)</span>
+            <input className={inputClass} data-testid="setup-address" value={address} onChange={(e) => setAddress(e.target.value)} />
+          </label>
+          <label className="block space-y-1">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Telepon (opsional)</span>
+            <input className={inputClass} data-testid="setup-phone" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </label>
+        </div>
 
         <label className="block space-y-1">
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Nama Owner</span>
           <input
             className={inputClass}
             required
-            autoFocus
             data-testid="setup-owner" value={ownerName}
             onChange={(e) => setOwnerName(e.target.value)}
           />

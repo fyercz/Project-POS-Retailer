@@ -22,6 +22,7 @@ import { printViaIframe } from '../utils/printHelper';
 import { UlilMartLogo } from './UlilMartLogo';
 import { usePOS } from '../context/POSContext';
 import { purchaseOutstandingOf, purchasePaidOf, purchasePaymentKind, purchaseTotalOf } from '../utils/accountingLedger';
+import { StoreLogo } from './StoreLogo';
 
 interface SupplierPurchaseDetailModalProps {
   isOpen: boolean;
@@ -174,13 +175,13 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <UlilMartLogo variant="mark" width={32} height={32} />
+                  <StoreLogo variant="mark" width={32} height={32} />
                   <div>
                     <h4 className="font-black text-base text-slate-900 dark:text-white leading-tight">
-                      {settings.storeName || 'ULIL Mart'}
+                      {settings.storeName || 'Toko'}
                     </h4>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {settings.branchName || 'Cabang Parang, Magetan'}
+                      {settings.branchName}
                     </p>
                   </div>
                 </div>
@@ -351,7 +352,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             {/* Signature Area */}
             <div className="pt-6 grid grid-cols-2 gap-8 text-center text-xs text-slate-600 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800">
               <div>
-                <p className="mb-14">Petugas Penerima (ULIL Mart):</p>
+                <p className="mb-14">Petugas Penerima{settings.storeName ? ` (${settings.storeName})` : ''}:</p>
                 <div className="border-b border-slate-400 dark:border-slate-600 w-44 mx-auto"></div>
                 <p className="mt-1 font-semibold text-slate-800 dark:text-slate-200">
                   ( {purchase.receivedBy || 'Staff Gudang / Kasir'} )

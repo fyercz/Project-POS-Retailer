@@ -21,3 +21,12 @@ test('database server pada instalasi baru tidak berisi data contoh', async () =>
     fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   } catch {}
 });
+
+test('pengaturan bawaan tidak memuat identitas toko mana pun & modal awal 0', async () => {
+  const { DEFAULT_STORE_SETTINGS: d } = await import('../src/data/mockData.ts');
+  for (const key of ['storeName', 'branchName', 'address', 'phone', 'googleMapsUrl', 'storeTagline', 'operatingHours'] as const) {
+    assert.equal((d as any)[key], '', `${key} harus kosong`);
+  }
+  assert.equal(d.initialCapital, 0);
+  assert.doesNotMatch(JSON.stringify(d), /ULIL|Magetan|Parang|0851/i);
+});
