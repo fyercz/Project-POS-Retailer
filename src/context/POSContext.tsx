@@ -1438,6 +1438,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  // Selalu memakai addToCart terbaru tanpa membuat callback scan dihitung ulang tiap render
+  const addToCartRef = useRef(addToCart);
+  addToCartRef.current = addToCart;
+
   const scanBarcodeAndAddToCart = useCallback(
     (
       scannedBarcode: string
@@ -1488,7 +1492,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       if (matchedProduct) {
-        addToCart(matchedProduct, undefined, undefined, matchedUnit);
+        addToCartRef.current(matchedProduct, undefined, undefined, matchedUnit);
         const unitLabel = matchedUnit ? ` (${matchedUnit.name})` : '';
         return {
           success: true,
@@ -1503,7 +1507,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
     },
-    [products, addToCart]
+    [products, ]
   );
 
   // Global Hardware USB / Bluetooth Barcode Scanner listener with subtle audio feedback
@@ -3223,6 +3227,80 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [generateBackupPayload, products, restorePoints.length]);
 
   // --- Domain Split 1: Catalog Value ---
+  // -------------------------------------------------------------
+  // Fungsi untuk nilai konteks: pembungkus STABIL yang selalu memanggil versi TERBARU.
+  // Dulu fungsi-fungsi ini tidak tercantum di dependensi useMemo, sehingga komponen bisa
+  // memanggil versi lama yang masih melihat data render sebelumnya (mis. jabatan atau shift
+  // lama); sebagian memo lain malah dihitung ulang tiap render. Pola ini menutup keduanya.
+  // -------------------------------------------------------------
+  const latestFns = useRef<Record<string, (...args: any[]) => any>>({});
+  latestFns.current = {
+    handleSetPointsToRedeem,
+    addCustomer,
+    addEmployee,
+    addExpense,
+    addProduct,
+    addProductsBatch,
+    addSupplier,
+    addToCart,
+    addVoucher,
+    adjustCustomerPoints,
+    applyCustomerDiscount,
+    applyMinStockRuleToAllProducts,
+    applyVoucher,
+    bulkAdjustProducts,
+    clearAllProducts,
+    clearAllTransactions,
+    clearCart,
+    clearImportedProducts,
+    closeCurrentShift,
+    completeFirstRunSetup,
+    deleteEmployee,
+    deleteExpense,
+    deleteHeldOrder,
+    deleteProduct,
+    deleteProductsBatch,
+    deleteSupplier,
+    deleteVoucher,
+    holdCurrentOrder,
+    lockScreen,
+    loginWithPin,
+    logoutEmployee,
+    openGeminiCopilot,
+    processPayment,
+    processPurchaseReturn,
+    processSalesReturn,
+    processSupplierPurchase,
+    quickSwitchEmployee,
+    recallHeldOrder,
+    recordProductPriceChange,
+    recordSupplierPayment,
+    removeCustomerDiscount,
+    removeFromCart,
+    removeVoucher,
+    setCartItemQuantity,
+    setUsePoints,
+    startNewShift,
+    unlockScreen,
+    updateCartItemDiscount,
+    updateCartItemNote,
+    updateCartItemQuantity,
+    updateCartItemUnit,
+    updateCustomer,
+    updateEmployee,
+    updateProduct,
+    updateProductStock,
+    updateSettings,
+    updateShiftStartingCash,
+    updateSupplier,
+    voidTransaction,
+  };
+  const stableFns = useMemo(() => {
+    const wrapped: Record<string, any> = {};
+    for (const key of ['handleSetPointsToRedeem', 'addCustomer', 'addEmployee', 'addExpense', 'addProduct', 'addProductsBatch', 'addSupplier', 'addToCart', 'addVoucher', 'adjustCustomerPoints', 'applyCustomerDiscount', 'applyMinStockRuleToAllProducts', 'applyVoucher', 'bulkAdjustProducts', 'clearAllProducts', 'clearAllTransactions', 'clearCart', 'clearImportedProducts', 'closeCurrentShift', 'completeFirstRunSetup', 'deleteEmployee', 'deleteExpense', 'deleteHeldOrder', 'deleteProduct', 'deleteProductsBatch', 'deleteSupplier', 'deleteVoucher', 'holdCurrentOrder', 'lockScreen', 'loginWithPin', 'logoutEmployee', 'openGeminiCopilot', 'processPayment', 'processPurchaseReturn', 'processSalesReturn', 'processSupplierPurchase', 'quickSwitchEmployee', 'recallHeldOrder', 'recordProductPriceChange', 'recordSupplierPayment', 'removeCustomerDiscount', 'removeFromCart', 'removeVoucher', 'setCartItemQuantity', 'setUsePoints', 'startNewShift', 'unlockScreen', 'updateCartItemDiscount', 'updateCartItemNote', 'updateCartItemQuantity', 'updateCartItemUnit', 'updateCustomer', 'updateEmployee', 'updateProduct', 'updateProductStock', 'updateSettings', 'updateShiftStartingCash', 'updateSupplier', 'voidTransaction']) wrapped[key] = (...args: any[]) => latestFns.current[key](...args);
+    return wrapped;
+  }, []);
+
   const catalogValue = useMemo<POSCatalogContextType>(
     () => ({
       products,
@@ -3233,56 +3311,40 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSearchQuery,
       filterLowStock,
       setFilterLowStock,
-      updateProductStock,
-      bulkAdjustProducts,
-      addProduct,
-      addProductsBatch,
-      deleteProductsBatch,
-      clearImportedProducts,
-      clearAllProducts,
-      updateProduct,
-      recordProductPriceChange,
-      deleteProduct,
+      updateProductStock: stableFns.updateProductStock,
+      bulkAdjustProducts: stableFns.bulkAdjustProducts,
+      addProduct: stableFns.addProduct,
+      addProductsBatch: stableFns.addProductsBatch,
+      deleteProductsBatch: stableFns.deleteProductsBatch,
+      clearImportedProducts: stableFns.clearImportedProducts,
+      clearAllProducts: stableFns.clearAllProducts,
+      updateProduct: stableFns.updateProduct,
+      recordProductPriceChange: stableFns.recordProductPriceChange,
+      deleteProduct: stableFns.deleteProduct,
     }),
     [
       products,
       selectedCategory,
       searchQuery,
       filterLowStock,
-      updateProductStock,
-      bulkAdjustProducts,
-      addProduct,
-      addProductsBatch,
-      deleteProductsBatch,
-      clearImportedProducts,
-      clearAllProducts,
-      updateProduct,
-      recordProductPriceChange,
-      deleteProduct,
+      stableFns,
     ]
   );
 
   // --- Domain Split 2: Cart Actions (Stable References) ---
   const cartActionsValue = useMemo<POSCartActionsContextType>(
     () => ({
-      addToCart,
-      updateCartItemQuantity,
-      setCartItemQuantity,
-      updateCartItemUnit,
-      updateCartItemDiscount,
-      removeFromCart,
-      clearCart,
-      updateCartItemNote,
+      addToCart: stableFns.addToCart,
+      updateCartItemQuantity: stableFns.updateCartItemQuantity,
+      setCartItemQuantity: stableFns.setCartItemQuantity,
+      updateCartItemUnit: stableFns.updateCartItemUnit,
+      updateCartItemDiscount: stableFns.updateCartItemDiscount,
+      removeFromCart: stableFns.removeFromCart,
+      clearCart: stableFns.clearCart,
+      updateCartItemNote: stableFns.updateCartItemNote,
     }),
     [
-      addToCart,
-      updateCartItemQuantity,
-      setCartItemQuantity,
-      updateCartItemUnit,
-      updateCartItemDiscount,
-      removeFromCart,
-      clearCart,
-      updateCartItemNote,
+      stableFns,
     ]
   );
 
@@ -3301,17 +3363,17 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       selectedCustomer,
       setSelectedCustomer,
       appliedVoucher,
-      applyVoucher,
-      removeVoucher,
+      applyVoucher: stableFns.applyVoucher,
+      removeVoucher: stableFns.removeVoucher,
       customerDiscount,
-      applyCustomerDiscount,
-      removeCustomerDiscount,
+      applyCustomerDiscount: stableFns.applyCustomerDiscount,
+      removeCustomerDiscount: stableFns.removeCustomerDiscount,
       customerDiscountAmount,
       customerDiscountSuggestions,
       usePoints,
-      setUsePoints,
+      setUsePoints: stableFns.setUsePoints,
       pointsToRedeem,
-      setPointsToRedeem: handleSetPointsToRedeem,
+      setPointsToRedeem: stableFns.handleSetPointsToRedeem,
       maxRedeemablePoints,
       pointRedemptionRate,
       subtotal,
@@ -3325,9 +3387,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       pointsEligibleSpend,
       minProfitPercentForPoints,
       heldOrders,
-      holdCurrentOrder,
-      recallHeldOrder,
-      deleteHeldOrder,
+      holdCurrentOrder: stableFns.holdCurrentOrder,
+      recallHeldOrder: stableFns.recallHeldOrder,
+      deleteHeldOrder: stableFns.deleteHeldOrder,
     }),
     [
       cartActionsValue,
@@ -3338,8 +3400,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       selectedCustomer,
       appliedVoucher,
       customerDiscount,
-      applyCustomerDiscount,
-      removeCustomerDiscount,
       customerDiscountAmount,
       customerDiscountSuggestions,
       usePoints,
@@ -3355,6 +3415,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       pointsEligibleSpend,
       minProfitPercentForPoints,
       heldOrders,
+      stableFns,
     ]
   );
 
@@ -3363,31 +3424,31 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     () => ({
       isPaymentModalOpen,
       setIsPaymentModalOpen,
-      processPayment,
+      processPayment: stableFns.processPayment,
       transactions,
       activeReceipt,
       setActiveReceipt,
       isReceiptFromNewPayment,
       setIsReceiptFromNewPayment,
-      voidTransaction,
+      voidTransaction: stableFns.voidTransaction,
       salesReturns,
-      processSalesReturn,
+      processSalesReturn: stableFns.processSalesReturn,
       purchaseReturns,
-      processPurchaseReturn,
+      processPurchaseReturn: stableFns.processPurchaseReturn,
       supplierPurchases,
-      processSupplierPurchase,
-      recordSupplierPayment,
+      processSupplierPurchase: stableFns.processSupplierPurchase,
+      recordSupplierPayment: stableFns.recordSupplierPayment,
       suppliers,
-      addSupplier,
-      updateSupplier,
-      deleteSupplier,
+      addSupplier: stableFns.addSupplier,
+      updateSupplier: stableFns.updateSupplier,
+      deleteSupplier: stableFns.deleteSupplier,
       customers,
-      addCustomer,
-      adjustCustomerPoints,
-      updateCustomer,
+      addCustomer: stableFns.addCustomer,
+      adjustCustomerPoints: stableFns.adjustCustomerPoints,
+      updateCustomer: stableFns.updateCustomer,
       vouchers,
-      addVoucher,
-      clearAllTransactions,
+      addVoucher: stableFns.addVoucher,
+      clearAllTransactions: stableFns.clearAllTransactions,
     }),
     [
       isPaymentModalOpen,
@@ -3401,6 +3462,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       suppliers,
       customers,
       vouchers,
+      stableFns,
     ]
   );
 
@@ -3416,18 +3478,18 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isShiftModalOpen,
       setIsShiftModalOpen,
       currentShift,
-      loginWithPin,
-      quickSwitchEmployee,
-      lockScreen,
-      unlockScreen,
-      logoutEmployee,
-      addEmployee,
-      updateEmployee,
-      deleteEmployee,
-      startNewShift,
-      updateShiftStartingCash,
-      deleteVoucher,
-      closeCurrentShift,
+      loginWithPin: stableFns.loginWithPin,
+      quickSwitchEmployee: stableFns.quickSwitchEmployee,
+      lockScreen: stableFns.lockScreen,
+      unlockScreen: stableFns.unlockScreen,
+      logoutEmployee: stableFns.logoutEmployee,
+      addEmployee: stableFns.addEmployee,
+      updateEmployee: stableFns.updateEmployee,
+      deleteEmployee: stableFns.deleteEmployee,
+      startNewShift: stableFns.startNewShift,
+      updateShiftStartingCash: stableFns.updateShiftStartingCash,
+      deleteVoucher: stableFns.deleteVoucher,
+      closeCurrentShift: stableFns.closeCurrentShift,
     }),
     [
       employees,
@@ -3436,6 +3498,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isEmployeeManagementOpen,
       isShiftModalOpen,
       currentShift,
+      stableFns,
     ]
   );
 
@@ -3488,13 +3551,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       selectedMarketingCustomer,
       setSelectedMarketingCustomer,
       settings,
-      updateSettings,
-      applyMinStockRuleToAllProducts,
+      updateSettings: stableFns.updateSettings,
+      applyMinStockRuleToAllProducts: stableFns.applyMinStockRuleToAllProducts,
       isGeminiCopilotOpen,
       setIsGeminiCopilotOpen,
       activeCopilotTab,
       setActiveCopilotTab,
-      openGeminiCopilot,
+      openGeminiCopilot: stableFns.openGeminiCopilot,
       triggerRestockPlanAnalysis,
       restockPlanTriggerCounter,
       pendingReceivingFromPO,
@@ -3545,13 +3608,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsLANModalOpen,
       applyMasterLANData,
       clearTrialTransactions,
-      completeFirstRunSetup,
+      completeFirstRunSetup: stableFns.completeFirstRunSetup,
       legacyDemoSummary,
       removeLegacyDemoData,
       // Accounting & Financial Statements
       expenses,
-      addExpense,
-      deleteExpense,
+      addExpense: stableFns.addExpense,
+      deleteExpense: stableFns.deleteExpense,
       journalEntries,
       balanceSheet,
       incomeStatement,
@@ -3585,7 +3648,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isLANModalOpen,
       applyMasterLANData,
       clearTrialTransactions,
-      completeFirstRunSetup,
       legacyDemoSummary,
       removeLegacyDemoData,
       expenses,
@@ -3593,6 +3655,16 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       balanceSheet,
       incomeStatement,
       chartOfAccounts,
+      stableFns,
+      createRestorePoint,
+      deleteRestorePoint,
+      downloadBackupFile,
+      generateBackupPayload,
+      pendingReceivingFromPO,
+      restockPlanTriggerCounter,
+      restoreFromPayload,
+      restoreFromPoint,
+      triggerRestockPlanAnalysis,
     ]
   );
 
