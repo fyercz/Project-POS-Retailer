@@ -27,6 +27,7 @@ import { printViaIframe, openPrintWindow, exportToCSV } from '../utils/printHelp
 import { Transaction, Product, SupplierPurchase, PurchaseReturn, SalesReturn } from '../types';
 import { escapeHtml } from '../utils/escapeHtml';
 import { lineCogs, unitMultiplierOf } from '../utils/cogs';
+import { isUlilMartStore } from './StoreLogo';
 
 export type ReportType =
   | 'summary'
@@ -211,7 +212,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
         <div style="font-family: monospace; font-size: 11px; line-height: 1.3; color: #000;">
           <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
             <div style="margin-bottom: 4px;">
-              <img src="/ulilmart-logo.svg" style="height: 28px; max-width: 160px; filter: grayscale(100%) contrast(200%);" alt="ULIL Mart" />
+              ${isUlilMartStore(settings.storeName) ? '<img src="/ulilmart-logo.svg" style="height: 28px; max-width: 160px; filter: grayscale(100%) contrast(200%);" alt="' + escapeHtml(settings.storeName) + '" />' : '<div style="font-weight: 800; font-size: 14px;">' + escapeHtml(settings.storeName || 'Toko') + '</div>'}
             </div>
             <div style="font-size: 13px; font-weight: bold; text-transform: uppercase;">${escapeHtml(settings.storeName)}</div>
             <div style="font-size: 10px; font-weight: 600;">${escapeHtml(settings.storeTagline || 'Lengkap & Hemat')}</div>
@@ -335,7 +336,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
         <!-- Official Header & Store Logo -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px;">
           <div style="display: flex; align-items: center; gap: 16px;">
-            <img src="/ulilmart-logo.svg" style="height: 48px; width: auto;" alt="ULIL Mart" />
+            ${isUlilMartStore(settings.storeName) ? '<img src="/ulilmart-logo.svg" style="height: 48px; width: auto;" alt="' + escapeHtml(settings.storeName) + '" />' : '<div style="font-weight: 800; font-size: 20px;">' + escapeHtml(settings.storeName || 'Toko') + '</div>'}
             <div>
               <div style="font-size: 13px; font-weight: 700; color: #0284c7; letter-spacing: 0.5px;">${escapeHtml(settings.storeTagline || 'Lengkap & Hemat')}</div>
               <div style="font-size: 12px; color: #475569; margin-top: 2px;">

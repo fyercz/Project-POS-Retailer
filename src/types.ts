@@ -40,7 +40,7 @@ export interface PriceHistoryRecord {
 }
 
 export interface CompetitorPrice {
-  competitorName: string; // e.g. 'Indomaret', 'Alfamart', 'Superindo', 'Toko Grosir Magetan', 'Pasar Tradisional'
+  competitorName: string; // e.g. 'Indomaret', 'Alfamart', 'Superindo', 'Toko Grosir Lokal', 'Pasar Tradisional'
   price: number;
   lastUpdated?: string;
   notes?: string;
@@ -386,7 +386,7 @@ export interface StoreSettings {
   serviceChargePercent: number; // e.g. 0% for retail
   currency: CurrencyType;
   enableThermal58mm: boolean;
-  showLogoOnReceipt?: boolean; // Tampilkan logo ULIL Mart di header struk kasir
+  showLogoOnReceipt?: boolean; // Tampilkan logo / nama toko di kop struk kasir
   autoPrintReceipt?: boolean; // Otomatis picu dialog cetak struk thermal kasir segera setelah pembayaran sukses
   outOfStockDisplay?: 'bottom' | 'hide' | 'normal'; // 'bottom': Taruh barang stok kosong di paling bawah, 'hide': Sembunyikan barang stok kosong, 'normal': Urutan normal
   googleMapsUrl?: string; // Tautan Google Maps lokasi toko fisik

@@ -51,6 +51,7 @@ import { AuthorityModal } from './AuthorityModal';
 import { UlilMartLogo } from './UlilMartLogo';
 import { isViewAllowed } from '../utils/permissions';
 import { isDesktopApp } from '../utils/desktopHelper';
+import { StoreLogo } from './StoreLogo';
 
 export const Header: React.FC = () => {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -270,10 +271,10 @@ export const Header: React.FC = () => {
           <div className="flex items-center space-x-2 md:space-x-2.5 shrink-0">
             {/* Logo on desktop / tablet: full brand logo; on mobile: compact mark */}
             <div className="hidden sm:flex items-center shrink-0 py-1">
-              <UlilMartLogo variant="full" height={38} className="shrink-0" />
+              <StoreLogo variant="full" height={38} className="shrink-0" />
             </div>
             <div className="sm:hidden flex items-center shrink-0">
-              <UlilMartLogo variant="mark" width={36} height={36} className="shrink-0 shadow-sm" />
+              <StoreLogo variant="mark" width={36} height={36} className="shrink-0 shadow-sm" />
             </div>
 
             <div className="hidden 2xl:block pl-2.5 border-l border-slate-200 dark:border-slate-800">

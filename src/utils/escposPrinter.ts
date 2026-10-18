@@ -196,7 +196,7 @@ export const buildTransactionReceiptEscPos = (
   builder.align('center');
   builder.bold(true);
   builder.size('large');
-  builder.line(settings.storeName || 'ULIL MART');
+  builder.line(settings.storeName || 'TOKO');
   builder.size('normal');
   builder.bold(false);
   if (settings.storeTagline) {

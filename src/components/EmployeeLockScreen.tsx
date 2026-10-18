@@ -18,6 +18,7 @@ import {
 import { usePOS } from '../context/POSContext';
 import { Employee } from '../types';
 import { UlilMartLogo } from './UlilMartLogo';
+import { StoreLogo } from './StoreLogo';
 
 export const EmployeeLockScreen: React.FC = () => {
   const {
@@ -172,7 +173,7 @@ export const EmployeeLockScreen: React.FC = () => {
           <div>
             {/* Store Brand */}
             <div className="mb-6 p-5 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 shadow-sm flex flex-col items-center justify-center text-center">
-              <UlilMartLogo variant="full" height={52} className="mb-2 max-w-[220px] drop-shadow-xs" />
+              <StoreLogo variant="full" height={52} className="mb-2 max-w-[220px] drop-shadow-xs" />
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-600 dark:text-slate-300 font-semibold">{settings.branchName}</span>
                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>

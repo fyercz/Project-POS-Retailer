@@ -34,6 +34,7 @@ import {
   ThermalPaperWidth,
 } from '../utils/escposPrinter';
 import { errorMessage } from '../utils/errors';
+import { StoreLogo } from './StoreLogo';
 
 interface ReceiptModalProps {
   transaction: Transaction | null;
@@ -363,7 +364,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               {settings.showLogoOnReceipt !== false ? (
                 <>
                   <div className="flex justify-center mb-1">
-                    <UlilMartLogo
+                    <StoreLogo
                       variant="receipt"
                       width={paperSize === '58mm' ? 175 : 210}
                       className="mx-auto"

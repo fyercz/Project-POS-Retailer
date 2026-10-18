@@ -347,7 +347,7 @@ export interface POSUIContextType {
   /** Hapus data contoh lama (hanya yang ID/kodenya cocok dengan data demo). Owner; titik pulih dibuat dulu. */
   removeLegacyDemoData: () => { success: boolean; message: string };
   /** Pendaftaran pertama: buat akun Owner (nama + PIN sendiri) dan nama toko. */
-  completeFirstRunSetup: (data: { ownerName: string; pin: string; storeName?: string }) => { success: boolean; message: string };
+  completeFirstRunSetup: (data: { ownerName: string; pin: string; storeName: string; address?: string; phone?: string }) => { success: boolean; message: string };
   // Accounting & Financial Statements (Double-Entry & Balance Sheet)
   expenses: OperationalExpense[];
   addExpense: (expense: Omit<OperationalExpense, 'id' | 'date'>) => OperationalExpense;
@@ -1993,8 +1993,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
    * Pendaftaran pertama (instalasi baru tanpa karyawan): buat akun Owner dengan PIN pilihan sendiri,
    * langsung login, mulai shift pertama, dan simpan nama toko bila diisi.
    */
-  const completeFirstRunSetup = (data: { ownerName: string; pin: string; storeName?: string }): { success: boolean; message: string } => {
+  const completeFirstRunSetup = (data: { ownerName: string; pin: string; storeName: string; address?: string; phone?: string }): { success: boolean; message: string } => {
     if (employees.length > 0) return { success: false, message: 'Akun Owner sudah ada. Silakan login.' };
+    if (!(data.storeName || '').trim()) return { success: false, message: 'Isi nama toko.' };
     const ownerName = (data.ownerName || '').trim();
     const pin = (data.pin || '').trim();
     if (!ownerName) return { success: false, message: 'Isi nama Owner.' };
@@ -2024,9 +2025,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setEmployees([owner]);
     setActiveEmployee(owner);
     setIsLocked(false);
-    if (data.storeName && data.storeName.trim()) {
-      setSettings((prev) => ({ ...prev, storeName: data.storeName!.trim() }));
-    }
+    setSettings((prev) => ({
+      ...prev,
+      storeName: data.storeName.trim(),
+      ...(data.address?.trim() ? { address: data.address.trim() } : {}),
+      ...(data.phone?.trim() ? { phone: data.phone.trim() } : {}),
+    }));
     setCurrentShift(newShift(owner));
     return { success: true, message: `Selamat datang, ${owner.name}!` };
   };

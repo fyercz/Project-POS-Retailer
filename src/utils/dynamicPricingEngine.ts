@@ -60,7 +60,7 @@ export function getDefaultCompetitorBenchmarks(product: Product): CompetitorPric
   const alfaVariance = -0.03 + (((seed >> 2) % 9) / 100);
   const alfamartPrice = roundToIndonesianRetailPrice(base * (1 + alfaVariance));
 
-  // Toko Grosir / Luwes Magetan: -6% to -1%
+  // Toko grosir lokal: -6% to -1%
   const grosirVariance = -0.07 + (((seed >> 4) % 6) / 100);
   const grosirPrice = roundToIndonesianRetailPrice(base * (1 + grosirVariance));
 
@@ -73,7 +73,7 @@ export function getDefaultCompetitorBenchmarks(product: Product): CompetitorPric
   return [
     { competitorName: 'Indomaret', price: indomaretPrice, lastUpdated: now, notes: 'Harga Toko Fisik' },
     { competitorName: 'Alfamart', price: alfamartPrice, lastUpdated: now, notes: 'Harga Aplikasi Alfagift' },
-    { competitorName: 'Toko Grosir Magetan', price: Math.max(product.costPrice, grosirPrice), lastUpdated: now, notes: 'Grosir & Eceran' },
+    { competitorName: 'Toko Grosir Lokal', price: Math.max(product.costPrice, grosirPrice), lastUpdated: now, notes: 'Grosir & Eceran' },
     { competitorName: 'Pasar Tradisional', price: Math.max(product.costPrice, pasarPrice), lastUpdated: now, notes: 'Survei Pasar Lokal' },
   ];
 }
@@ -309,7 +309,7 @@ export function generateDynamicPricingSuggestions(
       } else {
         actionType = 'maintain';
         strategyTag = 'Harga Optimal';
-        aiReasoning = `Harga toko sudah presisi selaras dengan rata-rata ritel modern di Magetan.`;
+        aiReasoning = `Harga toko sudah selaras dengan rata-rata ritel modern di sekitar toko.`;
       }
       confidenceScore = 90;
     } else {

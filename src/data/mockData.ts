@@ -534,19 +534,20 @@ export const INITIAL_VOUCHERS: Voucher[] = [
 ];
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
-  storeName: 'ULIL Mart',
-  storeTagline: 'Lengkap & Hemat',
-  branchName: 'Cabang Parang, Magetan',
-  address: 'Jaten, Krajan, Kec. Parang, Kabupaten Magetan, Jawa Timur 63371',
-  phone: '0851-7671-9187',
-  googleMapsUrl: 'https://maps.app.goo.gl/vdPYeh4Ncp7Hotzg8',
-  operatingHours: '06.00 – 21.00 WIB (Buka Setiap Hari)',
-  receiptFooterMessage: 'Terima kasih telah berbelanja di ULIL Mart! Lengkap & Hemat.',
+  // Identitas toko kosong: diisi Owner saat pendaftaran pertama / di Pengaturan
+  storeName: '',
+  storeTagline: '',
+  branchName: '',
+  address: '',
+  phone: '',
+  googleMapsUrl: '',
+  operatingHours: '',
+  receiptFooterMessage: 'Terima kasih telah berbelanja!',
   taxRatePercent: 0, // Tanpa Pajak Penjualan
   serviceChargePercent: 0, // Tanpa Surcharge
   currency: 'IDR',
   enableThermal58mm: true,
-  showLogoOnReceipt: true, // Cetak logo ULIL Mart di struk kasir
+  showLogoOnReceipt: true, // Cetak logo/nama toko di kop struk
   autoPrintReceipt: true, // Otomatis picu dialog cetak struk thermal kasir setelah pembayaran sukses
   outOfStockDisplay: 'bottom', // 'bottom': Stok kosong diletakkan di bawah | 'hide': Sembunyikan | 'normal': Urutan asli
   pointsRatio: 10000, // 1 poin tiap Rp 10.000 belanja berpoin
@@ -558,7 +559,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   showAiUpsellInCart: false,
   minStockRulePercentage: 50, // Aturan batas minimal stock adalah 50% dari jumlah order terakhir
   autoUpdateMinStockFromOrder: true, // Otomatis perbarui batas min stock saat penerimaan faktur masuk
-  initialCapital: 50000000, // Modal awal usaha toko Rp 50.000.000
+  initialCapital: 0, // Modal awal usaha: diisi Owner (dulu Rp 50 juta karangan ikut masuk neraca)
 };
 
 

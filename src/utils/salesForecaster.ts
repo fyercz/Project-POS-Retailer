@@ -16,7 +16,7 @@ export interface DemandCalendarEvent {
   datePattern: string; // 'MM-DD' (annual recurring), 'YYYY-MM-DD' (specific date), or 'payday'
   category: 'local_event' | 'religious_holiday' | 'national_holiday' | 'payday' | 'store_promo';
   demandMultiplier: number; // e.g. 1.45 = +45% surge
-  badge: string; // e.g. '🎉 Hari Jadi Magetan'
+  badge: string; // mis. '🎉 Hari Jadi Kota'
   description: string;
   stockAdvice: string;
   isDefault?: boolean;
@@ -71,19 +71,9 @@ export interface SalesProjectionSummary {
   enableEventMultiplier: boolean;
 }
 
-// Default Catalog of Special Retail Demand Events (Hari Jadi Magetan, Hari Raya, Libur Nasional, Payday)
+// Kalender acara bawaan (Hari Raya, Libur Nasional, Payday). Acara daerah ditambah toko sendiri
+// di widget Proyeksi Penjualan (dulu Hari Jadi Kabupaten Magetan tertanam sebagai bawaan).
 export const DEFAULT_DEMAND_EVENTS: DemandCalendarEvent[] = [
-  {
-    id: 'evt-magetan-anniversary',
-    name: 'Hari Jadi Kabupaten Magetan (HUT Magetan ke-351)',
-    datePattern: '10-12', // 12 Oktober setiap tahun
-    category: 'local_event',
-    demandMultiplier: 1.45, // +45%
-    badge: '🎉 Hari Jadi Magetan',
-    description: 'Peringatan Hari Jadi Kabupaten Magetan (12 Oktober). Pawai budaya, pameran daerah, dan keramaian masyarakat di pusat kota & alun-alun memicu lonjakan belanja ritel.',
-    stockAdvice: 'Tingkatkan stok minuman dingin botol/cup, air mineral, camilan ringan, rokok, dan siapkan uang kembalian pecahan Rp 2.000 - Rp 20.000 ekstra di laci kasir.',
-    isDefault: true,
-  },
   {
     id: 'evt-lebaran-h1',
     name: 'Hari Raya Idul Fitri (H-1 Lebaran)',
@@ -221,7 +211,7 @@ export function findDemandEventForDate(date: Date, events: DemandCalendarEvent[]
   const exactMatch = events.find((e) => e.datePattern === ymd);
   if (exactMatch) return exactMatch;
 
-  // 2. Check MM-DD annual recurring match (e.g., '10-12' for Hari Jadi Magetan)
+  // 2. Check MM-DD annual recurring match (mis. '10-12' untuk hari jadi kota)
   const annualMatch = events.find((e) => e.datePattern === mmdd);
   if (annualMatch) return annualMatch;
 
@@ -268,7 +258,7 @@ export function formatShortDateIndo(d: Date): string {
 
 /**
  * Computes projected sales for the next 7 days based on historical transactions,
- * factoring in Day-of-Week seasonality and special date demand events (Hari Raya, Hari Jadi Kota Magetan, Payday, etc.)
+ * factoring in Day-of-Week seasonality and special date demand events (Hari Raya, hari jadi kota, Payday, dll.)
  */
 export function computeSalesProjection(
   transactions: Transaction[],
@@ -455,7 +445,7 @@ export function computeSalesProjection(
     const shortLabel = formatShortDateIndo(futureDate);
     const dayName = INDO_DAY_NAMES[dow] || '';
 
-    // Match special demand calendar event (e.g. Hari Jadi Magetan, Hari Raya, Payday)
+    // Match special demand calendar event (mis. hari jadi kota, Hari Raya, Payday)
     const matchedEvent = enableEventMultiplier ? findDemandEventForDate(futureDate, effectiveEvents) : null;
     const eventMultiplier = matchedEvent ? matchedEvent.demandMultiplier : 1.0;
 
