@@ -895,9 +895,9 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                   <div className="w-7 h-7 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold text-xs flex items-center justify-center">
                     1
                   </div>
-                  <h5 className="text-xs font-bold text-slate-900 dark:text-white">Top 3 Google Search Citations</h5>
+                  <h5 className="text-xs font-bold text-slate-900 dark:text-white">Sumber Web & Tautan Pencarian</h5>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Menampilkan 3 sitasi web teratas dari indeks Google Search ritel Indonesia (KlikIndomaret, Alfagift, Tokopedia, produsen resmi) dan dapat dimasukkan langsung ke sistem.
+                    Sumber yang benar-benar dirujuk AI (bila ada), dilengkapi tautan "Cari di …" untuk memeriksa sendiri. Tautan pencarian bukan sumber data; periksa sebelum memakai informasinya.
                   </p>
                 </div>
 

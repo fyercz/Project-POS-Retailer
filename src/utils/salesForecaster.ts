@@ -1,5 +1,6 @@
 import { Transaction } from '../types';
 import { formatCurrency } from './formatters';
+import { movableDateFor, type MovableHoliday } from '../domain/religiousHolidays';
 
 export interface DailyHistoricalData {
   date: string; // YYYY-MM-DD
@@ -13,7 +14,9 @@ export interface DailyHistoricalData {
 export interface DemandCalendarEvent {
   id: string;
   name: string;
-  datePattern: string; // 'MM-DD' (annual recurring), 'YYYY-MM-DD' (specific date), or 'payday'
+  datePattern: string; // 'MM-DD' (tahunan tetap), 'YYYY-MM-DD' (tanggal tertentu), 'payday', atau 'movable'
+  /** Hari raya yang bergeser tiap tahun (tanggal dari src/domain/religiousHolidays.ts) */
+  movable?: { holiday: MovableHoliday; offsetDays: number };
   category: 'local_event' | 'religious_holiday' | 'national_holiday' | 'payday' | 'store_promo';
   demandMultiplier: number; // e.g. 1.45 = +45% surge
   badge: string; // mis. '🎉 Hari Jadi Kota'
@@ -77,7 +80,8 @@ export const DEFAULT_DEMAND_EVENTS: DemandCalendarEvent[] = [
   {
     id: 'evt-lebaran-h1',
     name: 'Hari Raya Idul Fitri (H-1 Lebaran)',
-    datePattern: '03-20',
+    datePattern: 'movable',
+    movable: { holiday: 'idul_fitri', offsetDays: -1 },
     category: 'religious_holiday',
     demandMultiplier: 1.90, // +90%
     badge: '🌙 H-1 Lebaran Idul Fitri',
@@ -88,7 +92,8 @@ export const DEFAULT_DEMAND_EVENTS: DemandCalendarEvent[] = [
   {
     id: 'evt-lebaran-h0',
     name: 'Hari Raya Idul Fitri (Hari H Lebaran)',
-    datePattern: '03-21',
+    datePattern: 'movable',
+    movable: { holiday: 'idul_fitri', offsetDays: 0 },
     category: 'religious_holiday',
     demandMultiplier: 1.75, // +75%
     badge: '🌙 Hari Raya Idul Fitri',
@@ -99,7 +104,8 @@ export const DEFAULT_DEMAND_EVENTS: DemandCalendarEvent[] = [
   {
     id: 'evt-idul-adha',
     name: 'Hari Raya Idul Adha (Hari Kurban)',
-    datePattern: '05-27',
+    datePattern: 'movable',
+    movable: { holiday: 'idul_adha', offsetDays: 0 },
     category: 'religious_holiday',
     demandMultiplier: 1.40, // +40%
     badge: '🐄 Hari Raya Idul Adha',
@@ -211,11 +217,26 @@ export function findDemandEventForDate(date: Date, events: DemandCalendarEvent[]
   const exactMatch = events.find((e) => e.datePattern === ymd);
   if (exactMatch) return exactMatch;
 
-  // 2. Check MM-DD annual recurring match (mis. '10-12' untuk hari jadi kota)
+  // 2. Hari raya yang bergeser tiap tahun (Idul Fitri, Idul Adha): tanggal per tahun dari tabel
+  for (const e of events) {
+    if (!e.movable) continue;
+    const hit = movableDateFor(e.movable.holiday, date.getFullYear(), e.movable.offsetDays);
+    if (hit && hit.date === ymd) {
+      return hit.official
+        ? e
+        : {
+            ...e,
+            badge: `${e.badge} (perkiraan)`,
+            description: `${e.description} Tanggal tahun ini masih perkiraan; pastikan dengan penetapan pemerintah (sidang isbat).`,
+          };
+    }
+  }
+
+  // 3. Check MM-DD annual recurring match (mis. '10-12' untuk hari jadi kota)
   const annualMatch = events.find((e) => e.datePattern === mmdd);
   if (annualMatch) return annualMatch;
 
-  // 3. Check payday pattern (typically 25th of month to 5th of next month)
+  // 4. Check payday pattern (typically 25th of month to 5th of next month)
   const paydayMatch = events.find((e) => e.datePattern === 'payday' && (dayOfMonth >= 25 || dayOfMonth <= 5));
   if (paydayMatch) return paydayMatch;
 

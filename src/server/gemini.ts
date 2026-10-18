@@ -254,35 +254,36 @@ export function extractTop3GoogleCitations(
       title: s.title || `Hasil Google Search: ${productName || keywordOrBarcode}`,
       uri: s.uri,
       domain,
-      snippet: `Halaman resmi indeks Google Search untuk katalog produk ritel Indonesia (${domain}).`,
+      snippet: `Sumber yang dirujuk AI lewat pencarian Google (${domain}).`,
       sourceType,
     });
 
     if (result.length >= 3) break;
   }
 
-  // 2. Guarantee Top 3 Google Search engine citations with authentic FMCG sources
+  // 2. Lengkapi dengan TAUTAN PENCARIAN (bukan sumber yang dirujuk AI) agar pengguna bisa memeriksa sendiri.
+  //    Dulu diberi judul 'Official Store' & klaim 'harga promo dan stok barang' seolah sitasi asli.
   const termEncoded = encodeURIComponent(productName || keywordOrBarcode || 'Produk FMCG Ritel Indonesia');
   const fallbackTemplates = [
     {
-      title: `KlikIndomaret Official Store - ${productName || keywordOrBarcode}`,
+      title: `Cari "${productName || keywordOrBarcode}" di KlikIndomaret`,
       uri: `https://www.klikindomaret.com/search/?key=${termEncoded}`,
       domain: 'klikindomaret.com',
-      snippet: 'Katalog resmi minimarket modern Indomaret untuk produk kebutuhan pokok & FMCG.',
-      sourceType: 'Official Distributor' as const,
+      snippet: 'Tautan pencarian (bukan sumber yang dirujuk AI). Buka untuk memeriksa sendiri.',
+      sourceType: 'Retail Marketplace' as const,
     },
     {
-      title: `Alfagift Supermarket Online - ${productName || keywordOrBarcode}`,
+      title: `Cari "${productName || keywordOrBarcode}" di Alfagift`,
       uri: `https://alfagift.id/search?q=${termEncoded}`,
       domain: 'alfagift.id',
-      snippet: 'Katalog belanja ritel resmi Alfamart dengan informasi harga promo dan stok barang.',
-      sourceType: 'Official Distributor' as const,
+      snippet: 'Tautan pencarian (bukan sumber yang dirujuk AI). Buka untuk memeriksa sendiri.',
+      sourceType: 'Retail Marketplace' as const,
     },
     {
-      title: `Tokopedia Official Store FMCG - ${productName || keywordOrBarcode}`,
+      title: `Cari "${productName || keywordOrBarcode}" di Tokopedia`,
       uri: `https://www.tokopedia.com/search?q=${termEncoded}`,
       domain: 'tokopedia.com',
-      snippet: 'Pencarian e-commerce resmi untuk referensi harga pasar dan spesifikasi produk.',
+      snippet: 'Tautan pencarian (bukan sumber yang dirujuk AI). Buka untuk memeriksa sendiri.',
       sourceType: 'Retail Marketplace' as const,
     },
   ];

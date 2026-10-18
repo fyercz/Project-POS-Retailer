@@ -1096,7 +1096,7 @@ export const ReportsView: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Rekomendasi penyesuaian harga jual retail otomatis berbasis riset kompetitor (Indomaret, Alfamart) dan perputaran stok (DSI).
+                  Rekomendasi harga jual berdasarkan perputaran stok (DSI), kedaluwarsa, dan harga pesaing (estimasi otomatis atau yang Anda masukkan).
                 </p>
               </div>
             </div>

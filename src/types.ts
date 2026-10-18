@@ -44,6 +44,8 @@ export interface CompetitorPrice {
   price: number;
   lastUpdated?: string;
   notes?: string;
+  /** true = dihitung otomatis dari harga modal (BUKAN harga asli pesaing); false/kosong = input manual */
+  isEstimate?: boolean;
 }
 
 export type TurnoverSpeed = 'fast' | 'moderate' | 'slow' | 'dead_stock';
