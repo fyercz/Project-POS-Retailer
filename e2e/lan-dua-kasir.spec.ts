@@ -36,8 +36,9 @@ test('dua kasir: stok server benar, katalog tersinkron, penjualan offline dikiri
 
   // Kasir B: daftar & tarik katalog dari server
   await registerOwner(b, { owner: 'Kasir B', pin: '3691' });
-  await b.locator('#btn-employee-menu').click();
-  await b.locator('#menu-item-lan-server').click();
+  // Di layar desktop, Server LAN ada di menu "Pusat Alat & Sistem"
+  await b.locator('#btn-tools-menu').click();
+  await b.getByRole('button', { name: /Server LAN Multi-Kasir/ }).click();
   await b.locator('#btn-pull-master-db').click();
   await b.locator('#btn-close-lan-modal').click();
   await b.locator('#nav-btn-pos').click();
