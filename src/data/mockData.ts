@@ -710,7 +710,7 @@ export const INITIAL_SUPPLIERS: Supplier[] = [
     paymentTerms: 'Tunai / Cash',
     leadTimeDays: 2,
     isActive: true,
-    notes: 'Distributor resmi Susu Ultra Milk UHT dan Teh Kotak. Garansi retur FEFO H-30 kadaluarsa.',
+    notes: 'Distributor resmi Susu Ultra Milk UHT dan Teh Kotak. Garansi retur FEFO H-30 kedaluwarsa.',
     createdAt: '2025-03-10',
   },
   {

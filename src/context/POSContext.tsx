@@ -1162,6 +1162,15 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Tandai produk yang stoknya pernah > 0 (dipakai untuk membedakan "Habis" dari "Belum ada stok").
+  // Satu efek menangkap semua jalur: terima barang, opname, koreksi, edit manual, sinkron server.
+  useEffect(() => {
+    if (!isStorageHydrated) return;
+    if (!products.some((p) => p.stock > 0 && !p.stockInitializedAt)) return;
+    const now = new Date().toISOString();
+    setProducts((prev) => prev.map((p) => (p.stock > 0 && !p.stockInitializedAt ? { ...p, stockInitializedAt: now } : p)));
+  }, [products, isStorageHydrated]);
+
   useEffect(() => {
     if (!isStorageHydrated) return;
     scheduleSave('pos_retail_products_v3', products);

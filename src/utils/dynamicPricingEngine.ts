@@ -250,7 +250,7 @@ export function generateDynamicPricingSuggestions(
       suggestedPrice = roundToIndonesianRetailPrice(Math.max(minSafePrice, costPrice * 1.04));
       actionType = 'decrease';
       strategyTag = 'Cuci Gudang';
-      aiReasoning = `Produk mendekati batas kadaluarsa (${daysToExpiry} hari lagi, sisa ${product.stock} ${product.unit}). Disarankan diskon cuci gudang agresif mendekati HPP untuk melikuidasi modal sebelum expired dan mencegah kerugian 100%.`;
+      aiReasoning = `Produk mendekati batas kedaluwarsa (${daysToExpiry} hari lagi, sisa ${product.stock} ${product.unit}). Disarankan diskon cuci gudang agresif mendekati HPP untuk melikuidasi modal sebelum expired dan mencegah kerugian 100%.`;
       projectedTurnoverImpactDays = -Math.round(turnover.daysOfInventory * 0.6);
       confidenceScore = 96;
     } else if (strategy === 'maximize_profit') {

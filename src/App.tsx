@@ -38,6 +38,12 @@ import { useIsDesktop } from './hooks/useIsDesktop';
 const POSMainApp: React.FC = () => {
   // Escape, fokus, dan role="dialog" untuk semua jendela modal (lihat hook)
   useGlobalDialogA11y();
+  // Judul jendela: nama toko (dulu "Point of Sales")
+  const { settings: appSettings } = usePOS();
+  useEffect(() => {
+    const store = (appSettings?.storeName || '').trim();
+    document.title = store ? `${store} — Ulilmart POS` : 'Ulilmart POS';
+  }, [appSettings?.storeName]);
   const {
     activeView,
     setActiveView,

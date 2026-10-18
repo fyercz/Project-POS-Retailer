@@ -424,7 +424,7 @@ export const Header: React.FC = () => {
           <button
             id="btn-open-user-manual"
             onClick={() => setIsManualModalOpen(true)}
-            className="hidden sm:flex px-2.5 py-1.5 rounded-xl text-xs font-semibold items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300/60 dark:border-amber-700/60 transition-all cursor-pointer shrink-0 shadow-sm"
+            className="hidden sm:flex px-2.5 py-1.5 rounded-xl text-xs font-semibold items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700"
             title="Buku Panduan Pengguna & Bantuan (F1 / Alt+H)"
           >
             <BookOpen className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 shrink-0" />
@@ -631,10 +631,10 @@ export const Header: React.FC = () => {
           <button
             id="btn-header-quick-lock"
             onClick={lockScreen}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-bold transition-all active:scale-95 cursor-pointer shrink-0 shadow-sm"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer shrink-0 shadow-sm bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700"
             title="Ganti Akun Kasir atau Login Otoritas Supervisor / Owner (Alt+L)"
           >
-            <Lock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+            <Lock className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
             <span className="inline">Ganti Akun</span>
           </button>
 
@@ -782,7 +782,7 @@ export const Header: React.FC = () => {
                       setIsUserMenuOpen(false);
                       setIsManualModalOpen(true);
                     }}
-                    className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition font-medium"
+                    className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition font-medium bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700"
                   >
                     <div className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4 text-amber-700 dark:text-amber-400" />

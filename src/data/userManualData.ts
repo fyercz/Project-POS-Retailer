@@ -259,7 +259,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           'Di tab Inventaris, klik tombol dropdown "Logistik & Faktur".',
           'Pilih aksi yang diinginkan:',
           '1. + Terima Barang / PO: Input nomor faktur pengiriman distributor dan tambahkan stok baru ke toko.',
-          '2. + Retur ke Supplier: Kembalikan barang rusak, cacat, atau mendekati tanggal kadaluarsa ke pihak distributor.',
+          '2. + Retur ke Supplier: Kembalikan barang rusak, cacat, atau mendekati tanggal kedaluwarsa ke pihak distributor.',
           '3. + Tambah Mitra Supplier: Daftarkan kontak vendor baru, alamat, nomor telepon sales, dan jangka waktu tempo pembayaran (Hutang Dagang).',
         ],
       },
@@ -500,7 +500,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           '• Gunakan "Cek Stok AI (Kamera)" untuk memindai deretan rak panjang secara otomatis menggunakan kamera.',
           '• Gunakan "Stock Opname CSV / Excel" untuk memasukkan data hasil penghitungan manual tim toko.',
           'Jika ditemukan perbedaan antara Stok Fisik vs Stok Komputer, lakukan investigasi silang ke riwayat faktur pembelian supplier dan riwayat retur.',
-          'Bila selisih diakibatkan oleh barang rusak atau kadaluarsa di rak, lakukan "Penyesuaian Stok Massal" dengan keterangan resmi agar kerugian diakui secara akurat di pembukuan.',
+          'Bila selisih diakibatkan oleh barang rusak atau kedaluwarsa di rak, lakukan "Penyesuaian Stok Massal" dengan keterangan resmi agar kerugian diakui secara akurat di pembukuan.',
         ],
         tips: [
           'Produk bernilai tinggi dan barang yang mudah diselipkan wajib dihitung lebih sering (minimal 1 kali per minggu).',

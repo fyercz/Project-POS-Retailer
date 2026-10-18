@@ -1162,7 +1162,7 @@ export const TransactionsView: React.FC = () => {
                           className="w-full px-2.5 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                         >
                           <option value="Barang Cacat / Rusak Fisik">Barang Cacat / Rusak Fisik</option>
-                          <option value="Kadaluarsa / Near Expired">Kadaluarsa / Near Expired</option>
+                          <option value="Kedaluwarsa / Near Expired">Kedaluwarsa / Near Expired</option>
                           <option value="Salah Varian / Salah Beli">Salah Varian / Salah Beli</option>
                           <option value="Kemasan Terbuka / Bocor">Kemasan Terbuka / Bocor</option>
                           <option value="Pelanggan Berubah Pikiran">Pelanggan Berubah Pikiran</option>
