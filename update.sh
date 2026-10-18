@@ -22,20 +22,25 @@ if command -v git >/dev/null; then
         echo "Data toko dicadangkan ke data-backup/$STAMP"
         git rm -r --cached --ignore-unmatch -q data || true
     fi
-    git fetch origin main
-    git reset --hard origin/main
+    git fetch --tags --force origin main
+    # Versi tujuan: argumen (mis. v1.0.0), atau tag rilis tertinggi, atau main bila belum ada rilis
+    TARGET="${1:-$(git tag -l 'v*' --sort=-v:refname | head -n1)}"
+    TARGET="${TARGET:-origin/main}"
+    echo "Memasang versi: $TARGET"
+    git reset --hard "$TARGET"
     git branch -M main 2>/dev/null || true
     # Jika database toko hilang karena update, pulihkan dari cadangan
     if [ -n "$STAMP" ] && [ ! -f data/pos-master.sqlite ]; then
         mkdir -p data && cp -R "data-backup/$STAMP/." data/
     fi
-    git log -1 --format="Versi sekarang: %h - %s"
+    echo "Versi sekarang: $(git describe --tags --always)"
+    echo "Untuk kembali ke versi sebelumnya: ./update.sh vX.Y.Z  (daftar: git tag -l)"
 else
     echo "[1/3] Git tidak ditemukan, kode tidak diunduh (hanya build ulang)."
 fi
 
 echo "[2/3] Memperbarui dependensi (npm install)..."
-npm install --no-audit --no-fund
+if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
 echo "[3/3] Membangun ulang aplikasi (npm run build)..."
 npm run build
 chmod +x ./*.sh 2>/dev/null || true

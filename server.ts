@@ -65,7 +65,11 @@ app.use('/api/online', createRateLimiter(60, 60_000));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', hasGeminiKey: Boolean(process.env.GEMINI_API_KEY) });
+  let version = 'unknown';
+  try {
+    version = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8')).version;
+  } catch {}
+  res.json({ status: 'ok', version, hasGeminiKey: Boolean(process.env.GEMINI_API_KEY) });
 });
 
 // =======================================================

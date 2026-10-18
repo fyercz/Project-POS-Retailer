@@ -1,10 +1,12 @@
 @echo off
-rem Ulilmart POS - ambil kode terbaru dari GitHub lalu build ulang. Data toko di folder data\ tetap aman.
+rem Ulilmart POS - pasang RILIS terbaru (tag vX.Y.Z yang lolos CI) lalu build ulang. Data toko aman.
+rem   update.bat            rilis terbaru
+rem   update.bat v1.0.0     pasang/kembali ke versi tertentu
 rem Skrip ini berpindah ke salinan di folder TEMP (tanpa "call", tidak kembali lagi),
 rem karena update.bat sendiri ikut ditimpa oleh git saat update.
 if not "%~1"=="--dari-temp" (
     copy /y "%~f0" "%TEMP%\ulilmart-update.bat" >nul
-    "%TEMP%\ulilmart-update.bat" --dari-temp "%~dp0"
+    "%TEMP%\ulilmart-update.bat" --dari-temp "%~dp0" %1
 )
 setlocal
 title Ulilmart POS - Update
@@ -31,18 +33,25 @@ if not exist ".git" (
     git init -q
     git remote add origin %REPO_URL%
 )
-git fetch origin main
+git fetch --tags --force origin main
 if errorlevel 1 goto GAGAL
-git reset --hard origin/main
+rem Versi tujuan: argumen (mis. v1.0.0), atau tag rilis tertinggi, atau main bila belum ada rilis
+set "TARGET=%~3"
+if not defined TARGET for /f "delims=" %%v in ('git tag -l "v*" --sort=-v:refname') do if not defined TARGET set "TARGET=%%v"
+if not defined TARGET set "TARGET=origin/main"
+echo Memasang versi: %TARGET%
+git reset --hard %TARGET%
 if errorlevel 1 goto GAGAL
 git branch -M main >nul 2>nul
 rem Jika database toko hilang karena update, pulihkan dari cadangan
 if defined STAMP if not exist "data\pos-master.sqlite" xcopy /e /i /y /q "data-backup\%STAMP%" "data" >nul
-git log -1 --format="Versi sekarang: %%h - %%s"
+for /f "delims=" %%d in ('git describe --tags --always') do echo Versi sekarang: %%d
+echo Untuk kembali ke versi sebelumnya: update.bat vX.Y.Z  (daftar: git tag -l)
 :BUILD
 
 echo [3/4] Memperbarui dependensi (npm install)...
-call npm install --no-audit --no-fund
+rem npm ci = pasang PERSIS versi yang sudah diuji (package-lock.json)
+if exist package-lock.json (call npm ci --no-audit --no-fund) else (call npm install --no-audit --no-fund)
 if errorlevel 1 goto GAGAL
 echo [4/4] Membangun ulang aplikasi (npm run build)...
 call npm run build
