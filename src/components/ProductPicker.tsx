@@ -1,4 +1,5 @@
-import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Product } from '../types';
 
 /**
@@ -38,6 +39,24 @@ export const ProductPicker: React.FC<ProductPickerProps> = ({
   const [active, setActive] = useState(0);
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  // Daftar hasil dirender di document.body (portal) dengan posisi tetap mengikuti kolom isian,
+  // agar tidak terpotong oleh tabel/jendela yang punya overflow tersembunyi.
+  const [anchor, setAnchor] = useState<DOMRect | null>(null);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const update = () => {
+      if (inputRef.current) setAnchor(inputRef.current.getBoundingClientRect());
+    };
+    update();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [open]);
 
   const pool = useMemo(() => (filter ? products.filter(filter) : products), [products, filter]);
 
@@ -63,7 +82,9 @@ export const ProductPicker: React.FC<ProductPickerProps> = ({
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (wrapRef.current?.contains(t) || listRef.current?.contains(t)) return;
+      setOpen(false);
     };
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
@@ -110,6 +131,7 @@ export const ProductPicker: React.FC<ProductPickerProps> = ({
   return (
     <div ref={wrapRef} className="relative">
       <input
+        ref={inputRef}
         type="text"
         role="combobox"
         aria-label={ariaLabel}
@@ -136,12 +158,22 @@ export const ProductPicker: React.FC<ProductPickerProps> = ({
           className="absolute inset-x-0 bottom-0 h-px opacity-0 pointer-events-none"
         />
       )}
-      {open && (
+      {open && anchor && createPortal(
         <ul
+          ref={listRef}
           id={listId}
           role="listbox"
           aria-label={`Hasil: ${ariaLabel}`}
-          className="absolute z-50 mt-1 w-full max-h-64 overflow-y-auto rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-md text-xs"
+          style={(() => {
+            const width = Math.min(Math.max(anchor.width, 360), window.innerWidth - 16);
+            const left = Math.max(8, Math.min(anchor.left, window.innerWidth - width - 8));
+            const spaceBelow = window.innerHeight - anchor.bottom;
+            const openUp = spaceBelow < 280 && anchor.top > spaceBelow;
+            return openUp
+              ? { position: 'fixed', left, width, bottom: window.innerHeight - anchor.top + 4, maxHeight: Math.min(320, anchor.top - 16) }
+              : { position: 'fixed', left, width, top: anchor.bottom + 4, maxHeight: Math.min(320, spaceBelow - 16) };
+          })()}
+          className="z-[300] overflow-y-auto rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl text-xs"
         >
           {results.length === 0 ? (
             <li className="px-3 py-2 text-slate-500">Tidak ada produk yang cocok.</li>
@@ -175,7 +207,8 @@ export const ProductPicker: React.FC<ProductPickerProps> = ({
               Menampilkan {maxResults} hasil teratas. Ketik lebih spesifik untuk mempersempit.
             </li>
           )}
-        </ul>
+        </ul>,
+        document.body
       )}
     </div>
   );
