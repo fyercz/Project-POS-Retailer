@@ -174,7 +174,7 @@ const POSMainApp: React.FC = () => {
                                 <ShoppingBag className="w-4 h-4" />
                               </div>
                               <div className="text-left">
-                                <div className="text-[10px] uppercase font-bold text-emerald-100 tracking-wider">
+                                <div className="text-[11px] uppercase font-bold text-emerald-100 tracking-wider">
                                   Keranjang ({totalCartCount} item)
                                 </div>
                                 <div className="font-mono font-black text-sm">
@@ -182,7 +182,7 @@ const POSMainApp: React.FC = () => {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1.5 text-xs font-black bg-white text-emerald-900 px-3 py-1.5 rounded-xl shadow-xs">
+                            <div className="flex items-center gap-1.5 text-xs font-black bg-white text-emerald-900 px-3 py-1.5 rounded-xl shadow-sm">
                               <span>Buka &amp; Bayar</span>
                               <ArrowRight className="w-3.5 h-3.5" />
                             </div>

@@ -311,20 +311,20 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 flex items-center gap-1 shadow-xs">
+        <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 flex items-center gap-1 shadow-sm">
           <span>🥇</span> Top #1 Google Search
         </span>
       );
     }
     if (rank === 2) {
       return (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600 flex items-center gap-1">
+        <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600 flex items-center gap-1">
           <span>🥈</span> Top #2 Google Search
         </span>
       );
     }
     return (
-      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-orange-100 dark:bg-orange-950/70 text-orange-800 dark:text-orange-300 border border-orange-300 dark:border-orange-700 flex items-center gap-1">
+      <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 flex items-center gap-1">
         <span>🥉</span> Top #3 Google Search
       </span>
     );
@@ -332,19 +332,19 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-xl flex flex-col max-h-[92vh] overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-teal-900/40 via-emerald-900/30 to-slate-900">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-emerald-900/40 via-emerald-900/30 to-slate-900">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20">
-              <Globe className="w-5 h-5 animate-pulse" />
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-md shadow-emerald-500/20">
+              <Globe className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Pencocokan Database Online & Cek Barcode Internet
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                   <Zap className="w-3 h-3" /> Google Search Engine Grounding
                 </span>
               </div>
@@ -355,7 +355,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
           </div>
           <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -415,16 +415,16 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Top 3 Citations Card (Universal Google Web Citations Block) */}
           {groundingSources.length > 0 && (
-            <div className="bg-gradient-to-br from-emerald-950/20 via-teal-950/10 to-slate-900/40 rounded-2xl border border-emerald-500/30 p-4 shadow-lg space-y-3 animate-in fade-in-50">
+            <div className="bg-gradient-to-br from-emerald-950/20 via-emerald-950/10 to-slate-900/40 rounded-2xl border border-emerald-500/30 p-4 shadow-md space-y-3 animate-in fade-in-50">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                  <div className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-400">
                     <Award className="w-4 h-4" />
                   </div>
                   <div>
                     <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                       <span>Top 3 Sitasi Sumber Web Google Search Engine</span>
-                      <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                      <span className="text-[11px] font-normal px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                         {groundingSources.length} Sumber Terindeks
                       </span>
                     </h4>
@@ -438,7 +438,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                 {activeTab === 'keyword' && searchResults.length > 0 && (
                   <button
                     onClick={handleImportTop3ToCatalog}
-                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer active:scale-95 transition-transform"
+                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer active:scale-95 transition-transform"
                   >
                     <Database className="w-3.5 h-3.5" />
                     <span>Masukkan Top 3 Hasil ke Sistem</span>
@@ -453,12 +453,12 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                   return (
                     <div
                       key={idx}
-                      className="bg-white dark:bg-slate-800/90 rounded-xl border border-slate-200 dark:border-slate-700/80 p-3 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-colors shadow-xs"
+                      className="bg-white dark:bg-slate-800/90 rounded-xl border border-slate-200 dark:border-slate-700/80 p-3 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-colors shadow-sm"
                     >
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between gap-1">
                           {getRankBadge(rank)}
-                          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 font-bold truncate max-w-[110px]">
+                          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold truncate max-w-[110px]">
                             {src.domain || 'google.com'}
                           </span>
                         </div>
@@ -466,7 +466,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                           {src.title || 'Hasil Pencarian Google Ritel Indonesia'}
                         </h5>
                         {src.snippet && (
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
                             {src.snippet}
                           </p>
                         )}
@@ -476,7 +476,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between gap-1.5">
                         <button
                           onClick={() => handleCopyUrl(src.uri, idx)}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                          className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                           title="Salin Tautan Web"
                         >
                           {copiedUrlIndex === idx ? (
@@ -491,7 +491,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                           href={src.uri}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 text-[10px] font-bold flex items-center gap-1 transition-colors"
+                          className="px-2 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 text-[11px] font-bold flex items-center gap-1 transition-colors"
                         >
                           <ExternalLink className="w-3 h-3" />
                           <span>Buka Web</span>
@@ -502,7 +502,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                           <button
                             onClick={() => handleImportToCatalog(searchResults[idx], src.uri)}
                             disabled={addedIds.has(searchResults[idx].barcode)}
-                            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
+                            className={`px-2 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
                               addedIds.has(searchResults[idx].barcode)
                                 ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed'
                                 : 'bg-emerald-700 hover:bg-emerald-500 text-white'
@@ -556,7 +556,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
                 {/* Quick Test Barcode Buttons */}
                 <div className="mt-3 flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] text-slate-500 font-semibold mr-1">Coba Barcode Contoh:</span>
+                  <span className="text-[11px] text-slate-500 font-semibold mr-1">Coba Barcode Contoh:</span>
                   {[
                     { label: 'Indomie Goreng', code: '8998866200223' },
                     { label: 'Zinc Shampoo 170ml', code: '8998866500118' },
@@ -571,7 +571,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                         setBarcodeInput(sample.code);
                         handleLookupBarcode(sample.code);
                       }}
-                      className="px-2 py-1 rounded-md text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 hover:text-emerald-700 dark:hover:text-emerald-400 font-mono transition-colors cursor-pointer"
+                      className="px-2 py-1 rounded-md text-[11px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 hover:text-emerald-700 dark:hover:text-emerald-400 font-mono transition-colors cursor-pointer"
                     >
                       {sample.label}
                     </button>
@@ -584,7 +584,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-emerald-500/40 p-5 shadow-xl space-y-4 animate-in fade-in-50">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      <span className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                         <CheckCircle2 className="w-4 h-4" />
                       </span>
                       <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
@@ -611,10 +611,10 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                     <div className="md:col-span-3 space-y-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                             {barcodeResult.brand || 'Brand Terdaftar'}
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
                             Kategori: {getCategoryName(barcodeResult.categoryId)}
                           </span>
                         </div>
@@ -631,19 +631,19 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                       {/* Pricing & Margin info */}
                       <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700/60">
                         <div>
-                          <span className="text-[10px] text-slate-500 uppercase font-bold block">Harga Eceran (HET)</span>
+                          <span className="text-[11px] text-slate-500 uppercase font-bold block">Harga Eceran (HET)</span>
                           <span className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400 font-mono">
                             {formatCurrency(barcodeResult.price)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-500 uppercase font-bold block">Estimasi Modal (HPP)</span>
+                          <span className="text-[11px] text-slate-500 uppercase font-bold block">Estimasi Modal (HPP)</span>
                           <span className="text-sm font-bold text-slate-700 dark:text-slate-300 font-mono">
                             {formatCurrency(barcodeResult.costPrice)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-500 uppercase font-bold block">Margin Laba Eceran</span>
+                          <span className="text-[11px] text-slate-500 uppercase font-bold block">Margin Laba Eceran</span>
                           <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400 font-mono">
                             {barcodeResult.price > 0
                               ? (((barcodeResult.price - barcodeResult.costPrice) / barcodeResult.price) * 100).toFixed(1)
@@ -664,7 +664,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                             {barcodeResult.wholesaleUnits.map((wh, idx) => (
                               <div
                                 key={idx}
-                                className="px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs font-mono"
+                                className="px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs font-mono"
                               >
                                 <strong className="text-indigo-900 dark:text-indigo-200 font-sans">{wh.name}</strong>:{' '}
                                 <span className="text-slate-600 dark:text-slate-400">
@@ -745,7 +745,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
                 {/* Keyword shortcuts */}
                 <div className="mt-3 flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] text-slate-500 font-semibold mr-1">Pencarian Populer:</span>
+                  <span className="text-[11px] text-slate-500 font-semibold mr-1">Pencarian Populer:</span>
                   {['Indomie', 'Mie Sedaap', 'Aqua', 'Bimoli', 'SunCo', 'Kapal Api', 'Chitato', 'Lifebuoy'].map(
                     (kw) => (
                       <button
@@ -754,7 +754,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                           setKeywordInput(kw);
                           handleSearchKeyword(kw);
                         }}
-                        className="px-2.5 py-1 rounded-md text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 hover:text-emerald-700 dark:hover:text-emerald-400 font-medium transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-md text-[11px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 hover:text-emerald-700 dark:hover:text-emerald-400 font-medium transition-colors cursor-pointer"
                       >
                         {kw}
                       </button>
@@ -776,7 +776,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                     <div className="flex items-center gap-2">
                       <button
                         onClick={handleImportTop3ToCatalog}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                        className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
                       >
                         <Database className="w-3.5 h-3.5" />
                         <span>Masukkan Top 3 ke Sistem</span>
@@ -808,11 +808,11 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                               <div className="flex items-center gap-1.5 flex-wrap mb-1">
                                 {isTop3 && getRankBadge(rank)}
                                 {item.brand && (
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
+                                  <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
                                     {item.brand}
                                   </span>
                                 )}
-                                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                                   {item.barcode}
                                 </span>
                               </div>
@@ -823,7 +823,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                                 <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-400 font-mono">
                                   {formatCurrency(item.price)}
                                 </span>
-                                <span className="text-[10px] text-slate-500 font-mono">
+                                <span className="text-[11px] text-slate-500 font-mono">
                                   Modal: {formatCurrency(item.costPrice)}
                                 </span>
                               </div>
@@ -832,7 +832,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
                           {/* Wholesale summary if any */}
                           {item.wholesaleUnits && item.wholesaleUnits.length > 0 && (
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 px-2.5 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 px-2.5 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800">
                               <strong className="text-slate-700 dark:text-slate-300">Grosir:</strong>{' '}
                               {item.wholesaleUnits.map((u) => `${u.name} (${formatCurrency(u.price)})`).join(', ')}
                             </div>
@@ -843,10 +843,10 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                             <button
                               onClick={() => handleImportToCatalog(item)}
                               disabled={isAdded}
-                              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
+                              className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
                                 isAdded
                                   ? 'bg-slate-200 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
-                                  : 'bg-emerald-700 hover:bg-emerald-500 text-white shadow-xs'
+                                  : 'bg-emerald-700 hover:bg-emerald-500 text-white shadow-sm'
                               }`}
                             >
                               <Plus className="w-3.5 h-3.5" />
@@ -856,7 +856,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                             {onSelectForForm && (
                               <button aria-label="Gunakan di formulir"
                                 onClick={() => handleSendToForm(item)}
-                                className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer"
+                                className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer"
                                 title="Gunakan di formulir"
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
@@ -892,7 +892,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold text-xs flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold text-xs flex items-center justify-center">
                     1
                   </div>
                   <h5 className="text-xs font-bold text-slate-900 dark:text-white">Top 3 Google Search Citations</h5>
@@ -902,7 +902,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
-                  <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center">
                     2
                   </div>
                   <h5 className="text-xs font-bold text-slate-900 dark:text-white">AI Retail Normalizer</h5>
@@ -913,7 +913,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
-                  <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 font-bold text-xs flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold text-xs flex items-center justify-center">
                     3
                   </div>
                   <h5 className="text-xs font-bold text-slate-900 dark:text-white">Auto Multi-Kemasan Grosir</h5>

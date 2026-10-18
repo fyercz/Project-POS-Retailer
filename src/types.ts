@@ -394,6 +394,10 @@ export interface StoreSettings {
   minRedeemPoints?: number; // Minimal poin untuk dapat ditukarkan di kasir (default 10)
   minProfitPercentForPoints: number; // e.g. 15% minimal profit margin barang untuk menghasilkan poin
   welcomeBonusPoints?: number; // Bonus poin untuk setiap member baru (default 0 = tidak ada bonus)
+  /** Tampilkan margin keuntungan per barang di keranjang (default mati: layar kasir sering terlihat pembeli) */
+  showMarginInCart?: boolean;
+  /** Tampilkan saran produk AI di keranjang (default mati: kurangi gangguan saat melayani) */
+  showAiUpsellInCart?: boolean;
   minStockRulePercentage?: number; // Aturan batas minimal stok (default 50 = 50% dari order terakhir)
   autoUpdateMinStockFromOrder?: boolean; // Otomatis perbarui minStock saat terima barang PO (default: true)
   initialCapital?: number; // Modal awal usaha toko untuk Neraca Keuangan (default: 50.000.000)

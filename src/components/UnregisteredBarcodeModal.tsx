@@ -176,7 +176,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
     >
       <div
         id="unregistered-barcode-modal-container"
-        className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[92vh]"
       >
         {/* Header Bar */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-amber-500/10 dark:bg-amber-950/30">
@@ -189,7 +189,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Barcode Belum Terdaftar
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50">
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50">
                   Tidak Ada di Master
                 </span>
               </div>
@@ -240,7 +240,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                   <div>
                     <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
                       <span>Otoritas Dikonfirmasi: Akses Penuh</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 font-extrabold uppercase">
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 font-extrabold uppercase">
                         {activeEmployee?.roleTitle || activeEmployee?.role}
                       </span>
                     </h4>
@@ -263,7 +263,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                   type="button"
                   id="btn-confirm-add-unregistered-product"
                   onClick={handleDirectAddProduct}
-                  className="flex-2 py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-xs"
+                  className="flex-2 py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 text-xs"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Tambah Produk Sekarang</span>
@@ -299,18 +299,18 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                         }}
                         className={`p-2.5 rounded-xl border text-left flex items-center gap-2.5 transition-all ${
                           isSelected
-                            ? 'border-purple-500 bg-purple-500/10 text-purple-900 dark:text-purple-200 shadow-sm'
+                            ? 'border-indigo-500 bg-indigo-500/10 text-indigo-900 dark:text-indigo-200 shadow-sm'
                             : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         <div
-                          className={`w-7 h-7 rounded-lg ${authEmp.avatarColor || 'bg-purple-600'} text-white flex items-center justify-center font-bold text-xs shrink-0`}
+                          className={`w-7 h-7 rounded-xl ${authEmp.avatarColor || 'bg-indigo-600'} text-white flex items-center justify-center font-bold text-xs shrink-0`}
                         >
                           {authEmp.avatar}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="font-bold text-xs truncate">{authEmp.name}</div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                             {authEmp.roleTitle}
                           </div>
                         </div>
@@ -342,7 +342,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                         setErrorMessage('');
                       }}
                       placeholder="••••"
-                      className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-center tracking-[0.4em] font-black text-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-center tracking-[0.4em] font-black text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                     <button aria-label="Tampilkan atau sembunyikan PIN"
                       type="button"
@@ -365,7 +365,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                         else if (k === '⌫') handleKeypadBackspace();
                         else handleKeypadPress(k);
                       }}
-                      className="py-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-sm text-slate-800 dark:text-slate-200 transition-colors active:scale-95"
+                      className="py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-sm text-slate-800 dark:text-slate-200 transition-colors active:scale-95"
                     >
                       {k}
                     </button>
@@ -401,7 +401,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                   <button
                     type="submit"
                     id="btn-verify-supervisor-pin"
-                    className="flex-2 py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all shadow-lg shadow-purple-600/25 flex items-center justify-center gap-2 text-xs"
+                    className="flex-2 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 text-xs"
                   >
                     <ShieldCheck className="w-4 h-4" />
                     <span>Verifikasi &amp; Tambah Produk</span>

@@ -63,10 +63,10 @@ export const EmployeeManagementModal: React.FC = () => {
 
   const colorOptions = [
     { label: 'Emerald', value: 'bg-emerald-600' },
-    { label: 'Teal', value: 'bg-teal-600' },
+    { label: 'Teal', value: 'bg-emerald-600' },
     { label: 'Blue', value: 'bg-blue-600' },
     { label: 'Indigo', value: 'bg-indigo-600' },
-    { label: 'Purple', value: 'bg-purple-600' },
+    { label: 'Purple', value: 'bg-indigo-600' },
     { label: 'Amber', value: 'bg-amber-600' },
     { label: 'Rose', value: 'bg-rose-600' },
   ];
@@ -190,7 +190,7 @@ export const EmployeeManagementModal: React.FC = () => {
       case 'owner':
         return { label: 'Owner / Pemilik', bg: 'bg-indigo-100 text-indigo-800 border-indigo-200' };
       case 'supervisor':
-        return { label: 'Supervisor', bg: 'bg-purple-100 text-purple-800 border-purple-200' };
+        return { label: 'Supervisor', bg: 'bg-indigo-100 text-indigo-800 border-indigo-200' };
       case 'inventory':
         return { label: 'Admin Gudang', bg: 'bg-amber-100 text-amber-800 border-amber-200' };
       case 'cashier':
@@ -208,7 +208,7 @@ export const EmployeeManagementModal: React.FC = () => {
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/50">
@@ -243,7 +243,7 @@ export const EmployeeManagementModal: React.FC = () => {
               onClick={() => setActiveTab('matrix')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 ${
                 activeTab === 'matrix'
-                  ? 'bg-purple-600 text-white shadow-sm'
+                  ? 'bg-indigo-600 text-white shadow-sm'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
               }`}
             >
@@ -326,8 +326,8 @@ export const EmployeeManagementModal: React.FC = () => {
                     {employees.filter((e) => e.isActive).length} Aktif
                   </div>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-900/40">
-                  <span className="text-xs font-medium text-purple-700 dark:text-purple-400">
+                <div className="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200/60 dark:border-indigo-900/40">
+                  <span className="text-xs font-medium text-indigo-700 dark:text-indigo-400">
                     Sedang Login
                   </span>
                   <div className="text-sm font-bold text-slate-900 dark:text-white mt-1 truncate flex items-center gap-1.5">
@@ -373,7 +373,7 @@ export const EmployeeManagementModal: React.FC = () => {
                                 <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                                   {emp.name}
                                   {isCurrent && (
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-700 text-white font-medium">
+                                    <span className="px-1.5 py-0.5 rounded-md text-[11px] bg-emerald-700 text-white font-medium">
                                       Aktif
                                     </span>
                                   )}
@@ -386,7 +386,7 @@ export const EmployeeManagementModal: React.FC = () => {
                           </td>
                           <td className="p-3.5">
                             <span
-                              className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badge.bg}`}
+                              className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badge.bg}`}
                             >
                               {badge.label}
                             </span>
@@ -395,22 +395,22 @@ export const EmployeeManagementModal: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-1 mt-1 flex-wrap">
                               {emp.role === 'cashier' && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-medium">
+                                <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-medium">
                                   Akses: Kasir, Nota
                                 </span>
                               )}
                               {emp.role === 'inventory' && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100/70 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-medium">
+                                <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-amber-100/70 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-medium">
                                   Akses: Gudang, Nota
                                 </span>
                               )}
                               {emp.role === 'supervisor' && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100/70 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-medium">
+                                <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-indigo-100/70 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 font-medium">
                                   Akses: Kasir, Nota, Stok, Member, Laporan
                                 </span>
                               )}
                               {emp.role === 'owner' && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100/70 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 font-medium">
+                                <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-indigo-100/70 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 font-medium">
                                   Akses: Penuh (Seluruh Fitur & Setting)
                                 </span>
                               )}
@@ -420,13 +420,13 @@ export const EmployeeManagementModal: React.FC = () => {
                             {emp.assignedShift || 'Shift Normal'}
                           </td>
                           <td className="p-3.5 font-mono text-slate-700 dark:text-slate-300">
-                            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded font-bold">
+                            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md font-bold">
                               ••••
                             </span>
                           </td>
                           <td className="p-3.5">
                             <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                                 emp.isActive
                                   ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
                                   : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
@@ -449,7 +449,7 @@ export const EmployeeManagementModal: React.FC = () => {
                                     setNotification({ type: 'error', message: `Butuh PIN: tidak bisa beralih ke jabatan yang lebih tinggi (${emp.name}) tanpa login PIN.` });
                                   }
                                 }}
-                                className="p-1.5 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-lg transition"
+                                className="p-1.5 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-xl transition"
                                 title="Login sebagai karyawan ini"
                               >
                                 <UserCheck className="w-4 h-4" />
@@ -459,7 +459,7 @@ export const EmployeeManagementModal: React.FC = () => {
                               id={`btn-edit-emp-${emp.id}`}
                               aria-label={`Edit ${emp.name}`}
                               onClick={() => handleOpenEditForm(emp)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition"
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-xl transition"
                               title="Edit Karyawan"
                             >
                               <Edit2 className="w-4 h-4" />
@@ -468,7 +468,7 @@ export const EmployeeManagementModal: React.FC = () => {
                               id={`btn-del-emp-${emp.id}`}
                               onClick={() => handleDelete(emp.id, emp.name)}
                               disabled={isCurrent || employees.length <= 1}
-                              className="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl transition disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Hapus Karyawan"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -505,9 +505,9 @@ export const EmployeeManagementModal: React.FC = () => {
           ) : activeTab === 'matrix' ? (
             /* Matriks Otoritas Menu & Jabatan */
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/60 text-xs">
-                <div className="font-bold text-purple-900 dark:text-purple-200 flex items-center gap-2 mb-1">
-                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+              <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/60 text-xs">
+                <div className="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-2 mb-1">
+                  <ShieldCheck className="w-4 h-4 text-indigo-600" />
                   <span>Matriks Otoritas & Pembatasan Menu Sistem</span>
                 </div>
                 <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
@@ -568,7 +568,7 @@ export const EmployeeManagementModal: React.FC = () => {
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
+                        <span className="text-[11px] text-amber-700 dark:text-amber-400 font-semibold">
                           PIN SPV
                         </span>
                       </td>
@@ -593,7 +593,7 @@ export const EmployeeManagementModal: React.FC = () => {
                                   message: `Berhasil berganti ke ${sampleCashier.name} (Kasir). Menu sekarang dibatasi!`,
                                 });
                               }}
-                              className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition flex items-center gap-1 mx-auto"
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white transition flex items-center gap-1 mx-auto"
                             >
                               <UserCheck className="w-3.5 h-3.5" /> Uji Kasir
                             </button>
@@ -666,7 +666,7 @@ export const EmployeeManagementModal: React.FC = () => {
                                   message: `Berhasil berganti ke ${sampleInv.name} (Gudang). Menu Kasir & Laporan sekarang terkunci!`,
                                 });
                               }}
-                              className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition flex items-center gap-1 mx-auto"
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition flex items-center gap-1 mx-auto"
                             >
                               <UserCheck className="w-3.5 h-3.5" /> Uji Gudang
                             </button>
@@ -681,7 +681,7 @@ export const EmployeeManagementModal: React.FC = () => {
                     <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
                       <td className="p-3.5">
                         <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
                           Supervisor / Kepala Toko
                         </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -719,7 +719,7 @@ export const EmployeeManagementModal: React.FC = () => {
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
+                        <span className="text-[11px] text-amber-700 dark:text-amber-400 font-semibold">
                           PIN Owner
                         </span>
                       </td>
@@ -739,7 +739,7 @@ export const EmployeeManagementModal: React.FC = () => {
                                   message: `Berhasil berganti ke ${sampleSpv.name} (Supervisor). Memiliki izin supervisi & void!`,
                                 });
                               }}
-                              className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition flex items-center gap-1 mx-auto"
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1 mx-auto"
                             >
                               <UserCheck className="w-3.5 h-3.5" /> Uji SPV
                             </button>
@@ -812,7 +812,7 @@ export const EmployeeManagementModal: React.FC = () => {
                                   message: `Berhasil berganti ke ${sampleOwner.name} (Owner). Seluruh menu dan pengaturan dapat diakses!`,
                                 });
                               }}
-                              className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1 mx-auto"
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1 mx-auto"
                             >
                               <UserCheck className="w-3.5 h-3.5" /> Uji Owner
                             </button>
@@ -933,7 +933,7 @@ export const EmployeeManagementModal: React.FC = () => {
                     />
                     <KeyRound className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                   </div>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[11px] text-slate-500">
                     PIN ini digunakan karyawan untuk membuka layar kasir.
                   </span>
                 </div>
@@ -1020,7 +1020,7 @@ export const EmployeeManagementModal: React.FC = () => {
                       type="checkbox"
                       checked={isActive}
                       onChange={(e) => setIsActive(e.target.checked)}
-                      className="w-4 h-4 text-emerald-700 rounded border-slate-300 focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-700 rounded-md border-slate-300 focus:ring-emerald-500"
                     />
                     <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
                       Karyawan Aktif (Dapat login ke POS)

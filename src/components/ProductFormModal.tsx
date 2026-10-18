@@ -461,7 +461,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl shadow-xl flex flex-col max-h-[92vh] overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
           <div className="flex items-center gap-2.5">
@@ -471,7 +471,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <span>{isEditMode ? 'Edit Master Item Produk' : 'Tambah Master Item Produk Baru'}</span>
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                <span className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                   {isEditMode ? 'Perbarui Data' : 'Produk Baru'}
                 </span>
               </h3>
@@ -484,7 +484,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </div>
           <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -494,20 +494,20 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Supervisor / Authority Authorization Banner */}
           {authorizationInfo && (
-            <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-200 flex items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+            <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-900 dark:text-indigo-200 flex items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-purple-600 text-white shrink-0">
+                <div className="p-1.5 rounded-xl bg-indigo-600 text-white shrink-0">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div>
                   <span className="font-bold">Otorisasi Supervisor / Owner Aktif:</span> Disetujui oleh{' '}
-                  <span className="font-black text-purple-700 dark:text-purple-300 underline decoration-purple-400">
+                  <span className="font-black text-indigo-700 dark:text-indigo-300 underline decoration-indigo-400">
                     {authorizationInfo.authorizedBy}
                   </span>{' '}
                   ({authorizationInfo.authorizerRole})
                 </div>
               </div>
-              <span className="px-2 py-0.5 rounded-md bg-purple-200 dark:bg-purple-900/60 text-[10px] font-mono font-black text-purple-800 dark:text-purple-300 shrink-0">
+              <span className="px-2 py-0.5 rounded-md bg-indigo-200 dark:bg-indigo-900/60 text-[11px] font-mono font-black text-indigo-800 dark:text-indigo-300 shrink-0">
                 OTORITAS TERVERIFIKASI
               </span>
             </div>
@@ -589,10 +589,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     type="button"
                     onClick={() => handleTriggerAiCategoryMapping(name, true)}
                     disabled={isAiMappingCategory || !name.trim()}
-                    className="px-3 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/50 border border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/60 cursor-pointer disabled:opacity-40 transition shadow-2xs shrink-0"
+                    className="px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center gap-1.5 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 cursor-pointer disabled:opacity-40 transition shadow-sm shrink-0"
                     title="Analisis nama produk & petakan kategori otomatis dengan Gemini AI"
                   >
-                    <Sparkles className={`w-3.5 h-3.5 text-purple-600 dark:text-purple-400 ${isAiMappingCategory ? 'animate-spin' : ''}`} />
+                    <Sparkles className={`w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 ${isAiMappingCategory ? 'animate-spin' : ''}`} />
                     <span>{isAiMappingCategory ? 'Memetakan...' : 'AI Kategori'}</span>
                   </button>
                   <button
@@ -630,9 +630,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setAutoMapCategoryEnabled(!autoMapCategoryEnabled)}
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 transition cursor-pointer ${
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 transition cursor-pointer ${
                       autoMapCategoryEnabled
-                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                        ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800'
                         : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-300 dark:border-slate-700'
                     }`}
                     title="Aktifkan atau nonaktifkan pemetaan otomatis AI saat mengetik nama produk"
@@ -649,13 +649,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   }}
                   className={`w-full px-3 py-2 text-sm rounded-xl border ${
                     aiMappingResult && !hasManuallySelectedCategory
-                      ? 'border-purple-400 dark:border-purple-600 bg-purple-50/30 dark:bg-purple-950/20'
+                      ? 'border-indigo-400 dark:border-indigo-600 bg-indigo-50/30 dark:bg-indigo-950/20'
                       : 'border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800'
                   } text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer transition`}
                 >
-                  <option value="" disabled>
-                    -- Pilih kategori --
-                  </option>
+                  <option value="" disabled>-- Pilih kategori --</option>
                   {categories
                     .filter((c) => c.id !== 'all')
                     .map((cat) => (
@@ -668,19 +666,19 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
                 {/* AI Mapping Status / Feedback Indicator */}
                 {isAiMappingCategory && (
-                  <div className="mt-1.5 p-2 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/50 text-[11px] text-purple-700 dark:text-purple-300 flex items-center gap-2 animate-pulse">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin text-purple-500 shrink-0" />
+                  <div className="mt-1.5 p-2 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 text-[11px] text-indigo-700 dark:text-indigo-300 flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin text-indigo-500 shrink-0" />
                     <span>Gemini AI sedang mengelompokkan kategori produk secara sistematis...</span>
                   </div>
                 )}
 
                 {aiMappingResult && !isAiMappingCategory && (
-                  <div className="mt-1.5 p-2.5 rounded-xl bg-gradient-to-r from-purple-50 via-indigo-50/40 to-emerald-50/50 dark:from-purple-950/40 dark:via-indigo-950/20 dark:to-emerald-950/30 border border-purple-200/80 dark:border-purple-800/60 text-[11px] space-y-1 animate-in fade-in">
+                  <div className="mt-1.5 p-2.5 rounded-xl bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-emerald-50/50 dark:from-indigo-950/40 dark:via-indigo-950/20 dark:to-emerald-950/30 border border-indigo-200/80 dark:border-indigo-800/60 text-[11px] space-y-1 animate-in fade-in">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                      <span className="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                         <span>Kategori AI: <strong>{aiMappingResult.categoryName}</strong></span>
-                        <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-purple-200/70 dark:bg-purple-900 text-purple-900 dark:text-purple-200 font-mono">
+                        <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-indigo-200/70 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-200 font-mono">
                           {Math.round(aiMappingResult.confidence * 100)}% akurat
                         </span>
                       </span>
@@ -690,7 +688,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           setAiMappingResult(null);
                           setHasManuallySelectedCategory(true);
                         }}
-                        className="text-[10px] text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                        className="text-[11px] text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                         title="Tutup informasi"
                       >
                         <X className="w-3 h-3" />
@@ -720,7 +718,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <button
                     type="button"
                     onClick={handleGenerateSku}
-                    className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                    className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
                   >
                     <RefreshCw className="w-2.5 h-2.5" /> Auto
                   </button>
@@ -748,7 +746,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       type="button"
                       onClick={() => handleOnlineBarcodeLookup()}
                       disabled={onlineLoading || !barcode.trim()}
-                      className="text-[10px] text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer font-bold disabled:opacity-40"
+                      className="text-[11px] text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer font-bold disabled:opacity-40"
                       title="Cek ke Google Search Grounding & Internet"
                     >
                       <Globe className="w-2.5 h-2.5" /> Cek Grounding
@@ -756,7 +754,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleGenerateBarcode('numeric')}
-                      className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                      className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
                       title="Acak Barcode Angka EAN-13"
                     >
                       <RefreshCw className="w-2.5 h-2.5" /> Acak EAN
@@ -764,7 +762,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleGenerateBarcode('alphanumeric')}
-                      className="text-[10px] text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                      className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5 cursor-pointer"
                       title="Acak Barcode Alfanumerik (Huruf & Angka Code-128)"
                     >
                       <RefreshCw className="w-2.5 h-2.5" /> Acak Alfanumerik
@@ -782,7 +780,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   />
                 </div>
                 {errors.barcode && <p id="err-productformmodal-barcode" role="alert" className="text-[11px] text-rose-600 mt-1">{errors.barcode}</p>}
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                   Bisa berupa angka murni (EAN-13/UPC) atau kombinasi huruf &amp; angka (Code-128).
                 </p>
               </div>
@@ -812,12 +810,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   Margin: <strong className="font-bold">{(marginPercent ?? 0).toFixed(1)}%</strong> ({formatCurrency(marginNominal)})
                 </span>
                 {isEligibleForPoints ? (
-                  <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500 text-slate-950 shadow-2xs">
+                  <span className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500 text-slate-950 shadow-sm">
                     <Award className="w-3 h-3 stroke-[2.5]" />
                     <span>Dapat Poin Member (≥15%)</span>
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                  <span className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                     <AlertTriangle className="w-3 h-3 text-amber-500" />
                     <span>Tanpa Poin (&lt;15%)</span>
                   </span>
@@ -880,7 +878,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleAddWholesaleUnit()}
-                className="px-3 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                className="px-3 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[3]" />
                 <span>+ Satuan Grosir</span>
@@ -889,13 +887,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
             {/* Quick Preset Buttons */}
             <div className="flex items-center gap-1.5 flex-wrap pt-1">
-              <span className="text-[10px] text-slate-500 font-medium">Preset cepat:</span>
+              <span className="text-[11px] text-slate-500 font-medium">Preset cepat:</span>
               {PRESET_UNITS.slice(0, 6).map((preset, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleAddWholesaleUnit(preset)}
-                  className="px-2 py-0.5 text-[10px] font-medium rounded-md bg-white dark:bg-slate-800 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950 dark:hover:text-emerald-300 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
+                  className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-white dark:bg-slate-800 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950 dark:hover:text-emerald-300 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
                 >
                   +{preset.label}
                 </button>
@@ -914,24 +912,24 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   return (
                     <div
                       key={u.id}
-                      className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-2.5 shadow-2xs"
+                      className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-2.5 shadow-sm"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-bold flex items-center justify-center">
+                          <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold flex items-center justify-center">
                             {idx + 1}
                           </span>
                           <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                             {u.name}
                           </span>
-                          <span className="text-[10px] text-slate-500 font-mono">
+                          <span className="text-[11px] text-slate-500 font-mono">
                             (Isi: {u.multiplier} {unit})
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2">
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                            className={`text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
                               unitPointsEligible
                                 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                                 : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
@@ -942,7 +940,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           <button aria-label="Hapus Satuan Grosir"
                             type="button"
                             onClick={() => handleDeleteWholesaleUnit(u.id)}
-                            className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
+                            className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
                             title="Hapus Satuan Grosir"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -952,7 +950,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                         <div className="sm:col-span-1">
-                          <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
+                          <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
                             Nama Satuan
                           </label>
                           <input aria-label="Nama Satuan"
@@ -960,12 +958,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                             value={u.name}
                             onChange={(e) => handleUpdateWholesaleUnit(u.id, { name: e.target.value })}
                             placeholder="Dus (40 Pcs)"
-                            className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
+                          <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
                             Isi / Multiplier ({unit})
                           </label>
                           <input aria-label="Isi / Multiplier ( )"
@@ -979,12 +977,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                 costPrice: costPrice * newMult,
                               });
                             }}
-                            className="w-full px-2.5 py-1.5 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            className="w-full px-2.5 py-1.5 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
+                          <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
                             Harga Jual Grosir (Rp)
                           </label>
                           <input aria-label="Harga Jual Grosir (Rp)"
@@ -993,12 +991,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                             step={500}
                             value={u.price || ''}
                             onChange={(e) => handleUpdateWholesaleUnit(u.id, { price: Number(e.target.value) })}
-                            className="w-full px-2.5 py-1.5 text-xs font-mono font-bold rounded-lg border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            className="w-full px-2.5 py-1.5 text-xs font-mono font-bold rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
+                          <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
                             Harga Modal HPP (Rp)
                           </label>
                           <input aria-label="Harga Modal HPP (Rp)"
@@ -1007,7 +1005,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                             step={500}
                             value={u.costPrice ?? (costPrice * u.multiplier)}
                             onChange={(e) => handleUpdateWholesaleUnit(u.id, { costPrice: Number(e.target.value) })}
-                            className="w-full px-2.5 py-1.5 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            className="w-full px-2.5 py-1.5 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                           />
                         </div>
                       </div>
@@ -1063,7 +1061,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Order Terakhir (PO)
                   </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Dasar 50%</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Dasar 50%</span>
                 </div>
                 <input aria-label="Order Terakhir (PO)"
                   type="number"
@@ -1090,7 +1088,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setMinStock(Math.max(1, Math.ceil(lastOrderQuantity * 0.5)))}
-                      className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                      className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       Sync 50% ({Math.max(1, Math.ceil(lastOrderQuantity * 0.5))})
                     </button>
@@ -1106,7 +1104,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     className="w-full px-3 py-2 text-sm font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                   {lastOrderQuantity > 0 && minStock === Math.max(1, Math.ceil(lastOrderQuantity * 0.5)) && (
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded">
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[11px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-md">
                       ✓ 50%
                     </span>
                   )}
@@ -1157,7 +1155,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       type="checkbox"
                       checked={isPopular}
                       onChange={(e) => setIsPopular(e.target.checked)}
-                      className="w-4 h-4 rounded text-emerald-700 focus:ring-emerald-500 border-slate-300"
+                      className="w-4 h-4 rounded-md text-emerald-700 focus:ring-emerald-500 border-slate-300"
                     />
                     <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
                       Tandai sebagai Produk Terlaris / Populer (Best Seller)
@@ -1188,7 +1186,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 <button
                   type="button"
                   onClick={() => onPrintPriceTag(productToEdit)}
-                  className="px-3.5 py-2 text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/60 rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                  className="px-3.5 py-2 text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/60 rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
                 >
                   <Tag className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
                   <span>Pricetag A4</span>
@@ -1198,7 +1196,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 <button
                   type="button"
                   onClick={() => onPrintQRShelfLabel(productToEdit)}
-                  className="px-3.5 py-2 text-xs font-bold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-300 dark:border-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                  className="px-3.5 py-2 text-xs font-bold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-300 dark:border-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
                   title="Cetak Label Rak QR Dinamis (Link Real-Time Stok & Update Harga)"
                 >
                   <QrCode className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />

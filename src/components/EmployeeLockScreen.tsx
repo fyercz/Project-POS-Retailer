@@ -145,7 +145,7 @@ export const EmployeeLockScreen: React.FC = () => {
       case 'owner':
         return { label: 'Owner / Pemilik', bg: 'bg-indigo-100 text-indigo-800 border-indigo-200' };
       case 'supervisor':
-        return { label: 'Supervisor / SPV', bg: 'bg-purple-100 text-purple-800 border-purple-200' };
+        return { label: 'Supervisor / SPV', bg: 'bg-indigo-100 text-indigo-800 border-indigo-200' };
       case 'inventory':
         return { label: 'Admin Gudang', bg: 'bg-amber-100 text-amber-800 border-amber-200' };
       case 'cashier':
@@ -165,18 +165,18 @@ export const EmployeeLockScreen: React.FC = () => {
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row"
+        className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row"
       >
         {/* Left Side: Store Info & Employee Selector */}
         <div className="w-full md:w-5/12 bg-slate-50 dark:bg-slate-900/50 p-6 md:p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between">
           <div>
             {/* Store Brand */}
-            <div className="mb-6 p-5 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 shadow-xs flex flex-col items-center justify-center text-center">
+            <div className="mb-6 p-5 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 shadow-sm flex flex-col items-center justify-center text-center">
               <UlilMartLogo variant="full" height={52} className="mb-2 max-w-[220px] drop-shadow-xs" />
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-600 dark:text-slate-300 font-semibold">{settings.branchName}</span>
                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                   POS Ready
                 </span>
               </div>
@@ -188,7 +188,7 @@ export const EmployeeLockScreen: React.FC = () => {
                 <span className="flex items-center gap-1.5 font-medium">
                   <Clock className="w-3.5 h-3.5 text-emerald-700" /> Waktu Sistem POS
                 </span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
                   Online
                 </span>
               </div>
@@ -243,17 +243,17 @@ export const EmployeeLockScreen: React.FC = () => {
                           <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                             {emp.name}
                           </p>
-                          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                             {emp.employeeCode}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded font-medium border ${badge.bg}`}
+                            className={`text-[11px] px-1.5 py-0.5 rounded-md font-medium border ${badge.bg}`}
                           >
                             {badge.label}
                           </span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                             {emp.assignedShift || 'Shift Normal'}
                           </span>
                         </div>

@@ -160,12 +160,12 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
     <div
       id="projected-sales-widget"
       data-testid="projected-sales-widget"
-      className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden transition-all ${className}`}
+      className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all ${className}`}
     >
       {/* 1. WIDGET HEADER */}
       <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
@@ -175,7 +175,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   (Projected Sales for the Next 7 Days)
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                   AI Forecasting
                 </span>
               </h3>
@@ -193,7 +193,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             type="button"
             id="btn-demand-calendar-modal"
             onClick={() => setIsEventModalOpen(true)}
-            className="px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/80 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition active:scale-95"
+            className="px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/80 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition active:scale-95"
             title="Kelola faktor lonjakan demand tanggal tertentu (Hari Jadi Kabupaten Magetan, Hari Raya, Libur Nasional)"
           >
             <PartyPopper className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
@@ -223,10 +223,10 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
               type="button"
               id="btn-seed-forecasting-sample"
               onClick={handleSeedSample}
-              className="px-2.5 py-1.5 rounded-xl border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition active:scale-95"
+              className="px-2.5 py-1.5 rounded-xl border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition active:scale-95"
               title="Isi riwayat transaksi 14 hari realistis untuk menguji ketepatan visualisasi proyeksi"
             >
-              <Zap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 animate-pulse" />
+              <Zap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>Simulasikan 14 Hari</span>
             </button>
           )}
@@ -236,9 +236,9 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             <button aria-pressed={scenario === 'conservative'}
               type="button"
               onClick={() => setScenario('conservative')}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl font-semibold transition cursor-pointer ${
                 scenario === 'conservative'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm font-bold'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
               }`}
               title="Skenario Konservatif: Perhitungan batas bawah estimasi (-15%)"
@@ -248,9 +248,9 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             <button aria-pressed={scenario === 'realistic'}
               type="button"
               onClick={() => setScenario('realistic')}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl font-semibold transition cursor-pointer ${
                 scenario === 'realistic'
-                  ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                  ? 'bg-indigo-600 text-white shadow-sm font-bold'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
               }`}
               title="Skenario Realistis: Target penjualan standar berbasis regresi waktu"
@@ -260,9 +260,9 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             <button aria-pressed={scenario === 'optimistic'}
               type="button"
               onClick={() => setScenario('optimistic')}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl font-semibold transition cursor-pointer ${
                 scenario === 'optimistic'
-                  ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-2xs font-bold'
+                  ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm font-bold'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
               }`}
               title="Skenario Optimis: Perhitungan batas atas estimasi lonjakan (+15%)"
@@ -275,9 +275,9 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
 
       {/* Special Demand Event Detection Banner */}
       {projection.hasEventBoost && (
-        <div className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 border-b border-amber-200 dark:border-amber-900/60 flex items-center justify-between gap-3 text-xs flex-wrap">
+        <div className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 border-b border-amber-200 dark:border-amber-900/60 flex items-center justify-between gap-3 text-xs flex-wrap">
           <div className="flex items-center gap-2">
-            <PartyPopper className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0 animate-bounce" />
+            <PartyPopper className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" />
             <span className="font-bold text-amber-900 dark:text-amber-200">
               Peringatan Lonjakan Demand Terdeteksi:
             </span>
@@ -285,7 +285,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
               {projection.activeEvents.map((evt) => (
                 <span
                   key={evt.id}
-                  className="px-2 py-0.5 rounded-lg bg-amber-200/80 dark:bg-amber-900/70 text-amber-900 dark:text-amber-100 font-bold font-mono text-[11px] border border-amber-300 dark:border-amber-700 flex items-center gap-1"
+                  className="px-2 py-0.5 rounded-xl bg-amber-200/80 dark:bg-amber-900/70 text-amber-900 dark:text-amber-100 font-bold font-mono text-[11px] border border-amber-300 dark:border-amber-700 flex items-center gap-1"
                 >
                   <span>{evt.badge}</span>
                   <span className="text-amber-700 dark:text-amber-300 font-normal">
@@ -341,14 +341,14 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Total Proyeksi 7 Hari
             </span>
-            <span className="p-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400">
+            <span className="p-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400">
               <Calendar className="w-3.5 h-3.5" />
             </span>
           </div>
           <div className="text-lg sm:text-xl font-black font-mono text-indigo-700 dark:text-indigo-300 mt-1">
             {formatCurrency(projection.totalProjected7Days, currency)}
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] mt-1 font-mono">
+          <div className="flex items-center gap-1.5 text-[11px] mt-1 font-mono">
             {projection.trendPercentage >= 0 ? (
               <span className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center">
                 <TrendingUp className="w-3 h-3 mr-0.5" />
@@ -370,14 +370,14 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Rata-Rata Per Hari
             </span>
-            <span className="p-1 rounded-lg bg-teal-50 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400">
+            <span className="p-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400">
               <DollarSign className="w-3.5 h-3.5" />
             </span>
           </div>
-          <div className="text-lg sm:text-xl font-black font-mono text-teal-700 dark:text-teal-300 mt-1">
+          <div className="text-lg sm:text-xl font-black font-mono text-emerald-700 dark:text-emerald-300 mt-1">
             {formatCurrency(projection.avgDailyProjected, currency)}
           </div>
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
             <span>~{Math.round(projection.projectedTotalTxCount / 7)} transaksi / hari</span>
           </div>
         </div>
@@ -388,7 +388,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Hari Puncak (Peak Day)
             </span>
-            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+            <span className="px-1.5 py-0.2 rounded-md text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
               🔥 Teramai
             </span>
           </div>
@@ -406,14 +406,14 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Estimasi Volume Struk
             </span>
-            <span className="p-1 rounded-lg bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400">
+            <span className="p-1 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400">
               <ShoppingBag className="w-3.5 h-3.5" />
             </span>
           </div>
           <div className="text-lg sm:text-xl font-black font-mono text-blue-700 dark:text-blue-300 mt-1">
             ~{projection.projectedTotalTxCount} Struk
           </div>
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-mono">
             <span>AOV: {formatCurrency(projection.projectedAvgTicket, currency)}/struk</span>
           </div>
         </div>
@@ -504,7 +504,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                             {data.dayName}, {data.label}
                           </span>
                           <span
-                            className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                            className={`px-1.5 py-0.2 rounded-md text-[11px] font-bold ${
                               isProj
                                 ? 'bg-indigo-900/80 text-indigo-300 border border-indigo-700/60'
                                 : 'bg-emerald-900/80 text-emerald-300 border border-emerald-700/60'
@@ -536,14 +536,14 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                             </div>
 
                             {data.specialEvent && (
-                              <div className="p-2 rounded-lg bg-amber-950/80 border border-amber-600/70 text-amber-200 text-xs mt-1 space-y-0.5">
+                              <div className="p-2 rounded-xl bg-amber-950/80 border border-amber-600/70 text-amber-200 text-xs mt-1 space-y-0.5">
                                 <div className="font-bold flex items-center justify-between gap-1">
                                   <span>{data.specialEvent.badge}</span>
-                                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/25 text-amber-300 font-mono font-bold">
+                                  <span className="text-[11px] px-1.5 py-0.2 rounded-md bg-amber-500/25 text-amber-300 font-mono font-bold">
                                     +{Math.round((data.specialEvent.demandMultiplier - 1) * 100)}% Demand
                                   </span>
                                 </div>
-                                <p className="text-[10px] text-amber-300/90 leading-tight">
+                                <p className="text-[11px] text-amber-300/90 leading-tight">
                                   {data.specialEvent.description}
                                 </p>
                               </div>
@@ -649,7 +649,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                       {day.dayName}
                     </span>
                     <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded font-bold shrink-0 ${
+                      className={`text-[11px] px-1.5 py-0.2 rounded-md font-bold shrink-0 ${
                         hasEvent
                           ? 'bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200 font-mono'
                           : isPeak
@@ -664,12 +664,12 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                       {hasEvent ? '🎉 Event' : isPeak ? '🔥 Puncak' : isHigh ? '⚡ Ramai' : isLow ? 'Tenang' : 'Normal'}
                     </span>
                   </div>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono block">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono block">
                     {day.label}
                   </span>
 
                   {day.specialEvent && (
-                    <div className="mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 truncate flex items-center justify-between gap-0.5">
+                    <div className="mt-1 px-1.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 truncate flex items-center justify-between gap-0.5">
                       <span className="truncate">{day.specialEvent.badge}</span>
                       <span className="shrink-0 font-mono">+{Math.round((day.specialEvent.demandMultiplier - 1) * 100)}%</span>
                     </div>
@@ -680,7 +680,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   <div className="text-xs sm:text-sm font-black font-mono text-slate-900 dark:text-white">
                     {formatCurrency(day.projectedSales, currency)}
                   </div>
-                  <div className="flex items-center justify-between text-[10px] font-mono mt-0.5">
+                  <div className="flex items-center justify-between text-[11px] font-mono mt-0.5">
                     <span className="text-slate-500 dark:text-slate-400">~{day.projectedTxCount} struk</span>
                     <span
                       className={`font-bold ${
@@ -703,13 +703,13 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
           <div
             className={`mt-3 p-3.5 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs animate-in fade-in ${
               activeDayDetail.specialEvent
-                ? 'bg-amber-50/90 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700/80 shadow-2xs'
+                ? 'bg-amber-50/90 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700/80 shadow-sm'
                 : 'bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800'
             }`}
           >
             <div className="flex items-start sm:items-center gap-2.5">
               <div
-                className={`p-1.5 rounded-lg text-white shrink-0 ${
+                className={`p-1.5 rounded-xl text-white shrink-0 ${
                   activeDayDetail.specialEvent ? 'bg-amber-600' : 'bg-indigo-600'
                 }`}
               >
@@ -729,7 +729,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                       : `Rekomendasi Operasional Toko (${activeDayDetail.dayName}, ${activeDayDetail.label}):`}
                   </span>
                   {activeDayDetail.specialEvent && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 font-mono">
+                    <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 font-mono">
                       Faktor Demand +{Math.round((activeDayDetail.specialEvent.demandMultiplier - 1) * 100)}%
                     </span>
                   )}
@@ -787,7 +787,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
 
           <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
             <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1 text-[11px]">
-              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+              <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
               <span>Promo Peningkatan Hari Tenang</span>
             </span>
             <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
@@ -800,7 +800,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
       {/* 7. DEMAND EVENTS & SPECIAL CALENDAR MODAL */}
       {isEventModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95">
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
               <div className="flex items-center gap-3">
@@ -819,7 +819,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
               <button aria-label="Tutup"
                 type="button"
                 onClick={() => setIsEventModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -844,9 +844,9 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   <button
                     type="button"
                     onClick={() => setSimulatedDate(null)}
-                    className={`px-2.5 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
+                    className={`px-2.5 py-1.5 rounded-xl font-semibold transition cursor-pointer ${
                       simulatedDate === null
-                        ? 'bg-indigo-600 text-white shadow-2xs font-bold'
+                        ? 'bg-indigo-600 text-white shadow-sm font-bold'
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -855,9 +855,9 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   <button
                     type="button"
                     onClick={() => setSimulatedDate(new Date(2026, 2, 19))}
-                    className={`px-2.5 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
+                    className={`px-2.5 py-1.5 rounded-xl font-semibold transition cursor-pointer ${
                       simulatedDate && formatYMD(simulatedDate) === '2026-03-19'
-                        ? 'bg-indigo-600 text-white shadow-2xs font-bold'
+                        ? 'bg-indigo-600 text-white shadow-sm font-bold'
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -866,9 +866,9 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   <button
                     type="button"
                     onClick={() => setSimulatedDate(new Date(2026, 11, 29))}
-                    className={`px-2.5 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
+                    className={`px-2.5 py-1.5 rounded-xl font-semibold transition cursor-pointer ${
                       simulatedDate && formatYMD(simulatedDate) === '2026-12-29'
-                        ? 'bg-indigo-600 text-white shadow-2xs font-bold'
+                        ? 'bg-indigo-600 text-white shadow-sm font-bold'
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -877,9 +877,9 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                   <button
                     type="button"
                     onClick={() => setSimulatedDate(new Date(2026, 9, 24))}
-                    className={`px-2.5 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
+                    className={`px-2.5 py-1.5 rounded-xl font-semibold transition cursor-pointer ${
                       simulatedDate && formatYMD(simulatedDate) === '2026-10-24'
-                        ? 'bg-indigo-600 text-white shadow-2xs font-bold'
+                        ? 'bg-indigo-600 text-white shadow-sm font-bold'
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -892,7 +892,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
               <div>
                 <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] mb-2 flex items-center justify-between">
                   <span>Daftar Event Demand &amp; Hari Besar ({eventsList.length})</span>
-                  <span className="text-slate-500 text-[10px] lowercase font-normal">
+                  <span className="text-slate-500 text-[11px] lowercase font-normal">
                     pola MM-DD berlaku tahunan
                   </span>
                 </h4>
@@ -908,17 +908,17 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                           <span className="font-bold text-slate-900 dark:text-white">
                             {evt.name}
                           </span>
-                          <span className="px-1.5 py-0.2 rounded font-mono text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                          <span className="px-1.5 py-0.2 rounded-md font-mono text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                             +{Math.round((evt.demandMultiplier - 1) * 100)}% Surge
                           </span>
-                          <span className="text-[10px] text-slate-500 font-mono">
+                          <span className="text-[11px] text-slate-500 font-mono">
                             {evt.datePattern === 'payday' ? 'tgl 25 - 5' : `Pola: ${evt.datePattern}`}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
                           {evt.description}
                         </p>
-                        <p className="text-[10px] text-emerald-700 dark:text-emerald-400 italic">
+                        <p className="text-[11px] text-emerald-700 dark:text-emerald-400 italic">
                           💡 {evt.stockAdvice}
                         </p>
                       </div>
@@ -927,7 +927,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                         <button aria-label="Hapus event kustom"
                           type="button"
                           onClick={() => handleDeleteCustomEvent(evt.id)}
-                          className="p-1.5 rounded text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition shrink-0 cursor-pointer"
+                          className="p-1.5 rounded-md text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition shrink-0 cursor-pointer"
                           title="Hapus event kustom"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -949,7 +949,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                 </h4>
 
                 {formError && (
-                  <div role="alert" className="p-2 rounded-lg bg-rose-50 text-rose-700 text-xs font-semibold">
+                  <div role="alert" className="p-2 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold">
                     {formError}
                   </div>
                 )}
@@ -964,7 +964,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                       value={newEventName}
                       onChange={(e) => setNewEventName(e.target.value)}
                       placeholder="Contoh: Festival Telaga Sarangan Magetan"
-                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
 
@@ -977,7 +977,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                       value={newEventDatePattern}
                       onChange={(e) => setNewEventDatePattern(e.target.value)}
                       placeholder="Contoh: 10-12 atau 2026-10-12"
-                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
 
@@ -992,7 +992,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                         max="200"
                         value={newEventMultiplierPercent}
                         onChange={(e) => setNewEventMultiplierPercent(e.target.value)}
-                        className="w-24 px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono"
+                        className="w-24 px-2.5 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono"
                       />
                       <span className="text-[11px] text-slate-500">
                         = x{(1 + (parseFloat(newEventMultiplierPercent) || 0) / 100).toFixed(2)} omzet
@@ -1007,7 +1007,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                     <select aria-label="Kategori Event"
                       value={newEventCategory}
                       onChange={(e) => setNewEventCategory(e.target.value as any)}
-                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                      className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                     >
                       <option value="local_event">Event Daerah / Kota (Magetan)</option>
                       <option value="religious_holiday">Hari Raya Keagamaan</option>
@@ -1026,7 +1026,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                     value={newEventDescription}
                     onChange={(e) => setNewEventDescription(e.target.value)}
                     placeholder="Contoh: Pawai budaya dan pasar rakyat memicu lonjakan konsumsi warga"
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   />
                 </div>
 
@@ -1039,14 +1039,14 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                     value={newEventAdvice}
                     onChange={(e) => setNewEventAdvice(e.target.value)}
                     placeholder="Contoh: Tambah stok minuman dingin & siapkan uang kembalian pecahan kecil"
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div className="flex justify-end pt-1">
                   <button
                     type="submit"
-                    className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition active:scale-95"
+                    className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition active:scale-95"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Simpan Event ke Kalender</span>

@@ -114,11 +114,11 @@ export const ReceivingBarcodeCameraModal: React.FC<ReceivingBarcodeCameraModalPr
 
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in">
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-teal-500 text-slate-950 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center">
               <ScanBarcode className="w-4 h-4" />
             </div>
             <div>
@@ -132,7 +132,7 @@ export const ReceivingBarcodeCameraModal: React.FC<ReceivingBarcodeCameraModalPr
           </div>
           <button aria-label="Tutup"
             onClick={handleClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -156,7 +156,7 @@ export const ReceivingBarcodeCameraModal: React.FC<ReceivingBarcodeCameraModalPr
           )}
 
           {lastScanned && !cameraError && (
-            <div className="absolute bottom-6 px-3 py-1.5 rounded-full bg-emerald-500 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-lg animate-bounce">
+            <div className="absolute bottom-6 px-3 py-1.5 rounded-full bg-emerald-500 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-md">
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Barcode Terbaca: {lastScanned}</span>
             </div>
@@ -171,7 +171,7 @@ export const ReceivingBarcodeCameraModal: React.FC<ReceivingBarcodeCameraModalPr
           <button
             type="button"
             onClick={handleClose}
-            className="px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer transition shadow-2xs"
+            className="px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer transition shadow-sm"
           >
             Selesai
           </button>

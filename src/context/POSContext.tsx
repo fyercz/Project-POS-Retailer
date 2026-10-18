@@ -1990,7 +1990,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       roleTitle: 'Pemilik Toko',
       pin,
       avatar: initials || 'OW',
-      avatarColor: 'bg-purple-600',
+      avatarColor: 'bg-indigo-600',
       isActive: true,
       assignedShift: 'Full Day',
       registeredAt: toLocalDateString(),

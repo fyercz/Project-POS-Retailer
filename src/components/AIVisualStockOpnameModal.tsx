@@ -545,12 +545,12 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]"
+        className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]"
       >
         {/* Modal Header */}
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-transparent dark:bg-slate-850">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-emerald-500/10 via-emerald-500/10 to-transparent dark:bg-slate-850">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-500 text-white flex items-center justify-center shadow-md shadow-teal-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
               <Layers className="w-5 h-5" />
             </div>
             <div>
@@ -558,7 +558,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                 <h2 className="text-base font-bold text-slate-900 dark:text-white">
                   Stock Opname Cerdas via Video & Kamera AI
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                   Gemini Vision Inspector
                 </span>
               </div>
@@ -613,9 +613,9 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                 <button aria-pressed={scannedType === 'shelf_image'}
                   type="button"
                   onClick={() => setScannedType('shelf_image')}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition ${
+                  className={`px-2.5 py-1 text-xs font-bold rounded-xl transition ${
                     scannedType === 'shelf_image'
-                      ? 'bg-teal-600 text-white shadow-xs'
+                      ? 'bg-emerald-600 text-white shadow-sm'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
@@ -624,9 +624,9 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                 <button aria-pressed={scannedType === 'video_stream'}
                   type="button"
                   onClick={() => setScannedType('video_stream')}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition ${
+                  className={`px-2.5 py-1 text-xs font-bold rounded-xl transition ${
                     scannedType === 'video_stream'
-                      ? 'bg-teal-600 text-white shadow-xs'
+                      ? 'bg-emerald-600 text-white shadow-sm'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
@@ -647,13 +647,13 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
               <canvas ref={canvasRef} className="hidden" />
 
               {/* Scanning visual overlay overlaying the video */}
-              <div className="absolute inset-0 border-2 border-teal-400/40 pointer-events-none flex flex-col justify-between p-4">
+              <div className="absolute inset-0 border-2 border-emerald-400/40 pointer-events-none flex flex-col justify-between p-4">
                 <div className="flex justify-between items-center">
-                  <span className="px-2.5 py-1 rounded-md bg-teal-600/90 text-white text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md">
+                  <span className="px-2.5 py-1 rounded-md bg-emerald-600/90 text-white text-[11px] font-bold flex items-center gap-1.5 backdrop-blur-md">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                     Kamera AI Siap Memindai Rak
                   </span>
-                  <span className="text-[10px] text-white/80 font-mono bg-black/50 px-2 py-0.5 rounded">
+                  <span className="text-[11px] text-white/80 font-mono bg-black/50 px-2 py-0.5 rounded-md">
                     Area: {shelfArea || '-'}
                   </span>
                 </div>
@@ -671,7 +671,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                 {scannedType === 'shelf_image' ? (
                   <button
                     onClick={handleCaptureSinglePhoto}
-                    className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 cursor-pointer"
                   >
                     <Camera className="w-4 h-4" /> Jepret Foto Rak
                   </button>
@@ -679,7 +679,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                   <button
                     onClick={handleStartContinuousVideoSampling}
                     disabled={isCapturingVideo}
-                    className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 cursor-pointer"
                   >
                     <Video className="w-4 h-4" />
                     {isCapturingVideo ? 'Merekam Frame Rak...' : 'Mulai Rekam Scan Video (3 Detik)'}
@@ -706,20 +706,20 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                   }}
                   className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center text-center transition ${
                     isDragging
-                      ? 'border-teal-500 bg-teal-50/60 dark:bg-teal-950/40'
+                      ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40'
                       : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40'
                   }`}
                 >
                   {isExtractingVideo ? (
                     <div className="py-10 space-y-3 flex flex-col items-center justify-center">
-                      <div className="w-12 h-12 rounded-2xl bg-teal-100 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shadow-inner">
-                        <RefreshCw className="w-6 h-6 animate-spin text-teal-600 dark:text-teal-400" />
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-inner">
+                        <RefreshCw className="w-6 h-6 animate-spin text-emerald-600 dark:text-emerald-400" />
                       </div>
                       <div className="space-y-1">
                         <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                           Sedang Memproses Rekaman Video Rak...
                         </p>
-                        <p className="text-[11px] text-teal-600 dark:text-teal-400 font-medium">
+                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                           {extractProgress || 'Mengekstrak keyframe produk pada rak display...'}
                         </p>
                       </div>
@@ -730,10 +730,10 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                         {capturedFrames.map((_, i) => (
                           <div
                             key={i}
-                            className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-left shadow-xs"
+                            className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-left shadow-sm"
                           >
                             <div className="flex items-center gap-2 min-w-0">
-                              <div className="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                                 {scannedType === 'video_stream' ? (
                                   <Film className="w-4 h-4" />
                                 ) : (
@@ -744,12 +744,12 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                                   {scannedType === 'video_stream' ? `Frame #${i + 1}` : `Foto Rak #${i + 1}`}
                                 </p>
-                                <span className="text-[10px] text-slate-500 font-mono">
+                                <span className="text-[11px] text-slate-500 font-mono">
                                   Tersimpan (No Preview)
                                 </span>
                               </div>
                             </div>
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+                            <span className="px-1.5 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
                               OK
                             </span>
                           </div>
@@ -760,12 +760,12 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                         <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                           {scannedType === 'video_stream' ? (
                             <>
-                              <Film className="w-3.5 h-3.5 text-teal-500" />
+                              <Film className="w-3.5 h-3.5 text-emerald-500" />
                               <span>{capturedFrames.length} Frame Rekaman Video Rak</span>
                             </>
                           ) : (
                             <>
-                              <Layers className="w-3.5 h-3.5 text-teal-500" />
+                              <Layers className="w-3.5 h-3.5 text-emerald-500" />
                               <span>{capturedFrames.length} Foto Rak Siap Dianalisis</span>
                             </>
                           )}
@@ -783,7 +783,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                     </div>
                   ) : (
                     <div className="py-8 space-y-3">
-                      <div className="w-12 h-12 rounded-2xl bg-teal-100 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center mx-auto">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
                         <Video className="w-6 h-6" />
                       </div>
                       <div>
@@ -826,7 +826,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                     <button
                       type="button"
                       onClick={() => nativeCameraInputRef.current?.click()}
-                      className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer"
                       title="Gunakan aplikasi kamera bawaan HP (paling stabil di Android)"
                     >
                       <Camera className="w-3.5 h-3.5" /> Foto Kamera HP
@@ -834,28 +834,28 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                     <button
                       type="button"
                       onClick={handleStartCamera}
-                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Video className="w-3.5 h-3.5" /> Live Stream
                     </button>
                     <button
                       type="button"
                       onClick={() => videoFileInputRef.current?.click()}
-                      className="px-3 py-1.5 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 text-xs font-bold rounded-xl hover:bg-teal-100 dark:hover:bg-teal-900/60 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/60 flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Film className="w-3.5 h-3.5" /> Unggah Video Rak
                     </button>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Upload className="w-3.5 h-3.5" /> Galeri / File
                     </button>
                     <button
                       type="button"
                       onClick={handleLoadSampleShelf}
-                      className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center gap-1 cursor-pointer shadow-2xs"
+                      className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center gap-1 cursor-pointer shadow-sm"
                     >
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Sampel Rak Toko
                     </button>
@@ -867,7 +867,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                   id="btn-run-ai-stock-audit"
                   onClick={handleRunAiStockAudit}
                   disabled={capturedFrames.length === 0 || isProcessing || isExtractingVideo}
-                  className="w-full py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-md shadow-teal-500/20 flex items-center justify-center gap-2 cursor-pointer transition"
+                  className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer transition"
                 >
                   {isProcessing ? (
                     <>
@@ -887,11 +887,11 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
               <div className="space-y-4 flex flex-col">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-teal-500" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                     <span>Hasil Rekonsiliasi Stok Fisik vs Sistem</span>
                   </h3>
                   {scanResult && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                       Selisih: {scanResult.totalDiscrepancy} Item
                     </span>
                   )}
@@ -917,7 +917,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                                 <p className="font-bold text-slate-900 dark:text-white truncate">
                                   {item.productName}
                                 </p>
-                                <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                                <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
                                   <span>Lokasi: {item.shelfLocation}</span>
                                   <span>•</span>
                                   <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
@@ -928,11 +928,11 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
 
                               <div className="text-right flex items-center gap-3">
                                 <div>
-                                  <div className="text-[10px] text-slate-500">Sistem / Fisik:</div>
+                                  <div className="text-[11px] text-slate-500">Sistem / Fisik:</div>
                                   <div className="font-mono font-bold text-xs">
                                     <span className="text-slate-500">{item.systemStock}</span>
                                     <span className="mx-1">→</span>
-                                    <span className="text-teal-600 dark:text-teal-400 text-sm">
+                                    <span className="text-emerald-600 dark:text-emerald-400 text-sm">
                                       {item.detectedCount}
                                     </span>
                                   </div>
@@ -940,16 +940,16 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
 
                                 {item.difference !== 0 ? (
                                   <span
-                                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                                    className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
                                       item.difference < 0
                                         ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                                        : 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300'
+                                        : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                                     }`}
                                   >
                                     {item.difference > 0 ? `+${item.difference}` : item.difference}
                                   </span>
                                 ) : (
-                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                  <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                                     Sesuai
                                   </span>
                                 )}
@@ -961,12 +961,12 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
 
                       {/* Observations */}
                       {scanResult.aiObservations && scanResult.aiObservations.length > 0 && (
-                        <div className="p-2.5 rounded-xl bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200/50 dark:border-teal-800/50 text-[11px] text-teal-900 dark:text-teal-200 space-y-1">
+                        <div className="p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/50 text-[11px] text-emerald-900 dark:text-emerald-200 space-y-1">
                           <span className="font-bold block flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-teal-500" />
+                            <Sparkles className="w-3 h-3 text-emerald-500" />
                             Observasi Visual AI:
                           </span>
-                          <ul className="list-disc list-inside space-y-0.5 text-[10px] text-slate-600 dark:text-slate-300">
+                          <ul className="list-disc list-inside space-y-0.5 text-[11px] text-slate-600 dark:text-slate-300">
                             {scanResult.aiObservations.map((obs, i) => (
                               <li key={i}>{obs}</li>
                             ))}

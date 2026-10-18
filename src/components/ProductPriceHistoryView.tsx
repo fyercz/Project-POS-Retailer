@@ -271,35 +271,35 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
     switch (type) {
       case 'purchase_receiving':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
             <Truck className="w-3 h-3 text-blue-600" />
             Faktur Supplier
           </span>
         );
       case 'manual_update':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-            <Tag className="w-3 h-3 text-purple-600" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+            <Tag className="w-3 h-3 text-indigo-600" />
             Penyesuaian Manual
           </span>
         );
       case 'bulk_adjust':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
             <Layers className="w-3 h-3 text-indigo-600" />
             Koreksi Massal
           </span>
         );
       case 'promotion':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
             <Sparkles className="w-3 h-3 text-amber-700" />
             Harga Promo
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
             <History className="w-3 h-3 text-slate-500" />
             Registrasi Awal
           </span>
@@ -311,7 +311,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
     <div className={`space-y-6 ${isModal ? 'p-1' : ''}`}>
       {/* Toast Notification */}
       {successToast && (
-        <div role="status" className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between gap-2 shadow-xs animate-in fade-in duration-200">
+        <div role="status" className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between gap-2 shadow-sm animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
             <span className="font-semibold">{successToast}</span>
@@ -326,7 +326,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
       )}
 
       {/* TOP HEADER: Product Selector + Actions */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
         {/* Left: Product Picker Dropdown */}
         <div className="relative flex-1 min-w-0">
           <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
@@ -340,7 +340,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
               className="flex-1 flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 text-left transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0">
                   <Package className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
@@ -349,7 +349,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                       {currentProduct.name}
                     </span>
                     {currentProduct.brand && (
-                      <span className="px-1.5 py-0.2 rounded-md text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 shrink-0">
+                      <span className="px-1.5 py-0.2 rounded-md text-[11px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 shrink-0">
                         {currentProduct.brand}
                       </span>
                     )}
@@ -400,14 +400,14 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 font-bold text-[10px] text-slate-600 dark:text-slate-300">
+                        <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 font-bold text-[11px] text-slate-600 dark:text-slate-300">
                           {prod.brand ? prod.brand.slice(0, 2).toUpperCase() : 'BR'}
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                             {prod.name}
                           </p>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                             {prod.sku} • {prod.barcode}
                           </p>
                         </div>
@@ -417,7 +417,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                         <div className="text-xs font-bold text-slate-900 dark:text-white font-mono">
                           {formatCurrency(prod.price, settings.currency)}
                         </div>
-                        <div className="text-[10px] text-amber-700 dark:text-amber-400 font-mono">
+                        <div className="text-[11px] text-amber-700 dark:text-amber-400 font-mono">
                           HPP: {formatCurrency(prod.costPrice, settings.currency)}
                         </div>
                       </div>
@@ -438,7 +438,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
           <button
             id="btn-add-price-change"
             onClick={handleOpenAddPrice}
-            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-all active:scale-95"
+            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95"
             title="Catat pembaruan harga modal / harga jual baru ke riwayat"
           >
             <Plus className="w-4 h-4" />
@@ -448,7 +448,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
           <button
             id="btn-export-price-history-csv"
             onClick={() => exportPriceHistoryCSV(currentProduct, filteredHistory)}
-            className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+            className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
             title="Ekspor riwayat harga ke file spreadsheet CSV"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
@@ -458,7 +458,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
           <button aria-label="Cetak lembar laporan riwayat harga"
             id="btn-print-price-history"
             onClick={handlePrint}
-            className="p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
+            className="p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center cursor-pointer transition-colors shadow-sm"
             title="Cetak lembar laporan riwayat harga"
           >
             <Printer className="w-4 h-4" />
@@ -480,7 +480,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
       {analytics && (
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Card 1: Harga Jual Retail Terkini */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
               <span>Harga Jual Retail</span>
               <Tag className="w-3.5 h-3.5 text-emerald-500" />
@@ -511,7 +511,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
           </div>
 
           {/* Card 2: Harga Modal (HPP Kulakan) */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
               <span>Harga Modal (HPP)</span>
               <DollarSign className="w-3.5 h-3.5 text-amber-500" />
@@ -542,7 +542,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
           </div>
 
           {/* Card 3: Gross Profit Margin */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
               <span>Margin Laba Kotor</span>
               <Percent className="w-3.5 h-3.5 text-indigo-500" />
@@ -556,7 +556,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
           </div>
 
           {/* Card 4: Rentang Fluktuasi HPP */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
               <span>Rentang Fluktuasi Modal</span>
               <ArrowUpDown className="w-3.5 h-3.5 text-blue-500" />
@@ -571,7 +571,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
           </div>
 
           {/* Card 5: Stabilitas & Rating Volatilitas */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1 col-span-2 lg:col-span-1">
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1 col-span-2 lg:col-span-1">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
               <span>Stabilitas Harga</span>
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
@@ -597,7 +597,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
       )}
 
       {/* VISUAL CHART SECTION WITH TIMEFRAME TOGGLE */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -622,9 +622,9 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                 key={tf.val}
                 type="button"
                 onClick={() => setTimeframeFilter(tf.val as any)}
-                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
                   timeframeFilter === tf.val
-                    ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                    ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
@@ -643,7 +643,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
       </div>
 
       {/* DETAILED HISTORICAL LOG TABLE */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         {/* Table Header Controls */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -659,7 +659,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
             <select aria-label="Filter jenis perubahan harga"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-2.5 py-1 text-xs rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 cursor-pointer font-medium"
+              className="px-2.5 py-1 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-indigo-500 cursor-pointer font-medium"
             >
               <option value="all">Semua Tipe Perubahan</option>
               <option value="purchase_receiving">Faktur Supplier / Kulakan</option>
@@ -710,7 +710,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                       {/* Date */}
                       <td className="py-3 px-4 font-mono text-slate-800 dark:text-slate-200 whitespace-nowrap">
                         <div className="font-bold">{formatDate(rec.date)}</div>
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[11px] text-slate-500">
                           {new Date(rec.date).toLocaleTimeString('id-ID', {
                             hour: '2-digit',
                             minute: '2-digit',
@@ -731,7 +731,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                         </div>
                         {costDiff !== 0 && (
                           <div
-                            className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${
+                            className={`text-[11px] font-bold flex items-center justify-end gap-0.5 ${
                               costDiff > 0 ? 'text-rose-600' : 'text-emerald-700'
                             }`}
                           >
@@ -748,7 +748,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                         </div>
                         {priceDiff !== 0 && (
                           <div
-                            className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${
+                            className={`text-[11px] font-bold flex items-center justify-end gap-0.5 ${
                               priceDiff > 0 ? 'text-emerald-700' : 'text-rose-600'
                             }`}
                           >
@@ -766,7 +766,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                       {/* Margin % */}
                       <td className="py-3 px-4 text-right font-mono whitespace-nowrap">
                         <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                          className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
                             Number(marginPct) >= 20
                               ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
                               : Number(marginPct) >= 10
@@ -784,7 +784,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                           {rec.sourceReference || '-'}
                         </div>
                         {rec.supplierName && (
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
                             {rec.supplierName}
                           </div>
                         )}
@@ -796,7 +796,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                           {rec.notes || '-'}
                         </div>
                         {rec.recordedBy && (
-                          <div className="text-[10px] text-slate-500">Oleh: {rec.recordedBy}</div>
+                          <div className="text-[11px] text-slate-500">Oleh: {rec.recordedBy}</div>
                         )}
                       </td>
                     </tr>
@@ -817,7 +817,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
       {/* MODAL: ADD / RECORD NEW PRICE ADJUSTMENT */}
       {isAddPriceModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/50">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
@@ -835,7 +835,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
               <button aria-label="Tutup"
                 type="button"
                 onClick={() => setIsAddPriceModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -845,7 +845,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
               {/* Previous vs New Comparison */}
               <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800">
                 <div>
-                  <span className="text-[10px] text-slate-500 block">Harga Saat Ini:</span>
+                  <span className="text-[11px] text-slate-500 block">Harga Saat Ini:</span>
                   <div className="font-mono text-emerald-700 font-bold">
                     Jual: {formatCurrency(currentProduct.price, settings.currency)}
                   </div>
@@ -855,11 +855,11 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-slate-500 block">Margin Saat Ini:</span>
+                  <span className="text-[11px] text-slate-500 block">Margin Saat Ini:</span>
                   <div className="font-mono font-black text-indigo-600">
                     {(((currentProduct.price - currentProduct.costPrice) / (currentProduct.price || 1)) * 100).toFixed(1)}%
                   </div>
-                  <div className="text-[10px] text-slate-500">
+                  <div className="text-[11px] text-slate-500">
                     Rp {currentProduct.price - currentProduct.costPrice}
                   </div>
                 </div>
@@ -979,7 +979,7 @@ export const ProductPriceHistoryView: React.FC<ProductPriceHistoryViewProps> = (
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer transition-all shadow-xs"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer transition-all shadow-sm"
                 >
                   Simpan &amp; Terapkan Harga
                 </button>

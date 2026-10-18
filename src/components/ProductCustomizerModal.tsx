@@ -50,13 +50,13 @@ export const ProductCustomizerModal: React.FC<ProductCustomizerModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div
         id="product-customizer-dialog"
-        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Clean Header without image preview */}
         <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500 text-slate-950 uppercase tracking-wider">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500 text-slate-950 uppercase tracking-wider">
                 {product.categoryId}
               </span>
               <span className="text-xs text-slate-500 font-mono">SKU: {product.sku}</span>
@@ -77,7 +77,7 @@ export const ProductCustomizerModal: React.FC<ProductCustomizerModalProps> = ({
         {/* Options Content */}
         <div className="p-5 overflow-y-auto flex-1 space-y-4">
           {product.description && (
-            <p className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+            <p className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
               {product.description}
             </p>
           )}
@@ -110,7 +110,7 @@ export const ProductCustomizerModal: React.FC<ProductCustomizerModalProps> = ({
                         >
                           <div className="flex items-center gap-2">
                             <div
-                              className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] ${
+                              className={`w-4 h-4 rounded-full border flex items-center justify-center text-[11px] ${
                                 isSelected
                                   ? 'border-emerald-500 bg-emerald-500 text-slate-950'
                                   : 'border-slate-400 dark:border-slate-600'

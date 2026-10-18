@@ -178,7 +178,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div
         id="settings-dialog"
-        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[85vh]"
       >
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
           <div className="flex items-center space-x-2">
@@ -189,7 +189,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
           </div>
           <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -202,7 +202,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
             onClick={() => setActiveTab('settings')}
             className={`px-3 py-2 rounded-t-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'settings'
-                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 border-t border-x border-slate-200 dark:border-slate-800 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 border-t border-x border-slate-200 dark:border-slate-800 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
@@ -215,7 +215,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
             onClick={() => setActiveTab('launch')}
             className={`px-3 py-2 rounded-t-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'launch'
-                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 border-t border-x border-slate-200 dark:border-slate-800 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 border-t border-x border-slate-200 dark:border-slate-800 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
@@ -227,31 +227,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
         {activeTab === 'settings' && (
         <form onSubmit={handleSubmit} className="p-5 flex-1 overflow-y-auto space-y-4 text-xs">
           {/* Logo & Brand Identity */}
-          <div className="space-y-3 bg-gradient-to-br from-sky-50/70 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 p-4 rounded-2xl border border-sky-200/80 dark:border-slate-800 shadow-2xs">
+          <div className="space-y-3 bg-gradient-to-br from-blue-50/70 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 p-4 rounded-2xl border border-blue-200/80 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100 text-sm">
-                <Store className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                <Store className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 <span>Logo &amp; Identitas Toko (ULIL Mart)</span>
               </div>
               <a
                 href="/ulilmart-logo.svg"
                 download="ulilmart-logo.svg"
-                className="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-[11px] font-semibold flex items-center gap-1.5 transition-colors"
+                className="px-2.5 py-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-[11px] font-semibold flex items-center gap-1.5 transition-colors"
                 title="Unduh file master logo SVG"
               >
-                <Download className="w-3 h-3 text-sky-500" />
+                <Download className="w-3 h-3 text-blue-500" />
                 <span>Unduh SVG</span>
               </a>
             </div>
 
             {/* Logo Live Visualizer Card */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs flex flex-col items-center justify-center min-h-[90px]">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tampilan Mode Terang</span>
+              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col items-center justify-center min-h-[90px]">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tampilan Mode Terang</span>
                 <UlilMartLogo variant="full" height={48} className="max-w-[210px] drop-shadow-xs" />
               </div>
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 shadow-2xs flex flex-col items-center justify-center min-h-[90px]">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tampilan Mode Gelap</span>
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 shadow-sm flex flex-col items-center justify-center min-h-[90px]">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tampilan Mode Gelap</span>
                 <UlilMartLogo variant="full" height={48} theme="dark" className="max-w-[210px] drop-shadow-xs" />
               </div>
             </div>
@@ -267,7 +267,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   value={formData.storeTagline || ''}
                   placeholder="Lengkap &amp; Hemat"
                   onChange={(e) => setFormData({ ...formData, storeTagline: e.target.value })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                 />
               </div>
 
@@ -277,11 +277,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     type="checkbox"
                     checked={formData.showLogoOnReceipt !== false}
                     onChange={(e) => setFormData({ ...formData, showLogoOnReceipt: e.target.checked })}
-                    className="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500 cursor-pointer"
+                    className="w-4 h-4 rounded-md text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
                   />
                   <div>
                     <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs">Cetak Logo di Struk</div>
-                    <div className="text-[10px] text-slate-500">Tampilkan logo ULIL Mart di kop struk kasir</div>
+                    <div className="text-[11px] text-slate-500">Tampilkan logo ULIL Mart di kop struk kasir</div>
                   </div>
                 </label>
               </div>
@@ -309,7 +309,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     operatingHours: '06.00 – 21.00 WIB (Buka Setiap Hari)',
                   });
                 }}
-                className="px-2.5 py-1 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                 title="Isi otomatis data dari lokasi Google Maps ULILMART"
               >
                 <MapPin className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
@@ -327,7 +327,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   required
                   value={formData.storeName}
                   onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
                 />
               </div>
 
@@ -340,7 +340,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   required
                   value={formData.branchName}
                   onChange={(e) => setFormData({ ...formData, branchName: e.target.value })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
@@ -353,7 +353,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 type="text"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
               />
             </div>
 
@@ -368,7 +368,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     type="text"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full pl-8 pr-2 py-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                    className="w-full pl-8 pr-2 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   />
                 </div>
               </div>
@@ -384,7 +384,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     value={formData.operatingHours || ''}
                     placeholder="06.00 – 21.00 WIB (Buka Setiap Hari)"
                     onChange={(e) => setFormData({ ...formData, operatingHours: e.target.value })}
-                    className="w-full pl-8 pr-2 py-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                    className="w-full pl-8 pr-2 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                   />
                 </div>
               </div>
@@ -400,7 +400,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     href={formData.googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[11px] font-bold text-sky-600 hover:text-sky-500 dark:text-sky-400 flex items-center gap-1"
+                    className="text-[11px] font-bold text-blue-600 hover:text-blue-500 dark:text-blue-400 flex items-center gap-1"
                   >
                     <span>Buka di Google Maps</span>
                     <ExternalLink className="w-3 h-3" />
@@ -414,7 +414,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   value={formData.googleMapsUrl || ''}
                   placeholder="https://maps.app.goo.gl/..."
                   onChange={(e) => setFormData({ ...formData, googleMapsUrl: e.target.value })}
-                  className="w-full pl-8 pr-2 py-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full pl-8 pr-2 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                 />
               </div>
             </div>
@@ -432,9 +432,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Mata Uang
                 </label>
-                <div className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 font-bold text-xs flex items-center justify-between">
+                <div className="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 font-bold text-xs flex items-center justify-between">
                   <span>IDR (Rp) - Rupiah</span>
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
                     Baku
                   </span>
                 </div>
@@ -451,10 +451,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   step={1}
                   value={formData.minProfitPercentForPoints ?? 15}
                   onChange={(e) => setFormData({ ...formData, minProfitPercentForPoints: Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="15"
                 />
-                <span className="text-[10px] text-slate-500">Min. profit barang dapat poin</span>
+                <span className="text-[11px] text-slate-500">Min. profit barang dapat poin</span>
               </div>
 
               <div>
@@ -467,10 +467,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   step={5}
                   value={formData.welcomeBonusPoints ?? 0}
                   onChange={(e) => setFormData({ ...formData, welcomeBonusPoints: Math.max(0, Number(e.target.value) || 0) })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="0"
                 />
-                <span className="text-[10px] text-slate-500">Diberikan saat daftar. 0 = tanpa bonus</span>
+                <span className="text-[11px] text-slate-500">Diberikan saat daftar. 0 = tanpa bonus</span>
+              </div>
+
+              <div className="sm:col-span-2 space-y-1.5">
+                <div className="text-slate-600 dark:text-slate-400 font-semibold text-xs">Tampilan Keranjang Kasir</div>
+                <label className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 accent-emerald-700"
+                    checked={Boolean(formData.showMarginInCart)}
+                    onChange={(e) => setFormData({ ...formData, showMarginInCart: e.target.checked })}
+                  />
+                  <span>
+                    Tampilkan margin keuntungan per barang
+                    <span className="block text-[11px] text-slate-500">Hanya untuk Owner/Supervisor. Matikan bila layar kasir terlihat oleh pembeli.</span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 accent-emerald-700"
+                    checked={Boolean(formData.showAiUpsellInCart)}
+                    onChange={(e) => setFormData({ ...formData, showAiUpsellInCart: e.target.checked })}
+                  />
+                  <span>Tampilkan saran produk AI di keranjang</span>
+                </label>
               </div>
 
               <div>
@@ -483,7 +508,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   step={100}
                   value={formData.pointsRatio ?? 10000}
                   onChange={(e) => setFormData({ ...formData, pointsRatio: e.target.value === '' ? 0 : Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="10000"
                 />
                 <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -492,7 +517,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                       key={pr}
                       type="button"
                       onClick={() => setFormData({ ...formData, pointsRatio: pr })}
-                      className={`px-1.5 py-0.5 text-[10px] font-mono rounded border transition cursor-pointer ${
+                      className={`px-1.5 py-0.5 text-[11px] font-mono rounded-md border transition cursor-pointer ${
                         formData.pointsRatio === pr
                           ? 'bg-emerald-700 text-white font-bold border-emerald-700'
                           : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400'
@@ -502,7 +527,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     </button>
                   ))}
                 </div>
-                <span className="text-[10px] text-slate-500">1 poin per kelipatan belanja</span>
+                <span className="text-[11px] text-slate-500">1 poin per kelipatan belanja</span>
               </div>
 
               <div>
@@ -515,7 +540,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   step={1}
                   value={formData.pointRedemptionRate ?? 100}
                   onChange={(e) => setFormData({ ...formData, pointRedemptionRate: e.target.value === '' ? 0 : Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="100"
                 />
                 <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -524,7 +549,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                       key={rate}
                       type="button"
                       onClick={() => setFormData({ ...formData, pointRedemptionRate: rate })}
-                      className={`px-1.5 py-0.5 text-[10px] font-mono rounded border transition cursor-pointer ${
+                      className={`px-1.5 py-0.5 text-[11px] font-mono rounded-md border transition cursor-pointer ${
                         formData.pointRedemptionRate === rate
                           ? 'bg-amber-500 text-slate-950 font-bold border-amber-600'
                           : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-400'
@@ -534,7 +559,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     </button>
                   ))}
                 </div>
-                <span className="text-[10px] text-slate-500">Nilai diskon per 1 poin (cth: Rp 10 atau Rp 100)</span>
+                <span className="text-[11px] text-slate-500">Nilai diskon per 1 poin (cth: Rp 10 atau Rp 100)</span>
               </div>
 
               <div>
@@ -547,7 +572,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   step={1}
                   value={formData.minRedeemPoints ?? 10}
                   onChange={(e) => setFormData({ ...formData, minRedeemPoints: e.target.value === '' ? 0 : Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="10"
                 />
                 <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -556,17 +581,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                       key={pts}
                       type="button"
                       onClick={() => setFormData({ ...formData, minRedeemPoints: pts })}
-                      className={`px-1.5 py-0.5 text-[10px] font-mono rounded border transition cursor-pointer ${
+                      className={`px-1.5 py-0.5 text-[11px] font-mono rounded-md border transition cursor-pointer ${
                         formData.minRedeemPoints === pts
-                          ? 'bg-purple-600 text-white font-bold border-purple-700'
-                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-purple-400'
+                          ? 'bg-indigo-600 text-white font-bold border-indigo-700'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400'
                       }`}
                     >
                       {pts}
                     </button>
                   ))}
                 </div>
-                <span className="text-[10px] text-slate-500">Bebas diisi angka bulat berapa saja (cth: 10 atau 100)</span>
+                <span className="text-[11px] text-slate-500">Bebas diisi angka bulat berapa saja (cth: 10 atau 100)</span>
               </div>
             </div>
           </div>
@@ -586,7 +611,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 value={formData.receiptFooterMessage}
                 onChange={(e) => setFormData({ ...formData, receiptFooterMessage: e.target.value })}
                 rows={2}
-                className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
               />
             </div>
 
@@ -602,14 +627,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     setFormData({ ...formData, autoPrintReceipt: checked });
                     setPrinterConfig({ ...printerConfig, autoPrintReceipt: checked });
                   }}
-                  className="w-4 h-4 mt-0.5 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer"
+                  className="w-4 h-4 mt-0.5 rounded-md text-emerald-700 focus:ring-emerald-500 cursor-pointer"
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
                       Otomatis Cetak Struk Thermal Setelah Pembayaran Sukses
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[11px] px-1.5 py-0.5 rounded-full font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                       Auto-Print Dialog
                     </span>
                   </div>
@@ -628,7 +653,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <Printer className="w-4 h-4 text-emerald-500" />
                 <span>Hardware Thermal Printer &amp; Laci Kas (ESC/POS)</span>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                 Direct RAW Hardware
               </span>
             </div>
@@ -645,7 +670,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <select aria-label="Koneksi Default"
                   value={printerConfig.connectionType}
                   onChange={(e) => setPrinterConfig({ ...printerConfig, connectionType: e.target.value as any })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                 >
                   <option value="system">Browser / Jendela Dialog Cetak</option>
                   <option value="serial">USB / Serial Port (ESC/POS)</option>
@@ -660,7 +685,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <select aria-label="Lebar Kertas Thermal"
                   value={printerConfig.paperWidth}
                   onChange={(e) => setPrinterConfig({ ...printerConfig, paperWidth: e.target.value as any })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                 >
                   <option value="58mm">58 mm (Standar Mini / 32 Kolom)</option>
                   <option value="80mm">80 mm (Lebar Kasir / 48 Kolom)</option>
@@ -674,7 +699,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <select aria-label="Baud Rate (Port Serial)"
                   value={printerConfig.baudRate}
                   onChange={(e) => setPrinterConfig({ ...printerConfig, baudRate: Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                 >
                   <option value={9600}>9600 bps (Standar Xprinter/Epson)</option>
                   <option value={19200}>19200 bps</option>
@@ -685,31 +710,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                 <input
                   type="checkbox"
                   checked={printerConfig.kickCashDrawer}
                   onChange={(e) => setPrinterConfig({ ...printerConfig, kickCashDrawer: e.target.checked })}
-                  className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                  className="rounded-md border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                 />
                 <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Buka Laci Kas Otomatis (RJ11 Pulse)
                 </span>
               </label>
 
-              <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                 <input
                   type="checkbox"
                   checked={printerConfig.autoCut}
                   onChange={(e) => setPrinterConfig({ ...printerConfig, autoCut: e.target.checked })}
-                  className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                  className="rounded-md border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                 />
                 <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Auto-Cut Kertas Struk Selesai Cetak
                 </span>
               </label>
 
-              <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                 <input
                   type="checkbox"
                   checked={printerConfig.autoPrintReceipt !== false}
@@ -718,7 +743,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     setPrinterConfig({ ...printerConfig, autoPrintReceipt: checked });
                     setFormData({ ...formData, autoPrintReceipt: checked });
                   }}
-                  className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                  className="rounded-md border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                 />
                 <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Auto-Print Struk saat Transaksi Selesai
@@ -733,7 +758,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   type="button"
                   onClick={handleTestPrint}
                   disabled={isTesting}
-                  className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition disabled:opacity-50"
                 >
                   <Play className="w-3.5 h-3.5 text-emerald-700" />
                   <span>Tes Cetak Struk ESC/POS</span>
@@ -743,7 +768,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   type="button"
                   onClick={handleTestDrawer}
                   disabled={isTesting}
-                  className="px-3 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition disabled:opacity-50"
                 >
                   <Coins className="w-3.5 h-3.5 text-amber-700" />
                   <span>Tes Buka Laci (RJ11)</span>
@@ -765,12 +790,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <ShieldAlert className="w-4 h-4 text-blue-500" />
                 <span>Aturan Batas Minimal Stok (Safety Stock)</span>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                 Aturan 50% PO
               </span>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/60 text-[11px] text-blue-900 dark:text-blue-200 leading-relaxed">
+            <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/60 text-[11px] text-blue-900 dark:text-blue-200 leading-relaxed">
               Sistem menetapkan <strong>batas minimal stok adalah 50% dari jumlah order terakhir</strong> (PO Faktur). Ketika stok barang di rak mencapai atau di bawah batas ini, sistem akan memunculkan peringatan stok menipis agar toko tidak mengalami kekosongan barang (stockout).
             </div>
 
@@ -787,26 +812,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     step={5}
                     value={formData.minStockRulePercentage ?? 50}
                     onChange={(e) => setFormData({ ...formData, minStockRulePercentage: Number(e.target.value) })}
-                    className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs pr-8"
+                    className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs pr-8"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">%</span>
                 </div>
-                <span className="text-[10px] text-slate-500">Default: 50% dari kuantitas order PO</span>
+                <span className="text-[11px] text-slate-500">Default: 50% dari kuantitas order PO</span>
               </div>
 
               <div className="flex flex-col justify-end">
-                <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <label className="flex items-center gap-2 cursor-pointer p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                   <input
                     type="checkbox"
                     checked={formData.autoUpdateMinStockFromOrder !== false}
                     onChange={(e) => setFormData({ ...formData, autoUpdateMinStockFromOrder: e.target.checked })}
-                    className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                    className="rounded-md border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                   />
                   <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                     Auto-Update saat Terima PO
                   </span>
                 </label>
-                <span className="text-[10px] text-slate-500 mt-1">Otomatis update min stock saat faktur masuk</span>
+                <span className="text-[11px] text-slate-500 mt-1">Otomatis update min stock saat faktur masuk</span>
               </div>
             </div>
 
@@ -818,7 +843,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   setSyncMessage(`Berhasil diterapkan ke ${count} produk!`);
                   setTimeout(() => setSyncMessage(null), 3500);
                 }}
-                className="px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition"
+                className="px-3 py-1.5 rounded-xl border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition"
               >
                 <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 <span>Terapkan Aturan 50% ke Semua Produk Sekarang</span>
@@ -841,14 +866,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   onClick={() => setFormData({ ...formData, outOfStockDisplay: 'bottom' })}
                   className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer ${
                     (formData.outOfStockDisplay ?? 'bottom') === 'bottom'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/70 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-2xs'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/70 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-bold shadow-sm'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center gap-1.5 font-bold">
                     <span>⬇️ Di Paling Bawah</span>
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
                     Barang stok 0 otomatis digeser ke urutan paling bawah setelah produk yang tersedia.
                   </p>
                 </button>
@@ -858,14 +883,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   onClick={() => setFormData({ ...formData, outOfStockDisplay: 'hide' })}
                   className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer ${
                     formData.outOfStockDisplay === 'hide'
-                      ? 'bg-purple-50 dark:bg-purple-950/70 border-purple-500 text-purple-900 dark:text-purple-200 font-bold shadow-2xs'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/70 border-indigo-500 text-indigo-900 dark:text-indigo-200 font-bold shadow-sm'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center gap-1.5 font-bold">
                     <span>👁️‍🗨️ Sembunyikan</span>
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
                     Barang stok 0 disembunyikan sepenuhnya dari katalog kasir agar hanya menampilkan barang siap jual.
                   </p>
                 </button>
@@ -875,14 +900,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   onClick={() => setFormData({ ...formData, outOfStockDisplay: 'normal' })}
                   className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer ${
                     formData.outOfStockDisplay === 'normal'
-                      ? 'bg-slate-100 dark:bg-slate-800 border-slate-500 text-slate-900 dark:text-white font-bold shadow-2xs'
+                      ? 'bg-slate-100 dark:bg-slate-800 border-slate-500 text-slate-900 dark:text-white font-bold shadow-sm'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center gap-1.5 font-bold">
                     <span>📋 Urutan Normal</span>
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
                     Barang ditampilkan apa adanya sesuai urutan asli kategori tanpa pemisahan stok.
                   </p>
                 </button>
@@ -903,13 +928,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   onClose();
                   setIsSyncModalOpen(true);
                 }}
-                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
+                className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all active:scale-95"
               >
                 <span>Pusat Sinkronisasi &amp; SQLite WAL</span>
               </button>
             </div>
             <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-bold text-[10px] font-mono">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-bold text-[11px] font-mono">
                 {databaseEngine || 'SQLite WAL Mode'}
               </span>
               <span>
@@ -930,7 +955,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <button
                   type="button"
                   onClick={() => downloadBackupFile()}
-                  className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+                  className="px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
                   title="Unduh langsung berkas backup .JSON ke komputer Anda"
                 >
                   <HardDriveDownload className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
@@ -942,14 +967,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     onClose();
                     setIsBackupRestoreOpen(true);
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all active:scale-95"
                 >
                   <span>Pusat Cadangan</span>
                 </button>
               </div>
             </div>
             <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400">
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-[10px]">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-[11px]">
                 IndexedDB Ultra-Capacity
               </span>
               <span>Kapasitas penyimpanan puluhan GB tanpa batas 5MB LocalStorage.</span>
@@ -989,7 +1014,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                         onClick={() => {
                           if (confirm(`Hapus voucher ${v.code}? Kode ini tidak bisa dipakai lagi di kasir.`)) deleteVoucher(v.code);
                         }}
-                        className="shrink-0 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                        className="shrink-0 px-2 py-1 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
                       >
                         Hapus
                       </button>
@@ -1027,7 +1052,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   }
                 }}
                 disabled={isCleaningInSettings}
-                className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50 transition"
+                className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 transition"
               >
                 <Trash2 className={`w-3.5 h-3.5 ${isCleaningInSettings ? 'animate-spin' : ''}`} />
                 <span>{isCleaningInSettings ? 'Sedang Membersihkan...' : 'Bersihkan File Usang Sekarang'}</span>
@@ -1109,14 +1134,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   <button
                     type="button"
                     onClick={handleExecuteLaunch}
-                    className="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-rose-600 text-white font-bold cursor-pointer"
                   >
                     Ya, Hapus
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsConfirmingLaunch(false)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 font-bold cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 font-bold cursor-pointer"
                   >
                     Batal
                   </button>

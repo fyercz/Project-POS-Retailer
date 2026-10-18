@@ -79,11 +79,11 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto animate-fadeIn">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-xl overflow-hidden my-auto">
         {/* Modal Header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold shadow-sm">
               <FileText className="w-5 h-5" />
             </div>
             <div>
@@ -105,7 +105,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
           <button aria-label="Tutup"
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -128,7 +128,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
               <div className="text-xs space-y-1">
                 <div className="font-bold flex items-center gap-2">
                   <span>Nota Pembelian Tempo (Term of Payment - TOP)</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-white dark:bg-slate-900 font-bold border border-current shadow-2xs">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] bg-white dark:bg-slate-900 font-bold border border-current shadow-sm">
                     {dueInfo.statusBadgeText}
                   </span>
                 </div>
@@ -140,12 +140,12 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
               </div>
             </div>
           ) : dueInfo.category === 'consignment' ? (
-            <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-200 flex items-start gap-3 text-xs">
-              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-purple-600 dark:text-purple-400" />
+            <div className="p-3.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 flex items-start gap-3 text-xs">
+              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-indigo-600 dark:text-indigo-400" />
               <div className="space-y-1">
                 <div className="font-bold flex items-center gap-2">
                   <span>Nota Titip Jual (Konsinyasi Supplier)</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-white dark:bg-slate-900 font-bold border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] bg-white dark:bg-slate-900 font-bold border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300">
                     Akun 2030 • Titip Jual
                   </span>
                 </div>
@@ -168,7 +168,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
           {/* Printable Invoice Sheet */}
           <div
             ref={printAreaRef}
-            className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-xs space-y-6 text-slate-800 dark:text-slate-200"
+            className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm space-y-6 text-slate-800 dark:text-slate-200"
           >
             {/* Header Nota */}
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
@@ -212,7 +212,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             {/* Supplier & Commercial Meta Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs">
               <div className="space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+                <span className="text-[11px] text-slate-500 uppercase tracking-wider font-bold">
                   Distributor / Pemasok
                 </span>
                 <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
@@ -227,7 +227,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
               </div>
 
               <div className="space-y-1 sm:text-right">
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+                <span className="text-[11px] text-slate-500 uppercase tracking-wider font-bold">
                   Syarat & Ketentuan Pembayaran
                 </span>
                 <div className="font-bold text-slate-900 dark:text-white flex items-center sm:justify-end gap-1.5">
@@ -247,7 +247,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
               <div className="font-bold text-xs text-slate-900 dark:text-white mb-2 flex items-center justify-between">
                 <span>Rincian Barang Diterima ({purchase.items.length} Macam Barang, {totalItemsCount} pcs)</span>
               </div>
-              <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+              <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800">
                     <tr>
@@ -265,7 +265,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                         <td className="py-2 px-3 text-center text-slate-500 font-mono">{idx + 1}</td>
                         <td className="py-2 px-3">
                           <div className="font-semibold text-slate-900 dark:text-white">{item.productName}</div>
-                          <div className="text-[10px] text-slate-500 font-mono">ID: {item.productId}</div>
+                          <div className="text-[11px] text-slate-500 font-mono">ID: {item.productId}</div>
                         </td>
                         <td className="py-2 px-3 text-center font-bold font-mono text-emerald-700 dark:text-emerald-400">
                           {item.quantity}
@@ -312,7 +312,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                         ):
                       </span>
                       {purchase.discountTiming && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+                        <span className="text-[11px] px-1.5 py-0.5 rounded-md font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
                           {purchase.discountTiming === 'before_ppn' ? 'Sebelum PPN' : 'Sesudah PPN'}
                         </span>
                       )}
@@ -404,23 +404,21 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                   value={payAmount}
                   onChange={(e) => setPayAmount(e.target.value)}
                   placeholder="Jumlah dibayar"
-                  className="w-36 px-2 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
+                  className="w-36 px-2 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
                 />
                 <button
                   type="button"
                   onClick={() => setPayAmount(String(payOutstanding))}
-                  className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 font-bold cursor-pointer"
+                  className="px-2 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 font-bold cursor-pointer"
                 >
                   Lunasi
                 </button>
                 <select aria-label="Sumber dana pembayaran"
                   value={paySource}
                   onChange={(e) => setPaySource(e.target.value as any)}
-                  className="px-2 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="px-2 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900"
                 >
-                  <option value="" disabled>
-                    -- Sumber dana --
-                  </option>
+                  <option value="" disabled>-- Sumber dana --</option>
                   <option value="cash_drawer">Kas laci kasir</option>
                   <option value="bank_transfer">Transfer bank</option>
                 </select>
@@ -429,12 +427,12 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                   value={payNote}
                   onChange={(e) => setPayNote(e.target.value)}
                   placeholder="Catatan (opsional)"
-                  className="flex-1 min-w-[120px] px-2 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="flex-1 min-w-[120px] px-2 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900"
                 />
                 <button
                   type="button"
                   onClick={handleRecordPayment}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold cursor-pointer"
                 >
                   Catat Pembayaran
                 </button>
@@ -459,7 +457,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                   onPrintPriceTags(purchase);
                   onClose();
                 }}
-                className="px-3 py-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-800 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition"
+                className="px-3 py-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-800 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition"
               >
                 <Tag className="w-3.5 h-3.5 text-amber-700" />
                 <span>Cetak Pricetag Rak ({purchase.items.length} Item)</span>
@@ -471,7 +469,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             <button
               type="button"
               onClick={() => handlePrintDocument('80mm')}
-              className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition"
+              className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition"
               title="Cetak struk penerimaan versi kasir (printer thermal)"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -480,7 +478,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             <button
               type="button"
               onClick={() => handlePrintDocument('a4')}
-              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition"
               title="Cetak dokumen faktur lembar A4 resmi"
             >
               <Printer className="w-3.5 h-3.5" />

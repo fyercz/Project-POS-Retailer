@@ -53,14 +53,14 @@ export const LoyaltyRulesConfig: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl">
       {savedSuccess && (
-        <div className="p-3.5 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 animate-in fade-in duration-200">
+        <div className="p-3.5 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-500/20 animate-in fade-in duration-200">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>Pengaturan Rasio Poin Loyalitas &amp; Diskon Berhasil Disimpan ke Sistem!</span>
         </div>
       )}
 
       {/* Rules Config Form */}
-      <form onSubmit={handleSave} className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-6">
+      <form onSubmit={handleSave} className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-2.5">
             <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
@@ -94,7 +94,7 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 <Coins className="w-4 h-4 text-emerald-500" />
                 <span>Rasio Belanja per 1 Poin (Rp)</span>
               </label>
-              <span className="text-[10px] text-slate-500 font-mono">
+              <span className="text-[11px] text-slate-500 font-mono">
                 1 Pts / {formatCurrency(pointsRatio, settings.currency)}
               </span>
             </div>
@@ -124,7 +124,7 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 <Tag className="w-4 h-4 text-amber-500" />
                 <span>Nilai Diskon Kasir per 1 Poin (Rp)</span>
               </label>
-              <span className="text-[10px] text-slate-500 font-mono">
+              <span className="text-[11px] text-slate-500 font-mono">
                 1 Pts = {formatCurrency(pointRedemptionRate, settings.currency)}
               </span>
             </div>
@@ -144,13 +144,13 @@ export const LoyaltyRulesConfig: React.FC = () => {
             </div>
             {/* Quick round chips */}
             <div className="flex items-center gap-1.5 flex-wrap pt-1">
-              <span className="text-[10px] text-slate-500">Pilihan Cepat:</span>
+              <span className="text-[11px] text-slate-500">Pilihan Cepat:</span>
               {[10, 50, 100, 200, 500, 1000].map((rate) => (
                 <button
                   key={rate}
                   type="button"
                   onClick={() => setPointRedemptionRate(rate)}
-                  className={`px-2 py-0.5 text-[11px] font-mono font-bold rounded-lg border transition cursor-pointer ${
+                  className={`px-2 py-0.5 text-[11px] font-mono font-bold rounded-xl border transition cursor-pointer ${
                     pointRedemptionRate === rate
                       ? 'bg-amber-500 text-slate-950 border-amber-600'
                       : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-400'
@@ -169,10 +169,10 @@ export const LoyaltyRulesConfig: React.FC = () => {
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
             <div className="flex items-center justify-between">
               <label className="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-purple-500" />
+                <ShieldCheck className="w-4 h-4 text-indigo-500" />
                 <span>Minimal Poin untuk Penukaran</span>
               </label>
-              <span className="text-[10px] text-slate-500 font-mono">
+              <span className="text-[11px] text-slate-500 font-mono">
                 Min {minRedeemPoints} Pts
               </span>
             </div>
@@ -189,16 +189,16 @@ export const LoyaltyRulesConfig: React.FC = () => {
             </div>
             {/* Quick round chips */}
             <div className="flex items-center gap-1.5 flex-wrap pt-1">
-              <span className="text-[10px] text-slate-500">Pilihan Cepat:</span>
+              <span className="text-[11px] text-slate-500">Pilihan Cepat:</span>
               {[1, 5, 10, 20, 50, 100].map((pts) => (
                 <button
                   key={pts}
                   type="button"
                   onClick={() => setMinRedeemPoints(pts)}
-                  className={`px-2 py-0.5 text-[11px] font-mono font-bold rounded-lg border transition cursor-pointer ${
+                  className={`px-2 py-0.5 text-[11px] font-mono font-bold rounded-xl border transition cursor-pointer ${
                     minRedeemPoints === pts
-                      ? 'bg-purple-600 text-white border-purple-700'
-                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-400'
+                      ? 'bg-indigo-600 text-white border-indigo-700'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-400'
                   }`}
                 >
                   {pts} Pts
@@ -214,10 +214,10 @@ export const LoyaltyRulesConfig: React.FC = () => {
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
             <div className="flex items-center justify-between">
               <label className="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Percent className="w-4 h-4 text-teal-500" />
+                <Percent className="w-4 h-4 text-emerald-500" />
                 <span>Syarat Margin Profit Barang (&ge; %)</span>
               </label>
-              <span className="text-[10px] text-slate-500 font-mono">
+              <span className="text-[11px] text-slate-500 font-mono">
                 Margin &ge; {minProfitMargin}%
               </span>
             </div>
@@ -247,48 +247,48 @@ export const LoyaltyRulesConfig: React.FC = () => {
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-            <div className="p-3 rounded-2xl border border-orange-200 dark:border-orange-900/60 bg-orange-50/50 dark:bg-orange-950/20 space-y-1">
+            <div className="p-3 rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/50 dark:bg-amber-950/20 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-orange-900 dark:text-orange-300">Bronze</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-orange-200 text-orange-800">
+                <span className="font-bold text-amber-900 dark:text-amber-300">Bronze</span>
+                <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-md bg-amber-200 text-amber-800">
                   1.0x Poin
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-mono">Belanja Rp 0 - Rp 999.999</p>
-              <p className="text-[10px] text-slate-500">Tingkat dasar semua member terdaftar</p>
+              <p className="text-[11px] text-slate-500">Tingkat dasar semua member terdaftar</p>
             </div>
 
             <div className="p-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-100/60 dark:bg-slate-800/40 space-y-1">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-800 dark:text-slate-200">Silver</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-200 text-slate-800">
+                <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-md bg-slate-200 text-slate-800">
                   1.2x Poin
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-mono">Belanja Rp 1jt - Rp 4.99jt</p>
-              <p className="text-[10px] text-slate-500">+20% bonus poin tiap transaksi</p>
+              <p className="text-[11px] text-slate-500">+20% bonus poin tiap transaksi</p>
             </div>
 
             <div className="p-3 rounded-2xl border border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 space-y-1">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-amber-900 dark:text-amber-300">Gold</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-200 text-amber-800">
+                <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-md bg-amber-200 text-amber-800">
                   1.5x Poin
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-mono">Belanja Rp 5jt - Rp 9.99jt</p>
-              <p className="text-[10px] text-slate-500">+50% bonus poin tiap transaksi</p>
+              <p className="text-[11px] text-slate-500">+50% bonus poin tiap transaksi</p>
             </div>
 
-            <div className="p-3 rounded-2xl border border-purple-300 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/20 space-y-1">
+            <div className="p-3 rounded-2xl border border-indigo-300 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/20 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-purple-900 dark:text-purple-300">Platinum</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-purple-200 text-purple-800">
+                <span className="font-bold text-indigo-900 dark:text-indigo-300">Platinum</span>
+                <span className="text-[11px] font-bold px-1.5 py-0.2 rounded-md bg-indigo-200 text-indigo-800">
                   2.0x Poin
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-mono">Belanja &ge; Rp 10.000.000</p>
-              <p className="text-[10px] text-slate-500">2x lipat poin ganda maksimal</p>
+              <p className="text-[11px] text-slate-500">2x lipat poin ganda maksimal</p>
             </div>
           </div>
         </div>

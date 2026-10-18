@@ -873,18 +873,18 @@ export const GeminiRetailCopilot: React.FC = () => {
     <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
       <div
         id="gemini-retail-copilot-drawer"
-        className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-200"
+        className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-200"
       >
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-slate-950 shadow-md shadow-emerald-500/30">
-              <Sparkles className="w-5 h-5 fill-current animate-pulse" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-slate-950 shadow-md shadow-emerald-500/30">
+              <Sparkles className="w-5 h-5 fill-current" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-base tracking-tight text-white">Gemini Retail Copilot</h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                   AI v3.7
                 </span>
               </div>
@@ -894,7 +894,7 @@ export const GeminiRetailCopilot: React.FC = () => {
 
           <button aria-label="Tutup"
             onClick={() => setIsGeminiCopilotOpen(false)}
-            className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 flex items-center justify-center cursor-pointer transition-colors"
+            className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 flex items-center justify-center cursor-pointer transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -904,9 +904,9 @@ export const GeminiRetailCopilot: React.FC = () => {
         <div className="flex items-center gap-1 p-2 bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveCopilotTab('upsell')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
               activeCopilotTab === 'upsell'
-                ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -919,9 +919,9 @@ export const GeminiRetailCopilot: React.FC = () => {
 
           <button
             onClick={() => setActiveCopilotTab('forecast')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
               activeCopilotTab === 'forecast'
-                ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -931,9 +931,9 @@ export const GeminiRetailCopilot: React.FC = () => {
 
           <button
             onClick={() => setActiveCopilotTab('insights')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
               activeCopilotTab === 'insights'
-                ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -943,9 +943,9 @@ export const GeminiRetailCopilot: React.FC = () => {
 
           <button
             onClick={() => setActiveCopilotTab('promo')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
               activeCopilotTab === 'promo'
-                ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -955,9 +955,9 @@ export const GeminiRetailCopilot: React.FC = () => {
 
           <button
             onClick={() => setActiveCopilotTab('chat')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
               activeCopilotTab === 'chat'
-                ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -985,7 +985,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                 <button
                   onClick={fetchUpsellSuggestions}
                   disabled={isFetchingUpsell}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isFetchingUpsell ? 'animate-spin' : ''}`} />
                   <span>Refresh AI</span>
@@ -1013,7 +1013,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                   {aiUpsellSuggestions.map((sug, idx) => (
                     <div
                       key={idx}
-                      className="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-xs flex items-center justify-between gap-3 hover:border-emerald-500/60 transition-all"
+                      className="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm flex items-center justify-between gap-3 hover:border-emerald-500/60 transition-all"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-emerald-700 dark:text-emerald-400 shrink-0">
@@ -1021,11 +1021,11 @@ export const GeminiRetailCopilot: React.FC = () => {
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                               {sug.urgency}
                             </span>
                             {sug.discountOffer && (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
                                 {sug.discountOffer}
                               </span>
                             )}
@@ -1040,7 +1040,7 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                           <div className="text-xs font-bold font-mono text-emerald-700 dark:text-emerald-400 mt-1">
                             {formatCurrency(sug.product.price, settings.currency)}
-                            <span className="text-[10px] font-normal text-slate-500 ml-1">
+                            <span className="text-[11px] font-normal text-slate-500 ml-1">
                               • Stok: {sug.product.stock}
                             </span>
                           </div>
@@ -1049,7 +1049,7 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                       <button
                         onClick={() => addToCart(sug.product)}
-                        className="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 shrink-0 transition-colors shadow-xs cursor-pointer"
+                        className="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 shrink-0 transition-colors shadow-sm cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
                         <span>Tambah</span>
@@ -1083,7 +1083,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                 <button
                   onClick={() => handleFetchForecast()}
                   disabled={isLoadingForecast}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 cursor-pointer shadow-xs transition shrink-0"
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 cursor-pointer shadow-sm transition shrink-0"
                   title="Analisis ulang tingkat stok dan transaksi toko"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoadingForecast ? 'animate-spin' : ''}`} />
@@ -1092,10 +1092,10 @@ export const GeminiRetailCopilot: React.FC = () => {
               </div>
 
               {/* TARGET DATE & HORIZON CONTROLLER CARD */}
-              <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-xs">
+              <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-sm">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+                    <div className="p-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
                       <CalendarDays className="w-4 h-4" />
                     </div>
                     <div>
@@ -1128,7 +1128,7 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                 {/* Date presets */}
                 <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 mr-1">Preset:</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-500 mr-1">Preset:</span>
                   {datePresets.map((preset, idx) => {
                     const isSelected = targetRestockDate === preset.date;
                     return (
@@ -1139,7 +1139,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                           setTargetRestockDate(preset.date);
                           handleFetchForecast(preset.date);
                         }}
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-lg border transition cursor-pointer ${
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-xl border transition cursor-pointer ${
                           isSelected
                             ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold'
                             : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-emerald-300'
@@ -1156,7 +1156,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                         setTargetRestockDate('');
                         handleFetchForecast('');
                       }}
-                      className="text-[10px] font-medium text-rose-600 hover:underline ml-1"
+                      className="text-[11px] font-medium text-rose-600 hover:underline ml-1"
                     >
                       Reset (Default 14 Hari)
                     </button>
@@ -1165,7 +1165,7 @@ export const GeminiRetailCopilot: React.FC = () => {
               </div>
 
               {/* DEADSTOCK & RETURN POLICY CONTROL PANEL */}
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-4 h-4 text-emerald-500" />
@@ -1173,7 +1173,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                       Aturan Kebijakan Retur & Deadstock
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-[10px]">
+                  <div className="flex items-center gap-2 text-[11px]">
                     <span className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold">
                       {filterCounts.deadstock} Deadstock
                     </span>
@@ -1199,9 +1199,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleApplyPoliciesLocally('eliminate', returnPolicy)}
-                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                        className={`text-[11px] font-bold py-1 px-1.5 rounded-xl border text-center transition cursor-pointer ${
                           deadstockPolicy === 'eliminate'
-                            ? 'bg-rose-600 text-white border-rose-500 shadow-xs'
+                            ? 'bg-rose-600 text-white border-rose-500 shadow-sm'
                             : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
                         }`}
                         title="Eliminasi kuota order menjadi 0 untuk mencegah modal tertahan"
@@ -1211,9 +1211,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleApplyPoliciesLocally('reduce', returnPolicy)}
-                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                        className={`text-[11px] font-bold py-1 px-1.5 rounded-xl border text-center transition cursor-pointer ${
                           deadstockPolicy === 'reduce'
-                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-xs'
+                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm'
                             : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
                         }`}
                         title="Pangkas kuota order 50%"
@@ -1223,9 +1223,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleApplyPoliciesLocally('none', returnPolicy)}
-                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                        className={`text-[11px] font-bold py-1 px-1.5 rounded-xl border text-center transition cursor-pointer ${
                           deadstockPolicy === 'none'
-                            ? 'bg-slate-700 text-white border-slate-600 shadow-xs'
+                            ? 'bg-slate-700 text-white border-slate-600 shadow-sm'
                             : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
                         }`}
                         title="Tanpa pembatasan otomatis"
@@ -1247,9 +1247,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleApplyPoliciesLocally(deadstockPolicy, 'reduce')}
-                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                        className={`text-[11px] font-bold py-1 px-1.5 rounded-xl border text-center transition cursor-pointer ${
                           returnPolicy === 'reduce'
-                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-xs'
+                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm'
                             : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
                         }`}
                         title="Pangkas kuota 50% untuk mitigasi produk rusak/cacat"
@@ -1259,9 +1259,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleApplyPoliciesLocally(deadstockPolicy, 'eliminate')}
-                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                        className={`text-[11px] font-bold py-1 px-1.5 rounded-xl border text-center transition cursor-pointer ${
                           returnPolicy === 'eliminate'
-                            ? 'bg-rose-600 text-white border-rose-500 shadow-xs'
+                            ? 'bg-rose-600 text-white border-rose-500 shadow-sm'
                             : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
                         }`}
                         title="Eliminasi kuota order menjadi 0 hingga vendor dievaluasi"
@@ -1271,9 +1271,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleApplyPoliciesLocally(deadstockPolicy, 'none')}
-                        className={`text-[10px] font-bold py-1 px-1.5 rounded-lg border text-center transition cursor-pointer ${
+                        className={`text-[11px] font-bold py-1 px-1.5 rounded-xl border text-center transition cursor-pointer ${
                           returnPolicy === 'none'
-                            ? 'bg-slate-700 text-white border-slate-600 shadow-xs'
+                            ? 'bg-slate-700 text-white border-slate-600 shadow-sm'
                             : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
                         }`}
                         title="Tanpa pembatasan otomatis"
@@ -1289,7 +1289,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                 <div className="p-8 text-center rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
                   <div className="relative w-12 h-12 mx-auto">
                     <RefreshCw className="w-12 h-12 text-emerald-500 animate-spin" />
-                    <Sparkles className="w-5 h-5 text-amber-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+                    <Sparkles className="w-5 h-5 text-amber-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                   </div>
                   <div>
                     <h5 className="font-bold text-sm text-slate-900 dark:text-white">
@@ -1303,7 +1303,7 @@ export const GeminiRetailCopilot: React.FC = () => {
               ) : forecastData ? (
                 <div className="space-y-3.5">
                   {/* Executive Summary & Health Card */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800/80 space-y-3 shadow-xs">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-50 dark:from-emerald-950/40 dark:to-emerald-950/20 border border-emerald-200 dark:border-emerald-800/80 space-y-3 shadow-sm">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
                         <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
@@ -1311,7 +1311,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                       </span>
                       {forecastData.healthScore !== undefined && (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400">Score</span>
+                          <span className="text-[11px] uppercase font-bold text-emerald-700 dark:text-emerald-400">Score</span>
                           <span
                             className={`text-xs font-black px-2.5 py-0.5 rounded-full ${
                               forecastData.healthScore >= 80
@@ -1349,25 +1349,25 @@ export const GeminiRetailCopilot: React.FC = () => {
                       return (
                         <div className="grid grid-cols-3 gap-2 pt-1 border-t border-emerald-200/60 dark:border-emerald-800/60">
                           <div className="bg-white/80 dark:bg-slate-900/60 rounded-xl p-2 text-center">
-                            <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
+                            <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
                               Produk Dipilih
                             </span>
                             <span className="text-xs font-black text-slate-900 dark:text-white">
-                              {selItems.length} <span className="text-[10px] font-normal text-slate-500">/ {forecastData.forecasts.length} SKU</span>
+                              {selItems.length} <span className="text-[11px] font-normal text-slate-500">/ {forecastData.forecasts.length} SKU</span>
                             </span>
                           </div>
 
                           <div className="bg-white/80 dark:bg-slate-900/60 rounded-xl p-2 text-center">
-                            <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
+                            <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
                               Total Kuantitas
                             </span>
                             <span className="text-xs font-black text-emerald-700 dark:text-emerald-400">
-                              {selQty} <span className="text-[10px] font-normal text-slate-500">Unit</span>
+                              {selQty} <span className="text-[11px] font-normal text-slate-500">Unit</span>
                             </span>
                           </div>
 
                           <div className="bg-white/80 dark:bg-slate-900/60 rounded-xl p-2 text-center">
-                            <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
+                            <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
                               Estimasi Anggaran
                             </span>
                             <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 truncate block">
@@ -1466,9 +1466,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                           <button aria-pressed={restockViewMode === 'grouped_supplier'}
                             type="button"
                             onClick={() => setRestockViewMode('grouped_supplier')}
-                            className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                            className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1.5 transition cursor-pointer ${
                               restockViewMode === 'grouped_supplier'
-                                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                             }`}
                             title="Kelompokkan rekomendasi per distributor terdaftar"
@@ -1479,9 +1479,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                           <button aria-pressed={restockViewMode === 'list'}
                             type="button"
                             onClick={() => setRestockViewMode('list')}
-                            className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                            className={`px-2.5 py-1 rounded-xl font-bold flex items-center gap-1.5 transition cursor-pointer ${
                               restockViewMode === 'list'
-                                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
                                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                             }`}
                             title="Tampilkan daftar seluruh produk sekaligus"
@@ -1499,7 +1499,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                           onClick={() => setSelectedSupplierFilter('all')}
                           className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer ${
                             selectedSupplierFilter === 'all'
-                              ? 'bg-emerald-700 text-white shadow-xs'
+                              ? 'bg-emerald-700 text-white shadow-sm'
                               : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 border border-slate-200 dark:border-slate-700'
                           }`}
                         >
@@ -1514,14 +1514,14 @@ export const GeminiRetailCopilot: React.FC = () => {
                               onClick={() => setSelectedSupplierFilter(isSel ? 'all' : sup.name)}
                               className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5 ${
                                 isSel
-                                  ? 'bg-emerald-700 text-white shadow-xs'
+                                  ? 'bg-emerald-700 text-white shadow-sm'
                                   : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 border border-slate-200 dark:border-slate-700'
                               }`}
                             >
                               <Building2 className={`w-3 h-3 ${isSel ? 'text-white' : 'text-slate-500'}`} />
                               <span>{sup.name}</span>
                               <span
-                                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                                className={`px-1.5 py-0.2 rounded-full text-[11px] ${
                                   isSel
                                     ? 'bg-emerald-700 text-white'
                                     : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -1592,12 +1592,12 @@ export const GeminiRetailCopilot: React.FC = () => {
                           type="button"
                           onClick={handleApplyPOToReceiving}
                           disabled={selectedPOProductIds.length === 0}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-black text-[11px] flex items-center gap-1.5 transition cursor-pointer shadow-xs disabled:opacity-50 active:scale-95"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-black text-[11px] flex items-center gap-1.5 transition cursor-pointer shadow-sm disabled:opacity-50 active:scale-95"
                           title="Muat seluruh barang terpilih ke Form Terima Barang gudang"
                         >
                           {appliedToReceivingFeedback ? (
                             <>
-                              <Check className="w-3.5 h-3.5 text-white animate-bounce" />
+                              <Check className="w-3.5 h-3.5 text-white" />
                               <span>Memuat ke Terima Barang...</span>
                             </>
                           ) : (
@@ -1636,7 +1636,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                               isEliminated
                                 ? 'border-rose-300/70 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/10'
                                 : isSelected
-                                ? 'border-emerald-300 dark:border-emerald-700/80 bg-white dark:bg-slate-900 shadow-xs'
+                                ? 'border-emerald-300 dark:border-emerald-700/80 bg-white dark:bg-slate-900 shadow-sm'
                                 : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 opacity-70'
                             }`}
                           >
@@ -1665,37 +1665,37 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                                       {/* Status & Rule Badges */}
                                       {fc.isDeadstock && (
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-1">
+                                        <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-1">
                                           <AlertTriangle className="w-3 h-3" />
                                           Deadstock (0 Terjual)
                                         </span>
                                       )}
 
                                       {(fc.returnCount || 0) > 0 && (
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1">
+                                        <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1">
                                           <RotateCcw className="w-3 h-3" />
                                           Retur: {fc.returnCount} Unit
                                         </span>
                                       )}
 
                                       {isEliminated && (
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white flex items-center gap-1">
+                                        <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-rose-600 text-white flex items-center gap-1">
                                           <Ban className="w-3 h-3" />
                                           Kuota Dieliminasi (0)
                                         </span>
                                       )}
 
                                       {isReduced && (
-                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 flex items-center gap-1">
+                                        <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-500 text-slate-950 flex items-center gap-1">
                                           <Scissors className="w-3 h-3" />
                                           Kuota Dipangkas (-50%)
                                         </span>
                                       )}
                                     </div>
 
-                                    <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 flex-wrap">
+                                    <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex-wrap">
                                       {fc.category && (
-                                        <span className="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-800 rounded font-medium">
+                                        <span className="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-800 rounded-md font-medium">
                                           {fc.category}
                                         </span>
                                       )}
@@ -1706,9 +1706,9 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                                   {/* Urgency Pill */}
                                   <span
-                                    className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                                    className={`text-[11px] font-black px-2 py-0.5 rounded-full shrink-0 ${
                                       fc.urgency.includes('KRITIS')
-                                        ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse'
+                                        ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                                         : fc.urgency.includes('TINGGI')
                                         ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                                         : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
@@ -1736,7 +1736,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                       </span>
                                     </div>
                                     {fc.supplierTerms && (
-                                      <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                                      <span className="ml-auto text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
                                         {fc.supplierTerms}
                                       </span>
                                     )}
@@ -1767,7 +1767,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                     <button aria-label="Kurangi 6 unit"
                                       type="button"
                                       onClick={() => handleUpdatePOQuantity(itemKey, -6)}
-                                      className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer text-slate-700 dark:text-slate-200"
+                                      className="w-6 h-6 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer text-slate-700 dark:text-slate-200"
                                       title="Kurangi 6 unit"
                                     >
                                       <Minus className="w-3 h-3" />
@@ -1779,12 +1779,12 @@ export const GeminiRetailCopilot: React.FC = () => {
                                       onChange={(e) =>
                                         handleSetPOQuantityDirect(itemKey, parseInt(e.target.value) || 0)
                                       }
-                                      className="w-14 px-1.5 py-0.5 text-center font-bold text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                      className="w-14 px-1.5 py-0.5 text-center font-bold text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                     />
                                     <button aria-label="Tambah 6 unit"
                                       type="button"
                                       onClick={() => handleUpdatePOQuantity(itemKey, 6)}
-                                      className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer text-slate-700 dark:text-slate-200"
+                                      className="w-6 h-6 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs font-bold cursor-pointer text-slate-700 dark:text-slate-200"
                                       title="Tambah 6 unit"
                                     >
                                       <Plus className="w-3 h-3" />
@@ -1815,7 +1815,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                       onClick={() => handleToggleExpandChart(itemKey)}
                                       className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer ${
                                         isChartExpanded
-                                          ? 'bg-emerald-700 text-white shadow-xs'
+                                          ? 'bg-emerald-700 text-white shadow-sm'
                                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                                       }`}
                                     >
@@ -1840,7 +1840,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                       <button
                                         type="button"
                                         onClick={() => handleEliminateSingleItem(itemKey)}
-                                        className="px-2 py-1 rounded-lg border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold hover:bg-rose-100 transition cursor-pointer flex items-center gap-1"
+                                        className="px-2 py-1 rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold hover:bg-rose-100 transition cursor-pointer flex items-center gap-1"
                                         title="Set kuota order ke 0 (eliminasi)"
                                       >
                                         <Ban className="w-3 h-3" />
@@ -1850,7 +1850,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                       <button
                                         type="button"
                                         onClick={() => handleRestoreSingleItem(itemKey, originalQty)}
-                                        className="px-2 py-1 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold hover:bg-emerald-100 transition cursor-pointer flex items-center gap-1"
+                                        className="px-2 py-1 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold hover:bg-emerald-100 transition cursor-pointer flex items-center gap-1"
                                         title="Pulihkan kuota order normal"
                                       >
                                         <CheckCircle2 className="w-3 h-3" />
@@ -1862,7 +1862,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                       <button
                                         type="button"
                                         onClick={() => handleReduceSingleItem(itemKey, originalQty)}
-                                        className="px-2 py-1 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 transition cursor-pointer flex items-center gap-1"
+                                        className="px-2 py-1 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 transition cursor-pointer flex items-center gap-1"
                                         title="Pangkas kuota 50%"
                                       >
                                         <Scissors className="w-3 h-3" />
@@ -1927,7 +1927,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                   className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3.5 space-y-3"
                                 >
                                   {/* Supplier Section Header Card */}
-                                  <div className="flex items-center justify-between gap-3 flex-wrap bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+                                  <div className="flex items-center justify-between gap-3 flex-wrap bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                                     <div className="flex items-center gap-2.5 min-w-0">
                                       <button aria-label="Pilih"
                                         type="button"
@@ -1938,7 +1938,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                         {isAllGroupSelected ? (
                                           <CheckSquare className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                                         ) : isSomeGroupSelected ? (
-                                          <div className="w-4 h-4 rounded border-2 border-emerald-600 bg-emerald-100 flex items-center justify-center text-[10px] text-emerald-800 font-black">
+                                          <div className="w-4 h-4 rounded-md border-2 border-emerald-600 bg-emerald-100 flex items-center justify-center text-[11px] text-emerald-800 font-black">
                                             -
                                           </div>
                                         ) : (
@@ -1957,9 +1957,9 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                                           {/* Payment Terms Badge */}
                                           <span
-                                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
                                               (group.paymentTerms || '').toLowerCase().includes('konsinyasi')
-                                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-200'
+                                                ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200'
                                                 : (group.paymentTerms || '').toLowerCase().includes('tempo')
                                                 ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200'
                                                 : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200'
@@ -1987,10 +1987,10 @@ export const GeminiRetailCopilot: React.FC = () => {
                                     {/* Supplier Subtotal & Actions */}
                                     <div className="flex items-center gap-2 ml-auto flex-wrap">
                                       <div className="text-right mr-1">
-                                        <div className="text-[10px] text-slate-500 font-semibold uppercase">Total PO Supplier</div>
+                                        <div className="text-[11px] text-slate-500 font-semibold uppercase">Total PO Supplier</div>
                                         <div className="text-xs font-black text-emerald-700 dark:text-emerald-400">
                                           {formatCurrency(group.totalSelectedBudget, settings.currency)}
-                                          <span className="text-[10px] font-normal text-slate-500 ml-1">
+                                          <span className="text-[11px] font-normal text-slate-500 ml-1">
                                             ({group.selectedCount}/{group.items.length} SKU)
                                           </span>
                                         </div>
@@ -1999,7 +1999,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                       <button aria-label="Salin"
                                         type="button"
                                         onClick={() => handleCopyPOText(group.supplierName)}
-                                        className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
+                                        className="px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
                                         title={`Salin PO khusus ${group.supplierName} untuk WhatsApp`}
                                       >
                                         {copiedSupplierFeedback === group.supplierName ? (
@@ -2018,7 +2018,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                       <button
                                         type="button"
                                         onClick={() => handlePrintPO(group.supplierName)}
-                                        className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
+                                        className="px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1 transition cursor-pointer"
                                         title={`Cetak surat pesanan ${group.supplierName}`}
                                       >
                                         <Printer className="w-3.5 h-3.5 text-slate-500" />
@@ -2089,7 +2089,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                 <button
                   onClick={handleFetchInsights}
                   disabled={isLoadingInsights}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoadingInsights ? 'animate-spin' : ''}`} />
                   <span>Update Analisis</span>
@@ -2148,7 +2148,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                       <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
                         {insightsData.actionableTips.map((tip, i) => (
                           <li key={i} className="flex items-start gap-2">
-                            <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                            <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
                               {i + 1}
                             </span>
                             <span>{tip}</span>
@@ -2209,17 +2209,17 @@ export const GeminiRetailCopilot: React.FC = () => {
                 </div>
 
                 {/* OWNER PROFIT MARGIN RULE SECTION */}
-                <div className="p-3.5 rounded-xl bg-gradient-to-br from-emerald-50/70 to-teal-50/50 dark:from-emerald-950/30 dark:to-slate-900 border border-emerald-200/80 dark:border-emerald-800/60 space-y-2.5">
+                <div className="p-3.5 rounded-xl bg-gradient-to-br from-emerald-50/70 to-emerald-50/50 dark:from-emerald-950/30 dark:to-slate-900 border border-emerald-200/80 dark:border-emerald-800/60 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                         <ShieldCheck className="w-3.5 h-3.5" />
                       </div>
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                         Aturan Margin Profit Owner (Minimal)
                       </span>
                     </div>
-                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-700 text-white shadow-2xs">
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-700 text-white shadow-sm">
                       Min. {minOwnerMargin}%
                     </span>
                   </div>
@@ -2234,9 +2234,9 @@ export const GeminiRetailCopilot: React.FC = () => {
                         key={val}
                         type="button"
                         onClick={() => setMinOwnerMargin(val)}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           minOwnerMargin === val
-                            ? 'bg-emerald-700 text-white shadow-2xs ring-1 ring-emerald-500'
+                            ? 'bg-emerald-700 text-white shadow-sm ring-1 ring-emerald-500'
                             : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                         }`}
                       >
@@ -2246,7 +2246,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                   </div>
 
                   {/* Live Margin Calculation Badge */}
-                  <div className="p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-800/40 flex items-center justify-between text-[11px]">
+                  <div className="p-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-800/40 flex items-center justify-between text-[11px]">
                     <span className="text-slate-600 dark:text-slate-400">
                       Rata-rata Margin Kategori: <strong>{targetCategoryStats.avgMargin}%</strong>
                     </span>
@@ -2270,7 +2270,7 @@ export const GeminiRetailCopilot: React.FC = () => {
               {generatedPromo && (
                 <div className="p-4 rounded-2xl border border-emerald-500/50 bg-white dark:bg-slate-950 space-y-3 shadow-md animate-in fade-in">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950">
                       Voucher Siap Pakai
                     </span>
                     <span className="text-xs font-mono font-bold text-slate-500">
@@ -2291,32 +2291,32 @@ export const GeminiRetailCopilot: React.FC = () => {
                   </div>
 
                   {/* OWNER PROFIT MARGIN AUDIT CARD */}
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-slate-900 border border-emerald-300 dark:border-emerald-800/80 space-y-2">
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-emerald-50 dark:from-emerald-950/40 dark:to-slate-900 border border-emerald-300 dark:border-emerald-800/80 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-300">
                         <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                         <span>Garansi Margin Owner (≥ {generatedPromo.minProfitMargin || 5}%)</span>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">
                         Status: Terlindungi
                       </span>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-emerald-200/60 dark:border-emerald-800/50">
-                      <div className="p-1.5 rounded-lg bg-white/60 dark:bg-slate-900/60">
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Margin Awal</span>
+                      <div className="p-1.5 rounded-xl bg-white/60 dark:bg-slate-900/60">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Margin Awal</span>
                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
                           {generatedPromo.originalMarginPercent || targetCategoryStats.avgMargin}%
                         </span>
                       </div>
-                      <div className="p-1.5 rounded-lg bg-white/60 dark:bg-slate-900/60">
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Margin Sisa</span>
+                      <div className="p-1.5 rounded-xl bg-white/60 dark:bg-slate-900/60">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Margin Sisa</span>
                         <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 font-mono">
                           +{generatedPromo.projectedMarginPercent || 5.5}%
                         </span>
                       </div>
-                      <div className="p-1.5 rounded-lg bg-white/60 dark:bg-slate-900/60">
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Est. Laba/Trx</span>
+                      <div className="p-1.5 rounded-xl bg-white/60 dark:bg-slate-900/60">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Est. Laba/Trx</span>
                         <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 font-mono">
                           +Rp {(generatedPromo.estimatedProfitAmount || 3500).toLocaleString('id-ID')}
                         </span>
@@ -2332,13 +2332,13 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                   <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 flex items-center justify-between border border-dashed border-slate-300 dark:border-slate-700">
                     <div>
-                      <span className="text-[10px] text-slate-500 font-mono">KODE VOUCHER</span>
+                      <span className="text-[11px] text-slate-500 font-mono">KODE VOUCHER</span>
                       <p className="text-sm font-mono font-black text-slate-900 dark:text-white tracking-widest">
                         {generatedPromo.voucherCode}
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] text-slate-500">NILAI POTONGAN</span>
+                      <span className="text-[11px] text-slate-500">NILAI POTONGAN</span>
                       <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 font-mono">
                         {generatedPromo.discountType === 'percentage'
                           ? `${generatedPromo.value}%`
@@ -2381,12 +2381,12 @@ export const GeminiRetailCopilot: React.FC = () => {
                       className={`max-w-[85%] p-3 rounded-2xl text-xs ${
                         msg.sender === 'user'
                           ? 'bg-emerald-500 text-slate-950 font-medium rounded-tr-xs'
-                          : 'bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-tl-xs shadow-2xs'
+                          : 'bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-tl-xs shadow-sm'
                       }`}
                     >
                       <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
                     </div>
-                    <span className="text-[10px] text-slate-500 mt-1 px-1">{msg.time}</span>
+                    <span className="text-[11px] text-slate-500 mt-1 px-1">{msg.time}</span>
 
                     {/* Quick suggestion pills */}
                     {msg.actions && msg.actions.length > 0 && (

@@ -75,9 +75,9 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
       id="access-denied-container"
       className="flex-1 flex items-center justify-center p-4 md:p-8 bg-slate-50 dark:bg-slate-950 overflow-y-auto"
     >
-      <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 md:p-8 text-center">
+      <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 md:p-8 text-center">
         {/* Shield Icon */}
-        <div className="w-16 h-16 rounded-3xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-5 shadow-sm">
+        <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-5 shadow-sm">
           <ShieldAlert className="w-8 h-8" />
         </div>
 
@@ -98,7 +98,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
           <div
             className={`w-10 h-10 rounded-xl ${
               activeEmployee?.avatarColor || 'bg-emerald-700'
-            } text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-2xs`}
+            } text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm`}
           >
             {activeEmployee?.avatar || 'KR'}
           </div>
@@ -110,7 +110,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
               Jabatan: {activeEmployee?.roleTitle || activeEmployee?.role || 'Kasir'}
             </p>
           </div>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+          <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
             Terbatas
           </span>
         </div>
@@ -134,7 +134,7 @@ export const AccessDeniedView: React.FC<AccessDeniedViewProps> = ({
                 placeholder="4-digit PIN..."
                 className="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-xl bg-white dark:bg-slate-900 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                 Masukkan 4-digit PIN Supervisor atau Owner untuk otorisasi akses.
               </p>
             </div>

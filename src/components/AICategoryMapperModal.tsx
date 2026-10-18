@@ -156,17 +156,17 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-4xl max-h-[85vh] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden">
+      <div className="w-full max-w-4xl max-h-[85vh] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
               <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <span>Pemetaan Kategori Inventaris Otomatis (Gemini AI)</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-semibold">
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold">
                   FMCG Retail
                 </span>
               </h3>
@@ -177,7 +177,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
           </div>
           <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -186,7 +186,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
         {/* Content */}
         <div className="p-4 flex-1 overflow-y-auto space-y-4">
           {/* Top Banner / Actions */}
-          <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-emerald-500/10 border border-purple-200 dark:border-purple-900/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-500/10 via-indigo-500/10 to-emerald-500/10 border border-indigo-200 dark:border-indigo-900/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                 Total Produk Inventaris: {products.length} Item
@@ -200,7 +200,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
               type="button"
               onClick={handleStartAnalysis}
               disabled={isAnalyzing}
-              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-purple-600/20 disabled:opacity-50 transition active:scale-95 shrink-0"
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-600/20 disabled:opacity-50 transition active:scale-95 shrink-0"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? 'animate-spin' : ''}`} />
               <span>{isAnalyzing ? 'Sedang Menganalisis AI...' : candidates.length > 0 ? 'Pindai Ulang AI' : 'Mulai Analisis AI Sekarang'}</span>
@@ -222,9 +222,9 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
                   <button aria-pressed={filterMode === 'different_only'}
                     type="button"
                     onClick={() => setFilterMode('different_only')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition ${
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold cursor-pointer transition ${
                       filterMode === 'different_only'
-                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
+                        ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
                         : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
                   >
@@ -233,9 +233,9 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
                   <button aria-pressed={filterMode === 'all'}
                     type="button"
                     onClick={() => setFilterMode('all')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition ${
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold cursor-pointer transition ${
                       filterMode === 'all'
-                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
+                        ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
                         : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
                   >
@@ -247,7 +247,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggleSelectAll(true)}
-                    className="text-purple-600 dark:text-purple-400 hover:underline cursor-pointer font-semibold text-[11px]"
+                    className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer font-semibold text-[11px]"
                   >
                     Pilih Semua
                   </button>
@@ -266,7 +266,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden text-xs">
                 <div className="overflow-x-auto max-h-80">
                   <table className="w-full text-left divide-y divide-slate-200 dark:divide-slate-800">
-                    <thead className="bg-slate-50 dark:bg-slate-800/60 text-[10px] uppercase font-bold text-slate-500 tracking-wider sticky top-0">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60 text-[11px] uppercase font-bold text-slate-500 tracking-wider sticky top-0">
                       <tr>
                         <th className="p-2.5 w-10 text-center">Pilih</th>
                         <th className="p-2.5">Nama Produk</th>
@@ -280,7 +280,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
                         <tr
                           key={item.id}
                           className={`hover:bg-slate-50 dark:hover:bg-slate-800/40 transition ${
-                            item.isDifferent ? 'bg-purple-50/20 dark:bg-purple-950/10' : ''
+                            item.isDifferent ? 'bg-indigo-50/20 dark:bg-indigo-950/10' : ''
                           }`}
                         >
                           <td className="p-2.5 text-center">
@@ -288,7 +288,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
                               type="checkbox"
                               checked={item.selected}
                               onChange={() => handleToggleItem(item.id)}
-                              className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                              className="rounded-md border-slate-300 text-indigo-600 focus:ring-indigo-500"
                             />
                           </td>
                           <td className="p-2.5">
@@ -296,25 +296,25 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
                               {item.name}
                             </div>
                             {item.brand && (
-                              <span className="text-[10px] text-slate-500">
+                              <span className="text-[11px] text-slate-500">
                                 Brand: {item.brand}
                               </span>
                             )}
                           </td>
                           <td className="p-2.5">
-                            <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                               {item.currentCategoryName}
                             </span>
                           </td>
                           <td className="p-2.5">
                             <div className="flex items-center gap-1.5">
                               {item.isDifferent ? (
-                                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                                <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
                                   <Sparkles className="w-3 h-3 text-emerald-700" />
                                   {item.suggestedCategoryName}
                                 </span>
                               ) : (
-                                <span className="px-2 py-0.5 rounded text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                <span className="px-2 py-0.5 rounded-md text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                                   <Check className="w-3 h-3 text-emerald-500" />
                                   Sudah Tepat
                                 </span>

@@ -94,7 +94,7 @@ export const CustomersView: React.FC = () => {
     switch (t) {
       case 'Platinum':
         return {
-          badge: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-800',
+          badge: 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950/70 dark:text-indigo-300 dark:border-indigo-800',
           mult: '2x Poin',
         };
       case 'Gold':
@@ -109,7 +109,7 @@ export const CustomersView: React.FC = () => {
         };
       default:
         return {
-          badge: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-950/70 dark:text-orange-300 dark:border-orange-800',
+          badge: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800',
           mult: '1x Poin',
         };
     }
@@ -178,7 +178,7 @@ export const CustomersView: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-100 dark:bg-slate-950 overflow-hidden select-none">
       {/* Top Banner */}
-      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
+      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 shadow-sm">
         <div>
           <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Users className="w-5 h-5 text-emerald-500" />
@@ -192,7 +192,7 @@ export const CustomersView: React.FC = () => {
         {/* Action Button & Stats */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="hidden sm:block px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
-            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 block">
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
               Total Member
             </span>
             <span className="font-bold text-slate-900 dark:text-white font-mono">
@@ -201,7 +201,7 @@ export const CustomersView: React.FC = () => {
           </div>
 
           <div className="hidden sm:block px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-300">
-            <span className="text-[10px] font-medium block">Poin Beredar</span>
+            <span className="text-[11px] font-medium block">Poin Beredar</span>
             <span className="font-bold font-mono flex items-center gap-1">
               <Award className="w-3.5 h-3.5 text-amber-500" />
               {totalPointsInCirculation.toLocaleString()} Pts
@@ -209,7 +209,7 @@ export const CustomersView: React.FC = () => {
           </div>
 
           <div className="hidden sm:block px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-300">
-            <span className="text-[10px] font-medium block">Potensi Diskon Aktif</span>
+            <span className="text-[11px] font-medium block">Potensi Diskon Aktif</span>
             <span className="font-bold font-mono">
               {formatCurrency(totalRupiahValue, settings.currency)}
             </span>
@@ -218,7 +218,7 @@ export const CustomersView: React.FC = () => {
           <button
             id="btn-open-marketing-promo"
             onClick={() => setActiveCustomersTab('marketing')}
-            className="hidden sm:flex px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95"
+            className="hidden sm:flex px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer transition-all active:scale-95"
             title="Buka Pusat Pemasaran & Generate Promo AI"
           >
             <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
@@ -236,7 +236,7 @@ export const CustomersView: React.FC = () => {
           <button
             id="btn-customers-backup-restore"
             onClick={() => setIsBackupRestoreOpen(true)}
-            className="hidden md:flex px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-xs transition-colors active:scale-95"
+            className="hidden md:flex px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs items-center gap-1.5 cursor-pointer shadow-sm transition-colors active:scale-95"
             title="Cadangkan Data Member, Poin & Seluruh Database (Backup & Restore - F9)"
           >
             <Database className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
@@ -252,7 +252,7 @@ export const CustomersView: React.FC = () => {
           onClick={() => setActiveCustomersTab('members')}
           className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${
             activeCustomersTab === 'members'
-              ? 'bg-emerald-500 text-slate-950 shadow-xs'
+              ? 'bg-emerald-500 text-slate-950 shadow-sm'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -266,13 +266,13 @@ export const CustomersView: React.FC = () => {
           onClick={() => setActiveCustomersTab('marketing')}
           className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${
             activeCustomersTab === 'marketing'
-              ? 'bg-emerald-500 text-slate-950 shadow-xs'
+              ? 'bg-emerald-500 text-slate-950 shadow-sm'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <Sparkles className="w-4 h-4 text-amber-500" />
           <span>Marketing &amp; Promo AI</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold uppercase bg-amber-400 text-slate-950">
+          <span className="px-1.5 py-0.2 rounded-full text-[11px] font-extrabold uppercase bg-amber-400 text-slate-950">
             Gemini
           </span>
         </button>
@@ -283,13 +283,13 @@ export const CustomersView: React.FC = () => {
           onClick={() => setActiveCustomersTab('calculator')}
           className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${
             activeCustomersTab === 'calculator'
-              ? 'bg-emerald-500 text-slate-950 shadow-xs'
+              ? 'bg-emerald-500 text-slate-950 shadow-sm'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <Calculator className="w-4 h-4" />
           <span>Kalkulator Poin</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold uppercase bg-amber-400 text-slate-950">
+          <span className="px-1.5 py-0.2 rounded-full text-[11px] font-extrabold uppercase bg-amber-400 text-slate-950">
             Auto Diskon
           </span>
         </button>
@@ -300,7 +300,7 @@ export const CustomersView: React.FC = () => {
           onClick={() => setActiveCustomersTab('ledger')}
           className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${
             activeCustomersTab === 'ledger'
-              ? 'bg-emerald-500 text-slate-950 shadow-xs'
+              ? 'bg-emerald-500 text-slate-950 shadow-sm'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -314,7 +314,7 @@ export const CustomersView: React.FC = () => {
           onClick={() => setActiveCustomersTab('rules')}
           className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${
             activeCustomersTab === 'rules'
-              ? 'bg-emerald-500 text-slate-950 shadow-xs'
+              ? 'bg-emerald-500 text-slate-950 shadow-sm'
               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -329,7 +329,7 @@ export const CustomersView: React.FC = () => {
         {activeCustomersTab === 'members' && (
           <div className="space-y-4">
             {/* Filter and Search */}
-            <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+            <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-sm">
               <div className="relative flex-1 min-w-[240px] max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input aria-label="Cari nama member, no. WhatsApp, atau email..."
@@ -347,9 +347,9 @@ export const CustomersView: React.FC = () => {
                   <button
                     key={t}
                     onClick={() => setSelectedTierFilter(t)}
-                    className={`px-3 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                    className={`px-3 py-1 text-xs font-semibold rounded-xl transition cursor-pointer ${
                       selectedTierFilter === t
-                        ? 'bg-slate-900 text-white dark:bg-emerald-600 dark:text-white shadow-xs'
+                        ? 'bg-slate-900 text-white dark:bg-emerald-600 dark:text-white shadow-sm'
                         : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'
                     }`}
                   >
@@ -361,7 +361,7 @@ export const CustomersView: React.FC = () => {
 
             {/* Customer Cards Grid */}
             {filteredCustomers.length === 0 ? (
-              <div className="text-center py-16 text-slate-500 text-xs bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+              <div className="text-center py-16 text-slate-500 text-xs bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
                 Tidak ada member yang cocok dengan filter atau kata kunci pencarian.
               </div>
             ) : (
@@ -373,12 +373,12 @@ export const CustomersView: React.FC = () => {
                   return (
                     <div
                       key={cust.id}
-                      className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/80 transition-all flex flex-col justify-between shadow-xs"
+                      className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/80 transition-all flex flex-col justify-between shadow-sm"
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-bold text-sm flex items-center justify-center shadow-xs">
+                            <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-bold text-sm flex items-center justify-center shadow-sm">
                               {cust.name.slice(0, 2).toUpperCase()}
                             </div>
                             <div className="min-w-0">
@@ -394,11 +394,11 @@ export const CustomersView: React.FC = () => {
 
                           <div className="text-right shrink-0">
                             <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${tierInfo.badge} block`}
+                              className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${tierInfo.badge} block`}
                             >
                               {cust.tier || 'Bronze'}
                             </span>
-                            <span className="text-[10px] text-slate-500 font-mono mt-0.5 block">
+                            <span className="text-[11px] text-slate-500 font-mono mt-0.5 block">
                               {tierInfo.mult}
                             </span>
                           </div>
@@ -415,19 +415,19 @@ export const CustomersView: React.FC = () => {
                       {/* Stats & Loyalty */}
                       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-3 gap-2 text-center text-xs">
                         <div className="bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 p-2 rounded-xl flex flex-col justify-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-0.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-0.5">
                             Poin Aktif
                           </span>
                           <span className="font-bold font-mono text-sm text-amber-700 dark:text-amber-400">
                             {(cust.points || 0).toLocaleString()}
                           </span>
-                          <span className="text-[10px] text-slate-500 font-mono truncate">
+                          <span className="text-[11px] text-slate-500 font-mono truncate">
                             ={formatCurrency(pointsValue, settings.currency)}
                           </span>
                         </div>
 
                         <div className="bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 p-2 rounded-xl flex flex-col justify-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-0.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-0.5">
                             Transaksi
                           </span>
                           <span className="font-bold font-mono text-sm text-slate-900 dark:text-white">
@@ -436,7 +436,7 @@ export const CustomersView: React.FC = () => {
                         </div>
 
                         <div className="bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 p-2 rounded-xl flex flex-col justify-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-0.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-0.5">
                             Belanja
                           </span>
                           <span className="font-bold font-mono text-xs text-emerald-700 dark:text-emerald-400 truncate block">
@@ -450,7 +450,7 @@ export const CustomersView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setDetailCustomer(cust)}
-                          className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1 cursor-pointer transition text-[11px]"
+                          className="px-2 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1 cursor-pointer transition text-[11px]"
                           title="Lihat riwayat poin dan transaksi detail"
                         >
                           <History className="w-3.5 h-3.5 text-emerald-500" />
@@ -463,7 +463,7 @@ export const CustomersView: React.FC = () => {
                             setCalculatorTargetCustomer(cust);
                             setActiveCustomersTab('calculator');
                           }}
-                          className="px-2 py-1.5 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 font-semibold flex items-center gap-1 cursor-pointer transition text-[11px] hover:bg-amber-100"
+                          className="px-2 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 font-semibold flex items-center gap-1 cursor-pointer transition text-[11px] hover:bg-amber-100"
                           title="Buka kalkulator otomatis untuk hitung poin dan diskon transaksi"
                         >
                           <Calculator className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
@@ -476,7 +476,7 @@ export const CustomersView: React.FC = () => {
                             setSelectedMarketingCustomer(cust);
                             setActiveCustomersTab('marketing');
                           }}
-                          className="px-2 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-semibold flex items-center gap-1 cursor-pointer transition text-[11px] hover:bg-emerald-100"
+                          className="px-2 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-semibold flex items-center gap-1 cursor-pointer transition text-[11px] hover:bg-emerald-100"
                           title="Rancang promo WhatsApp & diskon personal dengan Gemini AI"
                         >
                           <Sparkles className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
@@ -489,7 +489,7 @@ export const CustomersView: React.FC = () => {
                             setSelectedCustomer(cust);
                             setActiveView('pos');
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1 cursor-pointer transition text-[11px]"
+                          className="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1 cursor-pointer transition text-[11px]"
                           title="Pilih member ini untuk transaksi kasir"
                         >
                           <CreditCard className="w-3.5 h-3.5" />
@@ -525,11 +525,11 @@ export const CustomersView: React.FC = () => {
       {/* Customer Detail & Points Ledger Modal */}
       {detailCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-bold flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-white font-bold flex items-center justify-center">
                   {detailCustomer.name.slice(0, 2).toUpperCase()}
                 </div>
                 <div>
@@ -540,7 +540,7 @@ export const CustomersView: React.FC = () => {
                     <span className="font-mono">{detailCustomer.phone}</span>
                     <span>•</span>
                     <span
-                      className={`px-2 py-0.2 rounded-full border text-[10px] font-bold ${
+                      className={`px-2 py-0.2 rounded-full border text-[11px] font-bold ${
                         getTierBadge(detailCustomer.tier).badge
                       }`}
                     >
@@ -552,7 +552,7 @@ export const CustomersView: React.FC = () => {
               </div>
               <button aria-label="Tutup"
                 onClick={() => setDetailCustomer(null)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -577,12 +577,12 @@ export const CustomersView: React.FC = () => {
                     </div>
                     <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
                         style={{ width: `${progress.progress}%` }}
                       />
                     </div>
                     {progress.remaining > 0 && (
-                      <span className="text-[10px] text-slate-500 mt-1 block">
+                      <span className="text-[11px] text-slate-500 mt-1 block">
                         Belanja {formatCurrency(progress.remaining, settings.currency)} lagi untuk naik ke tingkat tier berikutnya dan raih pengali poin lebih tinggi.
                       </span>
                     )}
@@ -591,7 +591,7 @@ export const CustomersView: React.FC = () => {
               })()}
 
               {/* Points Summary & Adjustment Action */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 dark:from-amber-950/30 dark:via-slate-900 dark:to-amber-950/30 border border-amber-200 dark:border-amber-900/40 flex items-center justify-between gap-3">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 via-amber-50 to-amber-50 dark:from-amber-950/30 dark:via-slate-900 dark:to-amber-950/30 border border-amber-200 dark:border-amber-900/40 flex items-center justify-between gap-3">
                 <div>
                   <span className="text-[11px] font-semibold text-amber-900 dark:text-amber-300 block">
                     Saldo Poin Aktif
@@ -614,7 +614,7 @@ export const CustomersView: React.FC = () => {
                       setDetailCustomer(null);
                       setActiveCustomersTab('marketing');
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-bold transition cursor-pointer shadow-xs flex items-center justify-center gap-1"
+                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                     <span>Draft Promo AI</span>
@@ -627,7 +627,7 @@ export const CustomersView: React.FC = () => {
                       setDetailCustomer(null);
                       setActiveCustomersTab('calculator');
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition cursor-pointer shadow-xs flex items-center justify-center gap-1"
+                    className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1"
                   >
                     <Calculator className="w-3.5 h-3.5" />
                     <span>Buka Kalkulator Diskon</span>
@@ -652,7 +652,7 @@ export const CustomersView: React.FC = () => {
                 >
                   <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
                     <span>Penyesuaian Manual Poin Member</span>
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[11px] text-slate-500">
                       Operator: {activeEmployee?.name || 'Kasir'}
                     </span>
                   </div>
@@ -663,7 +663,7 @@ export const CustomersView: React.FC = () => {
                       onClick={() => setAdjustType('add')}
                       className={`p-2 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                         adjustType === 'add'
-                          ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                          ? 'bg-emerald-500 text-slate-950 shadow-sm'
                           : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
                       }`}
                     >
@@ -676,7 +676,7 @@ export const CustomersView: React.FC = () => {
                       onClick={() => setAdjustType('subtract')}
                       className={`p-2 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                         adjustType === 'subtract'
-                          ? 'bg-amber-500 text-slate-950 shadow-xs'
+                          ? 'bg-amber-500 text-slate-950 shadow-sm'
                           : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
                       }`}
                     >
@@ -721,13 +721,13 @@ export const CustomersView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsAdjustingPoints(false)}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer"
                     >
                       Batal
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold cursor-pointer"
+                      className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold cursor-pointer"
                     >
                       Simpan Penyesuaian
                     </button>
@@ -754,7 +754,7 @@ export const CustomersView: React.FC = () => {
                             <span className="font-mono font-bold text-slate-900 dark:text-white">
                               {tx.invoiceNumber}
                             </span>
-                            <span className="text-[10px] text-slate-500">
+                            <span className="text-[11px] text-slate-500">
                               {tx.createdAt ? toLocalDateString(new Date(tx.createdAt)) : ''}
                             </span>
                           </div>
@@ -770,7 +770,7 @@ export const CustomersView: React.FC = () => {
                             </span>
                           )}
                           {tx.pointsUsed && tx.pointsUsed > 0 ? (
-                            <span className="text-[10px] font-mono text-amber-700 dark:text-amber-400 block">
+                            <span className="text-[11px] font-mono text-amber-700 dark:text-amber-400 block">
                               -{tx.pointsUsed} Pts (Diskon {formatCurrency(tx.pointsDiscount || 0, settings.currency)})
                             </span>
                           ) : null}
@@ -799,7 +799,7 @@ export const CustomersView: React.FC = () => {
                         >
                           <div className="flex items-start gap-2.5">
                             <div
-                              className={`p-1.5 rounded-lg mt-0.5 ${
+                              className={`p-1.5 rounded-xl mt-0.5 ${
                                 isPositive
                                   ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
                                   : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
@@ -815,7 +815,7 @@ export const CustomersView: React.FC = () => {
                               <p className="font-bold text-slate-900 dark:text-slate-100">
                                 {entry.description}
                               </p>
-                              <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                              <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
                                 <span className="flex items-center gap-1 font-mono">
                                   <Clock className="w-2.5 h-2.5" />
                                   {entry.date ? entry.date.slice(0, 16).replace('T', ' ') : '-'}
@@ -835,7 +835,7 @@ export const CustomersView: React.FC = () => {
                             >
                               {isPositive ? `+${entry.points}` : entry.points} Pts
                             </span>
-                            <span className="text-[10px] text-slate-500 font-mono">
+                            <span className="text-[11px] text-slate-500 font-mono">
                               Saldo: {entry.balanceAfter}
                             </span>
                           </div>

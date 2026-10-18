@@ -17,7 +17,7 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div
         id="held-orders-dialog"
-        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+        className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[85vh]"
       >
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
@@ -34,7 +34,7 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
           </div>
           <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -50,7 +50,7 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-xs font-mono text-slate-900 dark:text-white bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded">
+                    <span className="font-bold text-xs font-mono text-slate-900 dark:text-white bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                       {held.referenceNumber}
                     </span>
                     <span className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
@@ -66,7 +66,7 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
 
                 <div className="text-xs text-slate-600 dark:text-slate-400">
                   <div className="flex items-center gap-2 font-medium">
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-[10px]">
+                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-[11px]">
                       Penjualan Kasir
                     </span>
                     {held.customer && <span>• Pelanggan: <strong>{held.customer.name}</strong></span>}
@@ -79,7 +79,7 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
                 <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
                   <button aria-label="Discard order"
                     onClick={() => deleteHeldOrder(held.id)}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
+                    className="p-1.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
                     title="Discard order"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -90,7 +90,7 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
                       recallHeldOrder(held);
                       onClose();
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
+                    className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
                   >
                     <span>Recall Order</span>
                     <ArrowRight className="w-3.5 h-3.5" />

@@ -96,7 +96,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
   if (!activeProduct) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-slate-200 dark:border-slate-800">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full text-center shadow-xl border border-slate-200 dark:border-slate-800">
           <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4">
             <XCircle className="w-8 h-8" />
           </div>
@@ -104,7 +104,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
             Produk Tidak Ditemukan
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
-            Label rak atau kode produk <code className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{productId}</code> belum terdaftar dalam sistem katalog toko.
+            Label rak atau kode produk <code className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md">{productId}</code> belum terdaftar dalam sistem katalog toko.
           </p>
           <button
             onClick={onClose}
@@ -146,7 +146,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs overflow-y-auto animate-in fade-in">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto flex flex-col max-h-[92vh]">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto flex flex-col max-h-[92vh]">
         {/* Top Header Bar */}
         <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white px-5 py-4 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-2.5">
@@ -155,7 +155,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] uppercase font-black tracking-wider text-indigo-300">
+                <span className="text-[11px] uppercase font-black tracking-wider text-indigo-300">
                   Verifikasi Label Rak Dinamis
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -192,15 +192,15 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
               <div>
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   {activeProduct.brand && (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                    <span className="px-2 py-0.5 rounded-md text-[11px] font-black uppercase tracking-wider bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
                       {activeProduct.brand}
                     </span>
                   )}
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                     SKU: {activeProduct.sku}
                   </span>
                   {activeProduct.aisle && (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
                       <span>{activeProduct.aisle}</span>
                     </span>
@@ -217,13 +217,13 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
 
               {/* Price Banner */}
               <div className="text-right shrink-0">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                <span className="text-[11px] uppercase font-bold text-slate-500 block">
                   Harga Jual Retail
                 </span>
                 <div className="text-xl sm:text-2xl font-black font-mono text-emerald-700 dark:text-emerald-400 tracking-tight">
                   {formatCurrency(activeProduct.price, settings.currency)}
                 </div>
-                <span className="text-[10px] font-medium text-slate-500">
+                <span className="text-[11px] font-medium text-slate-500">
                   per {activeProduct.unit || 'pcs'}
                 </span>
               </div>
@@ -231,10 +231,10 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
           </div>
 
           {/* REAL-TIME INVENTORY LEVEL (Core Requirement 1) */}
-          <div className="rounded-2xl p-4 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-850 border-2 border-emerald-500/30 dark:border-emerald-500/20 shadow-xs">
+          <div className="rounded-2xl p-4 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-850 border-2 border-emerald-500/30 dark:border-emerald-500/20 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
                   <Package className="w-4 h-4" />
                 </div>
                 <div>
@@ -242,7 +242,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
                     <span>Status Stok Real-Time (Fisik &amp; Sistem)</span>
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   </h4>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[11px] text-slate-500">
                     Live sinkronisasi &bull; Diperbarui {lastRefreshedAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} WIB
                   </span>
                 </div>
@@ -280,7 +280,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
               <div className="text-right text-[11px] text-slate-500 dark:text-slate-400">
                 <div>Ambang Batas Min: <strong className="text-slate-700 dark:text-slate-300">{activeProduct.minStock} {activeProduct.unit || 'pcs'}</strong></div>
                 {activeProduct.aisle && (
-                  <div>Lokasi Rak: <strong className="text-sky-600 dark:text-sky-400">{activeProduct.aisle}</strong></div>
+                  <div>Lokasi Rak: <strong className="text-blue-600 dark:text-blue-400">{activeProduct.aisle}</strong></div>
                 )}
               </div>
             </div>
@@ -306,25 +306,25 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
                       type="number"
                       value={customStockInput}
                       onChange={(e) => setCustomStockInput(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-24 px-2.5 py-1 text-sm font-mono font-bold rounded-lg border border-slate-500 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      className="w-24 px-2.5 py-1 text-sm font-mono font-bold rounded-xl border border-slate-500 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                       min={0}
                     />
                     <button
                       type="button"
                       onClick={handleQuickStockSave}
-                      className="px-3 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-xs"
+                      className="px-3 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-sm"
                     >
                       Simpan
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsAdjustingStock(false)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer"
+                      className="px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer"
                     >
                       Batal
                     </button>
                   </div>
-                  <div className="text-[10px] text-slate-500">
+                  <div className="text-[11px] text-slate-500">
                     Perubahan stok akan langsung disinkronkan ke master inventaris kasir.
                   </div>
                 </div>
@@ -336,14 +336,14 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
           <div className="rounded-2xl p-4 bg-gradient-to-br from-indigo-50/60 to-blue-50/60 dark:from-indigo-950/30 dark:to-blue-950/30 border border-indigo-200 dark:border-indigo-800/60 space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-slate-900 dark:text-white">
                     Pembaruan Harga Terakhir
                   </h4>
-                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">
+                  <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">
                     {priceUpdateInfo.isRecent ? '⚡ Baru saja diperbarui (Dalam 7 hari)' : 'Terverifikasi aktif'}
                   </span>
                 </div>
@@ -351,7 +351,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
 
               {priceUpdateInfo.priceDiff !== undefined && priceUpdateInfo.priceDiff !== 0 && (
                 <div
-                  className={`px-2 py-0.5 rounded-lg text-xs font-black flex items-center gap-1 ${
+                  className={`px-2 py-0.5 rounded-xl text-xs font-black flex items-center gap-1 ${
                     priceUpdateInfo.priceDiff > 0
                       ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300'
                       : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300'
@@ -385,7 +385,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
                 <span className="text-slate-500 dark:text-slate-400 font-medium">
                   Jenis Perubahan:
                 </span>
-                <span className="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-semibold text-[11px]">
+                <span className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-semibold text-[11px]">
                   {priceUpdateInfo.changeTypeLabel}
                 </span>
               </div>
@@ -433,7 +433,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
           {/* Dynamic Link URL Information Box */}
           <div className="rounded-2xl p-3 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-2 text-xs">
             <div className="truncate flex-1">
-              <span className="text-[10px] text-slate-500 block font-bold uppercase">
+              <span className="text-[11px] text-slate-500 block font-bold uppercase">
                 Tautan QR Dinamis Produk:
               </span>
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 truncate block">
@@ -442,7 +442,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
             </div>
             <button
               onClick={handleCopyLink}
-              className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold text-xs shrink-0 flex items-center gap-1.5 border border-slate-200 dark:border-slate-600 transition cursor-pointer shadow-2xs"
+              className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold text-xs shrink-0 flex items-center gap-1.5 border border-slate-200 dark:border-slate-600 transition cursor-pointer shadow-sm"
             >
               <Share2 className="w-3.5 h-3.5" />
               <span>{isCopied ? 'Tersalin!' : 'Salin URL'}</span>

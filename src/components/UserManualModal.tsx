@@ -94,11 +94,11 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
       case 'Coins':
         return <Coins className="w-4 h-4 text-indigo-500" />;
       case 'BarChart3':
-        return <BarChart3 className="w-4 h-4 text-teal-500" />;
+        return <BarChart3 className="w-4 h-4 text-emerald-500" />;
       case 'Database':
-        return <Database className="w-4 h-4 text-purple-500" />;
+        return <Database className="w-4 h-4 text-indigo-500" />;
       case 'Laptop':
-        return <Laptop className="w-4 h-4 text-cyan-500" />;
+        return <Laptop className="w-4 h-4 text-blue-500" />;
       case 'Network':
         return <Network className="w-4 h-4 text-indigo-500" />;
       case 'ShieldCheck':
@@ -106,7 +106,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
       case 'FileSpreadsheet':
         return <FileSpreadsheet className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />;
       case 'Cloud':
-        return <Cloud className="w-4 h-4 text-sky-500" />;
+        return <Cloud className="w-4 h-4 text-blue-500" />;
       default:
         return <BookOpen className="w-4 h-4 text-emerald-500" />;
     }
@@ -165,7 +165,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
       <div
         id="user-manual-modal"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-5xl h-[90vh] max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden min-h-0"
+        className="w-full max-w-5xl h-[90vh] max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden min-h-0"
       >
         {/* Modal Header */}
         <div className="shrink-0 p-4 sm:px-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-wrap items-center justify-between gap-3">
@@ -192,7 +192,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
             <button
               id="btn-print-user-manual"
               onClick={handlePrintManual}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs"
+              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
               title="Cetak panduan ini untuk lembar kerja kasir"
             >
               <Printer className="w-3.5 h-3.5 text-slate-500" />
@@ -216,7 +216,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
               onClick={() => setActiveTab('manual')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'manual'
-                  ? 'bg-emerald-700 text-white shadow-xs'
+                  ? 'bg-emerald-700 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -229,7 +229,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
               onClick={() => setActiveTab('changelog')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'changelog'
-                  ? 'bg-emerald-700 text-white shadow-xs'
+                  ? 'bg-emerald-700 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -243,7 +243,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
               onClick={() => setActiveTab('faq')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'faq'
-                  ? 'bg-emerald-700 text-white shadow-xs'
+                  ? 'bg-emerald-700 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -256,7 +256,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
               onClick={() => setActiveTab('shortcuts')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'shortcuts'
-                  ? 'bg-emerald-700 text-white shadow-xs'
+                  ? 'bg-emerald-700 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -301,9 +301,9 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                     <button
                       key={role}
                       onClick={() => setSelectedRole(role)}
-                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                      className={`px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                         selectedRole === role
-                          ? 'bg-emerald-700 text-white shadow-2xs'
+                          ? 'bg-emerald-700 text-white shadow-sm'
                           : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-700'
                       }`}
                     >
@@ -333,16 +333,16 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                 <div className="px-2 pt-1 pb-2 space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     <span>Daftar Bab Panduan</span>
-                    <span className="text-[10px] text-slate-500 font-normal">({filteredSections.length} Bab)</span>
+                    <span className="text-[11px] text-slate-500 font-normal">({filteredSections.length} Bab)</span>
                   </div>
                   <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
                     {(['Semua', 'Kasir', 'Supervisor', 'Owner'] as const).map((role) => (
                       <button
                         key={role}
                         onClick={() => setSelectedRole(role)}
-                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                        className={`px-2 py-0.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer ${
                           selectedRole === role
-                            ? 'bg-emerald-700 text-white shadow-2xs'
+                            ? 'bg-emerald-700 text-white shadow-sm'
                             : 'bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-700'
                         }`}
                       >
@@ -359,18 +359,18 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                       onClick={() => setSelectedSectionId(sec.id)}
                       className={`w-full p-2.5 rounded-xl text-left transition-all flex items-start gap-2.5 cursor-pointer ${
                         isSelected
-                          ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-emerald-400/40 shadow-xs'
+                          ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-emerald-400/40 shadow-sm'
                           : 'text-slate-700 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-800/50 border border-transparent'
                       }`}
                     >
-                      <div className="p-1 rounded-lg bg-slate-100 dark:bg-slate-900 shrink-0 mt-0.5">
+                      <div className="p-1 rounded-xl bg-slate-100 dark:bg-slate-900 shrink-0 mt-0.5">
                         {renderSectionIcon(sec.iconName)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
                           <span className="text-xs font-bold truncate">{sec.title}</span>
                           {sec.badge && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium shrink-0">
+                            <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium shrink-0">
                               {sec.badge}
                             </span>
                           )}
@@ -405,7 +405,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                           {activeSection.roles.map((role) => (
                             <span
                               key={role}
-                              className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium"
+                              className="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium"
                             >
                               {role}
                             </span>
@@ -447,7 +447,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                                 {topic.shortcuts.map((sc) => (
                                   <span
                                     key={sc}
-                                    className="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300 shadow-2xs"
+                                    className="px-2 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300 shadow-sm"
                                   >
                                     {sc}
                                   </span>
@@ -464,7 +464,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                             <div className="space-y-2">
                               {topic.steps.map((step, sIdx) => (
                                 <div key={sIdx} className="flex items-start gap-3 text-xs text-slate-700 dark:text-slate-300">
-                                  <div className="w-5 h-5 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono font-semibold flex items-center justify-center shrink-0 mt-0.5 text-slate-600 dark:text-slate-400 shadow-2xs">
+                                  <div className="w-5 h-5 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono font-semibold flex items-center justify-center shrink-0 mt-0.5 text-slate-600 dark:text-slate-400 shadow-sm">
                                     {sIdx + 1}
                                   </div>
                                   <div className="flex-1 leading-relaxed">{step}</div>
@@ -499,7 +499,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                     </p>
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="mt-4 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+                      className="mt-4 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-sm"
                     >
                       Tampilkan Semua Bab Panduan
                     </button>
@@ -520,7 +520,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                       Status Versi Sistem: {APP_VERSION} (Terbaru)
                     </p>
                     <p className="mt-0.5 text-slate-600 dark:text-slate-400">
-                      Seluruh fitur baru, pembaruan keamanan, dan peningkatan performa dicatat di sini. Untuk memperbarui aplikasi ke versi terbaru di masa mendatang, Anda dapat menjalankan skrip otomatis <code className="px-1 py-0.5 bg-white dark:bg-slate-800 border rounded font-mono font-bold">npm run app:update</code> atau <code className="px-1 py-0.5 bg-white dark:bg-slate-800 border rounded font-mono font-bold">update.bat</code>.
+                      Seluruh fitur baru, pembaruan keamanan, dan peningkatan performa dicatat di sini. Untuk memperbarui aplikasi ke versi terbaru di masa mendatang, Anda dapat menjalankan skrip otomatis <code className="px-1 py-0.5 bg-white dark:bg-slate-800 border rounded-md font-mono font-bold">npm run app:update</code> atau <code className="px-1 py-0.5 bg-white dark:bg-slate-800 border rounded-md font-mono font-bold">update.bat</code>.
                     </p>
                   </div>
                 </div>
@@ -533,7 +533,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-3">
                         <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-xl bg-emerald-700 text-white font-mono font-bold text-xs shadow-2xs">
+                          <span className="px-2.5 py-1 rounded-xl bg-emerald-700 text-white font-mono font-bold text-xs shadow-sm">
                             {release.version}
                           </span>
                           <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
@@ -553,22 +553,22 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                         {release.changes.map((ch, cIdx) => (
                           <div key={cIdx} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
                             {ch.type === 'new' && (
-                              <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold shrink-0">
+                              <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold shrink-0">
                                 BARU
                               </span>
                             )}
                             {ch.type === 'improved' && (
-                              <span className="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 text-[10px] font-bold shrink-0">
+                              <span className="px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 text-[11px] font-bold shrink-0">
                                 OPTIMASI
                               </span>
                             )}
                             {ch.type === 'security' && (
-                              <span className="px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 text-[10px] font-bold shrink-0">
+                              <span className="px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-400 text-[11px] font-bold shrink-0">
                                 SECURITY
                               </span>
                             )}
                             {ch.type === 'fix' && (
-                              <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 text-[10px] font-bold shrink-0">
+                              <span className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 text-[11px] font-bold shrink-0">
                                 PERBAIKAN
                               </span>
                             )}
@@ -609,7 +609,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                           className="w-full p-4 text-left flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition-colors"
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">
+                            <span className="text-[11px] px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">
                               {faq.category}
                             </span>
                             <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
@@ -668,7 +668,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
                       key={sc.key}
                       className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex items-start gap-3"
                     >
-                      <kbd className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono font-bold text-xs shadow-2xs shrink-0">
+                      <kbd className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono font-bold text-xs shadow-sm shrink-0">
                         {sc.key}
                       </kbd>
                       <div>
@@ -696,7 +696,7 @@ export const UserManualModal: React.FC<UserManualModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+            className="px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-xs font-bold cursor-pointer transition-colors shadow-sm"
           >
             Tutup Panduan (Esc)
           </button>
