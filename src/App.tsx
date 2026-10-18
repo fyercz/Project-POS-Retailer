@@ -32,6 +32,7 @@ import { ShelfProductLiveModal } from './components/ShelfProductLiveModal';
 import { isViewAllowed, getDefaultView } from './utils/permissions';
 import { formatCurrency } from './utils/formatters';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { useIsDesktop } from './hooks/useIsDesktop';
 
 const POSMainApp: React.FC = () => {
   const {
@@ -61,6 +62,7 @@ const POSMainApp: React.FC = () => {
   } = usePOS();
 
   // Mobile POS view state: toggle between catalog and cart
+  const isDesktop = useIsDesktop();
   const [mobilePosTab, setMobilePosTab] = useState<'catalog' | 'cart'>('catalog');
 
   // Authorized Add Product modal state (triggered after supervisor/owner approves an unregistered barcode)
@@ -135,7 +137,8 @@ const POSMainApp: React.FC = () => {
           <>
             {activeView === 'pos' && (
               <div className="flex-1 h-full overflow-hidden">
-                {/* Desktop & Tablet: Side-by-Side 12-column grid */}
+                {/* Desktop & Tablet: Side-by-Side 12-column grid (hanya dirender di layar lebar) */}
+                {isDesktop && (
                 <div className="hidden md:grid md:grid-cols-12 h-full overflow-hidden">
                   <div className="md:col-span-7 xl:col-span-8 h-full overflow-hidden">
                     <ProductCatalog />
@@ -145,7 +148,10 @@ const POSMainApp: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Mobile Single-Screen View: Switch between Catalog and Cart */}
+                )}
+
+                {/* Mobile Single-Screen View: Switch between Catalog and Cart (hanya di layar sempit) */}
+                {!isDesktop && (
                 <div className="md:hidden h-full flex flex-col relative overflow-hidden">
                   {mobilePosTab === 'catalog' ? (
                     <div className="flex-1 h-full overflow-hidden relative">
@@ -187,6 +193,7 @@ const POSMainApp: React.FC = () => {
                     </div>
                   )}
                 </div>
+                )}
               </div>
             )}
 

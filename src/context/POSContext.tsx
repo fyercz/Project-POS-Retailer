@@ -84,6 +84,17 @@ import {
 } from '../domain/cartTotals';
 import { newShift, expectedCashOf, applySaleToShift, applyCashOut, canEditStartingCash, closeShift } from '../domain/shiftCash';
 import { saleStockDeltas, returnRestockLines, voidRestockLines, linesToDeltas, applyStockDeltas } from '../domain/stockMovements';
+import { createBaseline, markStockKnown, diffAgainstBaseline } from '../domain/lanSync';
+import {
+  sanitizeRestoredProducts,
+  sanitizeRestoredTransactions,
+  mergeRestoredEmployees,
+  mergeRestoredSettings,
+  addMissingById,
+  mergeProductsKeepExisting,
+  mergeSuppliersKeepExisting,
+  mergeCustomersKeepExisting,
+} from '../domain/restore';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -863,30 +874,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const lanBaselineRef = useRef<Map<string, { stock: number; sig: string; ref?: Product }> | null>(null);
   const [lanConfigTick, setLanConfigTick] = useState(0);
 
-  const productSignature = (p: Product): string => {
-    const { stock: _stock, ...rest } = p as any;
-    try {
-      return JSON.stringify(rest);
-    } catch {
-      return '';
-    }
-  };
-
+  // Logika deteksi perubahan: src/domain/lanSync.ts (teruji)
   const resetLanBaseline = (list: Product[]) => {
-    lanBaselineRef.current = new Map(
-      list.map((p) => [p.id, { stock: Number(p.stock) || 0, sig: productSignature(p), ref: p }])
-    );
+    lanBaselineRef.current = createBaseline(list);
   };
 
   /** Catat perubahan stok yang sudah diketahui server (agar tidak dikirim lagi sebagai penyesuaian). */
   const markStockKnownToServer = (changes: Array<{ productId: string; delta?: number; newStock?: number }>) => {
-    const base = lanBaselineRef.current;
-    if (!base) return;
-    for (const c of changes) {
-      const b = base.get(c.productId);
-      if (!b) continue;
-      b.stock = c.newStock !== undefined ? Number(c.newStock) || 0 : Math.max(0, b.stock + (c.delta || 0));
-    }
+    markStockKnown(lanBaselineRef.current, changes);
   };
 
   useEffect(() => {
@@ -908,28 +903,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const timer = setTimeout(() => {
       const base = lanBaselineRef.current;
       if (!base) return;
-      const changedProducts: Product[] = [];
-      const stockDeltas: Array<{ productId: string; delta: number }> = [];
-      for (const p of products) {
-        const b = base.get(p.id);
-        if (b && b.ref === p) continue; // objek tidak berubah sejak terakhir dicek
-        const stock = Number(p.stock) || 0;
-        const sig = productSignature(p);
-        if (!b) {
-          changedProducts.push(p); // produk baru: server memakai stok yang dikirim
-          base.set(p.id, { stock, sig, ref: p });
-          continue;
-        }
-        b.ref = p;
-        if (b.sig !== sig) {
-          changedProducts.push(p);
-          b.sig = sig;
-        }
-        if (b.stock !== stock) {
-          stockDeltas.push({ productId: p.id, delta: stock - b.stock });
-          b.stock = stock;
-        }
-      }
+      const { changedProducts, stockDeltas } = diffAgainstBaseline(base, products);
 
       if (changedProducts.length > 0) {
         pushProductsToLANServer(changedProducts, 'Edit produk dari kasir')
@@ -3067,45 +3041,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const d = payload.data;
 
         // Defensive sanitization helper to guarantee no NaN or corrupted values corrupt database state
-        const sanitizeProductsList = (list: Product[]): Product[] => {
-          return list
-            .filter((p) => p && typeof p === 'object' && typeof p.id === 'string' && p.name)
-            .map((p) => {
-              const rawPrice = Number(p.price ?? (p as any).sellingPrice);
-              const price = isNaN(rawPrice) || rawPrice < 0 ? 0 : rawPrice;
-              const rawCost = Number(p.costPrice);
-              const costPrice = isNaN(rawCost) || rawCost < 0 ? 0 : rawCost;
-              const rawStock = Number(p.stock);
-              const stock = isNaN(rawStock) ? 0 : rawStock;
-              return {
-                ...p,
-                price,
-                costPrice,
-                stock,
-                categoryId: typeof p.categoryId === 'string' ? p.categoryId : (typeof (p as any).category === 'string' ? (p as any).category : 'cat_all'),
-                unit: typeof p.unit === 'string' ? p.unit : 'Pcs',
-                barcode: typeof p.barcode === 'string' ? p.barcode : '',
-              };
-            });
-        };
-
-        const sanitizeTransactionsList = (list: Transaction[]): Transaction[] => {
-          return list
-            .filter((t) => t && typeof t === 'object' && typeof t.id === 'string')
-            .map((t) => {
-              const rawFinal = Number(t.finalTotal ?? (t as any).total);
-              const finalTotal = isNaN(rawFinal) || rawFinal < 0 ? 0 : rawFinal;
-              return {
-                ...t,
-                finalTotal,
-                items: Array.isArray(t.items) ? t.items : [],
-                createdAt: typeof t.createdAt === 'string' ? t.createdAt : new Date().toISOString(),
-              };
-            });
-        };
-
-        const cleanProducts = Array.isArray(d.products) ? sanitizeProductsList(d.products) : null;
-        const cleanTransactions = Array.isArray(d.transactions) ? sanitizeTransactionsList(d.transactions) : null;
+        // Aturan pemulihan: src/domain/restore.ts (teruji)
+        const cleanProducts = Array.isArray(d.products) ? sanitizeRestoredProducts<Product>(d.products) : null;
+        const cleanTransactions = Array.isArray(d.transactions) ? sanitizeRestoredTransactions<Transaction>(d.transactions) : null;
 
         if (mode === 'overwrite') {
           if (cleanProducts !== null) setProducts(cleanProducts);
@@ -3116,96 +3054,24 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (Array.isArray(d.purchaseReturns)) setPurchaseReturns(d.purchaseReturns);
           if (Array.isArray(d.supplierPurchases)) setSupplierPurchases(d.supplierPurchases);
           // Pengaturan digabung: backup versi lama tidak punya pengaturan baru (jangan sampai kosong)
-          if (d.settings && typeof d.settings === 'object') setSettings((prev) => ({ ...prev, ...d.settings }));
+          if (d.settings && typeof d.settings === 'object') setSettings((prev) => mergeRestoredSettings(prev, d.settings));
           if (Array.isArray(d.vouchers)) setVouchers(d.vouchers);
           // Daftar karyawan & PIN TIDAK ditimpa: memulihkan backup lama bisa mengembalikan PIN bawaan
           // atau akun mantan karyawan. Karyawan dari backup yang belum ada ditambahkan sebagai NONAKTIF.
-          if (Array.isArray(d.employees)) {
-            setEmployees((prev) => {
-              const ids = new Set(prev.map((e) => e.id));
-              const added = d.employees!
-                .filter((e) => e && e.id && e.name && !ids.has(e.id))
-                .map((e) => ({ ...e, isActive: false }));
-              return [...prev, ...added];
-            });
-          }
+          if (Array.isArray(d.employees)) setEmployees((prev) => mergeRestoredEmployees(prev, d.employees!));
           if (Array.isArray(d.heldOrders)) setHeldOrders(d.heldOrders);
           if (Array.isArray(d.expenses)) setExpenses(d.expenses);
           if (Array.isArray(d.pastShifts)) setPastShifts(d.pastShifts);
           setCart([]);
         } else {
           // Merge mode
-          if (cleanProducts !== null) {
-            setProducts((prev) => {
-              const existingMap = new Map<string, Product>();
-              prev.forEach((p) => {
-                existingMap.set(p.id, p);
-                if (p.barcode) existingMap.set(`b_${p.barcode}`, p);
-              });
-              const merged = [...prev];
-              cleanProducts.forEach((newP) => {
-                const byId = existingMap.get(newP.id);
-                const byBarcode = newP.barcode ? existingMap.get(`b_${newP.barcode}`) : undefined;
-                if (!byId && !byBarcode) {
-                  merged.push(newP);
-                }
-              });
-              return merged;
-            });
-          }
-
-          if (Array.isArray(d.suppliers)) {
-            setSuppliers((prev) => {
-              const ids = new Set(prev.map((s) => s.id));
-              const names = new Set(prev.map((s) => s.name.toLowerCase().trim()));
-              const added = d.suppliers!.filter(
-                (s) => s && s.id && s.name && !ids.has(s.id) && !names.has(s.name.toLowerCase().trim())
-              );
-              return [...prev, ...added];
-            });
-          }
-
-          if (Array.isArray(d.customers)) {
-            setCustomers((prev) => {
-              const ids = new Set(prev.map((c) => c.id));
-              const phones = new Set(prev.map((c) => c.phone?.trim()).filter(Boolean));
-              const added = d.customers!.filter(
-                (c) => c && c.id && c.name && !ids.has(c.id) && (!c.phone || !phones.has(c.phone.trim()))
-              );
-              return [...prev, ...added];
-            });
-          }
-
-          if (cleanTransactions !== null) {
-            setTransactions((prev) => {
-              const ids = new Set(prev.map((t) => t.id));
-              const added = cleanTransactions.filter((t) => !ids.has(t.id));
-              return [...prev, ...added];
-            });
-          }
-
-          if (Array.isArray(d.salesReturns)) {
-            setSalesReturns((prev) => {
-              const ids = new Set(prev.map((r) => r.id));
-              const added = d.salesReturns!.filter((r) => r && r.id && !ids.has(r.id));
-              return [...prev, ...added];
-            });
-          }
-
-          if (Array.isArray(d.supplierPurchases)) {
-            setSupplierPurchases((prev) => {
-              const ids = new Set(prev.map((p) => p.id));
-              const added = d.supplierPurchases!.filter((p) => p && p.id && !ids.has(p.id));
-              return [...prev, ...added];
-            });
-          }
-
-          if (Array.isArray(d.expenses)) {
-            setExpenses((prev) => {
-              const ids = new Set(prev.map((e) => e.id));
-              return [...prev, ...d.expenses!.filter((e) => e && e.id && !ids.has(e.id))];
-            });
-          }
+          if (cleanProducts !== null) setProducts((prev) => mergeProductsKeepExisting(prev, cleanProducts));
+          if (Array.isArray(d.suppliers)) setSuppliers((prev) => mergeSuppliersKeepExisting(prev, d.suppliers!));
+          if (Array.isArray(d.customers)) setCustomers((prev) => mergeCustomersKeepExisting(prev, d.customers!));
+          if (cleanTransactions !== null) setTransactions((prev) => addMissingById(prev, cleanTransactions));
+          if (Array.isArray(d.salesReturns)) setSalesReturns((prev) => addMissingById(prev, d.salesReturns!));
+          if (Array.isArray(d.supplierPurchases)) setSupplierPurchases((prev) => addMissingById(prev, d.supplierPurchases!));
+          if (Array.isArray(d.expenses)) setExpenses((prev) => addMissingById(prev, d.expenses!));
         }
 
         // Di jaringan LAN: stok hasil restore dianggap "sudah diketahui server" agar tidak terkirim
