@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { POSProvider, usePOS } from './context/POSContext';
 import { Header } from './components/Header';
@@ -11,29 +11,32 @@ import { ProductCatalog } from './components/ProductCatalog';
 import { CartPanel } from './components/CartPanel';
 import { PaymentModal } from './components/PaymentModal';
 import { ReceiptModal } from './components/ReceiptModal';
-import { TransactionsView } from './components/views/TransactionsView';
-import { InventoryView } from './components/views/InventoryView';
-import { CustomersView } from './components/views/CustomersView';
-import { ReportsView } from './components/views/ReportsView';
-import { GeminiRetailCopilot } from './components/GeminiRetailCopilot';
 import { EmployeeLockScreen } from './components/EmployeeLockScreen';
 import { FirstRunSetup } from './components/FirstRunSetup';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useGlobalDialogA11y } from './hooks/useGlobalDialogA11y';
-import { EmployeeManagementModal } from './components/EmployeeManagementModal';
 import { ShiftModal } from './components/ShiftModal';
-import { OfflineSyncModal } from './components/OfflineSyncModal';
 import { OfflineNotificationBanner } from './components/OfflineNotificationBanner';
-import { BarcodeScannerModal } from './components/BarcodeScannerModal';
-import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { UnregisteredBarcodeModal } from './components/UnregisteredBarcodeModal';
 import { ProductFormModal } from './components/ProductFormModal';
 import { AccessDeniedView } from './components/AccessDeniedView';
 import { MobileBottomNav } from './components/MobileBottomNav';
-import { ShelfProductLiveModal } from './components/ShelfProductLiveModal';
 import { isViewAllowed, getDefaultView } from './utils/permissions';
 import { formatCurrency } from './utils/formatters';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 import { useIsDesktop } from './hooks/useIsDesktop';
+
+// Halaman & jendela besar dimuat saat dibuka (bundle awal lebih kecil -> aplikasi lebih cepat terbuka)
+const TransactionsView = lazy(() => import('./components/views/TransactionsView').then((m) => ({ default: m.TransactionsView })));
+const InventoryView = lazy(() => import('./components/views/InventoryView').then((m) => ({ default: m.InventoryView })));
+const CustomersView = lazy(() => import('./components/views/CustomersView').then((m) => ({ default: m.CustomersView })));
+const ReportsView = lazy(() => import('./components/views/ReportsView').then((m) => ({ default: m.ReportsView })));
+const GeminiRetailCopilot = lazy(() => import('./components/GeminiRetailCopilot').then((m) => ({ default: m.GeminiRetailCopilot })));
+const EmployeeManagementModal = lazy(() => import('./components/EmployeeManagementModal').then((m) => ({ default: m.EmployeeManagementModal })));
+const OfflineSyncModal = lazy(() => import('./components/OfflineSyncModal').then((m) => ({ default: m.OfflineSyncModal })));
+const BarcodeScannerModal = lazy(() => import('./components/BarcodeScannerModal').then((m) => ({ default: m.BarcodeScannerModal })));
+const BackupRestoreModal = lazy(() => import('./components/BackupRestoreModal').then((m) => ({ default: m.BackupRestoreModal })));
+const ShelfProductLiveModal = lazy(() => import('./components/ShelfProductLiveModal').then((m) => ({ default: m.ShelfProductLiveModal })));
 
 const POSMainApp: React.FC = () => {
   // Escape, fokus, dan role="dialog" untuk semua jendela modal (lihat hook)
@@ -49,6 +52,7 @@ const POSMainApp: React.FC = () => {
     setActiveView,
     activeEmployee,
     employees,
+    isGeminiCopilotOpen,
     isPaymentModalOpen,
     setIsPaymentModalOpen,
     activeReceipt,
@@ -150,10 +154,10 @@ const POSMainApp: React.FC = () => {
                 {isDesktop && (
                 <div className="hidden md:grid md:grid-cols-12 h-full overflow-hidden">
                   <div className="md:col-span-7 xl:col-span-8 h-full overflow-hidden">
-                    <ProductCatalog />
+                    <ErrorBoundary variant="section" label="Katalog Produk"><ProductCatalog /></ErrorBoundary>
                   </div>
                   <div className="md:col-span-5 xl:col-span-4 h-full overflow-hidden">
-                    <CartPanel />
+                    <ErrorBoundary variant="section" label="Keranjang"><CartPanel /></ErrorBoundary>
                   </div>
                 </div>
 
@@ -164,7 +168,7 @@ const POSMainApp: React.FC = () => {
                 <div className="md:hidden h-full flex flex-col relative overflow-hidden">
                   {mobilePosTab === 'catalog' ? (
                     <div className="flex-1 h-full overflow-hidden relative">
-                      <ProductCatalog />
+                      <ErrorBoundary variant="section" label="Katalog Produk"><ProductCatalog /></ErrorBoundary>
 
                       {/* Mobile Floating Cart Summary Button when items are in cart */}
                       {totalCartCount > 0 && (
@@ -198,7 +202,7 @@ const POSMainApp: React.FC = () => {
                     </div>
                   ) : (
                     <div className="flex-1 h-full overflow-hidden">
-                      <CartPanel onBackToCatalog={() => setMobilePosTab('catalog')} />
+                      <ErrorBoundary variant="section" label="Keranjang"><CartPanel onBackToCatalog={() => setMobilePosTab('catalog')} /></ErrorBoundary>
                     </div>
                   )}
                 </div>
@@ -206,10 +210,34 @@ const POSMainApp: React.FC = () => {
               </div>
             )}
 
-            {activeView === 'transactions' && <TransactionsView />}
-            {activeView === 'inventory' && <InventoryView />}
-            {activeView === 'customers' && <CustomersView />}
-            {activeView === 'reports' && <ReportsView />}
+            {activeView === 'transactions' && (
+              <ErrorBoundary variant="section" label="TransactionsView" resetKeys={[activeView]}>
+                <Suspense fallback={<div className="p-6 text-sm text-slate-500">Memuat halaman…</div>}>
+                  <TransactionsView />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+            {activeView === 'inventory' && (
+              <ErrorBoundary variant="section" label="InventoryView" resetKeys={[activeView]}>
+                <Suspense fallback={<div className="p-6 text-sm text-slate-500">Memuat halaman…</div>}>
+                  <InventoryView />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+            {activeView === 'customers' && (
+              <ErrorBoundary variant="section" label="CustomersView" resetKeys={[activeView]}>
+                <Suspense fallback={<div className="p-6 text-sm text-slate-500">Memuat halaman…</div>}>
+                  <CustomersView />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+            {activeView === 'reports' && (
+              <ErrorBoundary variant="section" label="ReportsView" resetKeys={[activeView]}>
+                <Suspense fallback={<div className="p-6 text-sm text-slate-500">Memuat halaman…</div>}>
+                  <ReportsView />
+                </Suspense>
+              </ErrorBoundary>
+            )}
           </>
         )}
       </main>
@@ -219,23 +247,23 @@ const POSMainApp: React.FC = () => {
 
       {/* Root Modals */}
       {isPaymentModalOpen && (
-        <PaymentModal
+        <ErrorBoundary variant="section" floating label="PaymentModal"><PaymentModal
           isOpen={isPaymentModalOpen}
           onClose={() => setIsPaymentModalOpen(false)}
-        />
+        /></ErrorBoundary>
       )}
 
       {activeReceipt && (
-        <ReceiptModal
+        <ErrorBoundary variant="section" floating label="ReceiptModal"><ReceiptModal
           transaction={activeReceipt}
           isOpen={Boolean(activeReceipt)}
           isNewPayment={isReceiptFromNewPayment}
           onClose={() => setActiveReceipt(null)}
-        />
+        /></ErrorBoundary>
       )}
 
       {/* Gemini AI Retail Copilot Drawer */}
-      <GeminiRetailCopilot />
+      <ErrorBoundary variant="section" floating label="GeminiRetailCopilot"><Suspense fallback={null}>{isGeminiCopilotOpen && <GeminiRetailCopilot />}</Suspense></ErrorBoundary>
 
       {/* Employee Login & Screen Lock */}
       <EmployeeLockScreen />
@@ -244,31 +272,31 @@ const POSMainApp: React.FC = () => {
       {employees.length === 0 && <FirstRunSetup />}
 
       {/* Employee Management Modal */}
-      {isEmployeeManagementOpen && <EmployeeManagementModal />}
+      {isEmployeeManagementOpen && <ErrorBoundary variant="section" floating label="EmployeeManagementModal"><Suspense fallback={null}><EmployeeManagementModal /></Suspense></ErrorBoundary>}
 
       {/* Shift Summary & Drawer Reconciliation Modal */}
       {isShiftModalOpen && (
-        <ShiftModal
+        <ErrorBoundary variant="section" floating label="ShiftModal"><ShiftModal
           isOpen={isShiftModalOpen}
           onClose={() => setIsShiftModalOpen(false)}
-        />
+        /></ErrorBoundary>
       )}
 
       {/* Offline Caching & Cloud Background Sync Modal */}
-      {isSyncModalOpen && <OfflineSyncModal />}
+      {isSyncModalOpen && <ErrorBoundary variant="section" floating label="OfflineSyncModal"><Suspense fallback={null}><OfflineSyncModal /></Suspense></ErrorBoundary>}
 
       {/* Camera Barcode Scanner Modal with Auto-Add */}
-      {isBarcodeScannerOpen && <BarcodeScannerModal />}
+      {isBarcodeScannerOpen && <ErrorBoundary variant="section" floating label="BarcodeScannerModal"><Suspense fallback={null}><BarcodeScannerModal /></Suspense></ErrorBoundary>}
 
       {/* Backup & Restore Points Disaster Recovery Center */}
-      <BackupRestoreModal
+      <ErrorBoundary variant="section" floating label="BackupRestoreModal"><Suspense fallback={null}>{isBackupRestoreOpen && <BackupRestoreModal
         isOpen={isBackupRestoreOpen}
         onClose={() => setIsBackupRestoreOpen(false)}
-      />
+      />}</Suspense></ErrorBoundary>
 
       {/* Prompt Tambah Produk Barcode Belum Terdaftar (Otoritas Supervisor / Owner) */}
       {isUnregisteredBarcodeModalOpen && (
-        <UnregisteredBarcodeModal
+        <ErrorBoundary variant="section" floating label="UnregisteredBarcodeModal"><UnregisteredBarcodeModal
           isOpen={isUnregisteredBarcodeModalOpen}
           barcode={unregisteredBarcode}
           onClose={() => setIsUnregisteredBarcodeModalOpen(false)}
@@ -280,12 +308,12 @@ const POSMainApp: React.FC = () => {
               authorizer,
             });
           }}
-        />
+        /></ErrorBoundary>
       )}
 
       {/* Authorized Product Creation Modal (Auto adds to POS cart on save) */}
       {authorizedProductConfig.isOpen && (
-        <ProductFormModal
+        <ErrorBoundary variant="section" floating label="ProductFormModal"><ProductFormModal
           isOpen={authorizedProductConfig.isOpen}
           onClose={() =>
             setAuthorizedProductConfig({
@@ -304,16 +332,16 @@ const POSMainApp: React.FC = () => {
             });
             addToCart(savedProduct);
           }}
-        />
+        /></ErrorBoundary>
       )}
 
       {/* Scanned QR Shelf Product Live Verification Modal */}
       {scannedShelfProductId && (
-        <ShelfProductLiveModal
+        <ErrorBoundary variant="section" floating label="ShelfProductLiveModal"><Suspense fallback={null}><ShelfProductLiveModal
           productId={scannedShelfProductId}
           isOpen={Boolean(scannedShelfProductId)}
           onClose={handleCloseShelfModal}
-        />
+        /></Suspense></ErrorBoundary>
       )}
     </div>
   );

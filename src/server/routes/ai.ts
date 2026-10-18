@@ -2,6 +2,7 @@
 import express from 'express';
 import { callGeminiSafe, callGeminiVisionSafe, extractJsonFromText } from '../gemini.ts';
 import { toLocalDateString } from '../../utils/formatters.ts';
+import { daysUntil } from '../../domain/expiry.ts';
 
 export const aiRouter = express.Router();
 const router = aiRouter;
@@ -417,9 +418,9 @@ router.post('/api/ai/inventory-forecast', async (req, res) => {
   const now = new Date();
   let projectionDays = 14;
   if (targetDate) {
-    const target = new Date(targetDate);
-    if (!isNaN(target.getTime())) {
-      const diff = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = daysUntil(targetDate, now);
+    if (diffDays !== null) {
+      const diff = diffDays;
       projectionDays = Math.max(1, Math.min(60, diff || 7));
     }
   }
@@ -664,7 +665,7 @@ router.post('/api/ai/inventory-forecast', async (req, res) => {
       summary: `Rencana Restock terencana untuk target kebutuhan ${projectionDays} hari ke depan${targetDate ? ` (Target: ${targetDate})` : ''}. Dikelompokkan berdasarkan distributor/supplier terdaftar dan diterapkan aturan eliminasi/pemangkasan kuota untuk ${deadstockCount} barang deadstock dan ${returnedItemsCount} barang dengan riwayat retur.`,
       healthScore: lowItems.length === 0 ? 95 : Math.max(45, 100 - (lowItems.length * 8)),
       totalEstimatedBudget: totalBudget,
-      totalItemsToRestock: suggestions.filter((s) => s.recommendedOrderQty > 0).length,
+      totalItemsToRestock: suggestions.filter((s: any) => s.recommendedOrderQty > 0).length,
       targetDate: targetDate || toLocalDateString(now),
       projectionDays,
       deadstockRule,

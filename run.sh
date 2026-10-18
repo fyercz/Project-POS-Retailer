@@ -35,7 +35,7 @@ if (echo >/dev/tcp/127.0.0.1/3000) 2>/dev/null; then buka_kasir; exit 0; fi
 [ -f .env ] || cp .env.example .env
 if [ ! -d node_modules/express ]; then
     echo "Memasang komponen kasir (pertama kali saja, perlu internet)..."
-    npm install --no-audit --no-fund
+    if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
     chmod +x ./*.sh 2>/dev/null || true
 fi
 

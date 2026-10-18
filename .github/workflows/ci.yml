@@ -22,10 +22,10 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      # Repo tidak menyimpan package-lock.json, jadi memakai npm install (bukan npm ci)
-      - run: npm install --no-audit --no-fund
-      - name: Cek tipe TypeScript
-        run: npx tsc --noEmit
+      # Pasang PERSIS versi di package-lock.json (sama dengan yang dipakai komputer kasir)
+      - run: npm ci --no-audit --no-fund
+      - name: Cek tipe TypeScript (strict) & ESLint
+        run: npm run lint
       - name: Build
         run: npm run build
       - name: Tes
@@ -46,7 +46,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - name: Pasang browser Chromium
         run: npx playwright install --with-deps chromium
       - name: Build
@@ -60,3 +60,28 @@ jobs:
           name: playwright-hasil
           path: test-results/
           retention-days: 7
+
+  # Rilis: setelah SEMUA tes lulus di main, buat tag vX.Y.Z dari versi package.json (bila belum ada).
+  # update.bat di komputer kasir memasang tag rilis tertinggi, jadi kode yang belum lolos tes
+  # (atau belum dinaikkan versinya) tidak ikut terpasang di toko.
+  rilis:
+    name: Tag rilis
+    needs: [test, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Buat tag dari versi package.json
+        run: |
+          V="v$(node -p "require('./package.json').version")"
+          if git rev-parse -q --verify "refs/tags/$V" >/dev/null; then
+            echo "Tag $V sudah ada, tidak membuat rilis baru."
+            exit 0
+          fi
+          git tag "$V"
+          git push origin "$V"
+          echo "Rilis $V dibuat."

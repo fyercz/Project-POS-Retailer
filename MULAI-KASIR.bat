@@ -32,7 +32,7 @@ if not exist ".env" if exist ".env.example" copy ".env.example" ".env" >nul
 if exist "node_modules\express" goto SUDAH_INSTAL
 set "PERTAMA_KALI=1"
 echo Memasang komponen kasir - pertama kali saja, perlu internet, 1-3 menit...
-call npm install --no-audit --no-fund
+if exist package-lock.json (call npm ci --no-audit --no-fund) else (call npm install --no-audit --no-fund)
 if errorlevel 1 goto GAGAL
 :SUDAH_INSTAL
 if exist "dist\server.cjs" goto SUDAH_BUILD

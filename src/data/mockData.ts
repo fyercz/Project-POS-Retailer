@@ -10,7 +10,6 @@ import {
   SupplierPurchase,
   OperationalExpense,
 } from '../types';
-import { generate14DaysSampleTransactions } from '../utils/salesForecaster';
 
 export const INITIAL_CATEGORIES: ProductCategory[] = [
   { id: 'all', name: 'Semua Produk', iconName: 'LayoutGrid', description: 'Seluruh katalog toko ritel' },
@@ -562,7 +561,6 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   initialCapital: 50000000, // Modal awal usaha toko Rp 50.000.000
 };
 
-export const INITIAL_RECENT_TRANSACTIONS: Transaction[] = generate14DaysSampleTransactions();
 
 export const INITIAL_EMPLOYEES: Employee[] = [
   {

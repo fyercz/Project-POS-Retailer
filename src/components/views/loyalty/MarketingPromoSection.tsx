@@ -261,7 +261,7 @@ export const MarketingPromoSection: React.FC = () => {
   }, [customers, transactions, currentIndividualCustomer]);
 
   // Current active segment data
-  const currentSegmentData = segmentAnalytics[selectedSegment];
+  const currentSegmentData = (segmentAnalytics as Record<string, any>)[selectedSegment];
 
   // Handle Generate Promo using Gemini API
   const handleGeneratePromo = async () => {
@@ -446,7 +446,7 @@ export const MarketingPromoSection: React.FC = () => {
               'individual',
             ] as CustomerSegmentKey[]
           ).map((key) => {
-            const seg = segmentAnalytics[key];
+            const seg = (segmentAnalytics as Record<string, any>)[key];
             const isSelected = selectedSegment === key;
             const IconComponent = seg.icon;
 
@@ -585,7 +585,7 @@ export const MarketingPromoSection: React.FC = () => {
                 <span>Produk Terlaris Riwayat Belanja (FMCG Favorit):</span>
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {currentSegmentData.stats.topProducts.map((p, idx) => (
+                {currentSegmentData.stats.topProducts.map((p: any, idx: number) => (
                   <span
                     key={idx}
                     className="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
@@ -1039,7 +1039,7 @@ export const MarketingPromoSection: React.FC = () => {
             </div>
 
             <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
-              {currentSegmentData.members.map((m) => (
+              {currentSegmentData.members.map((m: any) => (
                 <div
                   key={m.id}
                   className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"

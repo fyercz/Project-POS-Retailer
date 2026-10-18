@@ -61,7 +61,7 @@ Jika pelanggan lupa mengambil barang tambahan di lorong toko:
 Jika saat transaksi kasir memindai barcode barang fisik yang belum ada di database:
 1. Sistem otomatis menampilkan jendela konfirmasi **"Barcode Belum Terdaftar"** dengan kode barcode yang baru saja dipindai.
 2. **Aturan Hak Akses (RBAC):**
-   * **Kasir Frontliner:** Membutuhkan PIN otorisasi Supervisor / Owner untuk mencegah pendaftaran barang atau pengubahan harga tanpa persetujuan. Masukkan 4-digit PIN pejabat yang berwenang (misal: Supervisor `7890` atau Owner `9999`).
+   * **Kasir Frontliner:** Membutuhkan PIN otorisasi Supervisor / Owner untuk mencegah pendaftaran barang atau pengubahan harga tanpa persetujuan. Masukkan PIN pribadi Supervisor atau Owner yang berwenang. Tidak ada PIN bawaan; setiap PIN dibuat sendiri di menu Kelola Karyawan.
    * **Supervisor / Owner / Inventory:** Jika akun yang sedang login sudah memiliki hak akses di atas kasir, tombol **"Tambah Produk Sekarang"** langsung aktif tanpa perlu memasukkan PIN ulang.
 3. Klik **"Verifikasi & Tambah Produk"**.
 4. Formulir pendaftaran produk baru terbuka dengan kode barcode yang sudah terisi otomatis *(pre-filled)*.
@@ -200,7 +200,7 @@ Fitur ini memungkinkan toko mengoperasikan banyak kasir sekaligus (PC Kasir 1, L
 
 ### Versi v2.6.5 (September 2026) — *Versi Terkini*
 * **Prompt Tambah Produk Barcode Belum Terdaftar:** Penanganan cerdas saat kasir memindai barcode barang yang belum terdaftar di database master toko.
-* **Otoritas Di Atas Kasir (Supervisor / Owner RBAC):** Kasir tidak dapat menambahkan barang sendiri; memerlukan persetujuan dan verifikasi 4-digit PIN Supervisor (`7890`) atau Owner (`9999`).
+* **Otoritas Di Atas Kasir (Supervisor / Owner RBAC):** Kasir tidak dapat menambahkan barang sendiri; memerlukan persetujuan dengan PIN pribadi Supervisor atau Owner. Setelah 5 kali PIN salah, otorisasi dikunci sementara.
 * **Persetujuan Langsung 1-Klik:** Akun aktif Supervisor/Owner/Inventory dapat langsung menyetujui tanpa input PIN ulang.
 * **Otomatisasi Alur Transaksi Kasir:** Barcode otomatis terisi, dukungan pencarian info produk online (AI Enrichment), dan produk baru otomatis langsung masuk ke keranjang nota kasir yang sedang berjalan.
 
@@ -226,7 +226,6 @@ Fitur ini memungkinkan toko mengoperasikan banyak kasir sekaligus (PC Kasir 1, L
 * **Peluncur Desktop 1-Klik (`MULAI-KASIR.bat` & `run.sh`):** Menjalankan aplikasi dalam jendela desktop mandiri tanpa address bar browser.
 * **Proteksi Konfirmasi Restore ("Are you sure?"):** Dialog verifikasi visual dengan checkbox persetujuan wajib sebelum menimpa database.
 * **Pusat Kontrol Desktop Hub (`Alt + D`):** Pengujian cetak struk thermal, perintah buka laci uang (*Cash Drawer Kick*), dan panduan *Silent Printing*.
-* **Konfigurasi Native Electron (`electron/main.cjs`):** Fondasi paket instalasi desktop `.exe`.
 
 ### Versi v2.3.0 (September 2026)
 * **Pusat Backup & Restore Point (F9):** Pembuatan snapshot titik pemulihan darurat otomatis.

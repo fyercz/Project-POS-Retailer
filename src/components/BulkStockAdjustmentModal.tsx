@@ -27,6 +27,7 @@ import {
 import { Product } from '../types';
 import { usePOS } from '../context/POSContext';
 import { formatCurrency, toLocalDateString } from '../utils/formatters';
+import { daysUntil } from '../domain/expiry';
 
 export interface BulkStockAdjustmentModalProps {
   isOpen: boolean;
@@ -260,9 +261,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
         badge: 'text-slate-500 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700',
       };
     }
-    const target = new Date(dateStr);
-    const now = new Date();
-    const diffDays = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = daysUntil(dateStr) ?? 0;
 
     if (diffDays < 0) {
       return {

@@ -821,6 +821,11 @@ export const Header: React.FC = () => {
                     </span>
                   </button>
 
+                  {/* Versi aplikasi (sebutkan saat melaporkan masalah) */}
+                  <div className="px-3 pt-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono" title="Versi aplikasi & kode commit">
+                    Versi {__APP_VERSION__} · {__APP_COMMIT__}
+                  </div>
+
                   {/* LAN & Desktop in menu for mobile/tablet (Owner/Supervisor) */}
                   {isManager && <div className="md:hidden border-t border-slate-200 dark:border-slate-800 pt-1 mt-1 space-y-1">
                     <button

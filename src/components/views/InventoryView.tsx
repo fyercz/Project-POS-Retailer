@@ -2878,7 +2878,7 @@ export const InventoryView: React.FC = () => {
                                   -{formatCurrency(purch.discountAmount, settings.currency)} ({purch.discountRate}%)
                                 </span>
                                 <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">
-                                  DPP: {formatCurrency(purch.dppAmount, settings.currency)}
+                                  DPP: {formatCurrency(purch.dppAmount ?? 0, settings.currency)}
                                 </div>
                               </div>
                             ) : (
