@@ -47,8 +47,8 @@ interface BulkAdjustItem {
 const ADJUSTMENT_REASONS = [
   'Stock Opname Rutin / Berkala',
   'Audit Selisih Fisik Rak Toko',
-  'Pembaruan Batch & Tanggal Kadaluarsa Distributor',
-  'Pembersihan Barang Rusak / Kadaluarsa (Ditarik)',
+  'Pembaruan Batch & Tanggal Kedaluwarsa Distributor',
+  'Pembersihan Barang Rusak / Kedaluwarsa (Ditarik)',
   'Penerimaan Barang Bonus / Non-Faktur',
   'Penyesuaian Koreksi Manual Lainnya',
 ];
@@ -266,7 +266,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
 
     if (diffDays < 0) {
       return {
-        label: `Kadaluarsa (${Math.abs(diffDays)} hari lalu)`,
+        label: `Kedaluwarsa (${Math.abs(diffDays)} hari lalu)`,
         badge: 'text-rose-700 bg-rose-50 border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800',
       };
     }
@@ -339,14 +339,14 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
-                  Penyesuaian Stok & Kadaluarsa Massal
+                  Penyesuaian Stok & Kedaluwarsa Massal
                 </h2>
                 <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                   Bulk Stock & FEFO
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Perbarui kuantitas stok fisik dan tanggal kadaluarsa beberapa barang secara serentak dalam satu operasi.
+                Perbarui kuantitas stok fisik dan tanggal kedaluwarsa beberapa barang secara serentak dalam satu operasi.
               </p>
             </div>
           </div>
@@ -378,7 +378,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                  <span>Set Kadaluarsa Serentak ({selectedCount} Terpilih)</span>
+                  <span>Set Kedaluwarsa Serentak ({selectedCount} Terpilih)</span>
                 </span>
                 <span className="text-[11px] text-slate-500">FEFO Expiry</span>
               </div>
@@ -443,7 +443,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                       handleApplyUniformExpiry('');
                     }}
                     className="px-2 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-[11px] font-medium border border-rose-200 dark:border-rose-900 transition cursor-pointer"
-                    title="Kosongkan tanggal kadaluarsa item terpilih"
+                    title="Kosongkan tanggal kedaluwarsa item terpilih"
                   >
                     Kosongkan
                   </button>
@@ -640,7 +640,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                   <th className="py-3 px-4">Nama Produk & Barcode</th>
                   <th className="py-3 px-3 text-center w-28">Stok Sistem</th>
                   <th className="py-3 px-4 text-center w-52">Stok Baru (Aktual)</th>
-                  <th className="py-3 px-4 w-60">Tanggal Kadaluarsa (FEFO)</th>
+                  <th className="py-3 px-4 w-60">Tanggal Kedaluwarsa (FEFO)</th>
                   <th className="py-3 px-3 text-center w-14">Aksi</th>
                 </tr>
               </thead>
@@ -794,11 +794,11 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                             </button>
 
                             {item.newExpiry && (
-                              <button aria-label="Hapus tanggal kadaluarsa"
+                              <button aria-label="Hapus tanggal kedaluwarsa"
                                 type="button"
                                 onClick={() => handleExpiryChange(p.id, '')}
                                 className="p-1.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950 text-slate-500 hover:text-rose-600 transition shrink-0"
-                                title="Hapus tanggal kadaluarsa"
+                                title="Hapus tanggal kedaluwarsa"
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
@@ -916,7 +916,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
 
               <div>
                 <span className="text-[11px] font-bold text-slate-500 block uppercase tracking-wider">
-                  Perubahan Kadaluarsa
+                  Perubahan Kedaluwarsa
                 </span>
                 <span className="font-bold font-mono text-sm text-blue-600 dark:text-blue-400">
                   {expiryChangedItems.length} Produk

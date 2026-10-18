@@ -92,6 +92,7 @@ import { playScannerSound } from '../../utils/scannerAudio';
 import { Html5Qrcode } from 'html5-qrcode';
 import { escapeHtml } from '../../utils/escapeHtml';
 import { purchaseOutstandingOf } from '../../utils/accountingLedger';
+import { buildStockHistoryIds, stockStatusOf } from '../../domain/stockStatus';
 
 interface ReceivingItem {
   productId: string;
@@ -148,6 +149,13 @@ export const InventoryView: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [productOriginFilter, setProductOriginFilter] = useState<'all' | 'imported' | 'default'>('all');
   const [alertFilter, setAlertFilter] = useState<InventoryAlertFilterType>('all');
+  // Produk yang pernah terjual / diterima: stok 0 = "Habis"; tanpa riwayat = "Belum ada stok"
+  // Kolom Brand disembunyikan bila hampir semua produk tidak punya merek (mis. hasil impor)
+  const showBrandColumn = useMemo(
+    () => products.length > 0 && products.filter((p) => (p.brand || '').trim()).length / products.length >= 0.1,
+    [products]
+  );
+  const stockHistory = useMemo(() => buildStockHistoryIds(transactions, supplierPurchases), [transactions, supplierPurchases]);
 
   // Product Price History State
   const [isPriceHistoryModalOpen, setIsPriceHistoryModalOpen] = useState(false);
@@ -342,16 +350,18 @@ export const InventoryView: React.FC = () => {
     let criticalExp = 0;
     let approachingExp = 0;
     let alerts = 0;
+    let unstocked = 0;
 
     for (let i = 0; i < products.length; i++) {
       const p = products[i];
       totalStock += p.stock;
       totalVal += p.stock * p.costPrice;
 
-      const isZero = p.stock === 0;
-      const isLow = p.stock <= p.minStock;
-      if (isZero) outOfStock++;
-      if (isLow) lowStock++;
+      const status = stockStatusOf(p, stockHistory);
+      const isLow = status === 'low' || status === 'out';
+      if (status === 'out') outOfStock++;
+      else if (status === 'low') lowStock++;
+      else if (status === 'unstocked') unstocked++;
 
       const diff = getProductExpiryDiffDays(p.expiryDate);
       let hasExpAlert = false;
@@ -376,6 +386,7 @@ export const InventoryView: React.FC = () => {
     return {
       outOfStockCount: outOfStock,
       lowStockCount: lowStock,
+      unstockedCount: unstocked,
       totalStockUnits: totalStock,
       totalValuation: totalVal,
       expiredCount: exp,
@@ -384,11 +395,12 @@ export const InventoryView: React.FC = () => {
       totalExpAlertsCount: exp + criticalExp + approachingExp,
       totalAlertsCount: alerts,
     };
-  }, [products]);
+  }, [products, stockHistory]);
 
   const {
     outOfStockCount,
     lowStockCount,
+    unstockedCount,
     totalStockUnits,
     totalValuation,
     expiredCount,
@@ -421,9 +433,11 @@ export const InventoryView: React.FC = () => {
       if (!matchOrigin) return false;
 
       if (alertFilter === 'low-stock') {
-        return p.stock <= p.minStock;
+        return stockStatusOf(p, stockHistory) === 'low';
       } else if (alertFilter === 'out-of-stock') {
-        return p.stock === 0;
+        return stockStatusOf(p, stockHistory) === 'out';
+      } else if (alertFilter === 'unstocked') {
+        return stockStatusOf(p, stockHistory) === 'unstocked';
       } else if (alertFilter === 'critical-exp') {
         const diff = getProductExpiryDiffDays(p.expiryDate);
         return diff !== null && diff <= 30;
@@ -439,7 +453,7 @@ export const InventoryView: React.FC = () => {
     });
 
     // Jika pengguna secara spesifik memilih filter 'out-of-stock', tampilkan semua produk habis
-    if (alertFilter === 'out-of-stock') {
+    if (alertFilter === 'out-of-stock' || alertFilter === 'unstocked') {
       return base;
     }
 
@@ -462,7 +476,7 @@ export const InventoryView: React.FC = () => {
     }
 
     return base;
-  }, [products, deferredSearch, categoryFilter, productOriginFilter, alertFilter, settings.outOfStockDisplay]);
+  }, [products, deferredSearch, categoryFilter, productOriginFilter, alertFilter, settings.outOfStockDisplay, stockHistory]);
 
   const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / productPageSize));
 
@@ -722,7 +736,7 @@ export const InventoryView: React.FC = () => {
       const diff = getProductExpiryDiffDays(prod.expiryDate);
       if (diff !== null && diff <= 0) {
         // Nilai harus sama persis dengan pilihan di daftar alasan
-        setReturnReason('Kadaluarsa / Near Expired (FEFO)');
+        setReturnReason('Kedaluwarsa / Near Expired (FEFO)');
       } else {
         setReturnReason('');
       }
@@ -1207,8 +1221,10 @@ export const InventoryView: React.FC = () => {
           <tbody>
             ${products
               .map((p) => {
-                const isLow = p.stock <= p.minStock && p.stock > 0;
-                const isOut = p.stock <= 0;
+                const st = stockStatusOf(p, stockHistory);
+                const isLow = st === 'low';
+                const isOut = st === 'out';
+                const isUnstocked = st === 'unstocked';
                 return `
                 <tr style="border-bottom: 1px solid #f1f5f9;">
                   <td style="padding: 6px 8px; font-weight: 600; color: #0f172a;">${escapeHtml(p.name)}</td>
@@ -1219,7 +1235,7 @@ export const InventoryView: React.FC = () => {
                   <td style="padding: 6px 8px; text-align: right; font-family: monospace;">${formatCurrency(p.costPrice || 0, settings.currency)}</td>
                   <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold; color: #059669;">${formatCurrency(p.price, settings.currency)}</td>
                   <td style="padding: 6px 8px; text-align: center; font-size: 10px;">
-                    ${isOut ? '<span style="color: #e11d48; font-weight: bold;">HABIS</span>' : isLow ? '<span style="color: #d97706; font-weight: bold;">MENIPIS</span>' : '<span style="color: #059669;">AMAN</span>'}
+                    ${isOut ? '<span style="color: #e11d48; font-weight: bold;">HABIS</span>' : isLow ? '<span style="color: #b45309; font-weight: bold;">MENIPIS</span>' : isUnstocked ? '<span style="color: #64748b;">Belum ada stok</span>' : ''}
                   </td>
                 </tr>
               `;
@@ -1336,10 +1352,10 @@ export const InventoryView: React.FC = () => {
               {totalAlertsCount > 0 && (
                 <span
                   className="px-1.5 py-0.2 rounded-full text-[11px] font-black bg-amber-500 text-slate-950 flex items-center gap-0.5 shadow-sm"
-                  title={`${totalAlertsCount} produk memerlukan perhatian stok atau kadaluarsa`}
+                  title={`${totalAlertsCount.toLocaleString('id-ID')} produk perlu perhatian: stok habis/menipis atau kedaluwarsa`}
                 >
                   <AlertTriangle className="w-2.5 h-2.5 text-slate-950" />
-                  <span>{totalAlertsCount}</span>
+                  <span>{totalAlertsCount.toLocaleString('id-ID')}</span>
                 </span>
               )}
             </button>
@@ -1360,7 +1376,7 @@ export const InventoryView: React.FC = () => {
               onClick={() => setActiveTab('dynamic_pricing')}
               className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                 activeTab === 'dynamic_pricing'
-                  ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-sm'
+                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400'
               }`}
             >
@@ -1475,10 +1491,10 @@ export const InventoryView: React.FC = () => {
           <button
             id="btn-generate-restock-plan"
             onClick={triggerRestockPlanAnalysis}
-            className="hidden sm:flex px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-bold text-xs items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition-all active:scale-95 border border-amber-300"
+            className="hidden sm:flex px-3 py-2 rounded-xl font-bold text-xs items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95 bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
             title="Analisis tingkat inventaris dengan Gemini AI & buat rekomendasi Purchase Order"
           >
-            <Sparkles className="w-3.5 h-3.5 fill-current text-slate-950" />
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
             <span>AI Restock Plan</span>
           </button>
 
@@ -1486,10 +1502,10 @@ export const InventoryView: React.FC = () => {
           <button
             id="btn-open-dynamic-pricing"
             onClick={() => setActiveTab('dynamic_pricing')}
-            className="flex px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-xs items-center gap-1.5 shadow-md shadow-indigo-500/20 cursor-pointer transition-all active:scale-95 border border-indigo-400/40"
+            className="flex px-3 py-2 rounded-xl font-bold text-xs items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95 bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
             title="AI Dynamic Pricing: Optimasi harga berdasarkan kompetitor & perputaran stok"
           >
-            <Sparkles className="w-3.5 h-3.5 fill-current text-amber-300" />
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 text-amber-300" />
             <span>Harga Dinamis AI</span>
           </button>
 
@@ -1500,7 +1516,7 @@ export const InventoryView: React.FC = () => {
               setSelectedProductForQR(null);
               setIsQRShelfLabelModalOpen(true);
             }}
-            className="flex px-3 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs items-center gap-1.5 shadow-md shadow-slate-900/20 cursor-pointer transition-all active:scale-95 border border-slate-700"
+            className="flex px-3 py-2 rounded-xl font-bold text-xs items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
             title="Cetak Label Rak QR Dinamis: Link real-time stok & tanggal update harga"
           >
             <QrCode className="w-3.5 h-3.5 text-indigo-400" />
@@ -1805,36 +1821,8 @@ export const InventoryView: React.FC = () => {
               <option value="normal">Stok Habis: Urutan Normal</option>
             </select>
 
-            {/* Quick Alert Filter Chips */}
-            <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-              <button
-                type="button"
-                onClick={() => setAlertFilter(alertFilter === 'low-stock' ? 'all' : 'low-stock')}
-                className={`px-2.5 py-1 text-[11px] font-bold rounded-xl flex items-center gap-1 cursor-pointer transition border ${
-                  alertFilter === 'low-stock' || alertFilter === 'out-of-stock'
-                    ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-sm font-black'
-                    : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:hover:bg-amber-900/80 dark:text-amber-300 dark:border-amber-800'
-                }`}
-                title="Saring tabel hanya menampilkan produk dengan stok menipis / habis"
-              >
-                <AlertTriangle className="w-3 h-3 text-amber-700 dark:text-amber-400" />
-                <span>Stok Menipis ({lowStockCount})</span>
-              </button>
+            {/* (Filter Menipis/Kedaluwarsa ada di baris ringkasan di bawah; tidak diulang) */}
 
-              <button
-                type="button"
-                onClick={() => setAlertFilter(alertFilter === 'all-exp' ? 'all' : 'all-exp')}
-                className={`px-2.5 py-1 text-[11px] font-bold rounded-xl flex items-center gap-1 cursor-pointer transition border ${
-                  alertFilter === 'all-exp' || alertFilter === 'critical-exp' || alertFilter === 'approaching-exp'
-                    ? 'bg-rose-500 text-white border-rose-600 shadow-sm font-black'
-                    : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 dark:text-rose-300 dark:border-rose-800'
-                }`}
-                title="Saring tabel hanya menampilkan produk kadaluarsa atau mendekati kadaluarsa dalam 90 hari"
-              >
-                <Calendar className="w-3 h-3 text-rose-600 dark:text-rose-400" />
-                <span>Kadaluarsa ({totalExpAlertsCount})</span>
-              </button>
-            </div>
           </div>
         ) : activeTab === 'suppliers' ? (
           <div className="flex items-center gap-2">
@@ -1858,7 +1846,7 @@ export const InventoryView: React.FC = () => {
         {activeTab === 'inventory' && (
           <div className="flex items-center gap-3 text-xs flex-wrap">
             <span className="text-slate-500 dark:text-slate-400">
-              Total Fisik: <strong className="text-slate-900 dark:text-white font-mono">{totalStockUnits}</strong> pcs
+              Total Fisik: <strong className="text-slate-900 dark:text-white font-mono">{totalStockUnits.toLocaleString('id-ID')}</strong> pcs
             </span>
             <span className="text-slate-500 dark:text-slate-400">
               Valuasi: <strong className="text-emerald-700 dark:text-emerald-400 font-mono">{formatCurrency(totalValuation, settings.currency)}</strong>
@@ -1871,14 +1859,29 @@ export const InventoryView: React.FC = () => {
                 title="Klik untuk menyaring produk habis (0 stok)"
               >
                 <ShieldAlert className="w-3 h-3 text-rose-600" />
-                {outOfStockCount} Habis (0)
+                Habis: {outOfStockCount.toLocaleString('id-ID')}
               </button>
             )}
             {(settings.outOfStockDisplay ?? 'bottom') === 'hide' && alertFilter !== 'out-of-stock' && outOfStockCount > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">
                 <EyeOff className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
-                {outOfStockCount} Disembunyikan
+                {outOfStockCount.toLocaleString('id-ID')} disembunyikan
               </span>
+            )}
+            {unstockedCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setAlertFilter(alertFilter === 'unstocked' ? 'all' : 'unstocked')}
+                aria-pressed={alertFilter === 'unstocked'}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border cursor-pointer ${
+                  alertFilter === 'unstocked'
+                    ? 'bg-slate-700 text-white border-slate-700'
+                    : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                }`}
+                title="Produk dengan stok 0 yang belum pernah diterima, di-opname, atau terjual (mis. hasil impor). Bukan peringatan."
+              >
+                Belum ada stok: {unstockedCount.toLocaleString('id-ID')}
+              </button>
             )}
             {lowStockCount > 0 && (
               <button
@@ -1888,7 +1891,7 @@ export const InventoryView: React.FC = () => {
                 title="Klik untuk menyaring produk stok menipis"
               >
                 <AlertTriangle className="w-3 h-3 text-amber-700" />
-                {lowStockCount} Menipis
+                Menipis: {lowStockCount.toLocaleString('id-ID')}
               </button>
             )}
             {expiredCount > 0 && (
@@ -1896,10 +1899,10 @@ export const InventoryView: React.FC = () => {
                 type="button"
                 onClick={() => setAlertFilter(alertFilter === 'critical-exp' ? 'all' : 'critical-exp')}
                 className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 border border-rose-300 dark:border-rose-800 flex items-center gap-1 cursor-pointer hover:scale-105 transition"
-                title="Klik untuk menyaring produk kadaluarsa"
+                title="Klik untuk menyaring produk kedaluwarsa"
               >
                 <AlertCircle className="w-3 h-3 text-rose-600" />
-                {expiredCount} Expired
+                Kedaluwarsa: {expiredCount.toLocaleString('id-ID')}
               </button>
             )}
             {criticalExpCount > 0 && (
@@ -2070,7 +2073,7 @@ export const InventoryView: React.FC = () => {
               type="button"
               onClick={handleOpenBulkAdjustSelected}
               className="px-3.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-sm active:scale-95"
-              title="Perbarui kuantitas stok fisik dan tanggal kadaluarsa produk terpilih secara massal"
+              title="Perbarui kuantitas stok fisik dan tanggal kedaluwarsa produk terpilih secara massal"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-slate-950" />
               <span>Penyesuaian Stok Massal ({selectedProductIds.length})</span>
@@ -2094,6 +2097,7 @@ export const InventoryView: React.FC = () => {
             {/* Inventory Alerts & Notifications Hub */}
             <InventoryAlertBanner
               products={products}
+              stockHistory={stockHistory}
               currentAlertFilter={alertFilter}
               onSelectAlertFilter={setAlertFilter}
               onOpenReceiving={handleOpenReceivingForProduct}
@@ -2124,7 +2128,7 @@ export const InventoryView: React.FC = () => {
                     />
                   </th>
                   <th className="py-3 px-4">Produk / Barang</th>
-                  <th className="py-3 px-4">Brand</th>
+                  {showBrandColumn && <th className="py-3 px-4">Brand</th>}
                   <th className="py-3 px-4">SKU / Barcode</th>
                   <th className="py-3 px-4 text-right">Harga Modal</th>
                   <th className="py-3 px-4 text-right">Harga Jual</th>
@@ -2136,8 +2140,10 @@ export const InventoryView: React.FC = () => {
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {paginatedProducts.length > 0 ? (
                   paginatedProducts.map((prod) => {
-                    const isLow = prod.stock <= prod.minStock;
-                    const isZero = prod.stock === 0;
+                    const rowStatus = stockStatusOf(prod, stockHistory);
+                    const isUnstocked = rowStatus === 'unstocked';
+                    const isLow = rowStatus === 'low' || rowStatus === 'out';
+                    const isZero = rowStatus === 'out';
                     const isImported = isImportedProduct(prod);
                     const isSelected = selectedProductIds.includes(prod.id);
                     const expiryDiff = getProductExpiryDiffDays(prod.expiryDate);
@@ -2190,11 +2196,13 @@ export const InventoryView: React.FC = () => {
                         </td>
 
                         {/* Brand */}
+                        {showBrandColumn && (
                         <td className="py-3 px-4">
                           <div className="font-semibold text-emerald-700 dark:text-emerald-400">
                             {prod.brand || '-'}
                           </div>
                         </td>
+                        )}
 
                         {/* SKU / Barcode */}
                         <td className="py-3 px-4 font-mono text-[11px] text-slate-700 dark:text-slate-300">
@@ -2256,18 +2264,21 @@ export const InventoryView: React.FC = () => {
                             {isZero ? (
                               <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-0.5">
                                 <ShieldAlert className="w-2.5 h-2.5 text-rose-600" />
-                                HABIS (0)
+                                HABIS
                               </span>
                             ) : isLow ? (
                               <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-0.5">
                                 <AlertTriangle className="w-2.5 h-2.5 text-amber-700" />
                                 MENIPIS
                               </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                AMAN
+                            ) : isUnstocked ? (
+                              <span
+                                className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                title="Stok 0 dan belum pernah diterima, di-opname, atau terjual"
+                              >
+                                Belum ada stok
                               </span>
-                            )}
+                            ) : null /* Aman: tidak perlu lencana, hanya pengecualian yang ditandai */}
 
                             {/* Expiry date status badge */}
                             {prod.expiryDate && (
@@ -2299,6 +2310,8 @@ export const InventoryView: React.FC = () => {
                         {/* Action */}
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                            {/* Tempat tetap untuk aksi cepat (Terima/Retur) agar ikon di semua baris sejajar */}
+                            <span className="inline-flex justify-end min-w-[88px]">
                             {/* Quick Restock button for zero or low stock */}
                             {(isZero || isLow) && (
                               <button
@@ -2322,6 +2335,7 @@ export const InventoryView: React.FC = () => {
                                 <span>Retur</span>
                               </button>
                             )}
+                            </span>
 
                             {/* Print Pricetag for this Item */}
                             <button aria-label="Cetak Pricetag / Label Rak Item Ini"
@@ -3093,7 +3107,7 @@ export const InventoryView: React.FC = () => {
                           <div>
                             <RotateCcw className="w-12 h-12 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
                             <p className="font-semibold text-slate-700 dark:text-slate-300">Belum ada nota retur supplier</p>
-                            <p className="text-xs text-slate-500 mt-1">Kembalikan barang rusak/kadaluarsa ke distributor melalui tombol "+ Retur ke Supplier".</p>
+                            <p className="text-xs text-slate-500 mt-1">Kembalikan barang rusak/kedaluwarsa ke distributor melalui tombol "+ Retur ke Supplier".</p>
                           </div>
                         )}
                       </td>
@@ -3344,7 +3358,7 @@ export const InventoryView: React.FC = () => {
                     setIsReceivingOpen(false);
                     setIsAiInvoiceScannerOpen(true);
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95"
+                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95"
                 >
                   <Camera className="w-3.5 h-3.5" />
                   <span>Scan Foto Faktur (AI Vision)</span>
@@ -3853,7 +3867,7 @@ export const InventoryView: React.FC = () => {
                     Form Retur Pembelian ke Supplier (Pengembalian Barang)
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Keluarkan barang rusak/kadaluarsa dari stok toko dan buat nota retur distributor
+                    Keluarkan barang rusak/kedaluwarsa dari stok toko dan buat nota retur distributor
                   </p>
                 </div>
               </div>
@@ -3900,7 +3914,7 @@ export const InventoryView: React.FC = () => {
                     >
                       <option value="" disabled>-- Pilih alasan --</option>
                       <option value="Barang Rusak / Bad Stock">Barang Rusak / Bad Stock</option>
-                      <option value="Kadaluarsa / Near Expired (FEFO)">Kadaluarsa / Near Expired (FEFO)</option>
+                      <option value="Kedaluwarsa / Near Expired (FEFO)">Kedaluwarsa / Near Expired (FEFO)</option>
                       <option value="Salah Kirim / Tidak Sesuai PO">Salah Kirim / Tidak Sesuai PO</option>
                       <option value="Kelebihan Qty Kiriman">Kelebihan Qty Kiriman</option>
                       <option value="Kemasan Bocor / Segel Terbuka">Kemasan Bocor / Segel Terbuka</option>
@@ -4021,7 +4035,7 @@ export const InventoryView: React.FC = () => {
                   </label>
                   <input aria-label="Catatan Khusus Retur"
                     type="text"
-                    placeholder="Contoh: Barang kadaluarsa dititipkan ke sales kanvas yang berkunjung..."
+                    placeholder="Contoh: Barang kedaluwarsa dititipkan ke sales kanvas yang berkunjung..."
                     value={returnNotes}
                     onChange={(e) => setReturnNotes(e.target.value)}
                     className="w-full p-2 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
@@ -4414,7 +4428,7 @@ export const InventoryView: React.FC = () => {
         onSuccess={(count, notes) => {
           setNotificationMsg({
             type: 'success',
-            text: `Berhasil memperbarui ${count} produk (stok fisik & tanggal kadaluarsa) secara massal [${notes}].`,
+            text: `Berhasil memperbarui ${count} produk (stok fisik & tanggal kedaluwarsa) secara massal [${notes}].`,
           });
           setSelectedProductIds([]);
           setTimeout(() => setNotificationMsg(null), 6000);

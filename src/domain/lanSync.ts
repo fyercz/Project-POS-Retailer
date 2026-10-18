@@ -18,7 +18,8 @@ export type LanBaseline<P> = Map<string, BaselineEntry<P>>;
 
 /** Tanda isi produk tanpa stok (stok dikirim terpisah sebagai selisih). */
 export function productSignature(p: object): string {
-  const { stock: _stock, ...rest } = p as any;
+  // stockInitializedAt hanya penanda lokal: tidak membuat produk dianggap berubah (tidak dikirim ulang)
+  const { stock: _stock, stockInitializedAt: _init, ...rest } = p as any;
   try {
     return JSON.stringify(rest);
   } catch {

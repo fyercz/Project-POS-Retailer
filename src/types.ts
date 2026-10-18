@@ -122,6 +122,8 @@ export interface Product {
     choices: { name: string; extraPrice: number }[];
   }[];
   /** Diisi saat produk masuk lewat impor file (untuk fitur 'Hapus Data Impor') */
+  /** Diisi otomatis saat stok produk pertama kali tercatat > 0 (bedakan 'Habis' dari 'Belum ada stok') */
+  stockInitializedAt?: string;
   importedAt?: string;
 }
 
@@ -307,7 +309,7 @@ export interface PurchaseReturn {
   supplierName: string;
   referenceInvoice?: string;
   referenceInvoiceNumber?: string;
-  reason: string; // 'Barang Rusak / Bad Stock' | 'Kadaluarsa / Near Expired (FEFO)' | 'Salah Kirim / Tidak Sesuai' | 'Kelebihan Qty'
+  reason: string; // 'Barang Rusak / Bad Stock' | 'Kedaluwarsa / Near Expired (FEFO)' | 'Salah Kirim / Tidak Sesuai' | 'Kelebihan Qty'
   items: PurchaseReturnItem[];
   totalAmount: number;
   status?: 'completed' | 'pending';
@@ -600,7 +602,7 @@ export interface AIStockOpnameDetectedItem {
   systemStock: number;
   detectedCount: number;
   difference: number;
-  condition?: 'Baik / Utuh' | 'Kemasan Rusak' | 'Salah Penempatan Rak' | 'Kadaluarsa';
+  condition?: 'Baik / Utuh' | 'Kemasan Rusak' | 'Salah Penempatan Rak' | 'Kedaluwarsa';
   shelfLocation?: string;
   confidence: number;
 }

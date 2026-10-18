@@ -2052,7 +2052,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                     <div className="p-3.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 space-y-2">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-rose-900 dark:text-rose-300 uppercase tracking-wider">
                         <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                        <span>Peringatan Kadaluarsa & Slow Moving (FEFO)</span>
+                        <span>Peringatan Kedaluwarsa & Slow Moving (FEFO)</span>
                       </div>
                       <div className="space-y-1.5">
                         {forecastData.deadstockOrExpiryAlerts.map((alt, idx) => (

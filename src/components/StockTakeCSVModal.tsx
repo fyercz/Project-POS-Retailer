@@ -49,7 +49,7 @@ const COMMON_REASONS = [
   'Audit Selisih Fisik Rak Toko',
   'Hasil Export Scanner Barcode Gudang',
   'Pembaruan Stok Akhir Bulan',
-  'Penyesuaian Fisik & Barang Rusak / Kadaluarsa',
+  'Penyesuaian Fisik & Barang Rusak / Kedaluwarsa',
   'Koreksi Manual Hasil Hitung Cepat',
 ];
 
@@ -128,7 +128,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
             stockColIdx = idx;
             hasHeader = true;
           }
-        } else if (t.includes('kadaluarsa') || t.includes('expiry') || t.includes('exp')) {
+        } else if (t.includes('kedaluwarsa') || t.includes('expiry') || t.includes('exp')) {
           expiryColIdx = idx;
           hasHeader = true;
         }
@@ -159,7 +159,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
           rawExpiryStr = rawTokens[expiryColIdx] || '';
         }
       } else if (rawTokens.length >= 5) {
-        // Standard full template: barcode, sku, nama_produk, stok_tercatat, stok_fisik_hitung, [tanggal_kadaluarsa]
+        // Standard full template: barcode, sku, nama_produk, stok_tercatat, stok_fisik_hitung, [tanggal_kedaluwarsa]
         rawIdentifier = rawTokens[0] || rawTokens[1] || '';
         rawQtyStr = rawTokens[4] || ''; // kolom stok fisik; kosong = belum dihitung (tidak diterapkan)
         rawExpiryStr = rawTokens[5] || '';
@@ -317,7 +317,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
     const sampleProducts = products.slice(0, 6);
     if (sampleProducts.length === 0) {
       setRawText(
-        '# Barcode/SKU, Stok_Fisik, Kadaluarsa (Opsional)\n' +
+        '# Barcode/SKU, Stok_Fisik, Kedaluwarsa (Opsional)\n' +
           '8992753101111, 45, 2026-12-31\n' +
           '8991001100222, 28, 2027-06-30\n' +
           '8998866100333, 60\n' +
@@ -339,7 +339,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
     sampleLines.push('8999999999999, 20, 2027-08-15');
 
     const fullSample =
-      '# Format: Barcode atau SKU, Stok Fisik Baru, [Kadaluarsa Opsional: YYYY-MM-DD]\n' +
+      '# Format: Barcode atau SKU, Stok Fisik Baru, [Kedaluwarsa Opsional: YYYY-MM-DD]\n' +
       sampleLines.join('\n');
 
     setRawText(fullSample);
@@ -348,7 +348,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
 
   // Handle Download CSV Template
   const handleDownloadTemplate = () => {
-    const headers = ['barcode', 'sku', 'nama_produk', 'stok_tercatat', 'stok_fisik_hitung', 'tanggal_kadaluarsa'];
+    const headers = ['barcode', 'sku', 'nama_produk', 'stok_tercatat', 'stok_fisik_hitung', 'tanggal_kedaluwarsa'];
     // Semua produk (dulu hanya 50 pertama). Kolom stok_fisik_hitung DIKOSONGKAN: diisi hasil hitung.
     // Dulu diisi stok sistem, sehingga baris yang lupa dihitung terimpor seolah tanpa selisih.
     // Baris yang dibiarkan kosong tidak diterapkan saat impor.
@@ -367,7 +367,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
 
   // Handle Copy Format to Clipboard
   const handleCopyFormat = () => {
-    const textToCopy = 'barcode, stok_fisik, tanggal_kadaluarsa\n8992753101111, 45, 2026-12-31';
+    const textToCopy = 'barcode, stok_fisik, tanggal_kedaluwarsa\n8992753101111, 45, 2026-12-31';
     navigator.clipboard.writeText(textToCopy);
     setCopiedNotification(true);
     setTimeout(() => setCopiedNotification(false), 2500);
@@ -596,7 +596,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
               >
                 <span>Input Data CSV / Tab Delimited:</span>
                 <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">
-                  (Format: <code>Barcode / SKU, Jumlah Stok, [Kadaluarsa Opsional]</code>)
+                  (Format: <code>Barcode / SKU, Jumlah Stok, [Kedaluwarsa Opsional]</code>)
                 </span>
               </label>
 
@@ -796,7 +796,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                         <th className="py-2.5 px-3 text-center">Jumlah Input</th>
                         <th className="py-2.5 px-3 text-center">Stok Akhir</th>
                         <th className="py-2.5 px-3 text-center">Selisih</th>
-                        <th className="py-2.5 px-3">Kadaluarsa</th>
+                        <th className="py-2.5 px-3">Kedaluwarsa</th>
                         <th className="py-2.5 px-3 text-right">Aksi</th>
                       </tr>
                     </thead>
