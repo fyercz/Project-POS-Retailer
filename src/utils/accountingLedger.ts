@@ -603,8 +603,8 @@ export function computeIncomeStatement(options: {
   const netProfitMarginPercent = netSales > 0 ? (netOperatingProfit / netSales) * 100 : 0;
 
   return {
-    startDate,
-    endDate,
+    startDate: startDate ?? '',
+    endDate: endDate ?? '',
     grossSales,
     salesDiscounts,
     salesReturns: salesReturnsTotal,

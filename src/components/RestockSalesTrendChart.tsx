@@ -271,7 +271,7 @@ export const RestockSalesTrendChart: React.FC<RestockSalesTrendChartProps> = ({
                   color: '#fff',
                   fontSize: '12px',
                 }}
-                formatter={(val: number, name: string) => [
+                formatter={(val: any, name: any) => [
                   `${val} ${item.unit || 'pcs'}`,
                   name === 'penjualan' ? 'Terjual' : 'Diretur',
                 ]}

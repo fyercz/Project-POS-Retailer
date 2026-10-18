@@ -171,12 +171,12 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   const handleOpenReceiptTab = () => {
     const el = document.getElementById('thermal-receipt-print-area');
     if (el) {
-      openPrintWindow(el.outerHTML, `Struk POS - ${transaction.invoiceNumber}`, paperSize);
+      openPrintWindow(el.outerHTML, `Struk POS - ${transaction?.invoiceNumber ?? ''}`, paperSize);
     }
   };
 
   const handleCopyInvoice = () => {
-    navigator.clipboard.writeText(transaction.invoiceNumber);
+    navigator.clipboard.writeText(transaction?.invoiceNumber ?? '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

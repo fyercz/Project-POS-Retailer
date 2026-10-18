@@ -664,7 +664,7 @@ router.post('/api/ai/inventory-forecast', async (req, res) => {
       summary: `Rencana Restock terencana untuk target kebutuhan ${projectionDays} hari ke depan${targetDate ? ` (Target: ${targetDate})` : ''}. Dikelompokkan berdasarkan distributor/supplier terdaftar dan diterapkan aturan eliminasi/pemangkasan kuota untuk ${deadstockCount} barang deadstock dan ${returnedItemsCount} barang dengan riwayat retur.`,
       healthScore: lowItems.length === 0 ? 95 : Math.max(45, 100 - (lowItems.length * 8)),
       totalEstimatedBudget: totalBudget,
-      totalItemsToRestock: suggestions.filter((s) => s.recommendedOrderQty > 0).length,
+      totalItemsToRestock: suggestions.filter((s: any) => s.recommendedOrderQty > 0).length,
       targetDate: targetDate || toLocalDateString(now),
       projectionDays,
       deadstockRule,

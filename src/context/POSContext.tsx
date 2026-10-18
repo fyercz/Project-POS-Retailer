@@ -947,7 +947,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }, 400);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [products, lanConfigTick, isStorageHydrated]);
 
   const applyMasterLANData = useCallback(
@@ -1035,7 +1035,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       window.removeEventListener('lan-stock-updated', handleLanStockUpdated);
       clearInterval(interval);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Debounced Sync to High-Capacity IndexedDB & LocalStorage Fallback
@@ -1172,7 +1172,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Tandai produk yang stoknya pernah > 0 (dipakai untuk membedakan "Habis" dari "Belum ada stok").
@@ -2953,13 +2953,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ...basePayload,
         data: finalData,
         summary: {
-          totalProducts: finalData.products.length,
-          totalSuppliers: finalData.suppliers.length,
-          totalCustomers: finalData.customers.length,
-          totalTransactions: finalData.transactions.length,
-          totalSalesReturns: finalData.salesReturns.length,
-          totalSupplierPurchases: finalData.supplierPurchases.length,
-          totalEmployees: finalData.employees.length,
+          totalProducts: (finalData.products?.length ?? 0),
+          totalSuppliers: (finalData.suppliers?.length ?? 0),
+          totalCustomers: (finalData.customers?.length ?? 0),
+          totalTransactions: (finalData.transactions?.length ?? 0),
+          totalSalesReturns: (finalData.salesReturns?.length ?? 0),
+          totalSupplierPurchases: (finalData.supplierPurchases?.length ?? 0),
+          totalEmployees: (finalData.employees?.length ?? 0),
         },
       };
 

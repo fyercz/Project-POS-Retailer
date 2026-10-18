@@ -912,7 +912,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                             <span className="text-[11px] text-slate-500 font-mono">{file.category}</span>
                           </td>
                           <td className="p-2.5 text-slate-500 text-[11px]">
-                            {file.exists ? `${(file.size / 1024).toFixed(1)} KB` : '-'}
+                            {file.exists ? `${((file.size ?? 0) / 1024).toFixed(1)} KB` : '-'}
                           </td>
                           <td className="p-2.5">
                             {file.status === 'ok' ? (

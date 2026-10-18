@@ -997,7 +997,6 @@ app.post('/api/pos/database/clean-obsolete', adminOnly, async (req, res) => {
   try {
     const result = await cleanSqliteDatabase();
     res.json({
-      success: true,
       ...result,
     });
   } catch (err: any) {

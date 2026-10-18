@@ -192,7 +192,7 @@ class OfflineSyncManager {
           console.log('[OfflineManager] Background sync success from SW:', event.data);
           this.refreshPendingCount();
           this.lastSyncTime = event.data.serverTime || new Date().toISOString();
-          localStorage.setItem('pos_last_cloud_sync_time', this.lastSyncTime);
+          localStorage.setItem('pos_last_cloud_sync_time', this.lastSyncTime ?? '');
           this.notifyListeners();
 
           window.dispatchEvent(
@@ -495,7 +495,7 @@ class OfflineSyncManager {
         if (data.database) {
           this.databaseEngine = data.database;
         }
-        localStorage.setItem('pos_last_cloud_sync_time', this.lastSyncTime);
+        localStorage.setItem('pos_last_cloud_sync_time', this.lastSyncTime ?? '');
         this.notifyListeners();
       }
     } catch {

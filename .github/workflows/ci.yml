@@ -24,8 +24,8 @@ jobs:
           node-version: 22
       # Pasang PERSIS versi di package-lock.json (sama dengan yang dipakai komputer kasir)
       - run: npm ci --no-audit --no-fund
-      - name: Cek tipe TypeScript
-        run: npx tsc --noEmit
+      - name: Cek tipe TypeScript (strict) & ESLint
+        run: npm run lint
       - name: Build
         run: npm run build
       - name: Tes

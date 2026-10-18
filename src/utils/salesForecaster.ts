@@ -644,7 +644,7 @@ export function generate14DaysSampleTransactions(): Transaction[] {
         id: `tx-sample-${dayOffset}-${t}-${Date.now().toString(36)}`,
         invoiceNumber: `INV-SMP-${String(dayOffset).padStart(2, '0')}${String(t + 1).padStart(2, '0')}`,
         orderType: 'takeaway',
-        items: chosenItems,
+        items: chosenItems as any,
         subtotal,
         taxAmount: 0,
         serviceChargeAmount: 0,

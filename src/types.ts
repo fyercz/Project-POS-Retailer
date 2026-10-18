@@ -669,7 +669,7 @@ export interface BackupPayload {
   storeName: string;
   branchName: string;
   data: {
-    products: Product[];
+    products?: Product[];
     suppliers?: Supplier[];
     customers?: Customer[];
     transactions?: Transaction[];
