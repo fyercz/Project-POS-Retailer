@@ -1,3 +1,5 @@
+// Muat .env lebih dulu sebelum modul lain membaca process.env
+import './src/server/loadEnv.ts';
 import express from 'express';
 import path from 'path';
 import os from 'os';
@@ -72,9 +74,13 @@ app.use('/api/online', createRateLimiter(60, 60_000));
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   let version = 'unknown';
-  try {
-    version = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8')).version;
-  } catch {}
+  // Cari package.json di folder kerja, lalu di folder aplikasi (dist/server.cjs -> ..)
+  for (const dir of [process.cwd(), path.resolve(path.dirname(process.argv[1] || '.'), '..')]) {
+    try {
+      version = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf-8')).version;
+      break;
+    } catch {}
+  }
   res.json({ status: 'ok', version, hasGeminiKey: Boolean(process.env.GEMINI_API_KEY) });
 });
 
