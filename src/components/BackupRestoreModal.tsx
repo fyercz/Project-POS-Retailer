@@ -51,6 +51,7 @@ import { formatRupiah, toLocalDateString } from '../utils/formatters';
 import { validateBackupFile, BackupValidationReport } from '../utils/backupValidator';
 import { executeDatabasePruning, DatabasePruneResponse } from '../utils/desktopHelper';
 import { activateOnKey } from '../utils/a11y';
+import { errorMessage } from '../utils/errors';
 
 interface BackupRestoreModalProps {
   isOpen: boolean;
@@ -389,8 +390,8 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
       setPruneDbResult(res);
       refreshStorageDiagnostics().catch(() => {});
       showToast('success', res.message || 'Database berhasil dipangkas & dirampingkan!');
-    } catch (err: any) {
-      showToast('error', 'Gagal memangkas database: ' + (err?.message || 'Error'));
+    } catch (err) {
+      showToast('error', 'Gagal memangkas database: ' + (errorMessage(err) || 'Error'));
     } finally {
       setIsPruningDb(false);
     }
@@ -450,8 +451,8 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
           setUploadError(report.statusMessage || 'Uji integritas berkas gagal. Berkas rusak atau tidak kompatibel.');
           showToast('error', 'Integritas berkas tidak lolos validasi. Pemulihan dicegah demi keamanan.');
         }
-      } catch (err: any) {
-        setUploadError(err?.message || 'Gagal membaca atau mem-parsing berkas JSON.');
+      } catch (err) {
+        setUploadError(errorMessage(err) || 'Gagal membaca atau mem-parsing berkas JSON.');
         setUploadedPayload(null);
         setValidationReport(null);
         showToast('error', 'Gagal memproses berkas JSON.');
@@ -1759,7 +1760,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                         setIsBenchmarking(false);
                       }
                     }}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition active:scale-95 disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition active:scale-95 disabled:opacity-50"
                   >
                     <Zap className={`w-3.5 h-3.5 ${isBenchmarking ? '' : ''}`} />
                     <span>{isBenchmarking ? 'Menguji Kecepatan...' : 'Jalankan Benchmark Sekarang'}</span>
@@ -1825,7 +1826,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                     type="button"
                     disabled={isPruningDb}
                     onClick={handlePruneDb}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer transition active:scale-95 disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer transition active:scale-95 disabled:opacity-50"
                   >
                     <Trash2 className={`w-3.5 h-3.5 ${isPruningDb ? 'animate-spin' : ''}`} />
                     <span>{isPruningDb ? 'Memangkas Database...' : 'Pangkas File Usang & Padatkan DB'}</span>

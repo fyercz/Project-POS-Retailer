@@ -41,6 +41,7 @@ import { aiRouter } from './src/server/routes/ai.ts';
 import { onlineRouter } from './src/server/routes/online.ts';
 import { systemRouter } from './src/server/routes/system.ts';
 import { saleStockDeltas } from './src/domain/stockMovements.ts';
+import { errorMessage } from './src/utils/errors.ts';
 
 
 const app = express();
@@ -192,8 +193,8 @@ async function initLanDatabase() {
       `Basis Data Relasional SQLite (WAL Mode) aktif: ${lanProductsStore.size} produk, ${lanTransactionsStore.size} transaksi, ${lanCustomersStore.size} member.`
     );
     return;
-  } catch (err: any) {
-    console.warn('[LAN Server] Error initializing SQLite DB, checking fallback JSON:', err?.message || err);
+  } catch (err) {
+    console.warn('[LAN Server] Error initializing SQLite DB, checking fallback JSON:', errorMessage(err) || err);
   }
 
   // Fallback to legacy JSON if SQLite initialization fails
@@ -221,8 +222,8 @@ async function initLanDatabase() {
       addLanLog('warn', `SQLite gagal dibuka; memakai salinan lama lan-database.json (${lanProductsStore.size} produk, ${lanTransactionsStore.size} transaksi). Perubahan baru TIDAK tersimpan permanen sampai SQLite pulih.`);
       return;
     }
-  } catch (err: any) {
-    console.warn('[LAN Server] Failed loading existing LAN DB, initializing fresh:', err?.message || err);
+  } catch (err) {
+    console.warn('[LAN Server] Failed loading existing LAN DB, initializing fresh:', errorMessage(err) || err);
   }
 
   // Tanpa SQLite dan tanpa berkas lama: server mulai KOSONG (dulu diisi katalog FMCG contoh).
@@ -343,8 +344,8 @@ app.post('/api/lan/client/register', (req, res) => {
       client: clientRecord,
       serverTime: new Date().toISOString(),
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -421,8 +422,8 @@ async function applyStockMovement(
     const r = await applySqliteStockMovement(key, kind, items);
     if (r.duplicate) return { duplicate: true, updatedStocks: [] };
     fromDb = new Map(r.updatedStocks.map((u) => [u.productId, u.newStock]));
-  } catch (err: any) {
-    console.warn('[Stok] SQLite tidak tersedia, memakai stok di memori:', err?.message || err);
+  } catch (err) {
+    console.warn('[Stok] SQLite tidak tersedia, memakai stok di memori:', errorMessage(err) || err);
     if (memoryAppliedMovements.has(key)) return { duplicate: true, updatedStocks: [] };
     memoryAppliedMovements.add(key);
   }
@@ -537,9 +538,9 @@ app.post('/api/lan/data/push-transaction', async (req, res) => {
       updatedStocks,
       serverTime: now,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error processing LAN transaction push:', err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -593,9 +594,9 @@ app.post('/api/lan/data/stock-return', async (req, res) => {
       addLanLog('info', `${movementKind === 'void' ? 'Void' : 'Retur'} ${key} dari ${clientName || 'Kasir'}: stok ${result.updatedStocks.length} produk dikembalikan.`);
     }
     res.json({ success: true, duplicate: result.duplicate, updatedStocks: result.updatedStocks, transaction: updatedTx });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error processing stock return:', err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -631,8 +632,8 @@ app.post('/api/lan/data/sync-products', async (req, res) => {
       totalProductsInServer: lanProductsStore.size,
       serverTime: new Date().toISOString(),
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -663,9 +664,9 @@ app.post('/api/lan/data/stock-adjust', async (req, res) => {
       addLanLog('info', `Penyesuaian stok ${movement.length} produk dari ${clientName || 'Kasir'}${typeof reason === 'string' && reason ? ` (${reason.slice(0, 100)})` : ''}.`);
     }
     res.json({ success: true, duplicate: result.duplicate, updatedStocks: result.updatedStocks });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error processing stock adjust:', err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -744,8 +745,8 @@ app.get('/api/shelf/:productId', async (req, res) => {
       aisle: product.aisle || null,
       serverTime: new Date().toISOString(),
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -775,9 +776,9 @@ app.post('/api/lan/database/seed', adminOnly, async (req, res) => {
     const persist = async (label: string, run: () => Promise<unknown>) => {
       try {
         await run();
-      } catch (e: any) {
-        persistErrors.push(`${label}: ${e?.message || e}`);
-        console.error(`[SQLite Server] Gagal menyimpan ${label} saat seed:`, e?.message || e);
+      } catch (e) {
+        persistErrors.push(`${label}: ${errorMessage(e) || e}`);
+        console.error(`[SQLite Server] Gagal menyimpan ${label} saat seed:`, errorMessage(e) || e);
       }
     };
     if (Array.isArray(products) && products.length > 0) await persist('produk', () => upsertSqliteProducts(products));
@@ -800,8 +801,8 @@ app.post('/api/lan/database/seed', adminOnly, async (req, res) => {
         transactions: lanTransactionsStore.size,
       },
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -836,8 +837,8 @@ app.post('/api/lan/orders/held', (req, res) => {
       heldOrder: orderWithTerminal,
       totalHeldOrders: lanHeldOrdersStore.size,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -894,8 +895,8 @@ app.get('/api/pos/database/status', async (req, res) => {
       success: true,
       ...status,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -906,8 +907,8 @@ app.post('/api/pos/database/check-integrity', adminOnly, async (req, res) => {
       success: true,
       ...check,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -918,8 +919,8 @@ app.post('/api/pos/database/clean-obsolete', adminOnly, async (req, res) => {
     res.json({
       ...result,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -964,11 +965,11 @@ app.post('/api/pos/transactions/sync', async (req, res) => {
         const key = String(tx.id || tx.invoiceNumber);
         try {
           await upsertSqliteTransactions([tx], deviceId || 'pos-terminal', cashierName || 'Kasir');
-        } catch (e: any) {
-          console.error('[SQLite Server] Gagal menyimpan transaksi', key, e?.message || e);
+        } catch (e) {
+          console.error('[SQLite Server] Gagal menyimpan transaksi', key, errorMessage(e) || e);
           const idx = syncedIds.indexOf(key);
           if (idx > -1) syncedIds.splice(idx, 1);
-          rejected.push({ id: key, error: 'Gagal disimpan di database server: ' + (e?.message || e) });
+          rejected.push({ id: key, error: 'Gagal disimpan di database server: ' + (errorMessage(e) || e) });
         }
       }
     }
@@ -983,8 +984,8 @@ app.post('/api/pos/transactions/sync', async (req, res) => {
       database: 'SQLite Relational (WAL Mode)',
       totalCloudTransactions: lanTransactionsStore.size,
     });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -1004,16 +1005,16 @@ app.post('/api/pos/transactions', async (req, res) => {
     // Simpan ke SQLite; bila gagal, jawab error agar kasir menyimpannya di antrean offline
     try {
       await upsertSqliteTransactions([stored]);
-    } catch (e: any) {
-      console.error('[SQLite Server] Gagal menyimpan transaksi:', e?.message || e);
+    } catch (e) {
+      console.error('[SQLite Server] Gagal menyimpan transaksi:', errorMessage(e) || e);
       scheduleLanDbSave();
       return res.status(500).json({ success: false, error: 'Transaksi gagal disimpan di database server.' });
     }
 
     scheduleLanDbSave();
     res.json({ success: true, transaction: tx, serverTime: new Date().toISOString() });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    res.status(500).json({ success: false, error: errorMessage(err) });
   }
 });
 
@@ -1070,8 +1071,8 @@ app.get('/api/pos/transactions', async (req, res) => {
       ...paginated,
       count: paginated.transactions.length,
     });
-  } catch (err: any) {
-    console.warn('[Transactions API] Error in paginated query, using fallback:', err?.message || err);
+  } catch (err) {
+    console.warn('[Transactions API] Error in paginated query, using fallback:', errorMessage(err) || err);
     const list = Array.from(lanTransactionsStore.values()).sort(
       (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
     );

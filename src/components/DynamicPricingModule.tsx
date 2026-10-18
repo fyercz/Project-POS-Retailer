@@ -430,7 +430,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
 
             <button
               onClick={handleApplyAllPending}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
             >
               <CheckCheck className="w-4 h-4" />
               Terapkan Semua Saran ({filteredSuggestions.filter((s) => s.actionType !== 'maintain' && !appliedProductIds.has(s.productId)).length})

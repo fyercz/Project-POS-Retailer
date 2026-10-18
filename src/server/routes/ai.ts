@@ -3,6 +3,7 @@ import express from 'express';
 import { callGeminiSafe, callGeminiVisionSafe, extractJsonFromText } from '../gemini.ts';
 import { toLocalDateString } from '../../utils/formatters.ts';
 import { daysUntil } from '../../domain/expiry.ts';
+import { errorMessage } from '../../utils/errors.ts';
 
 export const aiRouter = express.Router();
 const router = aiRouter;
@@ -395,7 +396,7 @@ Kembalikan format JSON murni array objek:
     }
 
     res.json({ suggestions: [], isAiGenerated: false });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in /api/ai/dynamic-pricing:', err);
     res.json({ suggestions: [], isAiGenerated: false });
   }
@@ -1291,7 +1292,7 @@ KEMBALIKAN HANYA FORMAT JSON VALID BERIKUT (TANPA MARKDOWN CODEBLOCK):
       isAiGenerated: true,
       createdAt: new Date().toISOString(),
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error generating segment promo:', err);
     res.json(generateRuleBasedSegmentPromo());
   }
@@ -1551,8 +1552,8 @@ Kembalikan respon dalam format JSON murni:
         });
       }
     }
-  } catch (err: any) {
-    console.warn('AI Category mapping error, using heuristic fallback:', err?.message);
+  } catch (err) {
+    console.warn('AI Category mapping error, using heuristic fallback:', errorMessage(err));
   }
 
   // Heuristic rule-based fallback
@@ -1615,8 +1616,8 @@ Kembalikan format JSON murni:
         });
       }
     }
-  } catch (err: any) {
-    console.warn('Batch AI mapping error, using fallback:', err?.message);
+  } catch (err) {
+    console.warn('Batch AI mapping error, using fallback:', errorMessage(err));
   }
 
   // Fallback heuristic for batch

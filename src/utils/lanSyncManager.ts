@@ -1,4 +1,5 @@
 import { LANConfig, LANRole, LANServerStatus, Product, Transaction, Customer, Supplier } from '../types';
+import { errorMessage } from './errors';
 
 const STORAGE_KEY_CONFIG = 'pos_lan_config';
 const STORAGE_KEY_CLIENT_ID = 'pos_lan_client_id';
@@ -262,8 +263,8 @@ export async function pushTransactionToLANServer(
       const errData = await res.json().catch(() => ({}));
       return { success: false, status: res.status, error: errData.error || `HTTP ${res.status}` };
     }
-  } catch (err: any) {
-    return { success: false, error: err.message || 'Gagal mengirim transaksi ke server LAN' };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) || 'Gagal mengirim transaksi ke server LAN' };
   }
 }
 
@@ -302,8 +303,8 @@ export async function pushStockReturnToLANServer(payload: LANStockReturnPayload)
     const data = await res.json().catch(() => ({}));
     if (res.ok) return { success: true, duplicate: data.duplicate, updatedStocks: data.updatedStocks };
     return { success: false, status: res.status, error: data.error || `HTTP ${res.status}` };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'Gagal mengirim retur ke server LAN' };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) || 'Gagal mengirim retur ke server LAN' };
   }
 }
 
@@ -452,8 +453,8 @@ export async function pushProductsToLANServer(products: Product[], auditNote?: s
     const data = await res.json().catch(() => ({}));
     if (res.ok) return { success: true, updatedStocks: data.updatedStocks };
     return { success: false, status: res.status, error: data.error || `HTTP ${res.status}` };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'Gagal mengirim produk ke server LAN' };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) || 'Gagal mengirim produk ke server LAN' };
   }
 }
 
@@ -479,8 +480,8 @@ export async function pushStockAdjustToLANServer(payload: LANStockAdjustPayload)
     const data = await res.json().catch(() => ({}));
     if (res.ok) return { success: true, duplicate: data.duplicate, updatedStocks: data.updatedStocks };
     return { success: false, status: res.status, error: data.error || `HTTP ${res.status}` };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'Gagal mengirim penyesuaian stok ke server LAN' };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) || 'Gagal mengirim penyesuaian stok ke server LAN' };
   }
 }
 
@@ -507,8 +508,8 @@ export async function seedLANServerDatabase(payload: {
     }
     const errData = await res.json().catch(() => ({}));
     return { success: false, error: errData.error || `HTTP ${res.status}` };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'Gagal melakukan seed ke server LAN' };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) || 'Gagal melakukan seed ke server LAN' };
   }
 }
 

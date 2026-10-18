@@ -1,3 +1,4 @@
+import { errorMessage } from './errors';
 /**
  * Utility helper for POS Desktop Application modes:
  * - Standalone PWA Desktop App (Edge/Chrome/Safari)
@@ -433,10 +434,10 @@ export async function fetchGitStatus(forceRefresh = false): Promise<GitStatusRes
     const res = await fetch(`/api/system/git-status${forceRefresh ? '?refresh=true' : ''}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
-  } catch (err: any) {
+  } catch (err) {
     return {
       isGitRepo: false,
-      error: err?.message || String(err),
+      error: errorMessage(err) || String(err),
       message: 'Gagal menghubungi server status Git',
     };
   }
@@ -446,8 +447,8 @@ export async function triggerGitPull(): Promise<{ success: boolean; message: str
   try {
     const res = await fetch('/api/system/git-pull', { method: 'POST' });
     return await res.json();
-  } catch (err: any) {
-    return { success: false, error: err?.message || String(err), message: 'Gagal menjalankan git pull' };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) || String(err), message: 'Gagal menjalankan git pull' };
   }
 }
 
@@ -459,8 +460,8 @@ export async function configureGitRemote(repoUrl = DEFAULT_GITHUB_REPO_URL): Pro
       body: JSON.stringify({ repoUrl }),
     });
     return await res.json();
-  } catch (err: any) {
-    return { success: false, error: err?.message || String(err), message: 'Gagal konfigurasi remote Git' };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) || String(err), message: 'Gagal konfigurasi remote Git' };
   }
 }
 
@@ -469,7 +470,7 @@ export async function verifySystemFiles(): Promise<SystemVerificationResponse> {
     const res = await fetch('/api/system/verify-files');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
-  } catch (err: any) {
+  } catch (err) {
     return {
       success: false,
       overallHealth: 'critical',
@@ -489,7 +490,7 @@ export async function verifySystemFiles(): Promise<SystemVerificationResponse> {
         databaseAccessible: false,
       },
       files: [],
-      error: err?.message || String(err),
+      error: errorMessage(err) || String(err),
     };
   }
 }
@@ -499,13 +500,13 @@ export async function scanUnnecessaryFiles(): Promise<CleanupScanResponse> {
     const res = await fetch('/api/system/cleanup-scan');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
-  } catch (err: any) {
+  } catch (err) {
     return {
       success: false,
       totalFiles: 0,
       totalBytes: 0,
       items: [],
-      error: err?.message || String(err),
+      error: errorMessage(err) || String(err),
     };
   }
 }
@@ -515,13 +516,13 @@ export async function executeSystemCleanup(): Promise<CleanupExecuteResponse> {
     const res = await fetch('/api/system/cleanup-execute', { method: 'POST' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
-  } catch (err: any) {
+  } catch (err) {
     return {
       success: false,
       deletedCount: 0,
       bytesFreed: 0,
-      message: 'Gagal menjalankan pembersihan sistem: ' + (err?.message || String(err)),
-      error: err?.message,
+      message: 'Gagal menjalankan pembersihan sistem: ' + (errorMessage(err) || String(err)),
+      error: errorMessage(err),
     };
   }
 }
@@ -536,7 +537,7 @@ export async function executeDatabasePruning(): Promise<DatabasePruneResponse> {
       throw new Error(`HTTP Error: ${res.status}`);
     }
     return await res.json();
-  } catch (err: any) {
+  } catch (err) {
     return {
       success: false,
       deletedSyncLogs: 0,
@@ -547,8 +548,8 @@ export async function executeDatabasePruning(): Promise<DatabasePruneResponse> {
       vacuumExecuted: false,
       walCheckpointExecuted: false,
       integrity: 'error',
-      message: 'Gagal memangkas database: ' + (err?.message || String(err)),
-      error: err?.message,
+      message: 'Gagal memangkas database: ' + (errorMessage(err) || String(err)),
+      error: errorMessage(err),
     };
   }
 }

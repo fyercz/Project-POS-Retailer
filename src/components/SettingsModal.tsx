@@ -44,6 +44,7 @@ import {
   PrinterConfig,
 } from '../utils/escposPrinter';
 import { executeSystemCleanup } from '../utils/desktopHelper';
+import { errorMessage } from '../utils/errors';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -124,8 +125,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
         res = await printViaWebSerial(bytes, printerConfig.baudRate);
       }
       setTestStatus(res.message);
-    } catch (err: any) {
-      setTestStatus('Gagal tes cetak: ' + (err.message || String(err)));
+    } catch (err) {
+      setTestStatus('Gagal tes cetak: ' + (errorMessage(err) || String(err)));
     } finally {
       setIsTesting(false);
       setTimeout(() => setTestStatus(null), 5000);
@@ -139,8 +140,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
       const mode = printerConfig.connectionType === 'bluetooth' ? 'bluetooth' : 'serial';
       const res = await kickCashDrawerOnly(mode, printerConfig.baudRate);
       setTestStatus(res.message);
-    } catch (err: any) {
-      setTestStatus('Gagal tes buka laci: ' + (err.message || String(err)));
+    } catch (err) {
+      setTestStatus('Gagal tes buka laci: ' + (errorMessage(err) || String(err)));
     } finally {
       setIsTesting(false);
       setTimeout(() => setTestStatus(null), 5000);
@@ -1047,8 +1048,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   try {
                     const res = await executeSystemCleanup();
                     setSettingsCleanupMsg(res.message);
-                  } catch (e: any) {
-                    setSettingsCleanupMsg('Gagal: ' + e.message);
+                  } catch (e) {
+                    setSettingsCleanupMsg('Gagal: ' + errorMessage(e));
                   } finally {
                     setIsCleaningInSettings(false);
                   }

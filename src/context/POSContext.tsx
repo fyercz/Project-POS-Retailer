@@ -104,6 +104,7 @@ import {
   INITIAL_EXPENSES as DEMO_EXPENSES,
   INITIAL_PRODUCTS as DEMO_PRODUCTS,
 } from '../data/mockData';
+import { errorMessage } from '../utils/errors';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -3103,10 +3104,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             cleanProducts?.length || 0
           } produk & ${cleanTransactions?.length || 0} riwayat transaksi. Basis data telah diverifikasi aman.`,
         };
-      } catch (err: any) {
+      } catch (err) {
         return {
           success: false,
-          message: `Gagal memproses pemulihan data: ${err?.message || 'Terjadi kesalahan sistem'}`,
+          message: `Gagal memproses pemulihan data: ${errorMessage(err) || 'Terjadi kesalahan sistem'}`,
         };
       }
     },
@@ -3196,8 +3197,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setPastShifts([]);
       setCurrentShift(newShift(activeEmployee));
       return { success: true, message: 'Transaksi uji coba dihapus. Titik pulih otomatis sudah dibuat.' };
-    } catch (err: any) {
-      return { success: false, message: `Gagal menghapus transaksi uji coba: ${err?.message || err}` };
+    } catch (err) {
+      return { success: false, message: `Gagal menghapus transaksi uji coba: ${errorMessage(err) || err}` };
     }
   }, [activeEmployee, createRestorePoint]);
 

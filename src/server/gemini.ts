@@ -3,6 +3,7 @@
  * Dipindah dari server.ts tanpa perubahan logika.
  */
 import { GoogleGenAI } from '@google/genai';
+import { errorMessage } from '../utils/errors.ts';
 
 // Lazy initialization of Gemini Client
 let geminiClient: GoogleGenAI | null = null;
@@ -90,7 +91,7 @@ export async function callGeminiSafe(
         if (response.text) {
           return response.text;
         }
-      } catch (err: any) {
+      } catch (err) {
         const isTransient = isTransientGeminiError(err);
         if (isTransient && attempt === 0) {
           // Brief pause before retry on transient high-demand
@@ -98,7 +99,7 @@ export async function callGeminiSafe(
           continue;
         }
         if (!isTransient) {
-          console.warn(`Gemini generation warning with ${model}:`, err?.message || err);
+          console.warn(`Gemini generation warning with ${model}:`, errorMessage(err) || err);
         }
         break; // Proceed to next fallback model
       }
@@ -146,7 +147,7 @@ export async function callGeminiVisionSafe(
         if (response.text) {
           return response.text;
         }
-      } catch (err: any) {
+      } catch (err) {
         const isTransient = isTransientGeminiError(err);
         if (isTransient && attempt === 0) {
           // Brief pause before retry on transient high-demand
@@ -154,7 +155,7 @@ export async function callGeminiVisionSafe(
           continue;
         }
         if (!isTransient) {
-          console.warn(`Gemini vision warning with ${model}:`, err?.message || err);
+          console.warn(`Gemini vision warning with ${model}:`, errorMessage(err) || err);
         }
         break; // Proceed to next fallback model
       }
@@ -344,14 +345,14 @@ export async function callGeminiWithSearch(
         if (text) {
           return { text, sources };
         }
-      } catch (err: any) {
+      } catch (err) {
         const isTransient = isTransientGeminiError(err);
         if (isTransient && attempt === 0) {
           await wait(500);
           continue;
         }
         if (!isTransient) {
-          console.warn(`Gemini search grounding warning with ${model}:`, err?.message || err);
+          console.warn(`Gemini search grounding warning with ${model}:`, errorMessage(err) || err);
         }
         break;
       }

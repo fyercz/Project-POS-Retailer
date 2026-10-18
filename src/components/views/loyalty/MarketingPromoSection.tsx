@@ -403,7 +403,7 @@ export const MarketingPromoSection: React.FC = () => {
               type="button"
               disabled={isGenerating}
               onClick={handleGeneratePromo}
-              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-400 text-slate-950 font-black text-sm flex items-center gap-2 shadow-md shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="px-5 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm flex items-center gap-2 shadow-md shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {isGenerating ? (
                 <>

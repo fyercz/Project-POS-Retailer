@@ -26,6 +26,7 @@ import { AIStockOpnameDetectedItem, AIStockOpnameResult } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { compressImageForAI, formatBytes, CompressedImageResult } from '../utils/imageCompressor';
 import { getResilientCameraStream, getCameraErrorMessage } from '../utils/cameraHelper';
+import { errorMessage } from '../utils/errors';
 
 interface AIVisualStockOpnameModalProps {
   isOpen: boolean;
@@ -349,9 +350,9 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
         } else {
           setNotification('Gagal mengekstrak frame dari video. Pastikan format video didukung.');
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Video extraction error:', err);
-        setNotification(err.message || 'Gagal memproses video. Coba format MP4/WebM atau gunakan kamera live.');
+        setNotification(errorMessage(err) || 'Gagal memproses video. Coba format MP4/WebM atau gunakan kamera live.');
       } finally {
         setIsExtractingVideo(false);
         setExtractProgress('');
@@ -393,7 +394,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
       setNotification(
         `${loadedFrames.length} foto rak berhasil dikompresi & dimuat (${formatBytes(totalOrig)} → ${formatBytes(totalComp)}, hemat ${savedPct}% payload).`
       );
-    } catch (err: any) {
+    } catch (err) {
       console.error('Image compression error:', err);
       setNotification('Gagal mengompresi gambar. Silakan coba lagi.');
     } finally {
@@ -504,14 +505,14 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
 
       const errData = await response.json().catch(() => ({}));
       throw new Error(errData.error || `Server AI menjawab ${response.status}`);
-    } catch (err: any) {
+    } catch (err) {
       console.error('AI visual stock opname error:', err);
       // Tidak ada hasil cadangan: dulu dibuat hitungan stok ACAK (stok sistem +/- 1) yang bisa
       // diterapkan ke stok asli. Lebih aman memberi tahu bahwa AI gagal.
       setScanResult(null);
       setNotification(
-        (err?.message && !String(err.message).startsWith('Failed to fetch')
-          ? err.message
+        (errorMessage(err) && !String(errorMessage(err)).startsWith('Failed to fetch')
+          ? errorMessage(err)
           : 'Server AI tidak dapat dihubungi.') + ' Lakukan stock opname manual atau coba lagi nanti.'
       );
     } finally {
@@ -867,7 +868,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                   id="btn-run-ai-stock-audit"
                   onClick={handleRunAiStockAudit}
                   disabled={capturedFrames.length === 0 || isProcessing || isExtractingVideo}
-                  className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer transition"
+                  className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer transition"
                 >
                   {isProcessing ? (
                     <>

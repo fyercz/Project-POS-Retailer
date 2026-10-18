@@ -1,4 +1,5 @@
 import { BackupPayload, Product, StoreSettings, Transaction, Customer, Supplier, Employee } from '../types';
+import { errorMessage } from './errors';
 
 export interface ValidationCheckItem {
   id: string;
@@ -97,14 +98,14 @@ export function validateBackupFile(
       status: 'passed',
       details: 'Berkas memiliki format JSON yang valid dan dapat di-parse dengan sempurna.',
     });
-  } catch (err: any) {
-    criticalErrors.push(`Format JSON Rusak: ${err?.message || 'Gagal mem-parse JSON'}`);
+  } catch (err) {
+    criticalErrors.push(`Format JSON Rusak: ${errorMessage(err) || 'Gagal mem-parse JSON'}`);
     checks.push({
       id: 'json_syntax',
       name: 'Sintaks & Struktur Berkas JSON',
       category: 'schema',
       status: 'failed',
-      details: `Sintaks JSON tidak valid: ${err?.message || 'Bukan dokumen JSON valid'}.`,
+      details: `Sintaks JSON tidak valid: ${errorMessage(err) || 'Bukan dokumen JSON valid'}.`,
     });
     report.statusMessage = 'Berkas JSON rusak dan tidak dapat dibaca. Pemulihan dibatalkan demi keamanan.';
     return report;

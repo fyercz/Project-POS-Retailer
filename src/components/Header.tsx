@@ -374,7 +374,7 @@ export const Header: React.FC = () => {
           <button
             id="btn-open-gemini-copilot"
             onClick={() => openGeminiCopilot('upsell')}
-            className="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-500 hover:from-emerald-400 hover:to-emerald-400 text-slate-950 font-bold text-xs items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer shrink-0"
+            className="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer shrink-0"
             title="Buka Asisten AI Gemini Ritel Copilot"
           >
             <Sparkles className="w-3.5 h-3.5 fill-current" />

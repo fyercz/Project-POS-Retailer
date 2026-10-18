@@ -10,6 +10,7 @@
 
 import { Transaction, StoreSettings } from '../types';
 import { formatCurrency, formatDate } from './formatters';
+import { errorMessage } from './errors';
 
 export type ThermalPaperWidth = '58mm' | '80mm';
 export type PrinterConnectionType = 'serial' | 'bluetooth' | 'system';
@@ -375,11 +376,11 @@ export const printViaWebSerial = async (
       success: true,
       message: 'Berhasil mencetak langsung ke Thermal Printer via USB/Serial!',
     };
-  } catch (err: any) {
+  } catch (err) {
     console.error('Web Serial Print error:', err);
     return {
       success: false,
-      message: err?.message || 'Gagal berkomunikasi dengan port serial printer.',
+      message: errorMessage(err) || 'Gagal berkomunikasi dengan port serial printer.',
     };
   }
 };
@@ -448,11 +449,11 @@ export const printViaWebBluetooth = async (
       success: true,
       message: `Berhasil mencetak via Bluetooth ke printer: ${device.name || 'Thermal'}`,
     };
-  } catch (err: any) {
+  } catch (err) {
     console.error('Web Bluetooth Print error:', err);
     return {
       success: false,
-      message: err?.message || 'Gagal menghubungkan atau mencetak via Bluetooth.',
+      message: errorMessage(err) || 'Gagal menghubungkan atau mencetak via Bluetooth.',
     };
   }
 };

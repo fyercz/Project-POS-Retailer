@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { X, Camera, RefreshCw, AlertCircle, CheckCircle2, ScanBarcode } from 'lucide-react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { errorMessage } from '../utils/errors';
 
 interface ReceivingBarcodeCameraModalProps {
   isOpen: boolean;
@@ -72,11 +73,11 @@ export const ReceivingBarcodeCameraModal: React.FC<ReceivingBarcodeCameraModalPr
             // Ignore frame-by-frame non-matching scans
           }
         );
-      } catch (err: any) {
+      } catch (err) {
         if (!isMounted) return;
         console.warn('[ReceivingScanner] Gagal membuka kamera:', err);
         setCameraError(
-          err?.message || 'Izin kamera ditolak atau kamera tidak tersedia di perangkat ini.'
+          errorMessage(err) || 'Izin kamera ditolak atau kamera tidak tersedia di perangkat ini.'
         );
         setIsScanning(false);
       }
