@@ -6,7 +6,7 @@ import {readFileSync} from 'fs';
 import {execSync} from 'child_process';
 
 // Versi aplikasi (package.json) & commit, ditampilkan di aplikasi
-const APP_VERSION = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8')).version;
+const APP_VERSION = JSON.parse(readFileSync(path.resolve(import.meta.dirname, 'package.json'), 'utf-8')).version;
 let APP_COMMIT = 'dev';
 try {
   APP_COMMIT = execSync('git rev-parse --short HEAD', {stdio: ['ignore', 'pipe', 'ignore']}).toString().trim();
@@ -21,7 +21,7 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(import.meta.dirname, '.'),
       },
       dedupe: ['react', 'react-dom', 'react-dom/client'],
     },
