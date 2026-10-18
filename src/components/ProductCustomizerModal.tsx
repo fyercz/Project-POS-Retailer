@@ -59,14 +59,14 @@ export const ProductCustomizerModal: React.FC<ProductCustomizerModalProps> = ({
               <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500 text-slate-950 uppercase tracking-wider">
                 {product.categoryId}
               </span>
-              <span className="text-xs text-slate-400 font-mono">SKU: {product.sku}</span>
+              <span className="text-xs text-slate-500 font-mono">SKU: {product.sku}</span>
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">{product.name}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Stok: {product.stock} {product.brand && `• Brand: ${product.brand}`}
             </p>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center cursor-pointer transition-colors shrink-0"
           >
@@ -121,7 +121,7 @@ export const ProductCustomizerModal: React.FC<ProductCustomizerModalProps> = ({
                             <span>{choice.name}</span>
                           </div>
                           {choice.extraPrice > 0 && (
-                            <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]">
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-400 font-mono text-[11px]">
                               +{formatCurrency(choice.extraPrice, settings.currency)}
                             </span>
                           )}
@@ -144,12 +144,12 @@ export const ProductCustomizerModal: React.FC<ProductCustomizerModalProps> = ({
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               Special Notes / Instructions
             </label>
-            <textarea
+            <textarea aria-label="Special Notes / Instructions"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Extra hot, separate sauce, packaging preference..."
               rows={2}
-              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-slate-400"
+              className="w-full text-xs p-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-slate-400"
             />
           </div>
         </div>
@@ -158,7 +158,7 @@ export const ProductCustomizerModal: React.FC<ProductCustomizerModalProps> = ({
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 flex items-center justify-between">
           <div>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-medium">Total Item Price</span>
-            <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+            <div className="text-lg font-bold text-emerald-700 dark:text-emerald-400 font-mono">
               {formatCurrency(finalUnitPrice, settings.currency)}
             </div>
           </div>

@@ -187,9 +187,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
               POS Terminal &amp; Store Settings
             </h3>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -197,25 +197,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
 
         {/* Navigation Tabs */}
         <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-950 px-3 pt-2 gap-1 shrink-0">
-          <button
+          <button aria-pressed={activeTab === 'settings'}
             type="button"
             onClick={() => setActiveTab('settings')}
             className={`px-3 py-2 rounded-t-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'settings'
-                ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 border-t border-x border-slate-200 dark:border-slate-800 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 border-t border-x border-slate-200 dark:border-slate-800 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             <SettingsIcon className="w-3.5 h-3.5" />
             <span>Pengaturan Toko &amp; Struk</span>
           </button>
-          <button
+          <button aria-pressed={activeTab === 'launch'}
             type="button"
             id="tab-btn-launch-readiness"
             onClick={() => setActiveTab('launch')}
             className={`px-3 py-2 rounded-t-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'launch'
-                ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 border-t border-x border-slate-200 dark:border-slate-800 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 border-t border-x border-slate-200 dark:border-slate-800 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
@@ -247,7 +247,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
             {/* Logo Live Visualizer Card */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs flex flex-col items-center justify-center min-h-[90px]">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tampilan Mode Terang</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Tampilan Mode Terang</span>
                 <UlilMartLogo variant="full" height={48} className="max-w-[210px] drop-shadow-xs" />
               </div>
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 shadow-2xs flex flex-col items-center justify-center min-h-[90px]">
@@ -262,12 +262,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Slogan / Tagline Toko
                 </label>
-                <input
+                <input aria-label="Slogan / Tagline Toko"
                   type="text"
                   value={formData.storeTagline || ''}
                   placeholder="Lengkap &amp; Hemat"
                   onChange={(e) => setFormData({ ...formData, storeTagline: e.target.value })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                 />
               </div>
 
@@ -312,7 +312,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 className="px-2.5 py-1 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                 title="Isi otomatis data dari lokasi Google Maps ULILMART"
               >
-                <MapPin className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <MapPin className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
                 <span>Muat dari Google Maps</span>
               </button>
             </div>
@@ -322,12 +322,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1">
                   Nama Toko / Brand
                 </label>
-                <input
+                <input aria-label="Nama Toko / Brand"
                   type="text"
                   required
                   value={formData.storeName}
                   onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
                 />
               </div>
 
@@ -335,12 +335,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1">
                   Nama Cabang / Unit
                 </label>
-                <input
+                <input aria-label="Nama Cabang / Unit"
                   type="text"
                   required
                   value={formData.branchName}
                   onChange={(e) => setFormData({ ...formData, branchName: e.target.value })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
@@ -349,11 +349,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
               <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1">
                 Alamat Fisik Toko
               </label>
-              <input
+              <input aria-label="Alamat Fisik Toko"
                 type="text"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
               />
             </div>
 
@@ -363,12 +363,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   Nomor Telepon / WhatsApp
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                  <input
+                  <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                  <input aria-label="Nomor Telepon / WhatsApp"
                     type="text"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full pl-8 pr-2 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                    className="w-full pl-8 pr-2 py-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   />
                 </div>
               </div>
@@ -378,13 +378,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   Jam Operasional
                 </label>
                 <div className="relative">
-                  <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                  <input
+                  <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                  <input aria-label="Jam Operasional"
                     type="text"
                     value={formData.operatingHours || ''}
                     placeholder="06.00 – 21.00 WIB (Buka Setiap Hari)"
                     onChange={(e) => setFormData({ ...formData, operatingHours: e.target.value })}
-                    className="w-full pl-8 pr-2 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                    className="w-full pl-8 pr-2 py-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                   />
                 </div>
               </div>
@@ -408,13 +408,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 )}
               </div>
               <div className="relative">
-                <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-rose-500" />
-                <input
+                <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-rose-600" />
+                <input aria-label="Tautan Google Maps Lokasi Toko"
                   type="url"
                   value={formData.googleMapsUrl || ''}
                   placeholder="https://maps.app.goo.gl/..."
                   onChange={(e) => setFormData({ ...formData, googleMapsUrl: e.target.value })}
-                  className="w-full pl-8 pr-2 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full pl-8 pr-2 py-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                 />
               </div>
             </div>
@@ -434,7 +434,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 </label>
                 <div className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 font-bold text-xs flex items-center justify-between">
                   <span>IDR (Rp) - Rupiah</span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                     Baku
                   </span>
                 </div>
@@ -444,46 +444,46 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Min Margin Poin (%)
                 </label>
-                <input
+                <input aria-label="Min Margin Poin (%)"
                   type="number"
                   min={0}
                   max={100}
                   step={1}
                   value={formData.minProfitPercentForPoints ?? 15}
                   onChange={(e) => setFormData({ ...formData, minProfitPercentForPoints: Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="15"
                 />
-                <span className="text-[10px] text-slate-400">Min. profit barang dapat poin</span>
+                <span className="text-[10px] text-slate-500">Min. profit barang dapat poin</span>
               </div>
 
               <div>
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Bonus Poin Member Baru
                 </label>
-                <input
+                <input aria-label="Bonus Poin Member Baru"
                   type="number"
                   min={0}
                   step={5}
                   value={formData.welcomeBonusPoints ?? 0}
                   onChange={(e) => setFormData({ ...formData, welcomeBonusPoints: Math.max(0, Number(e.target.value) || 0) })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="0"
                 />
-                <span className="text-[10px] text-slate-400">Diberikan saat daftar. 0 = tanpa bonus</span>
+                <span className="text-[10px] text-slate-500">Diberikan saat daftar. 0 = tanpa bonus</span>
               </div>
 
               <div>
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Rasio Perolehan Poin (Rp)
                 </label>
-                <input
+                <input aria-label="Rasio Perolehan Poin (Rp)"
                   type="number"
                   min={100}
                   step={100}
                   value={formData.pointsRatio ?? 10000}
                   onChange={(e) => setFormData({ ...formData, pointsRatio: e.target.value === '' ? 0 : Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="10000"
                 />
                 <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -492,9 +492,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                       key={pr}
                       type="button"
                       onClick={() => setFormData({ ...formData, pointsRatio: pr })}
-                      className={`px-1.5 py-0.5 text-[9px] font-mono rounded border transition cursor-pointer ${
+                      className={`px-1.5 py-0.5 text-[10px] font-mono rounded border transition cursor-pointer ${
                         formData.pointsRatio === pr
-                          ? 'bg-emerald-600 text-white font-bold border-emerald-700'
+                          ? 'bg-emerald-700 text-white font-bold border-emerald-700'
                           : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400'
                       }`}
                     >
@@ -502,20 +502,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     </button>
                   ))}
                 </div>
-                <span className="text-[10px] text-slate-400">1 poin per kelipatan belanja</span>
+                <span className="text-[10px] text-slate-500">1 poin per kelipatan belanja</span>
               </div>
 
               <div>
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Nilai Diskon Poin (Rp/Poin)
                 </label>
-                <input
+                <input aria-label="Nilai Diskon Poin (Rp/Poin)"
                   type="number"
                   min={1}
                   step={1}
                   value={formData.pointRedemptionRate ?? 100}
                   onChange={(e) => setFormData({ ...formData, pointRedemptionRate: e.target.value === '' ? 0 : Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="100"
                 />
                 <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -524,7 +524,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                       key={rate}
                       type="button"
                       onClick={() => setFormData({ ...formData, pointRedemptionRate: rate })}
-                      className={`px-1.5 py-0.5 text-[9px] font-mono rounded border transition cursor-pointer ${
+                      className={`px-1.5 py-0.5 text-[10px] font-mono rounded border transition cursor-pointer ${
                         formData.pointRedemptionRate === rate
                           ? 'bg-amber-500 text-slate-950 font-bold border-amber-600'
                           : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-400'
@@ -534,20 +534,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     </button>
                   ))}
                 </div>
-                <span className="text-[10px] text-slate-400">Nilai diskon per 1 poin (cth: Rp 10 atau Rp 100)</span>
+                <span className="text-[10px] text-slate-500">Nilai diskon per 1 poin (cth: Rp 10 atau Rp 100)</span>
               </div>
 
               <div>
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Min. Poin Ditukar
                 </label>
-                <input
+                <input aria-label="Min. Poin Ditukar"
                   type="number"
                   min={0}
                   step={1}
                   value={formData.minRedeemPoints ?? 10}
                   onChange={(e) => setFormData({ ...formData, minRedeemPoints: e.target.value === '' ? 0 : Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
                   placeholder="10"
                 />
                 <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -556,7 +556,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                       key={pts}
                       type="button"
                       onClick={() => setFormData({ ...formData, minRedeemPoints: pts })}
-                      className={`px-1.5 py-0.5 text-[9px] font-mono rounded border transition cursor-pointer ${
+                      className={`px-1.5 py-0.5 text-[10px] font-mono rounded border transition cursor-pointer ${
                         formData.minRedeemPoints === pts
                           ? 'bg-purple-600 text-white font-bold border-purple-700'
                           : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-purple-400'
@@ -566,7 +566,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     </button>
                   ))}
                 </div>
-                <span className="text-[10px] text-slate-400">Bebas diisi angka bulat berapa saja (cth: 10 atau 100)</span>
+                <span className="text-[10px] text-slate-500">Bebas diisi angka bulat berapa saja (cth: 10 atau 100)</span>
               </div>
             </div>
           </div>
@@ -582,11 +582,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
               <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1">
                 Receipt Footer Greeting Note
               </label>
-              <textarea
+              <textarea aria-label="Receipt Footer Greeting Note"
                 value={formData.receiptFooterMessage}
                 onChange={(e) => setFormData({ ...formData, receiptFooterMessage: e.target.value })}
                 rows={2}
-                className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
               />
             </div>
 
@@ -602,7 +602,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     setFormData({ ...formData, autoPrintReceipt: checked });
                     setPrinterConfig({ ...printerConfig, autoPrintReceipt: checked });
                   }}
-                  className="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                  className="w-4 h-4 mt-0.5 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer"
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -642,10 +642,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Koneksi Default
                 </label>
-                <select
+                <select aria-label="Koneksi Default"
                   value={printerConfig.connectionType}
                   onChange={(e) => setPrinterConfig({ ...printerConfig, connectionType: e.target.value as any })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                 >
                   <option value="system">Browser / Jendela Dialog Cetak</option>
                   <option value="serial">USB / Serial Port (ESC/POS)</option>
@@ -657,10 +657,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Lebar Kertas Thermal
                 </label>
-                <select
+                <select aria-label="Lebar Kertas Thermal"
                   value={printerConfig.paperWidth}
                   onChange={(e) => setPrinterConfig({ ...printerConfig, paperWidth: e.target.value as any })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                 >
                   <option value="58mm">58 mm (Standar Mini / 32 Kolom)</option>
                   <option value="80mm">80 mm (Lebar Kasir / 48 Kolom)</option>
@@ -671,10 +671,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">
                   Baud Rate (Port Serial)
                 </label>
-                <select
+                <select aria-label="Baud Rate (Port Serial)"
                   value={printerConfig.baudRate}
                   onChange={(e) => setPrinterConfig({ ...printerConfig, baudRate: Number(e.target.value) })}
-                  className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
+                  className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs"
                 >
                   <option value={9600}>9600 bps (Standar Xprinter/Epson)</option>
                   <option value={19200}>19200 bps</option>
@@ -690,7 +690,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   type="checkbox"
                   checked={printerConfig.kickCashDrawer}
                   onChange={(e) => setPrinterConfig({ ...printerConfig, kickCashDrawer: e.target.checked })}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                  className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                 />
                 <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Buka Laci Kas Otomatis (RJ11 Pulse)
@@ -702,7 +702,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   type="checkbox"
                   checked={printerConfig.autoCut}
                   onChange={(e) => setPrinterConfig({ ...printerConfig, autoCut: e.target.checked })}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                  className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                 />
                 <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Auto-Cut Kertas Struk Selesai Cetak
@@ -718,7 +718,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     setPrinterConfig({ ...printerConfig, autoPrintReceipt: checked });
                     setFormData({ ...formData, autoPrintReceipt: checked });
                   }}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                  className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                 />
                 <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Auto-Print Struk saat Transaksi Selesai
@@ -735,7 +735,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   disabled={isTesting}
                   className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition disabled:opacity-50"
                 >
-                  <Play className="w-3.5 h-3.5 text-emerald-600" />
+                  <Play className="w-3.5 h-3.5 text-emerald-700" />
                   <span>Tes Cetak Struk ESC/POS</span>
                 </button>
 
@@ -745,7 +745,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   disabled={isTesting}
                   className="px-3 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition disabled:opacity-50"
                 >
-                  <Coins className="w-3.5 h-3.5 text-amber-600" />
+                  <Coins className="w-3.5 h-3.5 text-amber-700" />
                   <span>Tes Buka Laci (RJ11)</span>
                 </button>
               </div>
@@ -780,18 +780,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   Persentase Batas Minimal (% Order)
                 </label>
                 <div className="relative">
-                  <input
+                  <input aria-label="Persentase Batas Minimal (% Order)"
                     type="number"
                     min={10}
                     max={100}
                     step={5}
                     value={formData.minStockRulePercentage ?? 50}
                     onChange={(e) => setFormData({ ...formData, minStockRulePercentage: Number(e.target.value) })}
-                    className="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs pr-8"
+                    className="w-full p-2 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs pr-8"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">%</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">%</span>
                 </div>
-                <span className="text-[10px] text-slate-400">Default: 50% dari kuantitas order PO</span>
+                <span className="text-[10px] text-slate-500">Default: 50% dari kuantitas order PO</span>
               </div>
 
               <div className="flex flex-col justify-end">
@@ -800,13 +800,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     type="checkbox"
                     checked={formData.autoUpdateMinStockFromOrder !== false}
                     onChange={(e) => setFormData({ ...formData, autoUpdateMinStockFromOrder: e.target.checked })}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                    className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
                   />
                   <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                     Auto-Update saat Terima PO
                   </span>
                 </label>
-                <span className="text-[10px] text-slate-400 mt-1">Otomatis update min stock saat faktur masuk</span>
+                <span className="text-[10px] text-slate-500 mt-1">Otomatis update min stock saat faktur masuk</span>
               </div>
             </div>
 
@@ -824,7 +824,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <span>Terapkan Aturan 50% ke Semua Produk Sekarang</span>
               </button>
               {syncMessage && (
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 animate-in fade-in">
+                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 animate-in fade-in">
                   ✓ {syncMessage}
                 </span>
               )}
@@ -933,7 +933,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
                   title="Unduh langsung berkas backup .JSON ke komputer Anda"
                 >
-                  <HardDriveDownload className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <HardDriveDownload className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
                   <span>Ekspor .JSON</span>
                 </button>
                 <button
@@ -942,7 +942,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     onClose();
                     setIsBackupRestoreOpen(true);
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
+                  className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
                 >
                   <span>Pusat Cadangan</span>
                 </button>
@@ -963,7 +963,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
               Semua kode di bawah ini bisa dipakai di kasir. Hapus voucher yang sudah tidak berlaku atau tidak pernah dibuat toko.
             </p>
             {vouchers.length === 0 ? (
-              <p className="text-[11px] text-slate-400">Belum ada voucher.</p>
+              <p className="text-[11px] text-slate-500">Belum ada voucher.</p>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
                 {vouchers.map((v) => {
@@ -978,7 +978,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                             {(v.minSpend || 0).toLocaleString('id-ID')}
                           </span>
                         </div>
-                        <div className={expired ? 'text-rose-500' : 'text-slate-400'}>
+                        <div className={expired ? 'text-rose-600' : 'text-slate-500'}>
                           {v.expiresAt
                             ? `${expired ? 'Kedaluwarsa' : 'Berlaku s/d'} ${new Date(v.expiresAt).toLocaleDateString('id-ID')}`
                             : 'Tanpa batas waktu'}
@@ -1004,7 +1004,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
           <div className="space-y-2 bg-gradient-to-r from-rose-50/50 via-amber-50/30 to-slate-50 dark:from-slate-900/80 dark:to-slate-950 p-3.5 rounded-xl border border-rose-200/60 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
-                <Trash2 className="w-4 h-4 text-rose-500" />
+                <Trash2 className="w-4 h-4 text-rose-600" />
                 <span>Pembersihan File Usang &amp; Cache Sistem</span>
               </div>
             </div>
@@ -1033,7 +1033,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <span>{isCleaningInSettings ? 'Sedang Membersihkan...' : 'Bersihkan File Usang Sekarang'}</span>
               </button>
               {settingsCleanupMsg && (
-                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                   {settingsCleanupMsg}
                 </span>
@@ -1080,12 +1080,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
             </div>
 
             {launchSuccessMessage && (
-              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300">
+              <div role="status" className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300">
                 {launchSuccessMessage}
               </div>
             )}
             {launchErrorMessage && (
-              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300">
+              <div role="alert" className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300">
                 {launchErrorMessage}
               </div>
             )}

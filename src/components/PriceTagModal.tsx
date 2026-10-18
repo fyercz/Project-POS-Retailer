@@ -640,7 +640,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
 
             {/* Quick Tab Switcher */}
             <div className="flex bg-slate-200 dark:bg-slate-800 p-0.5 rounded-xl text-xs font-semibold">
-              <button
+              <button aria-pressed={activeTab === 'preview'}
                 onClick={() => setActiveTab('preview')}
                 className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
                   activeTab === 'preview'
@@ -651,7 +651,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                 <Grid className="w-3.5 h-3.5" />
                 <span>Pratinjau Lembar</span>
               </button>
-              <button
+              <button aria-pressed={activeTab === 'items'}
                 onClick={() => setActiveTab('items')}
                 className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
                   activeTab === 'items'
@@ -664,7 +664,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
               </button>
             </div>
 
-            <button
+            <button aria-label="Tutup"
               onClick={onClose}
               className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 flex items-center justify-center cursor-pointer transition-colors"
             >
@@ -685,16 +685,16 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                   <span>Sumber Data / Faktur</span>
                 </span>
                 {activeInvoice && (
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-600 text-white">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-700 text-white">
                     Faktur Aktif
                   </span>
                 )}
               </label>
 
-              <select
+              <select aria-label="Sumber Data / Faktur"
                 value={selectedInvoiceId}
                 onChange={(e) => handleSelectInvoice(e.target.value, 'invoice_qty')}
-                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium cursor-pointer"
+                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium cursor-pointer"
               >
                 <option value="all">Semua Master Katalog Produk</option>
                 {supplierPurchases.map((inv) => (
@@ -709,7 +709,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                   <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 text-[11px] space-y-1">
                     <div className="flex justify-between font-bold text-slate-900 dark:text-white">
                       <span>{activeInvoice.supplierName}</span>
-                      <span className="text-emerald-600 dark:text-emerald-400 font-mono">
+                      <span className="text-emerald-700 dark:text-emerald-400 font-mono">
                         {activeInvoice.items.length} Item
                       </span>
                     </div>
@@ -725,7 +725,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleSelectInvoice(activeInvoice.id, 'invoice_qty')}
-                      className="px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold cursor-pointer transition-colors shadow-2xs text-center"
+                      className="px-2 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white text-[10px] font-bold cursor-pointer transition-colors shadow-2xs text-center"
                       title="Salinan label disesuaikan persis dengan jumlah pcs yang dibeli di faktur"
                     >
                       Set Salinan = Qty Faktur
@@ -754,7 +754,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                 <span>1. Ukuran Kertas Cetak</span>
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <button
+                <button aria-pressed={paperSize === 'a4'}
                   type="button"
                   onClick={() => setPaperSize('a4')}
                   className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
@@ -772,7 +772,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                   </span>
                 </button>
 
-                <button
+                <button aria-pressed={paperSize === 'f4'}
                   type="button"
                   onClick={() => setPaperSize('f4')}
                   className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
@@ -839,7 +839,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                       <span className="font-semibold text-xs text-slate-900 dark:text-white">
                         {item.name}
                       </span>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 font-mono text-slate-600 dark:text-slate-300">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 font-mono text-slate-600 dark:text-slate-300">
                         {item.badge}
                       </span>
                     </div>
@@ -857,10 +857,10 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 <span>3. Gaya & Aksen Desain</span>
               </label>
-              <select
+              <select aria-label="3. Gaya & Aksen Desain"
                 value={themeStyle}
                 onChange={(e) => setThemeStyle(e.target.value as TagThemeStyle)}
-                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs"
+                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs"
               >
                 <option value="classic">Klasik Retail (Header Hitam Tegas)</option>
                 <option value="modern_retail">Modern Biru (Minimarket Segar)</option>
@@ -882,7 +882,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     type="checkbox"
                     checked={showStoreHeader}
                     onChange={(e) => setShowStoreHeader(e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500"
                   />
                 </label>
 
@@ -892,7 +892,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     type="checkbox"
                     checked={showBarcode}
                     onChange={(e) => setShowBarcode(e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500"
                   />
                 </label>
 
@@ -902,7 +902,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     type="checkbox"
                     checked={showSku}
                     onChange={(e) => setShowSku(e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500"
                   />
                 </label>
 
@@ -912,7 +912,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     type="checkbox"
                     checked={showAisle}
                     onChange={(e) => setShowAisle(e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500"
                   />
                 </label>
 
@@ -922,7 +922,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     type="checkbox"
                     checked={showUnit}
                     onChange={(e) => setShowUnit(e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500"
                   />
                 </label>
 
@@ -932,7 +932,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     type="checkbox"
                     checked={showDate}
                     onChange={(e) => setShowDate(e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500"
                   />
                 </label>
 
@@ -942,7 +942,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     type="checkbox"
                     checked={showCutGuide}
                     onChange={(e) => setShowCutGuide(e.target.checked)}
-                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="rounded border-slate-300 text-emerald-700 focus:ring-emerald-500"
                   />
                 </label>
               </div>
@@ -952,12 +952,12 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                   <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Teks Banner Promo:
                   </label>
-                  <input
+                  <input aria-label="Teks Banner Promo"
                     type="text"
                     value={customPromoText}
                     onChange={(e) => setCustomPromoText(e.target.value)}
                     placeholder="misal: PROMO SPESIAL / HEMAT"
-                    className="w-full px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white uppercase font-bold"
+                    className="w-full px-2 py-1 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white uppercase font-bold"
                   />
                 </div>
               )}
@@ -977,7 +977,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
               </div>
               <div className="flex justify-between text-[11px] pt-1 border-t border-slate-200 dark:border-slate-700">
                 <span className="text-slate-700 dark:text-slate-300 font-semibold">Estimasi Kertas:</span>
-                <strong className="text-emerald-600 dark:text-emerald-400 font-mono">
+                <strong className="text-emerald-700 dark:text-emerald-400 font-mono">
                   {totalPages} Lembar {paperSize.toUpperCase()}
                 </strong>
               </div>
@@ -995,7 +995,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       Pratinjau Kertas {paperSize.toUpperCase()} (Halaman {previewPage} dari {totalPages})
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-slate-500">
                       • {gridConfig.cols} Kolom × {gridConfig.rows} Baris
                     </span>
                     {activeInvoice && (
@@ -1009,20 +1009,20 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                   {/* Page Navigator */}
                   {totalPages > 1 && (
                     <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-xl">
-                      <button
+                      <button aria-label="Sebelumnya"
                         onClick={() => setPreviewPage((p) => Math.max(1, p - 1))}
                         disabled={previewPage === 1}
-                        className="p-1 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
+                        className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </button>
                       <span className="text-xs font-mono font-bold px-1">
                         {previewPage} / {totalPages}
                       </span>
-                      <button
+                      <button aria-label="Berikutnya"
                         onClick={() => setPreviewPage((p) => Math.min(totalPages, p + 1))}
                         disabled={previewPage === totalPages}
-                        className="p-1 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
+                        className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </button>
@@ -1043,7 +1043,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                       </p>
                       <button
                         onClick={() => setActiveTab('items')}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-sm"
+                        className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-sm"
                       >
                         Buka Pemilih Produk ({products.length} Produk Tersedia)
                       </button>
@@ -1088,7 +1088,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                   {activeInvoice && (
                     <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-2 flex-wrap text-xs">
                       <div className="flex items-center gap-2">
-                        <Truck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <Truck className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
                         <div>
                           <span className="font-bold text-slate-900 dark:text-white">
                             Mode Faktur: {activeInvoice.invoiceNumber}
@@ -1102,7 +1102,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => handleSelectInvoice(activeInvoice.id, 'invoice_qty')}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer transition-colors shadow-2xs"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer transition-colors shadow-2xs"
                         >
                           Salinan = Qty Faktur
                         </button>
@@ -1124,19 +1124,19 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
 
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
-                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <input aria-label="Cari nama produk, SKU, barcode, atau brand..."
                         type="text"
                         placeholder="Cari nama produk, SKU, barcode, atau brand..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
+                        className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
                       />
                     </div>
-                    <select
+                    <select aria-label="Filter kategori"
                       value={categoryFilter}
                       onChange={(e) => setCategoryFilter(e.target.value)}
-                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
+                      className="px-2.5 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
                     >
                       <option value="all">Semua Kategori</option>
                       {categories.map((cat) => (
@@ -1203,7 +1203,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                             <button
                               type="button"
                               onClick={() => handleToggleSelect(p.id)}
-                              className="text-slate-400 hover:text-emerald-500 cursor-pointer"
+                              className="text-slate-500 hover:text-emerald-500 cursor-pointer"
                             >
                               {isSelected ? (
                                 <CheckSquare className="w-4 h-4 text-emerald-500" />
@@ -1212,7 +1212,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                               )}
                             </button>
 
-                            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 shrink-0">
+                            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 shrink-0">
                               <Package className="w-5 h-5 text-emerald-500" />
                             </div>
 
@@ -1220,12 +1220,12 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                               <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-2">
                                 <span>{p.name}</span>
                                 {p.aisle && (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
                                     {p.aisle}
                                   </span>
                                 )}
                                 {invoiceItem && (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 font-mono">
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 font-mono">
                                     Qty Faktur: {invoiceItem.quantity}
                                   </span>
                                 )}
@@ -1249,7 +1249,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
 
                             {/* Copies Quantity Selector */}
                             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-                              <button
+                              <button aria-label="Kurangi"
                                 onClick={() => handleUpdateCopies(p.id, -1)}
                                 disabled={copies === 0}
                                 className="w-6 h-6 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 disabled:opacity-30 hover:bg-slate-200 dark:hover:bg-slate-600 cursor-pointer"
@@ -1259,7 +1259,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                               <span className="w-8 text-center font-mono font-bold text-xs text-slate-900 dark:text-white">
                                 {copies}
                               </span>
-                              <button
+                              <button aria-label="Tambah"
                                 onClick={() => handleUpdateCopies(p.id, 1)}
                                 className="w-6 h-6 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 cursor-pointer"
                               >
@@ -1271,7 +1271,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                       );
                     })
                   ) : (
-                    <div className="p-8 text-center text-slate-400 text-xs">
+                    <div className="p-8 text-center text-slate-500 text-xs">
                       Tidak ada produk sesuai filter pencarian.
                     </div>
                   )}
@@ -1287,7 +1287,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
             <span className="text-slate-600 dark:text-slate-400">
               Format: <strong className="text-slate-900 dark:text-white uppercase font-mono">Kertas {paperSize}</strong>
             </span>
-            <span className="text-slate-400">•</span>
+            <span className="text-slate-500">•</span>
             <span className="text-slate-600 dark:text-slate-400">
               Total Label: <strong className="text-slate-900 dark:text-white font-mono">{totalTagsCount} Label</strong> ({totalPages} Lembar)
             </span>
@@ -1307,7 +1307,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
             <button
               onClick={handlePrint}
               disabled={totalTagsCount === 0}
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-500/20 active:scale-95 disabled:opacity-40 transition-all"
+              className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-500 text-white flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-500/20 active:scale-95 disabled:opacity-40 transition-all"
             >
               <Printer className="w-4 h-4" />
               <span>Cetak Pricetag ({paperSize.toUpperCase()})</span>

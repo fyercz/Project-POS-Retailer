@@ -175,9 +175,9 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -208,7 +208,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
           </div>
 
           {successMessage && (
-            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
+            <div role="status" className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
               <span>{successMessage}</span>
             </div>
@@ -219,7 +219,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
             <div className="space-y-3">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                 <div className="flex items-center gap-2">
-                  <button
+                  <button aria-pressed={filterMode === 'different_only'}
                     type="button"
                     onClick={() => setFilterMode('different_only')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition ${
@@ -230,7 +230,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
                   >
                     Perlu Penyesuaian ({candidates.filter((c) => c.isDifferent).length})
                   </button>
-                  <button
+                  <button aria-pressed={filterMode === 'all'}
                     type="button"
                     onClick={() => setFilterMode('all')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition ${
@@ -296,7 +296,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
                               {item.name}
                             </div>
                             {item.brand && (
-                              <span className="text-[10px] text-slate-400">
+                              <span className="text-[10px] text-slate-500">
                                 Brand: {item.brand}
                               </span>
                             )}
@@ -310,11 +310,11 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
                             <div className="flex items-center gap-1.5">
                               {item.isDifferent ? (
                                 <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
-                                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                                  <Sparkles className="w-3 h-3 text-emerald-700" />
                                   {item.suggestedCategoryName}
                                 </span>
                               ) : (
-                                <span className="px-2 py-0.5 rounded text-[11px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                                <span className="px-2 py-0.5 rounded text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                                   <Check className="w-3 h-3 text-emerald-500" />
                                   Sudah Tepat
                                 </span>
@@ -334,7 +334,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
           )}
 
           {candidates.length === 0 && !isAnalyzing && (
-            <div className="py-12 text-center text-slate-400 space-y-2">
+            <div className="py-12 text-center text-slate-500 space-y-2">
               <Package className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
               <p className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
                 Klik tombol "Mulai Analisis AI Sekarang" di atas
@@ -368,7 +368,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
               type="button"
               onClick={handleApplySelected}
               disabled={selectedCount === 0}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20 disabled:opacity-40 transition active:scale-95"
+              className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20 disabled:opacity-40 transition active:scale-95"
             >
               <Check className="w-4 h-4" />
               <span>Terapkan Kategori Terpilih ({selectedCount})</span>

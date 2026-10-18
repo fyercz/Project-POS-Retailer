@@ -344,9 +344,9 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
             </div>
           </div>
 
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
+            className="p-2 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -356,12 +356,12 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {/* Error Notice Banner */}
           {scanError && (
-            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-start gap-2.5">
+            <div role="alert" className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <div className="flex-1 leading-relaxed">
                 <span className="font-semibold">{scanError}</span>
               </div>
-              <button
+              <button aria-label="Tutup"
                 type="button"
                 onClick={() => setScanError(null)}
                 className="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 text-xs"
@@ -386,7 +386,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                 </button>
                 <button
                   onClick={handleCaptureCamera}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-2"
+                  className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-2"
                 >
                   <Camera className="w-4 h-4" /> Ambil Foto Faktur
                 </button>
@@ -420,7 +420,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                             </p>
                           </div>
                         </div>
-                        <button
+                        <button aria-label="Hapus berkas"
                           onClick={() => {
                             setSelectedImage(null);
                             setCompressionInfo(null);
@@ -446,7 +446,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                     </div>
                   ) : (
                     <div className="py-6 space-y-3">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto">
                         <Upload className="w-6 h-6" />
                       </div>
                       <div>
@@ -481,7 +481,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                     <button
                       type="button"
                       onClick={() => nativeCameraInputRef.current?.click()}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer"
                       title="Gunakan aplikasi kamera bawaan HP (paling stabil di Android)"
                     >
                       <Camera className="w-3.5 h-3.5" /> Foto Kamera HP
@@ -552,7 +552,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                         </div>
                         <div className="text-right">
                           <span className="text-[10px] text-slate-500 block">No. Faktur:</span>
-                          <span className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                          <span className="text-xs font-bold font-mono text-emerald-700 dark:text-emerald-400">
                             {scanResult.invoiceNumber || 'INV-SUP-10928'}
                           </span>
                         </div>
@@ -573,7 +573,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                                 {item.quantity} unit @ {formatCurrency(item.costPrice, settings.currency)}
                               </span>
                             </div>
-                            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs">
+                            <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-xs">
                               {formatCurrency(item.subtotal, settings.currency)}
                             </span>
                           </div>
@@ -596,7 +596,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                         </div>
                         <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-1 border-t border-slate-200 dark:border-slate-700">
                           <span>Total Tagihan:</span>
-                          <span className="font-mono text-emerald-600 dark:text-emerald-400">
+                          <span className="font-mono text-emerald-700 dark:text-emerald-400">
                             {formatCurrency(scanResult.finalTotal || 0, settings.currency)}
                           </span>
                         </div>
@@ -607,14 +607,14 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                       type="button"
                       id="btn-apply-scanned-invoice"
                       onClick={handleApplyToPurchaseForm}
-                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer transition"
+                      className="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer transition"
                     >
                       <Check className="w-4 h-4" />
                       <span>Terapkan ke Form Pembelian</span>
                     </button>
                   </div>
                 ) : (
-                  <div className="flex-1 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center text-slate-400 space-y-2 bg-slate-50/50 dark:bg-slate-850/50">
+                  <div className="flex-1 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center text-slate-500 space-y-2 bg-slate-50/50 dark:bg-slate-850/50">
                     <FileText className="w-8 h-8 stroke-1 text-slate-300 dark:text-slate-600" />
                     <p className="text-xs">
                       Belum ada data pindaian. Pilih foto faktur lalu klik tombol{' '}

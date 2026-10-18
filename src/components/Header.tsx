@@ -306,9 +306,9 @@ export const Header: React.FC = () => {
                   }
                   className={`px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs border border-slate-200/60 dark:border-slate-700/60'
+                      ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 font-bold shadow-xs border border-slate-200/60 dark:border-slate-700/60'
                       : !isAllowed
-                      ? 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-700/50 font-medium'
+                      ? 'text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-700/50 font-medium'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700/60 font-medium'
                   }`}
                 >
@@ -329,7 +329,7 @@ export const Header: React.FC = () => {
 
           {/* Navigation Dropdown on medium / tablet screens */}
           <div className="hidden md:block lg:hidden shrink-0">
-            <select
+            <select aria-label="Pindah halaman"
               id="mobile-nav-select"
               value={activeView}
               onChange={(e) => {
@@ -340,7 +340,7 @@ export const Header: React.FC = () => {
                   setActiveView(e.target.value as any);
                 }
               }}
-              className="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 cursor-pointer shadow-xs focus:ring-1 focus:ring-emerald-500 outline-none"
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-500 dark:border-slate-700 cursor-pointer shadow-xs focus:ring-1 focus:ring-emerald-500 outline-none"
             >
               <option value="pos">
                 🛒 Kasir {!isViewAllowed(activeEmployee?.role, 'pos') ? '🔒 (Perlu SPV/Owner)' : ''}
@@ -389,7 +389,7 @@ export const Header: React.FC = () => {
             className="p-1.5 sm:px-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
             title="Scan Barcode Kamera (F3)"
           >
-            <ScanBarcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <ScanBarcode className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
             <span className="hidden md:inline">Scan</span>
           </button>
 
@@ -409,7 +409,7 @@ export const Header: React.FC = () => {
             <PauseCircle className="w-4 h-4 text-amber-500" />
             <span className="hidden md:inline">Parkir</span>
             {heldOrders.length > 0 && (
-              <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-bold text-[9px] flex items-center justify-center animate-pulse">
+              <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px] flex items-center justify-center animate-pulse">
                 {heldOrders.length}
               </span>
             )}
@@ -422,7 +422,7 @@ export const Header: React.FC = () => {
             className="hidden sm:flex px-2.5 py-1.5 rounded-xl text-xs font-semibold items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300/60 dark:border-amber-700/60 transition-all cursor-pointer shrink-0 shadow-2xs"
             title="Buku Panduan Pengguna & Bantuan (F1 / Alt+H)"
           >
-            <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <BookOpen className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 shrink-0" />
             <span className="hidden lg:inline">Panduan</span>
           </button>
 
@@ -434,9 +434,9 @@ export const Header: React.FC = () => {
               className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0 shadow-2xs"
               title="Pusat Alat, LAN, Backup, Pengaturan &amp; Hotkeys"
             >
-              <SettingsIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <SettingsIcon className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
               <span className="hidden xl:inline">Pusat Alat</span>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-150 ${isToolsMenuOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-150 ${isToolsMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isToolsMenuOpen && (
@@ -466,7 +466,7 @@ export const Header: React.FC = () => {
                       <Network className="w-4 h-4 text-indigo-500 shrink-0" />
                       <div>
                         <div className="font-semibold text-slate-800 dark:text-slate-200">Server LAN Multi-Kasir</div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Jaringan kasir terintegrasi (Alt+N)</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Jaringan kasir terintegrasi (Alt+N)</div>
                       </div>
                     </div>
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
@@ -484,7 +484,7 @@ export const Header: React.FC = () => {
                       <Database className="w-4 h-4 text-emerald-500 shrink-0" />
                       <div>
                         <div className="font-semibold text-slate-800 dark:text-slate-200">Backup &amp; Restore Data</div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Cadangan titik pemulihan (F9)</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Cadangan titik pemulihan (F9)</div>
                       </div>
                     </div>
                   </button>
@@ -501,11 +501,11 @@ export const Header: React.FC = () => {
                       <Laptop className="w-4 h-4 text-blue-500 shrink-0" />
                       <div>
                         <div className="font-semibold text-slate-800 dark:text-slate-200">Mode Desktop &amp; Kiosk</div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Layar penuh POS (Alt+D / F11)</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Layar penuh POS (Alt+D / F11)</div>
                       </div>
                     </div>
                     {isDesktop && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-bold">Aktif</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-bold">Aktif</span>
                     )}
                   </button>
 
@@ -519,10 +519,10 @@ export const Header: React.FC = () => {
                     className="w-full px-2.5 py-2 rounded-xl flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-xs"
                   >
                     <div className="flex items-center gap-2.5">
-                      <Trash2 className="w-4 h-4 text-rose-500 shrink-0" />
+                      <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
                       <div>
                         <div className="font-semibold text-slate-800 dark:text-slate-200">Pembersihan File Usang &amp; Cache</div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Hapus cache, log, dan file sampah sistem</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Hapus cache, log, dan file sampah sistem</div>
                       </div>
                     </div>
                   </button>
@@ -541,10 +541,10 @@ export const Header: React.FC = () => {
                       <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
                       <div>
                         <div className="font-semibold text-slate-800 dark:text-slate-200">Marketing &amp; Promo AI</div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Draft pesan promo &amp; diskon pelanggan</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Draft pesan promo &amp; diskon pelanggan</div>
                       </div>
                     </div>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold">
                       Gemini
                     </span>
                   </button>
@@ -561,7 +561,7 @@ export const Header: React.FC = () => {
                       <SettingsIcon className="w-4 h-4 text-slate-500 shrink-0" />
                       <div>
                         <div className="font-semibold text-slate-800 dark:text-slate-200">Pengaturan Toko &amp; Struk</div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Printer, pajak, logo struk</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Printer, pajak, logo struk</div>
                       </div>
                     </div>
                   </button>
@@ -578,7 +578,7 @@ export const Header: React.FC = () => {
                       <Keyboard className="w-4 h-4 text-slate-500 shrink-0" />
                       <div>
                         <div className="font-semibold text-slate-800 dark:text-slate-200">Pintasan Keyboard (Hotkeys)</div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500">Daftar tombol cepat F1 - F10</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Daftar tombol cepat F1 - F10</div>
                       </div>
                     </div>
                   </button>
@@ -623,7 +623,7 @@ export const Header: React.FC = () => {
             className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-bold transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs"
             title="Ganti Akun Kasir atau Login Otoritas Supervisor / Owner (Alt+L)"
           >
-            <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <Lock className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
             <span className="inline">Ganti Akun</span>
           </button>
 
@@ -637,7 +637,7 @@ export const Header: React.FC = () => {
             >
               <div
                 className={`w-7 h-7 rounded-lg ${
-                  activeEmployee?.avatarColor || 'bg-emerald-600'
+                  activeEmployee?.avatarColor || 'bg-emerald-700'
                 } text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0`}
               >
                 {activeEmployee?.avatar || 'KR'}
@@ -647,12 +647,12 @@ export const Header: React.FC = () => {
                   {activeEmployee?.name || 'Kasir'}
                 </p>
                 <div className="flex items-center gap-1">
-                  <span className={`text-[9px] font-bold px-1 rounded ${badge.bg}`}>
+                  <span className={`text-[10px] font-bold px-1 rounded ${badge.bg}`}>
                     {badge.label}
                   </span>
                 </div>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
             </button>
 
             {/* User Dropdown Menu */}
@@ -663,7 +663,7 @@ export const Header: React.FC = () => {
                   <div className="flex items-center gap-2.5">
                     <div
                       className={`w-9 h-9 rounded-xl ${
-                        activeEmployee?.avatarColor || 'bg-emerald-600'
+                        activeEmployee?.avatarColor || 'bg-emerald-700'
                       } text-white font-bold text-sm flex items-center justify-center shadow-sm shrink-0`}
                     >
                       {activeEmployee?.avatar || 'KR'}
@@ -673,7 +673,7 @@ export const Header: React.FC = () => {
                         <p className="font-bold text-slate-900 dark:text-white truncate">
                           {activeEmployee?.name}
                         </p>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${badge.bg}`}>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${badge.bg}`}>
                           {badge.label}
                         </span>
                       </div>
@@ -695,7 +695,7 @@ export const Header: React.FC = () => {
                     className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-amber-900 dark:text-amber-200 bg-amber-50/80 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 transition border border-amber-200 dark:border-amber-800"
                   >
                     <div className="flex items-center gap-2 font-bold">
-                      <Lock className="w-4 h-4 text-amber-600" />
+                      <Lock className="w-4 h-4 text-amber-700" />
                       <span>Ganti Kasir / Kunci Layar</span>
                     </div>
                     <kbd className="px-1.5 py-0.5 rounded bg-amber-200/60 dark:bg-amber-900/60 text-[10px] text-amber-900 dark:text-amber-200 font-mono">
@@ -748,7 +748,7 @@ export const Header: React.FC = () => {
                     className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition font-medium cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <Rocket className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <Rocket className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                       <span>Hapus Transaksi Uji Coba</span>
                     </div>
                   </button>
@@ -761,7 +761,7 @@ export const Header: React.FC = () => {
                     }}
                     className="w-full px-3 py-2 rounded-xl flex items-center gap-2 text-left text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition font-medium"
                   >
-                    <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <Database className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                     <span>Cadangan & Titik Pemulihan (Backup)</span>
                   </button>
 
@@ -774,7 +774,7 @@ export const Header: React.FC = () => {
                     className="w-full px-3 py-2 rounded-xl flex items-center justify-between text-left text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition font-medium"
                   >
                     <div className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      <BookOpen className="w-4 h-4 text-amber-700 dark:text-amber-400" />
                       <span>Buku Panduan & Dokumentasi</span>
                     </div>
                     <kbd className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-[10px] font-mono">
@@ -848,7 +848,7 @@ export const Header: React.FC = () => {
                         <GitBranch className="w-4 h-4 text-emerald-500 shrink-0" />
                         <span className="truncate">Auto-Update GitHub Resmi</span>
                       </div>
-                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold shrink-0">
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold shrink-0">
                         v-Pull
                       </span>
                     </button>
@@ -871,7 +871,7 @@ export const Header: React.FC = () => {
                 <div className="p-2 bg-slate-50/70 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5 px-1 flex items-center justify-between">
                     <span>Ganti Akun Cepat:</span>
-                    <span className="text-[9px] font-normal text-slate-400 font-mono">PIN / Otoritas</span>
+                    <span className="text-[10px] font-normal text-slate-500 font-mono">PIN / Otoritas</span>
                   </span>
                   <div className="space-y-1">
                     {employees
@@ -895,11 +895,11 @@ export const Header: React.FC = () => {
                             <div className="flex items-center gap-2 truncate">
                               <span className={`w-2.5 h-2.5 rounded-full ${emp.avatarColor} shrink-0`} />
                               <span className="font-semibold truncate">{emp.name}</span>
-                              <span className="text-[9px] px-1 py-0.2 rounded bg-slate-200/70 dark:bg-slate-700 font-bold shrink-0">
+                              <span className="text-[10px] px-1 py-0.2 rounded bg-slate-200/70 dark:bg-slate-700 font-bold shrink-0">
                                 {emp.role === 'owner' ? 'Owner' : emp.role === 'supervisor' ? 'SPV' : 'Kasir'}
                               </span>
                             </div>
-                            <span className="text-[9px] text-slate-400 font-mono shrink-0">
+                            <span className="text-[10px] text-slate-500 font-mono shrink-0">
                               {isAuthority ? 'Perlu PIN' : ''}
                             </span>
                           </button>

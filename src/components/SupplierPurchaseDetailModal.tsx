@@ -83,7 +83,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
         {/* Modal Header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold shadow-xs">
               <FileText className="w-5 h-5" />
             </div>
             <div>
@@ -102,10 +102,10 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Tutup"
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -157,7 +157,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             </div>
           ) : (
             <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 flex items-start gap-3 text-xs">
-              <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+              <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-700 dark:text-emerald-400" />
               <div>
                 <span className="font-bold">Pembayaran Tunai (Lunas Langsung): </span>
                 Faktur ini telah dibayar tunai saat pengiriman barang masuk dan dicatat keluar dari laci kasir (Akun 1010).
@@ -196,11 +196,11 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                 <div className="inline-block px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-mono font-bold">
                   FAKTUR PENERIMAAN BARANG
                 </div>
-                <div className="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
+                <div className="text-base font-black font-mono text-emerald-700 dark:text-emerald-400">
                   {purchase.invoiceNumber}
                 </div>
                 <div className="text-xs text-slate-500 flex sm:justify-end items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  <Calendar className="w-3.5 h-3.5 text-slate-500" />
                   <span>Tanggal: {formatDate(purchase.createdAt)}</span>
                 </div>
                 <div className="text-xs text-slate-500">
@@ -212,7 +212,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             {/* Supplier & Commercial Meta Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs">
               <div className="space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
                   Distributor / Pemasok
                 </span>
                 <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
@@ -227,7 +227,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
               </div>
 
               <div className="space-y-1 sm:text-right">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
                   Syarat & Ketentuan Pembayaran
                 </span>
                 <div className="font-bold text-slate-900 dark:text-white flex items-center sm:justify-end gap-1.5">
@@ -262,12 +262,12 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {purchase.items.map((item, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                        <td className="py-2 px-3 text-center text-slate-400 font-mono">{idx + 1}</td>
+                        <td className="py-2 px-3 text-center text-slate-500 font-mono">{idx + 1}</td>
                         <td className="py-2 px-3">
                           <div className="font-semibold text-slate-900 dark:text-white">{item.productName}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">ID: {item.productId}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">ID: {item.productId}</div>
                         </td>
-                        <td className="py-2 px-3 text-center font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                        <td className="py-2 px-3 text-center font-bold font-mono text-emerald-700 dark:text-emerald-400">
                           {item.quantity}
                         </td>
                         <td className="py-2 px-3 text-right font-mono">
@@ -312,7 +312,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                         ):
                       </span>
                       {purchase.discountTiming && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
                           {purchase.discountTiming === 'before_ppn' ? 'Sebelum PPN' : 'Sesudah PPN'}
                         </span>
                       )}
@@ -341,7 +341,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
 
                 <div className="flex justify-between items-center pt-2 border-t border-slate-300 dark:border-slate-700 text-sm font-bold text-slate-900 dark:text-white">
                   <span>Total Tagihan:</span>
-                  <span className="font-mono text-emerald-600 dark:text-emerald-400 text-base">
+                  <span className="font-mono text-emerald-700 dark:text-emerald-400 text-base">
                     {formatCurrency(purchase.finalTotal ?? purchase.totalAmount, settings.currency)}
                   </span>
                 </div>
@@ -375,7 +375,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
               <span className="font-bold text-slate-800 dark:text-slate-100">
                 {payKind === 'consignment' ? 'Hutang Konsinyasi' : 'Hutang Tempo'}:{' '}
                 {payOutstanding === 0 ? (
-                  <span className="text-emerald-600 dark:text-emerald-400">LUNAS</span>
+                  <span className="text-emerald-700 dark:text-emerald-400">LUNAS</span>
                 ) : (
                   <span className="text-rose-600 dark:text-rose-400">sisa {formatCurrency(payOutstanding, settings.currency)}</span>
                 )}
@@ -397,14 +397,14 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             )}
             {payOutstanding > 0 && canRecordPayment && (
               <div className="flex items-center gap-2 flex-wrap">
-                <input
+                <input aria-label="Jumlah dibayar"
                   type="number"
                   min={1}
                   max={payOutstanding}
                   value={payAmount}
                   onChange={(e) => setPayAmount(e.target.value)}
                   placeholder="Jumlah dibayar"
-                  className="w-36 px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
+                  className="w-36 px-2 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
                 />
                 <button
                   type="button"
@@ -413,10 +413,10 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                 >
                   Lunasi
                 </button>
-                <select
+                <select aria-label="Sumber dana pembayaran"
                   value={paySource}
                   onChange={(e) => setPaySource(e.target.value as any)}
-                  className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="px-2 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900"
                 >
                   <option value="" disabled>
                     -- Sumber dana --
@@ -424,27 +424,27 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                   <option value="cash_drawer">Kas laci kasir</option>
                   <option value="bank_transfer">Transfer bank</option>
                 </select>
-                <input
+                <input aria-label="Catatan (opsional)"
                   type="text"
                   value={payNote}
                   onChange={(e) => setPayNote(e.target.value)}
                   placeholder="Catatan (opsional)"
-                  className="flex-1 min-w-[120px] px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  className="flex-1 min-w-[120px] px-2 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900"
                 />
                 <button
                   type="button"
                   onClick={handleRecordPayment}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold cursor-pointer"
                 >
                   Catat Pembayaran
                 </button>
               </div>
             )}
             {payOutstanding > 0 && !canRecordPayment && (
-              <p className="text-[11px] text-slate-400">Pembayaran hutang dicatat oleh Supervisor/Owner.</p>
+              <p className="text-[11px] text-slate-500">Pembayaran hutang dicatat oleh Supervisor/Owner.</p>
             )}
             {payMessage && (
-              <p className={`text-[11px] ${payMessage.ok ? 'text-emerald-600' : 'text-rose-600'}`}>{payMessage.text}</p>
+              <p role="status" className={`text-[11px] ${payMessage.ok ? 'text-emerald-700' : 'text-rose-600'}`}>{payMessage.text}</p>
             )}
           </div>
         )}
@@ -461,7 +461,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                 }}
                 className="px-3 py-2 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-800 dark:text-amber-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition"
               >
-                <Tag className="w-3.5 h-3.5 text-amber-600" />
+                <Tag className="w-3.5 h-3.5 text-amber-700" />
                 <span>Cetak Pricetag Rak ({purchase.items.length} Item)</span>
               </button>
             )}
@@ -480,7 +480,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             <button
               type="button"
               onClick={() => handlePrintDocument('a4')}
-              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition"
               title="Cetak dokumen faktur lembar A4 resmi"
             >
               <Printer className="w-3.5 h-3.5" />

@@ -198,10 +198,10 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Tutup"
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -234,7 +234,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-xl bg-emerald-600 text-white shrink-0 mt-0.5">
+                  <div className="p-2 rounded-xl bg-emerald-700 text-white shrink-0 mt-0.5">
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
@@ -263,7 +263,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                   type="button"
                   id="btn-confirm-add-unregistered-product"
                   onClick={handleDirectAddProduct}
-                  className="flex-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-xs"
+                  className="flex-2 py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-xs"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Tambah Produk Sekarang</span>
@@ -275,7 +275,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
             <div className="space-y-4 animate-in fade-in duration-200">
               {/* Cashier Notice Banner */}
               <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-                <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <ShieldAlert className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-xs leading-relaxed">
                   <span className="font-bold">Wewenang Kasir Terbatas:</span> Kasir frontliner tidak dapat mendaftarkan produk baru secara mandiri. Mintalah <strong>Supervisor</strong>, <strong>Kepala Toko</strong>, atau <strong>Owner</strong> untuk memasukkan PIN otorisasi di bawah ini.
                 </div>
@@ -327,10 +327,10 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                     Masukkan PIN Otoritas (4-Digit):
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                       <KeyRound className="w-4 h-4" />
                     </div>
-                    <input
+                    <input aria-label="Masukkan PIN Otoritas (4-Digit)"
                       ref={pinInputRef}
                       type={showPin ? 'text' : 'password'}
                       inputMode="numeric"
@@ -342,12 +342,12 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                         setErrorMessage('');
                       }}
                       placeholder="••••"
-                      className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-center tracking-[0.4em] font-black text-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-center tracking-[0.4em] font-black text-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPin(!showPin)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-600 dark:hover:text-slate-200"
                     >
                       {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -374,7 +374,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
 
                 {/* Error Message */}
                 {errorMessage && (
-                  <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2 animate-in fade-in">
+                  <div role="alert" className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2 animate-in fade-in">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{errorMessage}</span>
                   </div>
@@ -382,7 +382,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
 
                 {/* Success Message */}
                 {successMessage && (
-                  <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs flex items-center gap-2 animate-in fade-in">
+                  <div role="status" className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs flex items-center gap-2 animate-in fade-in">
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
                     <span className="font-bold">{successMessage}</span>
                   </div>

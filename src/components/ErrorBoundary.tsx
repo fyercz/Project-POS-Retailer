@@ -60,7 +60,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
               </div>
               <div>
                 <h1 className="text-lg font-bold text-white">Terjadi Kendala Tampilan</h1>
-                <p className="text-xs text-slate-400">Aplikasi POS mendeteksi error tak terduga.</p>
+                <p className="text-xs text-slate-500">Aplikasi POS mendeteksi error tak terduga.</p>
               </div>
             </div>
 

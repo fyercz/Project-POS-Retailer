@@ -130,9 +130,9 @@ export const ReceivingBarcodeCameraModal: React.FC<ReceivingBarcodeCameraModalPr
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={handleClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -146,7 +146,7 @@ export const ReceivingBarcodeCameraModal: React.FC<ReceivingBarcodeCameraModalPr
           />
 
           {cameraError && (
-            <div className="p-4 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-200 text-xs text-center space-y-2 max-w-xs">
+            <div role="alert" className="p-4 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-200 text-xs text-center space-y-2 max-w-xs">
               <AlertCircle className="w-6 h-6 text-rose-400 mx-auto" />
               <p className="font-semibold">{cameraError}</p>
               <p className="text-[11px] text-rose-300">
@@ -171,7 +171,7 @@ export const ReceivingBarcodeCameraModal: React.FC<ReceivingBarcodeCameraModalPr
           <button
             type="button"
             onClick={handleClose}
-            className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer transition shadow-2xs"
+            className="px-4 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer transition shadow-2xs"
           >
             Selesai
           </button>

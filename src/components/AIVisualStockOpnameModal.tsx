@@ -568,9 +568,9 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
             </div>
           </div>
 
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
+            className="p-2 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -578,9 +578,9 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
 
         {/* Notification banner */}
         {notification && (
-          <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-950/80 border-b border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center justify-between">
+          <div role="status" className="px-4 py-2 bg-emerald-50 dark:bg-emerald-950/80 border-b border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center justify-between">
             <span>{notification}</span>
-            <button onClick={() => setNotification(null)}>
+            <button aria-label="Tutup" onClick={() => setNotification(null)}>
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -595,10 +595,10 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                   Target Rak / Area:
                 </span>
-                <select
+                <select aria-label="Target rak atau area"
                   value={shelfArea}
                   onChange={(e) => setShelfArea(e.target.value)}
-                  className="px-2.5 py-1 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium"
+                  className="px-2.5 py-1 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-500 dark:border-slate-700 font-medium"
                 >
                   <option value="">-- Pilih area (opsional) --</option>
                   <option value="Lorong 1 - Rak Sembako & Makanan">Lorong 1 - Rak Sembako & Makanan</option>
@@ -610,7 +610,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
               </div>
 
               <div className="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-700 pl-3">
-                <button
+                <button aria-pressed={scannedType === 'shelf_image'}
                   type="button"
                   onClick={() => setScannedType('shelf_image')}
                   className={`px-2.5 py-1 text-xs font-bold rounded-lg transition ${
@@ -621,7 +621,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                 >
                   Foto Rak
                 </button>
-                <button
+                <button aria-pressed={scannedType === 'video_stream'}
                   type="button"
                   onClick={() => setScannedType('video_stream')}
                   className={`px-2.5 py-1 text-xs font-bold rounded-lg transition ${
@@ -679,7 +679,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                   <button
                     onClick={handleStartContinuousVideoSampling}
                     disabled={isCapturingVideo}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-2 cursor-pointer"
                   >
                     <Video className="w-4 h-4" />
                     {isCapturingVideo ? 'Merekam Frame Rak...' : 'Mulai Rekam Scan Video (3 Detik)'}
@@ -749,7 +749,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                                 </span>
                               </div>
                             </div>
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
                               OK
                             </span>
                           </div>
@@ -775,7 +775,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                             setCapturedFrames([]);
                             setScanResult(null);
                           }}
-                          className="text-rose-500 hover:underline cursor-pointer font-medium"
+                          className="text-rose-600 hover:underline cursor-pointer font-medium"
                         >
                           Hapus / Reset
                         </button>
@@ -920,7 +920,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                                 <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
                                   <span>Lokasi: {item.shelfLocation}</span>
                                   <span>•</span>
-                                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                                     Kondisi: {item.condition || 'Baik'}
                                   </span>
                                 </div>
@@ -928,7 +928,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
 
                               <div className="text-right flex items-center gap-3">
                                 <div>
-                                  <div className="text-[10px] text-slate-400">Sistem / Fisik:</div>
+                                  <div className="text-[10px] text-slate-500">Sistem / Fisik:</div>
                                   <div className="font-mono font-bold text-xs">
                                     <span className="text-slate-500">{item.systemStock}</span>
                                     <span className="mx-1">→</span>
@@ -980,14 +980,14 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
                       type="button"
                       id="btn-apply-all-stock-corrections"
                       onClick={handleApplyAllStockCorrections}
-                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer transition"
+                      className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer transition"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>Sinkronkan Hasil Hitung Fisik ke Master Stok</span>
                     </button>
                   </div>
                 ) : (
-                  <div className="flex-1 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center text-slate-400 space-y-2 bg-slate-50/50 dark:bg-slate-850/50">
+                  <div className="flex-1 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center text-slate-500 space-y-2 bg-slate-50/50 dark:bg-slate-850/50">
                     <Layers className="w-8 h-8 stroke-1 text-slate-300 dark:text-slate-600" />
                     <p className="text-xs">
                       Belum ada hasil audit. Ambil foto rak barang atau rekam video lalu klik tombol{' '}

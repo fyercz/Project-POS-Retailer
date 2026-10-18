@@ -145,9 +145,9 @@ export const RestockSalesTrendChart: React.FC<RestockSalesTrendChartProps> = ({
         </div>
 
         {isModal && onClose && (
-          <button
+          <button aria-label="Tutup Pratinjau Grafik"
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-white transition cursor-pointer"
+            className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-600 dark:hover:text-white transition cursor-pointer"
             title="Tutup Pratinjau Grafik"
           >
             <X className="w-4 h-4" />
@@ -166,10 +166,10 @@ export const RestockSalesTrendChart: React.FC<RestockSalesTrendChartProps> = ({
             {velocity > 1 ? (
               <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
             ) : isDeadstock ? (
-              <TrendingDown className="w-3.5 h-3.5 text-rose-500" />
+              <TrendingDown className="w-3.5 h-3.5 text-rose-600" />
             ) : null}
           </span>
-          <span className="text-[10px] text-slate-400">
+          <span className="text-[10px] text-slate-500">
             Laju: {velocity.toFixed(1)}/hari
           </span>
         </div>
@@ -186,9 +186,9 @@ export const RestockSalesTrendChart: React.FC<RestockSalesTrendChartProps> = ({
             hasReturn ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
           }`}>
             {totalReturned}
-            {hasReturn && <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />}
+            {hasReturn && <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />}
           </span>
-          <span className="text-[10px] text-slate-400">
+          <span className="text-[10px] text-slate-500">
             {returnPercentage > 0 ? `Rasio Retur: ${returnPercentage}%` : 'Nihil komplain'}
           </span>
         </div>
@@ -198,9 +198,9 @@ export const RestockSalesTrendChart: React.FC<RestockSalesTrendChartProps> = ({
             Sisa Stok / Batas Aman
           </span>
           <span className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1 mt-0.5">
-            {currentStock} <span className="text-[10px] font-normal text-slate-400">/ Min {item.minStock || 10}</span>
+            {currentStock} <span className="text-[10px] font-normal text-slate-500">/ Min {item.minStock || 10}</span>
           </span>
-          <span className="text-[10px] text-slate-400">
+          <span className="text-[10px] text-slate-500">
             Habis: ~{item.estimatedDaysLeft || (velocity > 0 ? Math.floor(currentStock / velocity) : 30)} hari lagi
           </span>
         </div>
@@ -213,7 +213,7 @@ export const RestockSalesTrendChart: React.FC<RestockSalesTrendChartProps> = ({
           <span className="text-sm font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-1 mt-0.5">
             +{projectionDays} Hari
           </span>
-          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 truncate block">
+          <span className="text-[10px] text-emerald-700 dark:text-emerald-400 truncate block">
             {targetDate ? `Target: ${targetDate}` : 'Kebutuhan 2 Pekan'}
           </span>
         </div>
@@ -308,16 +308,16 @@ export const RestockSalesTrendChart: React.FC<RestockSalesTrendChartProps> = ({
             </>
           ) : hasReturn ? (
             <>
-              <RotateCcw className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <RotateCcw className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
               <p className="text-slate-700 dark:text-slate-300">
-                <strong className="text-amber-600 dark:text-amber-400">Analisis Perilaku: Waspada Retur.</strong> Terdapat {totalReturned} unit barang diretur pelanggan (rasio retur {returnPercentage}%). Disarankan memangkas kuota restock hingga vendor/kualitas produk diverifikasi.
+                <strong className="text-amber-700 dark:text-amber-400">Analisis Perilaku: Waspada Retur.</strong> Terdapat {totalReturned} unit barang diretur pelanggan (rasio retur {returnPercentage}%). Disarankan memangkas kuota restock hingga vendor/kualitas produk diverifikasi.
               </p>
             </>
           ) : velocity >= 2 ? (
             <>
-              <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
               <p className="text-slate-700 dark:text-slate-300">
-                <strong className="text-emerald-600 dark:text-emerald-400">Analisis Perilaku: Fast Moving FMCG.</strong> Penjualan konsisten stabil dengan rata-rata {velocity.toFixed(1)} pcs/hari tanpa catatan retur. Prioritaskan pemenuhan stok penuh untuk mengamankan omzet.
+                <strong className="text-emerald-700 dark:text-emerald-400">Analisis Perilaku: Fast Moving FMCG.</strong> Penjualan konsisten stabil dengan rata-rata {velocity.toFixed(1)} pcs/hari tanpa catatan retur. Prioritaskan pemenuhan stok penuh untuk mengamankan omzet.
               </p>
             </>
           ) : (
@@ -423,12 +423,12 @@ export const RestockSalesTrendChart: React.FC<RestockSalesTrendChartProps> = ({
             >
               -6
             </button>
-            <input
+            <input aria-label="Jumlah pesanan"
               type="number"
               min={0}
               value={currentOrderQty}
               onChange={(e) => onUpdateOrderQty(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-16 px-2 py-1 text-center font-bold text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+              className="w-16 px-2 py-1 text-center font-bold text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
             />
             <button
               type="button"
@@ -437,7 +437,7 @@ export const RestockSalesTrendChart: React.FC<RestockSalesTrendChartProps> = ({
             >
               +6
             </button>
-            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 ml-2">
+            <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 ml-2">
               Subtotal: {formatCurrency(currentOrderQty * (item.costPrice || 0), currency)}
             </span>
           </div>

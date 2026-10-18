@@ -323,9 +323,9 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -335,19 +335,19 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           {/* Mode Selector Tabs */}
           <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <button
+            <button aria-pressed={importMode === 'direct'}
               type="button"
               onClick={() => setImportMode('direct')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
                 importMode === 'direct'
-                  ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-500/30'
+                  ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm border border-emerald-500/30'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Upload className="w-4 h-4" />
               <span>Impor Langsung (As-Is / Tanpa Koreksi)</span>
             </button>
-            <button
+            <button aria-pressed={importMode === 'auto_correct'}
               type="button"
               onClick={() => setImportMode('auto_correct')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
@@ -362,15 +362,15 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
           </div>
           {/* Notification when cleared */}
           {clearMessage && (
-            <div className="p-3 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold flex items-center justify-between animate-in fade-in">
+            <div role="status" className="p-3 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold flex items-center justify-between animate-in fade-in">
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4" />
                 <span>{clearMessage}</span>
               </div>
-              <button
+              <button aria-label="Tutup"
                 type="button"
                 onClick={() => setClearMessage(null)}
-                className="p-1 hover:opacity-80 cursor-pointer"
+                className="p-1.5 hover:opacity-80 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -387,7 +387,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
 
               {/* Preset Selector */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] text-slate-400 font-semibold">Pilihan Contoh:</span>
+                <span className="text-[11px] text-slate-500 font-semibold">Pilihan Contoh:</span>
                 {PRESETS.map((p, idx) => (
                   <button
                     key={idx}
@@ -413,7 +413,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
                   title="Unggah file CSV, TXT, atau TSV"
                 >
                   <FileUp className="w-3.5 h-3.5" />
@@ -425,7 +425,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                   className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
                   title="Unduh format daftar kategori resmi sistem (CSV)"
                 >
-                  <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <Download className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
                   <span>Unduh Format Kategori</span>
                 </button>
               </div>
@@ -433,27 +433,27 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
 
             {/* Formula Hint Chips */}
             <div className="flex items-center gap-1.5 flex-wrap text-[11px] text-slate-500">
-              <span className="font-semibold text-slate-400">Pola Kolom Bebas:</span>
+              <span className="font-semibold text-slate-500">Pola Kolom Bebas:</span>
               <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 font-mono font-bold">
                 1. Barcode
               </span>
-              <span className="text-slate-400 font-bold">,</span>
+              <span className="text-slate-500 font-bold">,</span>
               <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/80 border border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-300 font-mono font-bold">
                 2. Nama Produk
               </span>
-              <span className="text-slate-400 font-bold">,</span>
+              <span className="text-slate-500 font-bold">,</span>
               <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 font-mono font-bold">
                 3. Harga Modal (HPP)
               </span>
-              <span className="text-slate-400 font-bold">,</span>
+              <span className="text-slate-500 font-bold">,</span>
               <span className="px-2 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/80 border border-teal-300 dark:border-teal-700 text-teal-800 dark:text-teal-300 font-mono font-bold">
                 4. Harga Jual (HET)
               </span>
-              <span className="text-slate-400 font-bold">,</span>
+              <span className="text-slate-500 font-bold">,</span>
               <span className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-700 text-purple-800 dark:text-purple-300 font-mono font-bold">
                 5. Stok
               </span>
-              <span className="text-[10px] text-slate-400 ml-1">
+              <span className="text-[10px] text-slate-500 ml-1">
                 (Mendukung copy-paste tabel Excel / Google Sheets atau teks tanpa koma)
               </span>
             </div>
@@ -463,7 +463,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
               value={rawInput}
               onChange={(e) => setRawInput(e.target.value)}
               placeholder="Contoh: 8999999190112, indomi grg spsial 80 gr, 2700, 3100, 120&#10;8992775211029, myk grg bmol 2 ltr, 33500, 38500, 36..."
-              className="w-full p-3 text-xs font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none leading-relaxed shadow-inner"
+              className="w-full p-3 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none leading-relaxed shadow-inner"
             />
           </div>
 
@@ -475,7 +475,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                   <Globe className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
                   <span>{internetSyncStatus}</span>
                 </div>
-                <button
+                <button aria-label="Tutup"
                   type="button"
                   onClick={() => setInternetSyncStatus(null)}
                   className="text-teal-600 hover:text-teal-800 cursor-pointer"
@@ -500,9 +500,9 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                   className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer font-medium"
                 >
                   {totalSelected === itemsState.length && itemsState.length > 0 ? (
-                    <CheckSquare className="w-4 h-4 text-emerald-600" />
+                    <CheckSquare className="w-4 h-4 text-emerald-700" />
                   ) : (
-                    <Square className="w-4 h-4 text-slate-400" />
+                    <Square className="w-4 h-4 text-slate-500" />
                   )}
                   <span>Pilih Semua ({totalSelected}/{itemsState.length})</span>
                 </button>
@@ -511,13 +511,13 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
               <div className="flex items-center gap-2">
                 {/* Search in preview */}
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                  <input
+                  <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <input aria-label="Saring hasil..."
                     type="text"
                     value={filterQuery}
                     onChange={(e) => setFilterQuery(e.target.value)}
                     placeholder="Saring hasil..."
-                    className="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 w-36 sm:w-44"
+                    className="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 w-36 sm:w-44"
                   />
                 </div>
               </div>
@@ -526,7 +526,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
             {/* List of Corrected Items */}
             <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
               {filteredItems.length === 0 ? (
-                <div className="p-8 text-center bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 text-xs">
+                <div className="p-8 text-center bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 text-xs">
                   Tidak ada item yang cocok dengan filter atau input kosong.
                 </div>
               ) : (
@@ -544,7 +544,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                         type="checkbox"
                         checked={item.selected}
                         onChange={() => handleToggleSelect(item.id)}
-                        className="mt-1.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                        className="mt-1.5 w-4 h-4 rounded text-emerald-700 focus:ring-emerald-500 cursor-pointer"
                       />
 
                       <div className="flex-1 min-w-0 space-y-2">
@@ -554,65 +554,65 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                             {editingItemId === item.id ? (
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-emerald-500/40">
                                 <div className="sm:col-span-2">
-                                  <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                                  <label className="text-[10px] text-slate-500 uppercase font-bold block mb-1">
                                     Nama Produk Terkoreksi:
                                   </label>
-                                  <input
+                                  <input aria-label="Nama Produk Terkoreksi"
                                     type="text"
                                     value={item.name}
                                     onChange={(e) => handleItemFieldChange(item.id, 'name', e.target.value)}
-                                    className="w-full px-2.5 py-1 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white"
+                                    className="w-full px-2.5 py-1 text-xs rounded border border-slate-500 dark:border-slate-600 bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white"
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                                  <label className="text-[10px] text-slate-500 uppercase font-bold block mb-1">
                                     Brand:
                                   </label>
-                                  <input
+                                  <input aria-label="Brand"
                                     type="text"
                                     value={item.brand}
                                     onChange={(e) => handleItemFieldChange(item.id, 'brand', e.target.value)}
-                                    className="w-full px-2.5 py-1 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                                    className="w-full px-2.5 py-1 text-xs rounded border border-slate-500 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                                  <label className="text-[10px] text-slate-500 uppercase font-bold block mb-1">
                                     Barcode EAN-13:
                                   </label>
-                                  <input
+                                  <input aria-label="Barcode EAN-13"
                                     type="text"
                                     value={item.barcode}
                                     onChange={(e) => handleItemFieldChange(item.id, 'barcode', e.target.value)}
-                                    className="w-full px-2.5 py-1 text-xs font-mono rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                                    className="w-full px-2.5 py-1 text-xs font-mono rounded border border-slate-500 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                                  <label className="text-[10px] text-slate-500 uppercase font-bold block mb-1">
                                     Harga Modal (HPP):
                                   </label>
-                                  <input
+                                  <input aria-label="Harga Modal (HPP)"
                                     type="number"
                                     value={item.costPrice}
                                     onChange={(e) => handleItemFieldChange(item.id, 'costPrice', Number(e.target.value))}
-                                    className="w-full px-2.5 py-1 text-xs font-mono rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                                    className="w-full px-2.5 py-1 text-xs font-mono rounded border border-slate-500 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                                  <label className="text-[10px] text-slate-500 uppercase font-bold block mb-1">
                                     Harga Jual (HET):
                                   </label>
-                                  <input
+                                  <input aria-label="Harga Jual (HET)"
                                     type="number"
                                     value={item.price}
                                     onChange={(e) => handleItemFieldChange(item.id, 'price', Number(e.target.value))}
-                                    className="w-full px-2.5 py-1 text-xs font-mono rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-emerald-600 font-bold"
+                                    className="w-full px-2.5 py-1 text-xs font-mono rounded border border-slate-500 dark:border-slate-600 bg-white dark:bg-slate-900 text-emerald-700 font-bold"
                                   />
                                 </div>
                                 <div className="sm:col-span-3 flex justify-end pt-1">
                                   <button
                                     type="button"
                                     onClick={() => setEditingItemId(null)}
-                                    className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold cursor-pointer"
+                                    className="px-3 py-1 bg-emerald-700 text-white rounded-lg text-xs font-bold cursor-pointer"
                                   >
                                     Selesai Edit
                                   </button>
@@ -624,18 +624,18 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                                   <span className="text-xs font-bold text-slate-900 dark:text-white">
                                     {item.name}
                                   </span>
-                                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 font-bold">
+                                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 font-bold">
                                     EAN: {item.barcode}
                                   </span>
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                                     {item.brand}
                                   </span>
-                                  <span className="text-[10px] text-slate-400 font-mono">
+                                  <span className="text-[10px] text-slate-500 font-mono">
                                     (Stok: {item.stock})
                                   </span>
                                 </div>
 
-                                <div className="text-[10px] text-slate-400 font-mono mt-1 flex items-center gap-1.5 flex-wrap">
+                                <div className="text-[10px] text-slate-500 font-mono mt-1 flex items-center gap-1.5 flex-wrap">
                                   <span className="text-slate-500 font-sans font-semibold">Teks Asli Input:</span>
                                   <span className="line-through bg-slate-100 dark:bg-slate-800/60 px-1.5 py-0.5 rounded">
                                     {item.originalText}
@@ -647,10 +647,10 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
 
                           {/* Pricing info */}
                           <div className="text-right shrink-0">
-                            <div className="text-xs font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                            <div className="text-xs font-extrabold font-mono text-emerald-700 dark:text-emerald-400">
                               {formatCurrency(item.price)}
                             </div>
-                            <div className="text-[10px] text-slate-400 font-mono">
+                            <div className="text-[10px] text-slate-500 font-mono">
                               HPP: {formatCurrency(item.costPrice)}
                             </div>
                           </div>
@@ -707,18 +707,18 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
 
                       {/* Item Actions */}
                       <div className="flex items-center gap-1 shrink-0">
-                        <button
+                        <button aria-label="Edit detail produk secara manual"
                           type="button"
                           onClick={() => setEditingItemId(editingItemId === item.id ? null : item.id)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                           title="Edit detail produk secara manual"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
-                        <button
+                        <button aria-label="Hapus baris ini dari daftar import"
                           type="button"
                           onClick={() => handleDeleteItem(item.id)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                           title="Hapus baris ini dari daftar import"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -736,7 +736,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between flex-wrap gap-3">
           <div className="text-xs text-slate-500 dark:text-slate-400">
             {importedCount !== null ? (
-              <span className="font-bold text-emerald-600 flex items-center gap-1">
+              <span className="font-bold text-emerald-700 flex items-center gap-1">
                 <Check className="w-4 h-4" /> Berhasil mengimport {importedCount} produk ke katalog toko!
               </span>
             ) : (

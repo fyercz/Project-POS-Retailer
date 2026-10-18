@@ -138,16 +138,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
           <div>
-            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
               Kasir Pembayaran
             </span>
             <h3 className="font-bold text-base text-slate-900 dark:text-white leading-tight">
               Proses Transaksi & Pembayaran
             </h3>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -192,7 +192,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     Uang Diterima dari Pembeli
                   </label>
                   <div className="relative">
-                    <input
+                    <input aria-label="Uang Diterima dari Pembeli"
                       type="number"
                       data-testid="payment-cash-input" value={cashTendered || ''}
                       onChange={(e) => setCashTendered(Number(e.target.value))}
@@ -205,7 +205,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                       autoFocus
                       min={0}
                       placeholder="Ketik uang dari pembeli, atau tekan Uang Pas"
-                      className="w-full p-2.5 text-base font-bold font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full p-2.5 text-base font-bold font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
                 </div>
@@ -244,10 +244,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     <div
                       className={`text-lg font-black font-mono ${
                         !cashTendered
-                          ? 'text-slate-400 dark:text-slate-500'
+                          ? 'text-slate-500 dark:text-slate-400'
                           : isCashSufficient
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : 'text-rose-500'
+                            ? 'text-emerald-700 dark:text-emerald-400'
+                            : 'text-rose-600'
                       }`}
                     >
                       {!cashTendered
@@ -258,7 +258,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </div>
                   </div>
                   {isCashSufficient && cashTendered > 0 && (
-                    <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
                   )}
@@ -318,7 +318,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-emerald-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       ✓
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
@@ -333,24 +333,24 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       No. Ref / RRN EDC BRI (Opsional)
                     </label>
-                    <input
+                    <input aria-label="No. Ref / RRN EDC BRI (Opsional)"
                       type="text"
                       value={qrisRefCode}
                       onChange={(e) => setQrisRefCode(e.target.value)}
                       placeholder="Contoh: 002819 / 82910"
-                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Batch EDC (Opsional)
                     </label>
-                    <input
+                    <input aria-label="Batch EDC (Opsional)"
                       type="text"
                       value={qrisBatch}
                       onChange={(e) => setQrisBatch(e.target.value)}
                       placeholder="Contoh: 0001"
-                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
@@ -414,7 +414,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-emerald-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       ✓
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
@@ -452,37 +452,37 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       No. Ref / RRN EDC
                     </label>
-                    <input
+                    <input aria-label="No. Ref / RRN EDC"
                       type="text"
                       value={cardRefCode}
                       onChange={(e) => setCardRefCode(e.target.value)}
                       placeholder="Contoh: 009214"
-                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Batch EDC (Opsional)
                     </label>
-                    <input
+                    <input aria-label="Batch EDC (Opsional)"
                       type="text"
                       value={cardBatch}
                       onChange={(e) => setCardBatch(e.target.value)}
                       placeholder="Contoh: 0001"
-                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       4 Digit Terakhir
                     </label>
-                    <input
+                    <input aria-label="4 Digit Terakhir"
                       type="text"
                       maxLength={4}
                       value={cardLast4}
                       onChange={(e) => setCardLast4(e.target.value.replace(/\D/g, ''))}
                       placeholder="Contoh: 4242"
-                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                      className="w-full p-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
@@ -535,7 +535,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                   Total Tagihan
                 </span>
-                <span className="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+                <span className="text-xl font-black font-mono text-emerald-700 dark:text-emerald-400">
                   {formatCurrency(finalTotal, settings.currency)}
                 </span>
               </div>
@@ -543,7 +543,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
               {/* Offline Awareness Notice */}
               {!isOnline && (
                 <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
-                  <CloudOff className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                  <CloudOff className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-700 dark:text-amber-400" />
                   <span>
                     <strong>Mode Offline:</strong> Transaksi akan dicatat ke IndexedDB lokal kasir dan otomatis diunggah ke cloud saat internet terhubung kembali.
                   </span>

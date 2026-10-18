@@ -157,6 +157,8 @@ export const EmployeeLockScreen: React.FC = () => {
   return (
     <div
       id="employee-lock-screen"
+      data-no-escape
+      aria-label="Layar kunci kasir"
       className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
     >
       <motion.div
@@ -174,7 +176,7 @@ export const EmployeeLockScreen: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-600 dark:text-slate-300 font-semibold">{settings.branchName}</span>
                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                   POS Ready
                 </span>
               </div>
@@ -184,7 +186,7 @@ export const EmployeeLockScreen: React.FC = () => {
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-sm mb-6">
               <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                 <span className="flex items-center gap-1.5 font-medium">
-                  <Clock className="w-3.5 h-3.5 text-emerald-600" /> Waktu Sistem POS
+                  <Clock className="w-3.5 h-3.5 text-emerald-700" /> Waktu Sistem POS
                 </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
                   Online
@@ -257,7 +259,7 @@ export const EmployeeLockScreen: React.FC = () => {
                         </div>
                       </div>
                       {isSelected && (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                        <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400 flex-shrink-0" />
                       )}
                     </button>
                   );
@@ -268,7 +270,7 @@ export const EmployeeLockScreen: React.FC = () => {
           {/* Security Notice */}
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/60">
             <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-medium leading-relaxed">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
               <span>Sistem Kasir Aman: Jaga kerahasiaan PIN kasir Anda. Hubungi Supervisor jika lupa PIN.</span>
             </p>
           </div>
@@ -279,7 +281,7 @@ export const EmployeeLockScreen: React.FC = () => {
           <div className="w-full max-w-xs flex flex-col items-center">
             {/* Header Icon */}
             <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 mb-3 shadow-inner">
-              <Lock className="w-7 h-7 text-emerald-600" />
+              <Lock className="w-7 h-7 text-emerald-700" />
             </div>
 
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -360,7 +362,7 @@ export const EmployeeLockScreen: React.FC = () => {
                 0
               </button>
 
-              <button
+              <button aria-label="Hapus angka"
                 id="keypad-backspace"
                 onClick={handleBackspace}
                 className="h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center"
@@ -374,7 +376,7 @@ export const EmployeeLockScreen: React.FC = () => {
               id="btn-unlock-pos"
               onClick={handleUnlock}
               disabled={pinInput.length === 0}
-              className="w-full mt-4 h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md shadow-emerald-500/20 transition flex items-center justify-center gap-2"
+              className="w-full mt-4 h-12 rounded-2xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md shadow-emerald-500/20 transition flex items-center justify-center gap-2"
             >
               <Unlock className="w-4 h-4" /> Masuk ke POS
             </button>

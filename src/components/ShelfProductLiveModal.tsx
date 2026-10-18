@@ -167,7 +167,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button
+            <button aria-label="Refresh status stok real-time"
               onClick={fetchLiveProductData}
               disabled={isRefreshing}
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
@@ -175,7 +175,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-indigo-400' : ''}`} />
             </button>
-            <button
+            <button aria-label="Tutup"
               onClick={onClose}
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
             >
@@ -217,13 +217,13 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
 
               {/* Price Banner */}
               <div className="text-right shrink-0">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                <span className="text-[10px] uppercase font-bold text-slate-500 block">
                   Harga Jual Retail
                 </span>
-                <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
+                <div className="text-xl sm:text-2xl font-black font-mono text-emerald-700 dark:text-emerald-400 tracking-tight">
                   {formatCurrency(activeProduct.price, settings.currency)}
                 </div>
-                <span className="text-[10px] font-medium text-slate-400">
+                <span className="text-[10px] font-medium text-slate-500">
                   per {activeProduct.unit || 'pcs'}
                 </span>
               </div>
@@ -234,7 +234,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
           <div className="rounded-2xl p-4 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-850 border-2 border-emerald-500/30 dark:border-emerald-500/20 shadow-xs">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
                   <Package className="w-4 h-4" />
                 </div>
                 <div>
@@ -242,7 +242,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
                     <span>Status Stok Real-Time (Fisik &amp; Sistem)</span>
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   </h4>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-[10px] text-slate-500">
                     Live sinkronisasi &bull; Diperbarui {lastRefreshedAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} WIB
                   </span>
                 </div>
@@ -302,17 +302,17 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">
                       Stok Fisik Saat Ini:
                     </span>
-                    <input
+                    <input aria-label="Stok fisik saat ini"
                       type="number"
                       value={customStockInput}
                       onChange={(e) => setCustomStockInput(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-24 px-2.5 py-1 text-sm font-mono font-bold rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      className="w-24 px-2.5 py-1 text-sm font-mono font-bold rounded-lg border border-slate-500 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                       min={0}
                     />
                     <button
                       type="button"
                       onClick={handleQuickStockSave}
-                      className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-xs"
+                      className="px-3 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-xs"
                     >
                       Simpan
                     </button>
@@ -324,7 +324,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
                       Batal
                     </button>
                   </div>
-                  <div className="text-[10px] text-slate-400">
+                  <div className="text-[10px] text-slate-500">
                     Perubahan stok akan langsung disinkronkan ke master inventaris kasir.
                   </div>
                 </div>
@@ -421,7 +421,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
                     className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750"
                   >
                     <div className="font-bold text-slate-900 dark:text-white">{u.name} ({u.multiplier} {activeProduct.unit || 'pcs'})</div>
-                    <div className="text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs mt-0.5">
+                    <div className="text-emerald-700 dark:text-emerald-400 font-mono font-bold text-xs mt-0.5">
                       {formatCurrency(u.price, settings.currency)}
                     </div>
                   </div>
@@ -433,7 +433,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
           {/* Dynamic Link URL Information Box */}
           <div className="rounded-2xl p-3 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-2 text-xs">
             <div className="truncate flex-1">
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">
+              <span className="text-[10px] text-slate-500 block font-bold uppercase">
                 Tautan QR Dinamis Produk:
               </span>
               <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 truncate block">
@@ -468,7 +468,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleAddToCart}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition cursor-pointer active:scale-95"
+              className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition cursor-pointer active:scale-95"
             >
               <ShoppingCart className="w-4 h-4" />
               <span>Beli di Kasir POS</span>

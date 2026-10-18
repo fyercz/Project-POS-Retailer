@@ -32,9 +32,9 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
               </p>
             </div>
           </div>
-          <button
+          <button aria-label="Tutup"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -54,12 +54,12 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
                       {held.referenceNumber}
                     </span>
                     <span className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-slate-400" />
+                      <Clock className="w-3 h-3 text-slate-500" />
                       {formatDate(held.createdAt)}
                     </span>
                   </div>
 
-                  <span className="font-bold text-xs text-emerald-600 dark:text-emerald-400 font-mono">
+                  <span className="font-bold text-xs text-emerald-700 dark:text-emerald-400 font-mono">
                     {formatCurrency(held.subtotal, settings.currency)}
                   </span>
                 </div>
@@ -77,9 +77,9 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                  <button
+                  <button aria-label="Discard order"
                     onClick={() => deleteHeldOrder(held.id)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
                     title="Discard order"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -99,10 +99,10 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
               </div>
             ))
           ) : (
-            <div className="py-12 flex flex-col items-center justify-center text-center text-slate-400 dark:text-slate-500">
+            <div className="py-12 flex flex-col items-center justify-center text-center text-slate-500 dark:text-slate-400">
               <ShoppingBag className="w-10 h-10 stroke-[1.2] mb-2 opacity-40 text-amber-500" />
               <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">No Orders On Hold</p>
-              <p className="text-[11px] text-slate-400 max-w-xs mt-0.5">
+              <p className="text-[11px] text-slate-500 max-w-xs mt-0.5">
                 You can park orders anytime by clicking "Hold" or pressing F4.
               </p>
             </div>

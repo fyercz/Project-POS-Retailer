@@ -352,7 +352,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                   Real-Time Live Link
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500">
                 Label rak pintar dengan QR link menuju stok fisik &amp; riwayat pembaruan harga terkini toko.
               </p>
             </div>
@@ -367,7 +367,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
               <Printer className="w-4 h-4" />
               <span>Cetak {totalLabelTagsCount} Label</span>
             </button>
-            <button
+            <button aria-label="Tutup"
               onClick={onClose}
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer"
             >
@@ -382,7 +382,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
           <div className="w-full lg:w-80 bg-slate-50 dark:bg-slate-850 border-r border-slate-200 dark:border-slate-800 overflow-y-auto p-4 space-y-4 shrink-0 text-xs">
             {/* Navigation Tabs (Preview vs Item Selector) */}
             <div className="grid grid-cols-2 gap-1 bg-slate-200 dark:bg-slate-800 p-1 rounded-xl">
-              <button
+              <button aria-pressed={activeTab === 'preview'}
                 type="button"
                 onClick={() => setActiveTab('preview')}
                 className={`py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
@@ -394,7 +394,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                 <Eye className="w-3.5 h-3.5" />
                 <span>Pratinjau ({totalLabelTagsCount})</span>
               </button>
-              <button
+              <button aria-pressed={activeTab === 'select'}
                 type="button"
                 onClick={() => setActiveTab('select')}
                 className={`py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
@@ -453,7 +453,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                     }`}
                   >
                     <div className="font-bold">{item.name}</div>
-                    <div className="text-[10px] text-slate-400 font-normal leading-tight mt-0.5">
+                    <div className="text-[10px] text-slate-500 font-normal leading-tight mt-0.5">
                       {item.desc}
                     </div>
                   </button>
@@ -583,12 +583,12 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
               <label className="font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[10px] block mb-1">
                 Teks Badge Promo / Tagline
               </label>
-              <input
+              <input aria-label="Teks Badge Promo / Tagline"
                 type="text"
                 value={customPromoBadge}
                 onChange={(e) => setCustomPromoBadge(e.target.value)}
                 placeholder="HARGA PAS, PROMO MINGGU INI..."
-                className="w-full px-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                className="w-full px-3 py-1.5 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white"
               />
             </div>
           </div>
@@ -643,7 +643,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col items-center">
                   {totalSelectedProducts === 0 ? (
                     <div className="my-auto text-center max-w-sm">
-                      <div className="w-16 h-16 rounded-3xl bg-slate-200 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                      <div className="w-16 h-16 rounded-3xl bg-slate-200 dark:bg-slate-800 text-slate-500 flex items-center justify-center mx-auto mb-3">
                         <Tag className="w-8 h-8" />
                       </div>
                       <h4 className="font-black text-slate-800 dark:text-slate-200 text-sm mb-1">
@@ -699,7 +699,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                                     Salinan:
                                   </span>
                                   <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 px-1 py-0.5">
-                                    <button
+                                    <button aria-label="Kurangi"
                                       type="button"
                                       onClick={() => handleUpdateCopies(product.id, -1)}
                                       className="w-5 h-5 flex items-center justify-center rounded text-slate-600 dark:text-slate-400 hover:bg-slate-100 cursor-pointer"
@@ -709,7 +709,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                                     <span className="w-6 text-center font-bold font-mono">
                                       {copies}
                                     </span>
-                                    <button
+                                    <button aria-label="Tambah"
                                       type="button"
                                       onClick={() => handleUpdateCopies(product.id, 1)}
                                       className="w-5 h-5 flex items-center justify-center rounded text-slate-600 dark:text-slate-400 hover:bg-slate-100 cursor-pointer"
@@ -730,10 +730,10 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                                     <QrCode className="w-3 h-3" />
                                     <span>Tes Scan</span>
                                   </button>
-                                  <button
+                                  <button aria-label="Hapus dari daftar cetak"
                                     type="button"
                                     onClick={() => handleToggleProduct(product.id)}
-                                    className="p-1 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition cursor-pointer"
+                                    className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition cursor-pointer"
                                     title="Hapus dari daftar cetak"
                                   >
                                     <X className="w-4 h-4" />
@@ -748,7 +748,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                       {/* Pagination Controls */}
                       {totalPages > 1 && (
                         <div className="flex items-center justify-center gap-2 pt-4">
-                          <button
+                          <button aria-label="Sebelumnya"
                             type="button"
                             onClick={() => setPreviewPage((p) => Math.max(1, p - 1))}
                             disabled={previewPage === 1}
@@ -759,7 +759,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                           <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
                             Halaman {previewPage} dari {totalPages}
                           </span>
-                          <button
+                          <button aria-label="Berikutnya"
                             type="button"
                             onClick={() => setPreviewPage((p) => Math.min(totalPages, p + 1))}
                             disabled={previewPage === totalPages}
@@ -780,20 +780,20 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                 <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2 flex-1 max-w-md">
                     <div className="relative flex-1">
-                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
+                      <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input aria-label="Cari nama, SKU, barcode produk..."
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari nama, SKU, barcode produk..."
-                        className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                     </div>
 
-                    <select
+                    <select aria-label="Filter kategori"
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="px-2.5 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium cursor-pointer"
+                      className="px-2.5 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium cursor-pointer"
                     >
                       <option value="all">Semua Kategori</option>
                       {categories.map((c) => (
@@ -891,7 +891,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                                 <div className="font-bold text-slate-900 dark:text-white leading-tight">
                                   {p.name}
                                 </div>
-                                <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                <div className="text-[10px] text-slate-500 font-mono mt-0.5">
                                   SKU: {p.sku} | Barcode: {p.barcode}
                                 </div>
                               </td>
@@ -928,6 +928,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => handleUpdateCopies(p.id, -1)}
+                                      aria-label={`Kurangi jumlah salinan ${p.name}`}
                                       className="w-5 h-5 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200 cursor-pointer"
                                     >
                                       -
@@ -936,6 +937,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => handleUpdateCopies(p.id, 1)}
+                                      aria-label={`Tambah jumlah salinan ${p.name}`}
                                       className="w-5 h-5 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200 cursor-pointer"
                                     >
                                       +
@@ -966,12 +968,12 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
         {/* Footer Summary & Action Bar */}
         <div className="bg-slate-900 text-white px-5 py-3 border-t border-slate-800 flex items-center justify-between gap-3 shrink-0 flex-wrap">
           <div className="flex items-center gap-3 text-xs">
-            <span className="text-slate-400">Total Label Dicetak:</span>
+            <span className="text-slate-500">Total Label Dicetak:</span>
             <span className="font-mono font-black text-indigo-300 text-sm">
               {totalLabelTagsCount} Lembar Tag
             </span>
             <span className="text-slate-500">|</span>
-            <span className="text-slate-400">Format Kertas:</span>
+            <span className="text-slate-500">Format Kertas:</span>
             <span className="font-semibold text-white">
               {preset === 'sheet_a4_3x8'
                 ? 'Lembar A4 Grid'

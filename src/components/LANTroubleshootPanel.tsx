@@ -84,7 +84,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
       {/* Top Banner Alert */}
       <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 flex items-start gap-3.5">
         <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          <AlertTriangle className="w-5 h-5 text-amber-700 dark:text-amber-400" />
         </div>
         <div className="space-y-1">
           <h3 className="text-xs font-bold text-amber-900 dark:text-amber-200">
@@ -105,16 +105,16 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
               Uji Coba Ping Sambungan URL Kasir
             </h4>
           </div>
-          <span className="text-[10px] text-slate-400">Verifikasi apakah URL merespons secara real-time</span>
+          <span className="text-[10px] text-slate-500">Verifikasi apakah URL merespons secara real-time</span>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
-          <input
+          <input aria-label="http://192.168.1.15:3000 atau https://..."
             type="text"
             value={testUrl}
             onChange={(e) => setTestUrl(e.target.value)}
             placeholder="http://192.168.1.15:3000 atau https://..."
-            className="flex-1 px-3 py-2 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-indigo-500"
+            className="flex-1 px-3 py-2 text-xs font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-indigo-500"
           />
           <button
             id="btn-run-troubleshoot-ping"
@@ -137,7 +137,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
           >
             <div className="flex items-center gap-2">
               {pingTestResult.success ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
               ) : (
                 <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
               )}
@@ -180,7 +180,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                 </p>
               </div>
             </div>
-            {expandedCard === 'issue_localhost' ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            {expandedCard === 'issue_localhost' ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
           </button>
 
           {expandedCard === 'issue_localhost' && (
@@ -191,26 +191,26 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
 
               <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2">
                 <div className="font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
                   <span>Solusi Benar: Gunakan IP Wi-Fi PC Kasir</span>
                 </div>
                 <p className="text-[11px] text-emerald-800 dark:text-emerald-300 leading-relaxed">
                   Di browser HP, Anda harus mengetikkan IP Wi-Fi komputer kasir, contohnya: <strong>http://192.168.1.15:3000</strong>.
                 </p>
                 <div className="flex items-center gap-2 pt-1">
-                  <input
+                  <input aria-label="Contoh: 192.168.1.15"
                     type="text"
                     value={customIp}
                     onChange={(e) => setCustomIp(e.target.value)}
                     placeholder="Contoh: 192.168.1.15"
-                    className="px-2.5 py-1.5 text-xs font-mono rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
+                    className="px-2.5 py-1.5 text-xs font-mono rounded-md border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
                   />
                   <button
                     onClick={() => {
                       onSaveCustomIp(customIp);
                       onSelectAccessMode('wifi_lan');
                     }}
-                    className="px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer"
+                    className="px-3 py-1.5 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer"
                   >
                     Simpan IP &amp; Buat QR Code
                   </button>
@@ -239,7 +239,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                 </p>
               </div>
             </div>
-            {expandedCard === 'issue_firewall' ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            {expandedCard === 'issue_firewall' ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
           </button>
 
           {expandedCard === 'issue_firewall' && (
@@ -250,7 +250,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
 
               <div className="p-3.5 rounded-lg bg-slate-900 text-slate-200 font-mono text-[11px] space-y-2 border border-slate-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400 font-bold flex items-center gap-1.5">
+                  <span className="text-slate-500 font-bold flex items-center gap-1.5">
                     <Terminal className="w-3.5 h-3.5 text-indigo-400" />
                     Jalankan Perintah Ini di CMD / PowerShell (Administrator):
                   </span>
@@ -295,7 +295,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                 </p>
               </div>
             </div>
-            {expandedCard === 'issue_wifi' ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            {expandedCard === 'issue_wifi' ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
           </button>
 
           {expandedCard === 'issue_wifi' && (
@@ -335,7 +335,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                 </p>
               </div>
             </div>
-            {expandedCard === 'issue_cloud' ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            {expandedCard === 'issue_cloud' ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
           </button>
 
           {expandedCard === 'issue_cloud' && (
@@ -397,7 +397,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                 </p>
               </div>
             </div>
-            {expandedCard === 'issue_android_camera' ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            {expandedCard === 'issue_android_camera' ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
           </button>
 
           {expandedCard === 'issue_android_camera' && (
@@ -466,7 +466,7 @@ export const LANTroubleshootPanel: React.FC<LANTroubleshootPanelProps> = ({
                 </p>
               </div>
             </div>
-            {expandedCard === 'issue_find_ip' ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            {expandedCard === 'issue_find_ip' ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
           </button>
 
           {expandedCard === 'issue_find_ip' && (

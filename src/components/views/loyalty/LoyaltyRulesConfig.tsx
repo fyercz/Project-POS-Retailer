@@ -94,22 +94,22 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 <Coins className="w-4 h-4 text-emerald-500" />
                 <span>Rasio Belanja per 1 Poin (Rp)</span>
               </label>
-              <span className="text-[10px] text-slate-400 font-mono">
+              <span className="text-[10px] text-slate-500 font-mono">
                 1 Pts / {formatCurrency(pointsRatio, settings.currency)}
               </span>
             </div>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-xs text-slate-400">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-xs text-slate-500">
                 Rp
               </span>
-              <input
+              <input aria-label="Rasio Belanja per 1 Poin (Rp)"
                 type="number"
                 min={1000}
                 step={1000}
                 required
                 value={pointsRatio}
                 onChange={(e) => setPointsRatio(Number(e.target.value))}
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
             <p className="text-[11px] text-slate-500">
@@ -124,27 +124,27 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 <Tag className="w-4 h-4 text-amber-500" />
                 <span>Nilai Diskon Kasir per 1 Poin (Rp)</span>
               </label>
-              <span className="text-[10px] text-slate-400 font-mono">
+              <span className="text-[10px] text-slate-500 font-mono">
                 1 Pts = {formatCurrency(pointRedemptionRate, settings.currency)}
               </span>
             </div>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-xs text-slate-400">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-xs text-slate-500">
                 Rp
               </span>
-              <input
+              <input aria-label="Nilai Diskon Kasir per 1 Poin (Rp)"
                 type="number"
                 min={1}
                 step={1}
                 required
                 value={pointRedemptionRate || ''}
                 onChange={(e) => setPointRedemptionRate(e.target.value === '' ? 0 : Number(e.target.value))}
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
             {/* Quick round chips */}
             <div className="flex items-center gap-1.5 flex-wrap pt-1">
-              <span className="text-[10px] text-slate-400">Pilihan Cepat:</span>
+              <span className="text-[10px] text-slate-500">Pilihan Cepat:</span>
               {[10, 50, 100, 200, 500, 1000].map((rate) => (
                 <button
                   key={rate}
@@ -172,24 +172,24 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 <ShieldCheck className="w-4 h-4 text-purple-500" />
                 <span>Minimal Poin untuk Penukaran</span>
               </label>
-              <span className="text-[10px] text-slate-400 font-mono">
+              <span className="text-[10px] text-slate-500 font-mono">
                 Min {minRedeemPoints} Pts
               </span>
             </div>
             <div className="relative">
-              <input
+              <input aria-label="Minimal Poin untuk Penukaran"
                 type="number"
                 min={0}
                 step={1}
                 required
                 value={minRedeemPoints !== undefined ? minRedeemPoints : ''}
                 onChange={(e) => setMinRedeemPoints(e.target.value === '' ? 0 : Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full px-3 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
             {/* Quick round chips */}
             <div className="flex items-center gap-1.5 flex-wrap pt-1">
-              <span className="text-[10px] text-slate-400">Pilihan Cepat:</span>
+              <span className="text-[10px] text-slate-500">Pilihan Cepat:</span>
               {[1, 5, 10, 20, 50, 100].map((pts) => (
                 <button
                   key={pts}
@@ -217,12 +217,12 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 <Percent className="w-4 h-4 text-teal-500" />
                 <span>Syarat Margin Profit Barang (&ge; %)</span>
               </label>
-              <span className="text-[10px] text-slate-400 font-mono">
+              <span className="text-[10px] text-slate-500 font-mono">
                 Margin &ge; {minProfitMargin}%
               </span>
             </div>
             <div className="relative">
-              <input
+              <input aria-label="Syarat Margin Profit Barang (≥ %)"
                 type="number"
                 min={0}
                 max={100}
@@ -230,7 +230,7 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 required
                 value={minProfitMargin}
                 onChange={(e) => setMinProfitMargin(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full px-3 py-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
             <p className="text-[11px] text-slate-500">
@@ -255,7 +255,7 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-mono">Belanja Rp 0 - Rp 999.999</p>
-              <p className="text-[10px] text-slate-400">Tingkat dasar semua member terdaftar</p>
+              <p className="text-[10px] text-slate-500">Tingkat dasar semua member terdaftar</p>
             </div>
 
             <div className="p-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-100/60 dark:bg-slate-800/40 space-y-1">
@@ -266,7 +266,7 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-mono">Belanja Rp 1jt - Rp 4.99jt</p>
-              <p className="text-[10px] text-slate-400">+20% bonus poin tiap transaksi</p>
+              <p className="text-[10px] text-slate-500">+20% bonus poin tiap transaksi</p>
             </div>
 
             <div className="p-3 rounded-2xl border border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 space-y-1">
@@ -277,7 +277,7 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-mono">Belanja Rp 5jt - Rp 9.99jt</p>
-              <p className="text-[10px] text-slate-400">+50% bonus poin tiap transaksi</p>
+              <p className="text-[10px] text-slate-500">+50% bonus poin tiap transaksi</p>
             </div>
 
             <div className="p-3 rounded-2xl border border-purple-300 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/20 space-y-1">
@@ -288,7 +288,7 @@ export const LoyaltyRulesConfig: React.FC = () => {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-mono">Belanja &ge; Rp 10.000.000</p>
-              <p className="text-[10px] text-slate-400">2x lipat poin ganda maksimal</p>
+              <p className="text-[10px] text-slate-500">2x lipat poin ganda maksimal</p>
             </div>
           </div>
         </div>

@@ -17,7 +17,7 @@ export const OfflineNotificationBanner: React.FC = () => {
   // 1. If there is a sync restored notification, show success toast
   if (syncNotification) {
     return (
-      <div className="bg-emerald-600 text-white px-4 py-2 text-xs font-semibold flex items-center justify-between shadow-md z-40 animate-in slide-in-from-top duration-200">
+      <div className="bg-emerald-700 text-white px-4 py-2 text-xs font-semibold flex items-center justify-between shadow-md z-40 animate-in slide-in-from-top duration-200">
         <div className="flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-emerald-200 shrink-0" />
           <span>{syncNotification}</span>
@@ -29,7 +29,7 @@ export const OfflineNotificationBanner: React.FC = () => {
           >
             Lihat Detail
           </button>
-          <button
+          <button aria-label="Tutup"
             onClick={clearSyncNotification}
             className="text-emerald-200 hover:text-white cursor-pointer"
           >

@@ -213,7 +213,7 @@ export const EmployeeManagementModal: React.FC = () => {
         {/* Header */}
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
               <Users className="w-5 h-5" />
             </div>
             <div>
@@ -227,18 +227,18 @@ export const EmployeeManagementModal: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <button aria-pressed={activeTab === 'list'}
               id="tab-btn-employee-list"
               onClick={() => setActiveTab('list')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition ${
                 activeTab === 'list'
-                  ? 'bg-emerald-600 text-white shadow-sm'
+                  ? 'bg-emerald-700 text-white shadow-sm'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
               }`}
             >
               Daftar Karyawan
             </button>
-            <button
+            <button aria-pressed={activeTab === 'matrix'}
               id="tab-btn-authority-matrix"
               onClick={() => setActiveTab('matrix')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 ${
@@ -254,7 +254,7 @@ export const EmployeeManagementModal: React.FC = () => {
               <button
                 id="btn-add-employee-open"
                 onClick={handleOpenAddForm}
-                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition"
+                className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition"
               >
                 <UserPlus className="w-4 h-4" /> Tambah Staf
               </button>
@@ -267,10 +267,10 @@ export const EmployeeManagementModal: React.FC = () => {
                 Batal / Daftar
               </button>
             )}
-            <button
+            <button aria-label="Tutup"
               id="btn-close-employee-modal"
               onClick={() => setIsEmployeeManagementOpen(false)}
-              className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
+              className="p-2 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
             >
               <X className="w-5 h-5" />
             </button>
@@ -287,7 +287,7 @@ export const EmployeeManagementModal: React.FC = () => {
           )}
 
           {notification && (
-          <div
+          <div role="status"
             data-testid="employee-notification"
             className={`px-6 py-2.5 flex items-center gap-2 text-xs font-medium ${
               notification.type === 'success'
@@ -373,7 +373,7 @@ export const EmployeeManagementModal: React.FC = () => {
                                 <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                                   {emp.name}
                                   {isCurrent && (
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-600 text-white font-medium">
+                                    <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-700 text-white font-medium">
                                       Aktif
                                     </span>
                                   )}
@@ -395,22 +395,22 @@ export const EmployeeManagementModal: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-1 mt-1 flex-wrap">
                               {emp.role === 'cashier' && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-medium">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-medium">
                                   Akses: Kasir, Nota
                                 </span>
                               )}
                               {emp.role === 'inventory' && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100/70 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-medium">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100/70 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-medium">
                                   Akses: Gudang, Nota
                                 </span>
                               )}
                               {emp.role === 'supervisor' && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-100/70 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-medium">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100/70 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-medium">
                                   Akses: Kasir, Nota, Stok, Member, Laporan
                                 </span>
                               )}
                               {emp.role === 'owner' && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-100/70 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 font-medium">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100/70 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 font-medium">
                                   Akses: Penuh (Seluruh Fitur & Setting)
                                 </span>
                               )}
@@ -442,14 +442,14 @@ export const EmployeeManagementModal: React.FC = () => {
                           </td>
                           <td className="p-3.5 text-right space-x-1">
                             {!isCurrent && emp.isActive && (
-                              <button
+                              <button aria-label="Login sebagai karyawan ini"
                                 id={`btn-switch-emp-${emp.id}`}
                                 onClick={() => {
                                   if (!quickSwitchEmployee(emp)) {
                                     setNotification({ type: 'error', message: `Butuh PIN: tidak bisa beralih ke jabatan yang lebih tinggi (${emp.name}) tanpa login PIN.` });
                                   }
                                 }}
-                                className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-lg transition"
+                                className="p-1.5 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-lg transition"
                                 title="Login sebagai karyawan ini"
                               >
                                 <UserCheck className="w-4 h-4" />
@@ -464,7 +464,7 @@ export const EmployeeManagementModal: React.FC = () => {
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
-                            <button
+                            <button aria-label="Hapus Karyawan"
                               id={`btn-del-emp-${emp.id}`}
                               onClick={() => handleDelete(emp.id, emp.name)}
                               disabled={isCurrent || employees.length <= 1}
@@ -484,7 +484,7 @@ export const EmployeeManagementModal: React.FC = () => {
               {/* Roles Explanation */}
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
                 <div className="font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-1.5">
-                  <Shield className="w-4 h-4 text-emerald-600" /> Informasi Peran & Izin Sistem POS:
+                  <Shield className="w-4 h-4 text-emerald-700" /> Informasi Peran & Izin Sistem POS:
                 </div>
                 <ul className="list-disc list-inside space-y-1 pl-1 text-[11px]">
                   <li>
@@ -543,37 +543,37 @@ export const EmployeeManagementModal: React.FC = () => {
                         </div>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Kasir">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Kasir">
                           <Minus className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Kasir">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Kasir">
                           <Minus className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Kasir">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Kasir">
                           <Minus className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
                           PIN SPV
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
                           <Minus className="w-3.5 h-3.5" />
                         </span>
                       </td>
@@ -593,12 +593,12 @@ export const EmployeeManagementModal: React.FC = () => {
                                   message: `Berhasil berganti ke ${sampleCashier.name} (Kasir). Menu sekarang dibatasi!`,
                                 });
                               }}
-                              className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1 mx-auto"
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition flex items-center gap-1 mx-auto"
                             >
                               <UserCheck className="w-3.5 h-3.5" /> Uji Kasir
                             </button>
                           ) : (
-                            <span className="text-[11px] text-slate-400">-</span>
+                            <span className="text-[11px] text-slate-500">-</span>
                           );
                         })()}
                       </td>
@@ -616,37 +616,37 @@ export const EmployeeManagementModal: React.FC = () => {
                         </div>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Gudang">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 font-bold" title="Dibatasi untuk Gudang">
                           <Minus className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
                           <Minus className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
                           <Minus className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
                           <Minus className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-500 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 font-bold">
                           <Minus className="w-3.5 h-3.5" />
                         </span>
                       </td>
@@ -671,7 +671,7 @@ export const EmployeeManagementModal: React.FC = () => {
                               <UserCheck className="w-3.5 h-3.5" /> Uji Gudang
                             </button>
                           ) : (
-                            <span className="text-[11px] text-slate-400">-</span>
+                            <span className="text-[11px] text-slate-500">-</span>
                           );
                         })()}
                       </td>
@@ -689,37 +689,37 @@ export const EmployeeManagementModal: React.FC = () => {
                         </div>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
                           PIN Owner
                         </span>
                       </td>
@@ -744,7 +744,7 @@ export const EmployeeManagementModal: React.FC = () => {
                               <UserCheck className="w-3.5 h-3.5" /> Uji SPV
                             </button>
                           ) : (
-                            <span className="text-[11px] text-slate-400">-</span>
+                            <span className="text-[11px] text-slate-500">-</span>
                           );
                         })()}
                       </td>
@@ -762,37 +762,37 @@ export const EmployeeManagementModal: React.FC = () => {
                         </div>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
                       <td className="p-2.5 text-center">
-                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
+                        <span className="inline-flex p-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold">
                           <Check className="w-3.5 h-3.5" />
                         </span>
                       </td>
@@ -817,7 +817,7 @@ export const EmployeeManagementModal: React.FC = () => {
                               <UserCheck className="w-3.5 h-3.5" /> Uji Owner
                             </button>
                           ) : (
-                            <span className="text-[11px] text-slate-400">-</span>
+                            <span className="text-[11px] text-slate-500">-</span>
                           );
                         })()}
                       </td>
@@ -834,13 +834,13 @@ export const EmployeeManagementModal: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Nama Lengkap Karyawan *
                   </label>
-                  <input
+                  <input aria-label="Nama Lengkap Karyawan"
                     type="text"
                     required
                     data-testid="employee-name" value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="misal: Rian Pratama"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
 
@@ -848,13 +848,13 @@ export const EmployeeManagementModal: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Kode Karyawan *
                   </label>
-                  <input
+                  <input aria-label="Kode Karyawan"
                     type="text"
                     required
                     value={employeeCode}
                     onChange={(e) => setEmployeeCode(e.target.value)}
                     placeholder="misal: EMP-06"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
                   />
                 </div>
               </div>
@@ -864,10 +864,10 @@ export const EmployeeManagementModal: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Jabatan / Role *
                   </label>
-                  <select
+                  <select aria-label="Jabatan / Role"
                     data-testid="employee-role" value={role}
                     onChange={(e) => setRole(e.target.value as EmployeeRole)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   >
                     <option value="cashier">Kasir (Frontliner)</option>
                     <option value="inventory">Admin Gudang & Stok</option>
@@ -880,12 +880,12 @@ export const EmployeeManagementModal: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Judul Posisi (Kustom)
                   </label>
-                  <input
+                  <input aria-label="Judul Posisi (Kustom)"
                     type="text"
                     value={roleTitle}
                     onChange={(e) => setRoleTitle(e.target.value)}
                     placeholder="misal: Kasir Utama Shift Pagi"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -893,7 +893,7 @@ export const EmployeeManagementModal: React.FC = () => {
               {/* Dynamic Live Role Permissions Badge Box */}
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs">
                 <span className="font-bold text-slate-800 dark:text-slate-200 block mb-2 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <ShieldCheck className="w-4 h-4 text-emerald-700" />
                   <span>Cakupan Hak Akses Menu untuk Posisi Ini:</span>
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
@@ -922,16 +922,16 @@ export const EmployeeManagementModal: React.FC = () => {
                     PIN Keamanan (4-6 Digit) *
                   </label>
                   <div className="relative">
-                    <input
+                    <input aria-label="PIN Keamanan (4-6 Digit)"
                       type="password"
                       maxLength={6}
                       required={!editingEmployee}
                       data-testid="employee-pin" value={pin}
                       onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                       placeholder={editingEmployee ? 'Kosongkan bila PIN tidak diubah' : '4-6 angka, jangan yang mudah ditebak'}
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono tracking-widest"
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono tracking-widest"
                     />
-                    <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <KeyRound className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                   </div>
                   <span className="text-[10px] text-slate-500">
                     PIN ini digunakan karyawan untuk membuka layar kasir.
@@ -942,10 +942,10 @@ export const EmployeeManagementModal: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Shift Kerja Ditugaskan
                   </label>
-                  <select
+                  <select aria-label="Shift Kerja Ditugaskan"
                     value={assignedShift}
                     onChange={(e) => setAssignedShift(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   >
                     <option value="Shift Pagi (07:00 - 15:00)">Shift Pagi (07:00 - 15:00)</option>
                     <option value="Shift Siang (14:30 - 22:30)">Shift Siang (14:30 - 22:30)</option>
@@ -961,14 +961,14 @@ export const EmployeeManagementModal: React.FC = () => {
                     Nomor WhatsApp / HP
                   </label>
                   <div className="relative">
-                    <input
+                    <input aria-label="Nomor WhatsApp / HP"
                       type="text"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="0812-xxxx-xxxx"
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     />
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                   </div>
                 </div>
 
@@ -977,14 +977,14 @@ export const EmployeeManagementModal: React.FC = () => {
                     Email Karyawan
                   </label>
                   <div className="relative">
-                    <input
+                    <input aria-label="Email Karyawan"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="nama@ulilmart.co.id"
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     />
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                   </div>
                 </div>
               </div>
@@ -1020,7 +1020,7 @@ export const EmployeeManagementModal: React.FC = () => {
                       type="checkbox"
                       checked={isActive}
                       onChange={(e) => setIsActive(e.target.checked)}
-                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-700 rounded border-slate-300 focus:ring-emerald-500"
                     />
                     <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
                       Karyawan Aktif (Dapat login ke POS)
@@ -1041,7 +1041,7 @@ export const EmployeeManagementModal: React.FC = () => {
                 <button
                   type="submit"
                   id="btn-save-employee"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 transition flex items-center gap-2"
+                  className="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 transition flex items-center gap-2"
                 >
                   <CheckCircle className="w-4 h-4" />
                   {editingEmployee ? 'Simpan Perubahan' : 'Tambah Karyawan'}
