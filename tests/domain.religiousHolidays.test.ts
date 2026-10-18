@@ -22,6 +22,11 @@ test('kalender proyeksi: Lebaran 2027 dikenali di 9-10 Maret, 20 Maret 2027 buka
 test('tahun yang masih perkiraan diberi label "perkiraan"', () => {
   const ev = findDemandEventForDate(new Date(2028, 1, 27), DEFAULT_DEMAND_EVENTS);
   assert.equal(ev?.id, 'evt-lebaran-h0');
+  // 26 Feb 2028 = Hari H versi KHGT sekaligus H-1 versi pemerintah: tetap ditandai lonjakan Lebaran
+  // (diprioritaskan H-1 = puncak belanja)
+  assert.equal(findDemandEventForDate(new Date(2028, 1, 26), DEFAULT_DEMAND_EVENTS)?.id, 'evt-lebaran-h1');
+  assert.equal(findDemandEventForDate(new Date(2028, 1, 25), DEFAULT_DEMAND_EVENTS)?.id, 'evt-lebaran-h1', 'H-1 versi KHGT');
+  assert.deepEqual(movableDateFor('idul_fitri', 2028, -1), { date: '2028-02-26', official: false, altDate: '2028-02-25' });
   assert.match(ev!.badge, /perkiraan/);
   const next = nextMovableDate('idul_fitri', new Date(2026, 9, 19));
   assert.equal(next?.date, '2027-03-10');

@@ -221,7 +221,7 @@ export function findDemandEventForDate(date: Date, events: DemandCalendarEvent[]
   for (const e of events) {
     if (!e.movable) continue;
     const hit = movableDateFor(e.movable.holiday, date.getFullYear(), e.movable.offsetDays);
-    if (hit && hit.date === ymd) {
+    if (hit && (hit.date === ymd || hit.altDate === ymd)) {
       return hit.official
         ? e
         : {
