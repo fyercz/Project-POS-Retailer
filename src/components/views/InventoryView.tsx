@@ -2112,7 +2112,7 @@ export const InventoryView: React.FC = () => {
               <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
                 <tr>
                   <th className="py-3 px-3 w-10 text-center">
-                    <input
+                    <input aria-label="Pilih semua produk"
                       type="checkbox"
                       checked={
                         filteredProducts.length > 0 &&
@@ -2160,7 +2160,7 @@ export const InventoryView: React.FC = () => {
                       >
                         {/* Checkbox Select */}
                         <td className="py-3 px-3 text-center">
-                          <input
+                          <input aria-label={`Pilih ${prod.name}`}
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => handleToggleSelectProduct(prod.id)}

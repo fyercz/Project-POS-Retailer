@@ -307,7 +307,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             }`}
             title="Otomatis picu dialog cetak thermal saat transaksi pembayaran selesai"
           >
-            <input
+            <input aria-label="Cetak struk otomatis"
               type="checkbox"
               id="toolbar-auto-print-receipt-toggle"
               checked={settings.autoPrintReceipt !== false}
@@ -586,7 +586,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               }`}
               title="Picu dialog cetak thermal secara otomatis setelah transaksi pembayaran sukses"
             >
-              <input
+              <input aria-label="Cetak struk otomatis"
                 type="checkbox"
                 id="footer-auto-print-receipt-toggle"
                 checked={settings.autoPrintReceipt !== false}

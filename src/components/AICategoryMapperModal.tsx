@@ -284,7 +284,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
                           }`}
                         >
                           <td className="p-2.5 text-center">
-                            <input
+                            <input aria-label="Pilih produk"
                               type="checkbox"
                               checked={item.selected}
                               onChange={() => handleToggleItem(item.id)}

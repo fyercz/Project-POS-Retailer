@@ -540,7 +540,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <input
+                      <input aria-label="Pilih produk"
                         type="checkbox"
                         checked={item.selected}
                         onChange={() => handleToggleSelect(item.id)}

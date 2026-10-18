@@ -629,7 +629,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
               <thead className="bg-slate-100 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10 backdrop-blur-xs">
                 <tr>
                   <th className="py-3 px-3 w-10 text-center">
-                    <input
+                    <input aria-label="Pilih semua produk"
                       type="checkbox"
                       checked={filteredItems.length > 0 && filteredItems.every((i) => i.isSelected)}
                       onChange={handleToggleSelectAll}
@@ -661,7 +661,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                     >
                       {/* Select Checkbox */}
                       <td className="py-3 px-3 text-center">
-                        <input
+                        <input aria-label={`Pilih ${p.name}`}
                           type="checkbox"
                           checked={item.isSelected}
                           onChange={() => handleToggleSelectItem(p.id)}
