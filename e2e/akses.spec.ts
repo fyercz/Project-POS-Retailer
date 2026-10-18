@@ -43,9 +43,12 @@ test('5 kali PIN salah: dikunci sementara, PIN benar pun ditolak selama jeda', a
   for (let i = 0; i < 5; i++) {
     await page.keyboard.type('1111');
     await expect(page.getByTestId('lock-error')).toBeVisible();
+    // Layar kunci memproses PIN 150 ms setelah digit ke-4; beri jeda seperti ketikan manusia
+    await page.waitForTimeout(500);
   }
   await expect(page.getByTestId('lock-error')).toContainText('Terlalu banyak PIN salah');
   await page.keyboard.type(OWNER.pin);
+  await page.waitForTimeout(500);
   await expect(page.getByTestId('lock-error')).toContainText('Terlalu banyak PIN salah');
   await expect(page.locator('#employee-lock-screen')).toBeVisible();
 });
@@ -53,7 +56,8 @@ test('5 kali PIN salah: dikunci sementara, PIN benar pun ditolak selama jeda', a
 test('kasir tidak bisa membuka Backup & Restore dari layar kasir', async ({ page }) => {
   await lockAndLogin(page, KASIR.name, KASIR.pin);
   await page.locator('#nav-btn-pos').click();
-  await page.locator('#btn-catalog-backup-restore').click();
+  // Ada dua tombol (layar lebar & kecil); pilih yang terlihat
+  await page.locator('#btn-catalog-backup-restore:visible').first().click();
   await expect(page.getByRole('alertdialog')).toContainText('Akses Dibatasi');
 });
 
