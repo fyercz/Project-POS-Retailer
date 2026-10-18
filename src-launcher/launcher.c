@@ -1,4 +1,6 @@
+#ifndef UNICODE
 #define UNICODE
+#endif
 #define _UNICODE
 #define WIN32_LEAN_AND_MEAN
 
@@ -84,7 +86,7 @@ static bool locate_node_exe(wchar_t* outPath, size_t maxLen) {
     wchar_t appData[MAX_PATH];
 
     if (GetEnvironmentVariableW(L"ProgramFiles", programFiles, MAX_PATH) > 0) {
-        swprintf(searchedPath, MAX_PATH, L"%s\\nodejs\\node.exe", programFiles);
+        swprintf(searchedPath, MAX_PATH, L"%ls\\nodejs\\node.exe", programFiles);
         if (file_exists_w(searchedPath)) {
             wcsncpy(outPath, searchedPath, maxLen);
             return true;
@@ -92,7 +94,7 @@ static bool locate_node_exe(wchar_t* outPath, size_t maxLen) {
     }
 
     if (GetEnvironmentVariableW(L"ProgramFiles(x86)", programFilesX86, MAX_PATH) > 0) {
-        swprintf(searchedPath, MAX_PATH, L"%s\\nodejs\\node.exe", programFilesX86);
+        swprintf(searchedPath, MAX_PATH, L"%ls\\nodejs\\node.exe", programFilesX86);
         if (file_exists_w(searchedPath)) {
             wcsncpy(outPath, searchedPath, maxLen);
             return true;
@@ -100,12 +102,12 @@ static bool locate_node_exe(wchar_t* outPath, size_t maxLen) {
     }
 
     if (GetEnvironmentVariableW(L"LOCALAPPDATA", localAppData, MAX_PATH) > 0) {
-        swprintf(searchedPath, MAX_PATH, L"%s\\Programs\\nodejs\\node.exe", localAppData);
+        swprintf(searchedPath, MAX_PATH, L"%ls\\Programs\\nodejs\\node.exe", localAppData);
         if (file_exists_w(searchedPath)) {
             wcsncpy(outPath, searchedPath, maxLen);
             return true;
         }
-        swprintf(searchedPath, MAX_PATH, L"%s\\Programs\\node\\node.exe", localAppData);
+        swprintf(searchedPath, MAX_PATH, L"%ls\\Programs\\node\\node.exe", localAppData);
         if (file_exists_w(searchedPath)) {
             wcsncpy(outPath, searchedPath, maxLen);
             return true;
@@ -113,7 +115,7 @@ static bool locate_node_exe(wchar_t* outPath, size_t maxLen) {
     }
 
     if (GetEnvironmentVariableW(L"APPDATA", appData, MAX_PATH) > 0) {
-        swprintf(searchedPath, MAX_PATH, L"%s\\nvm\\current\\node.exe", appData);
+        swprintf(searchedPath, MAX_PATH, L"%ls\\nvm\\current\\node.exe", appData);
         if (file_exists_w(searchedPath)) {
             wcsncpy(outPath, searchedPath, maxLen);
             return true;
@@ -152,21 +154,21 @@ static bool locate_browser_exe(wchar_t* outPath, size_t maxLen) {
 
     // Priority 1: Microsoft Edge (comes preinstalled on Windows 10/11)
     if (GetEnvironmentVariableW(L"ProgramFiles(x86)", progFilesX86, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Microsoft\\Edge\\Application\\msedge.exe", progFilesX86);
+        swprintf(testPath, MAX_PATH, L"%ls\\Microsoft\\Edge\\Application\\msedge.exe", progFilesX86);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
         }
     }
     if (GetEnvironmentVariableW(L"ProgramFiles", progFiles, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Microsoft\\Edge\\Application\\msedge.exe", progFiles);
+        swprintf(testPath, MAX_PATH, L"%ls\\Microsoft\\Edge\\Application\\msedge.exe", progFiles);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
         }
     }
     if (GetEnvironmentVariableW(L"LOCALAPPDATA", localApp, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Microsoft\\Edge\\Application\\msedge.exe", localApp);
+        swprintf(testPath, MAX_PATH, L"%ls\\Microsoft\\Edge\\Application\\msedge.exe", localApp);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
@@ -179,21 +181,21 @@ static bool locate_browser_exe(wchar_t* outPath, size_t maxLen) {
 
     // Priority 2: Google Chrome
     if (GetEnvironmentVariableW(L"ProgramFiles", progFiles, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Google\\Chrome\\Application\\chrome.exe", progFiles);
+        swprintf(testPath, MAX_PATH, L"%ls\\Google\\Chrome\\Application\\chrome.exe", progFiles);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
         }
     }
     if (GetEnvironmentVariableW(L"ProgramFiles(x86)", progFilesX86, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Google\\Chrome\\Application\\chrome.exe", progFilesX86);
+        swprintf(testPath, MAX_PATH, L"%ls\\Google\\Chrome\\Application\\chrome.exe", progFilesX86);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
         }
     }
     if (GetEnvironmentVariableW(L"LOCALAPPDATA", localApp, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Google\\Chrome\\Application\\chrome.exe", localApp);
+        swprintf(testPath, MAX_PATH, L"%ls\\Google\\Chrome\\Application\\chrome.exe", localApp);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
@@ -219,7 +221,7 @@ static void add_to_process_path(const wchar_t* nodeExePath) {
         DWORD len = GetEnvironmentVariableW(L"PATH", currentPath, 32768);
         if (len > 0) {
             wchar_t newPath[32768];
-            swprintf(newPath, 32768, L"%s;%s", nodeDir, currentPath);
+            swprintf(newPath, 32768, L"%ls;%ls", nodeDir, currentPath);
             SetEnvironmentVariableW(L"PATH", newPath);
         } else {
             SetEnvironmentVariableW(L"PATH", nodeDir);
@@ -239,12 +241,29 @@ static void set_working_dir_to_exe() {
     }
 }
 
+/*
+ * Alur launcher (v1.1.1):
+ *  1. Bila server kasir sudah berjalan di port 3000 (mis. dari MULAI-KASIR.bat / auto-start),
+ *     langsung buka jendela kasir.
+ *  2. Bila belum: pastikan aplikasi sudah dipasang & di-build (node_modules + dist\server.cjs).
+ *     Bila belum, tawarkan menjalankan MULAI-KASIR.bat (yang memasang & build).
+ *  3. Nyalakan server tersembunyi, keluaran dicatat ke server.log (sama dengan MULAI-KASIR.bat).
+ *  4. Buka jendela kasir (Edge/Chrome mode aplikasi) dengan PROFIL BROWSER SENDIRI.
+ *
+ * Perbaikan dari versi lama:
+ *  - Dulu launcher menunggu proses browser selesai lalu MEMATIKAN server. Edge hampir selalu
+ *    sudah berjalan di latar (Startup boost), sehingga proses yang dibuka launcher langsung
+ *    menyerahkan jendela ke Edge yang ada & selesai -> server dimatikan beberapa detik setelah
+ *    dibuka. Kini server TIDAK dimatikan saat jendela ditutup (kasir lain di jaringan tetap
+ *    terhubung); hentikan dengan BERHENTI-KASIR.bat, sama seperti MULAI-KASIR.bat.
+ *  - Server dulu berjalan tanpa log; kini ke server.log.
+ *  - Mode kiosk: nama file mengandung "Kiosk" atau argumen --kiosk (dulu teks "-k" di mana saja).
+ */
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
     (void)hInstance;
     (void)hPrevInstance;
     (void)nCmdShow;
 
-    // 1. Ensure working directory is the folder of this .exe
     set_working_dir_to_exe();
 
     bool kioskMode = false;
@@ -254,186 +273,134 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
             kioskMode = true;
         }
     }
-    if (pCmdLine && (wcsstr(pCmdLine, L"--kiosk") != NULL || wcsstr(pCmdLine, L"-k") != NULL)) {
+    if (pCmdLine && wcsstr(pCmdLine, L"--kiosk") != NULL) {
         kioskMode = true;
     }
 
-    // 2. Locate Node.js
-    wchar_t nodePath[MAX_PATH] = {0};
-    if (!locate_node_exe(nodePath, MAX_PATH)) {
-        int choice = MessageBoxW(
-            NULL,
-            L"Runtime Node.js belum ditemukan di komputer kasir ini.\n\n"
-            L"Aplikasi Ulilmart POS memerlukan Node.js untuk database lokal dan server transaksi.\n\n"
-            L"Apakah Anda ingin membuka link unduh Node.js LTS resmi sekarang?\n"
-            L"(Pilih 'Ya' untuk download otomatis, atau 'Tidak' untuk keluar)",
-            L"Ulilmart POS - Node.js Diperlukan",
-            MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON1
-        );
-
-        if (choice == IDYES) {
-            ShellExecuteW(NULL, L"open", L"https://nodejs.org/en/download", NULL, NULL, SW_SHOWNORMAL);
-        }
-        return 1;
-    }
-
-    // Inject Node folder into PATH for current process
-    add_to_process_path(nodePath);
-
-    // 3. Check if server is already running on port 3000
     int port = DEFAULT_PORT;
-    bool serverRunning = is_port_open(port);
-    PROCESS_INFORMATION piServer = {0};
-    bool startedOwnServer = false;
 
-    if (!serverRunning) {
-        // Prepare server command line
-        wchar_t cmdLine[1024];
-
-        if (file_exists_w(L"dist\\server.cjs")) {
-            swprintf(cmdLine, 1024, L"\"%s\" dist\\server.cjs", nodePath);
-        } else if (file_exists_w(L"server.ts")) {
-            // Development fallback
-            swprintf(cmdLine, 1024, L"cmd.exe /c npx tsx server.ts");
-        } else {
-            MessageBoxW(
+    if (!is_port_open(port)) {
+        // Aplikasi harus sudah dipasang & di-build (launcher tidak memasang dependensi)
+        if (!dir_exists_w(L"node_modules") || !file_exists_w(L"dist\\server.cjs")) {
+            int choice = MessageBoxW(
                 NULL,
-                L"File server (dist\\server.cjs) belum ditemukan.\n"
-                L"Silakan jalankan build aplikasi terlebih dahulu.",
+                L"Aplikasi kasir belum dipasang atau belum di-build di folder ini.\n\n"
+                L"Jalankan MULAI-KASIR.bat sekarang untuk memasang & menyalakan kasir?\n"
+                L"(Hanya perlu sekali; setelah itu launcher ini bisa dipakai langsung.)",
                 APP_TITLE,
-                MB_ICONERROR | MB_OK
+                MB_ICONINFORMATION | MB_YESNO
             );
+            if (choice == IDYES) {
+                ShellExecuteW(NULL, L"open", L"MULAI-KASIR.bat", NULL, NULL, SW_SHOWNORMAL);
+            }
+            return 0;
+        }
+
+        wchar_t nodePath[MAX_PATH] = {0};
+        if (!locate_node_exe(nodePath, MAX_PATH)) {
+            int choice = MessageBoxW(
+                NULL,
+                L"Node.js tidak ditemukan di komputer ini.\n\n"
+                L"Aplikasi Ulilmart POS memerlukan Node.js untuk server kasir.\n"
+                L"Jalankan MULAI-KASIR.bat (dapat memasang Node.js otomatis)?",
+                APP_TITLE,
+                MB_ICONWARNING | MB_YESNO
+            );
+            if (choice == IDYES) {
+                ShellExecuteW(NULL, L"open", L"MULAI-KASIR.bat", NULL, NULL, SW_SHOWNORMAL);
+            }
             return 1;
         }
+        add_to_process_path(nodePath);
+
+        // Server tersembunyi; keluaran ke server.log (lewat cmd agar bisa dialihkan)
+        wchar_t cmdLine[1400];
+        swprintf(cmdLine, 1400, L"cmd.exe /d /s /c \"\"%ls\" dist\\server.cjs >> server.log 2>&1\"", nodePath);
 
         STARTUPINFOW siServer = {0};
         siServer.cb = sizeof(siServer);
         siServer.dwFlags = STARTF_USESHOWWINDOW;
-        siServer.wShowWindow = SW_HIDE; // Run server completely hidden
-
-        BOOL success = CreateProcessW(
-            NULL,
-            cmdLine,
-            NULL,
-            NULL,
-            FALSE,
-            CREATE_NO_WINDOW,
-            NULL,
-            NULL,
-            &siServer,
-            &piServer
-        );
-
-        if (!success) {
+        siServer.wShowWindow = SW_HIDE;
+        PROCESS_INFORMATION piServer = {0};
+        if (!CreateProcessW(NULL, cmdLine, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &siServer, &piServer)) {
             MessageBoxW(
                 NULL,
-                L"Gagal menyalakan server kasir di latar belakang.\n"
-                L"Pastikan izin administrator atau hak akses folder sudah sesuai.",
+                L"Gagal menyalakan server kasir.\n"
+                L"Coba jalankan MULAI-KASIR.bat untuk melihat pesan kesalahannya.",
                 APP_TITLE,
                 MB_ICONERROR | MB_OK
             );
             return 1;
         }
 
-        startedOwnServer = true;
-
-        // Wait up to 25 seconds for server to respond
-        int attempts = 0;
-        while (attempts < 50) {
+        bool ready = false;
+        for (int attempts = 0; attempts < 120; attempts++) { // maks. 60 detik
             Sleep(500);
             if (is_port_open(port)) {
-                serverRunning = true;
+                ready = true;
                 break;
             }
-            // Check if server process terminated prematurely
             DWORD exitCode = 0;
             if (GetExitCodeProcess(piServer.hProcess, &exitCode) && exitCode != STILL_ACTIVE) {
                 MessageBoxW(
                     NULL,
-                    L"Server kasir berhenti tiba-tiba saat inisialisasi.\n"
-                    L"Silakan periksa log server atau dependensi node_modules.",
+                    L"Server kasir berhenti saat dinyalakan.\n\n"
+                    L"Buka file server.log di folder aplikasi untuk melihat penyebabnya,\n"
+                    L"atau jalankan update.bat bila aplikasi baru diperbarui.",
                     APP_TITLE,
                     MB_ICONERROR | MB_OK
                 );
+                CloseHandle(piServer.hProcess);
+                CloseHandle(piServer.hThread);
                 return 1;
             }
-            attempts++;
         }
+        // Server dibiarkan berjalan (tidak dimatikan saat jendela kasir ditutup)
+        CloseHandle(piServer.hProcess);
+        CloseHandle(piServer.hThread);
 
-        if (!serverRunning) {
+        if (!ready) {
             MessageBoxW(
                 NULL,
-                L"Waktu tunggu server kasir habis (Timeout 25 detik).\n"
-                L"Aplikasi akan mencoba membuka browser.",
+                L"Server kasir belum merespons setelah 60 detik.\n"
+                L"Jendela kasir tetap dibuka; bila kosong, periksa server.log.",
                 APP_TITLE,
                 MB_ICONWARNING | MB_OK
             );
         }
     }
 
-    // 4. Launch dedicated UI window (Edge or Chrome in --app mode, or default browser)
-    wchar_t targetUrl[256];
-    swprintf(targetUrl, 256, L"http://localhost:%d", port);
+    wchar_t targetUrl[64];
+    swprintf(targetUrl, 64, L"http://localhost:%d", port);
+
+    // Profil browser sendiri: jendela kasir tidak bercampur dengan Edge/Chrome yang sudah terbuka
+    wchar_t profileDir[MAX_PATH] = L"";
+    wchar_t localAppData[MAX_PATH];
+    if (GetEnvironmentVariableW(L"LOCALAPPDATA", localAppData, MAX_PATH) > 0) {
+        swprintf(profileDir, MAX_PATH, L"%ls\\UlilmartPOS\\Browser", localAppData);
+    }
 
     wchar_t browserPath[MAX_PATH] = {0};
-    bool browserFound = locate_browser_exe(browserPath, MAX_PATH);
-
-    PROCESS_INFORMATION piBrowser = {0};
-    bool startedBrowserProcess = false;
-
-    if (browserFound) {
-        wchar_t browserCmd[1024];
-        if (kioskMode) {
-            swprintf(browserCmd, 1024, L"\"%s\" --app=%s --kiosk", browserPath, targetUrl);
+    if (locate_browser_exe(browserPath, MAX_PATH)) {
+        wchar_t browserCmd[2048];
+        if (profileDir[0]) {
+            swprintf(browserCmd, 2048,
+                L"\"%ls\" --app=%ls --user-data-dir=\"%ls\" --no-first-run --no-default-browser-check%ls",
+                browserPath, targetUrl, profileDir, kioskMode ? L" --kiosk" : L"");
         } else {
-            swprintf(browserCmd, 1024, L"\"%s\" --app=%s", browserPath, targetUrl);
+            swprintf(browserCmd, 2048, L"\"%ls\" --app=%ls%ls", browserPath, targetUrl, kioskMode ? L" --kiosk" : L"");
         }
-
         STARTUPINFOW siBrowser = {0};
         siBrowser.cb = sizeof(siBrowser);
-
-        BOOL bRes = CreateProcessW(
-            NULL,
-            browserCmd,
-            NULL,
-            NULL,
-            FALSE,
-            0,
-            NULL,
-            NULL,
-            &siBrowser,
-            &piBrowser
-        );
-
-        if (bRes) {
-            startedBrowserProcess = true;
+        PROCESS_INFORMATION piBrowser = {0};
+        if (CreateProcessW(NULL, browserCmd, NULL, NULL, FALSE, 0, NULL, NULL, &siBrowser, &piBrowser)) {
+            CloseHandle(piBrowser.hProcess);
+            CloseHandle(piBrowser.hThread);
         } else {
-            // Fallback to ShellExecute
             ShellExecuteW(NULL, L"open", targetUrl, NULL, NULL, SW_SHOWNORMAL);
         }
     } else {
-        // Fallback to default browser
         ShellExecuteW(NULL, L"open", targetUrl, NULL, NULL, SW_SHOWNORMAL);
     }
-
-    // 5. If we started a browser process and our own server:
-    // Wait for the browser window to be closed by cashier, then cleanly stop background server
-    if (startedBrowserProcess && startedOwnServer) {
-        WaitForSingleObject(piBrowser.hProcess, INFINITE);
-
-        // Kasir ditutup oleh user: matikan server background secara bersih
-        if (piServer.hProcess) {
-            TerminateProcess(piServer.hProcess, 0);
-            CloseHandle(piServer.hProcess);
-            CloseHandle(piServer.hThread);
-        }
-        CloseHandle(piBrowser.hProcess);
-        CloseHandle(piBrowser.hThread);
-    } else if (startedOwnServer) {
-        // If we opened via shell execute, keep server handles closed
-        CloseHandle(piServer.hProcess);
-        CloseHandle(piServer.hThread);
-    }
-
     return 0;
 }

@@ -61,12 +61,52 @@ jobs:
           path: test-results/
           retention-days: 7
 
+  # Launcher .exe: kode sumber harus bisa dikompilasi, dan .exe yang disimpan di repo diuji
+  # sungguhan di Windows: server menyala, server.log terbentuk, dan server TETAP hidup setelah
+  # launcher selesai (dulu server dimatikan beberapa detik setelah dibuka).
+  launcher:
+    name: Launcher .exe (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Kompilasi launcher.c (memastikan sumber tetap bisa dibangun)
+        shell: bash
+        run: gcc -municode -mwindows -O2 -s src-launcher/launcher.c src-launcher/app.res -o launcher-uji.exe -lws2_32 -lshell32
+      - name: Jalankan UlilmartPOS.exe & periksa server
+        shell: pwsh
+        run: |
+          try {
+            $p = Start-Process -FilePath ".\UlilmartPOS.exe" -PassThru
+            if (-not $p.WaitForExit(90000)) { throw "Launcher tidak selesai dalam 90 detik (mungkin menampilkan kotak pesan)" }
+            Write-Host "Launcher selesai, kode keluar: $($p.ExitCode)"
+            if ($p.ExitCode -ne 0) { throw "Launcher keluar dengan kode $($p.ExitCode)" }
+            $r = Invoke-RestMethod http://localhost:3000/api/health -TimeoutSec 10
+            Write-Host "Server menjawab: status=$($r.status) versi=$($r.version)"
+            if ($r.status -ne 'ok') { throw "Server tidak sehat" }
+            if (-not (Test-Path server.log)) { throw "server.log tidak dibuat" }
+            Start-Sleep -Seconds 15
+            $r2 = Invoke-RestMethod http://localhost:3000/api/health -TimeoutSec 10
+            if ($r2.status -ne 'ok') { throw "Server mati setelah launcher selesai" }
+            Write-Host "Server masih hidup 15 detik kemudian."
+          } catch {
+            Write-Host "::error::$($_.Exception.Message)"
+            Write-Host "::error::Proses node: $((Get-Process node -ErrorAction SilentlyContinue | Measure-Object).Count) | launcher: $((Get-Process UlilmartPOS -ErrorAction SilentlyContinue | Measure-Object).Count) | dist/server.cjs: $(Test-Path dist/server.cjs) | node_modules: $(Test-Path node_modules)"
+            if (Test-Path server.log) { Get-Content server.log -Tail 25 | ForEach-Object { Write-Host "::error::server.log: $_" } } else { Write-Host "::error::server.log tidak ada" }
+            exit 1
+          }
+
   # Rilis: setelah SEMUA tes lulus di main, buat tag vX.Y.Z dari versi package.json (bila belum ada).
   # update.bat di komputer kasir memasang tag rilis tertinggi, jadi kode yang belum lolos tes
   # (atau belum dinaikkan versinya) tidak ikut terpasang di toko.
   rilis:
     name: Tag rilis
-    needs: [test, e2e]
+    needs: [test, e2e, launcher]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
