@@ -44,7 +44,16 @@ test('dua kasir: stok server benar, katalog tersinkron, penjualan offline dikiri
   await b.locator('#btn-close-lan-modal').click();
   await b.locator('#nav-btn-pos').click();
   // Server dipakai bersama tes E2E lain, jadi bisa ada produk lain: cari produk ini berdasarkan nama
-  await expect(b.locator('[id^="product-card-"]', { hasText: NAME })).toHaveCount(1);
+  // Diagnosa bila gagal: produk di server & kartu yang tampil di kasir B
+  const serverList = ((await (await request.get('/api/lan/data/pull')).json()).products || [])
+    .filter((x: any) => x.name === NAME)
+    .map((x: any) => `${x.id}|${x.barcode}|stok=${x.stock}`);
+  const cardIds = await b.locator('[id^="product-card-"]', { hasText: NAME }).evaluateAll((els) => els.map((e) => e.id));
+  const aCardIds = await a.locator('[id^="product-card-"]', { hasText: NAME }).evaluateAll((els) => els.map((e) => e.id));
+  await expect(
+    b.locator('[id^="product-card-"]', { hasText: NAME }),
+    `server=${JSON.stringify(serverList)} kartuB=${JSON.stringify(cardIds)} kartuA=${JSON.stringify(aCardIds)}`
+  ).toHaveCount(1);
 
   // Masing-masing menjual 1 -> stok server 18 (tidak ada yang tertimpa)
   await sellProductByName(a, NAME, 5000);
