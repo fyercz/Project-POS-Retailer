@@ -86,7 +86,7 @@ static bool locate_node_exe(wchar_t* outPath, size_t maxLen) {
     wchar_t appData[MAX_PATH];
 
     if (GetEnvironmentVariableW(L"ProgramFiles", programFiles, MAX_PATH) > 0) {
-        swprintf(searchedPath, MAX_PATH, L"%s\\nodejs\\node.exe", programFiles);
+        swprintf(searchedPath, MAX_PATH, L"%ls\\nodejs\\node.exe", programFiles);
         if (file_exists_w(searchedPath)) {
             wcsncpy(outPath, searchedPath, maxLen);
             return true;
@@ -94,7 +94,7 @@ static bool locate_node_exe(wchar_t* outPath, size_t maxLen) {
     }
 
     if (GetEnvironmentVariableW(L"ProgramFiles(x86)", programFilesX86, MAX_PATH) > 0) {
-        swprintf(searchedPath, MAX_PATH, L"%s\\nodejs\\node.exe", programFilesX86);
+        swprintf(searchedPath, MAX_PATH, L"%ls\\nodejs\\node.exe", programFilesX86);
         if (file_exists_w(searchedPath)) {
             wcsncpy(outPath, searchedPath, maxLen);
             return true;
@@ -102,12 +102,12 @@ static bool locate_node_exe(wchar_t* outPath, size_t maxLen) {
     }
 
     if (GetEnvironmentVariableW(L"LOCALAPPDATA", localAppData, MAX_PATH) > 0) {
-        swprintf(searchedPath, MAX_PATH, L"%s\\Programs\\nodejs\\node.exe", localAppData);
+        swprintf(searchedPath, MAX_PATH, L"%ls\\Programs\\nodejs\\node.exe", localAppData);
         if (file_exists_w(searchedPath)) {
             wcsncpy(outPath, searchedPath, maxLen);
             return true;
         }
-        swprintf(searchedPath, MAX_PATH, L"%s\\Programs\\node\\node.exe", localAppData);
+        swprintf(searchedPath, MAX_PATH, L"%ls\\Programs\\node\\node.exe", localAppData);
         if (file_exists_w(searchedPath)) {
             wcsncpy(outPath, searchedPath, maxLen);
             return true;
@@ -115,7 +115,7 @@ static bool locate_node_exe(wchar_t* outPath, size_t maxLen) {
     }
 
     if (GetEnvironmentVariableW(L"APPDATA", appData, MAX_PATH) > 0) {
-        swprintf(searchedPath, MAX_PATH, L"%s\\nvm\\current\\node.exe", appData);
+        swprintf(searchedPath, MAX_PATH, L"%ls\\nvm\\current\\node.exe", appData);
         if (file_exists_w(searchedPath)) {
             wcsncpy(outPath, searchedPath, maxLen);
             return true;
@@ -154,21 +154,21 @@ static bool locate_browser_exe(wchar_t* outPath, size_t maxLen) {
 
     // Priority 1: Microsoft Edge (comes preinstalled on Windows 10/11)
     if (GetEnvironmentVariableW(L"ProgramFiles(x86)", progFilesX86, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Microsoft\\Edge\\Application\\msedge.exe", progFilesX86);
+        swprintf(testPath, MAX_PATH, L"%ls\\Microsoft\\Edge\\Application\\msedge.exe", progFilesX86);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
         }
     }
     if (GetEnvironmentVariableW(L"ProgramFiles", progFiles, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Microsoft\\Edge\\Application\\msedge.exe", progFiles);
+        swprintf(testPath, MAX_PATH, L"%ls\\Microsoft\\Edge\\Application\\msedge.exe", progFiles);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
         }
     }
     if (GetEnvironmentVariableW(L"LOCALAPPDATA", localApp, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Microsoft\\Edge\\Application\\msedge.exe", localApp);
+        swprintf(testPath, MAX_PATH, L"%ls\\Microsoft\\Edge\\Application\\msedge.exe", localApp);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
@@ -181,21 +181,21 @@ static bool locate_browser_exe(wchar_t* outPath, size_t maxLen) {
 
     // Priority 2: Google Chrome
     if (GetEnvironmentVariableW(L"ProgramFiles", progFiles, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Google\\Chrome\\Application\\chrome.exe", progFiles);
+        swprintf(testPath, MAX_PATH, L"%ls\\Google\\Chrome\\Application\\chrome.exe", progFiles);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
         }
     }
     if (GetEnvironmentVariableW(L"ProgramFiles(x86)", progFilesX86, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Google\\Chrome\\Application\\chrome.exe", progFilesX86);
+        swprintf(testPath, MAX_PATH, L"%ls\\Google\\Chrome\\Application\\chrome.exe", progFilesX86);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
         }
     }
     if (GetEnvironmentVariableW(L"LOCALAPPDATA", localApp, MAX_PATH) > 0) {
-        swprintf(testPath, MAX_PATH, L"%s\\Google\\Chrome\\Application\\chrome.exe", localApp);
+        swprintf(testPath, MAX_PATH, L"%ls\\Google\\Chrome\\Application\\chrome.exe", localApp);
         if (file_exists_w(testPath)) {
             wcsncpy(outPath, testPath, maxLen);
             return true;
@@ -221,7 +221,7 @@ static void add_to_process_path(const wchar_t* nodeExePath) {
         DWORD len = GetEnvironmentVariableW(L"PATH", currentPath, 32768);
         if (len > 0) {
             wchar_t newPath[32768];
-            swprintf(newPath, 32768, L"%s;%s", nodeDir, currentPath);
+            swprintf(newPath, 32768, L"%ls;%ls", nodeDir, currentPath);
             SetEnvironmentVariableW(L"PATH", newPath);
         } else {
             SetEnvironmentVariableW(L"PATH", nodeDir);
@@ -315,7 +315,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
         // Server tersembunyi; keluaran ke server.log (lewat cmd agar bisa dialihkan)
         wchar_t cmdLine[1400];
-        swprintf(cmdLine, 1400, L"cmd.exe /d /s /c \"\"%s\" dist\\server.cjs >> server.log 2>&1\"", nodePath);
+        swprintf(cmdLine, 1400, L"cmd.exe /d /s /c \"\"%ls\" dist\\server.cjs >> server.log 2>&1\"", nodePath);
 
         STARTUPINFOW siServer = {0};
         siServer.cb = sizeof(siServer);
@@ -377,7 +377,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     wchar_t profileDir[MAX_PATH] = L"";
     wchar_t localAppData[MAX_PATH];
     if (GetEnvironmentVariableW(L"LOCALAPPDATA", localAppData, MAX_PATH) > 0) {
-        swprintf(profileDir, MAX_PATH, L"%s\\UlilmartPOS\\Browser", localAppData);
+        swprintf(profileDir, MAX_PATH, L"%ls\\UlilmartPOS\\Browser", localAppData);
     }
 
     wchar_t browserPath[MAX_PATH] = {0};
@@ -385,10 +385,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
         wchar_t browserCmd[2048];
         if (profileDir[0]) {
             swprintf(browserCmd, 2048,
-                L"\"%s\" --app=%s --user-data-dir=\"%s\" --no-first-run --no-default-browser-check%s",
+                L"\"%ls\" --app=%ls --user-data-dir=\"%ls\" --no-first-run --no-default-browser-check%ls",
                 browserPath, targetUrl, profileDir, kioskMode ? L" --kiosk" : L"");
         } else {
-            swprintf(browserCmd, 2048, L"\"%s\" --app=%s%s", browserPath, targetUrl, kioskMode ? L" --kiosk" : L"");
+            swprintf(browserCmd, 2048, L"\"%ls\" --app=%ls%ls", browserPath, targetUrl, kioskMode ? L" --kiosk" : L"");
         }
         STARTUPINFOW siBrowser = {0};
         siBrowser.cb = sizeof(siBrowser);
