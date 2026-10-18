@@ -7,6 +7,7 @@ import {
   TurnoverSpeed,
 } from '../types';
 import { toLocalDateString } from './formatters';
+import { daysUntil } from '../domain/expiry';
 
 /**
  * Deterministic hash helper for consistent pseudo-random benchmarks based on product ID
@@ -228,10 +229,8 @@ export function generateDynamicPricingSuggestions(
     // Check expiry
     let daysToExpiry = 999;
     if (product.expiryDate) {
-      const expDate = new Date(product.expiryDate).getTime();
-      if (!isNaN(expDate)) {
-        daysToExpiry = Math.ceil((expDate - Date.now()) / (1000 * 60 * 60 * 24));
-      }
+      const d = daysUntil(product.expiryDate);
+      if (d !== null) daysToExpiry = d;
     }
 
     let suggestedPrice = currentPrice;

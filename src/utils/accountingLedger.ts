@@ -12,6 +12,7 @@ import {
   IncomeStatement,
   ExpenseCategory,
 } from '../types';
+import { lineCogs } from './cogs';
 
 export type { ExpenseCategory };
 
@@ -155,14 +156,9 @@ export function generateJournalEntries(options: {
 
     // Calculate actual cost of goods sold (HPP) for this transaction
     let totalCogs = 0;
-    for (const item of tx.items || []) {
-      const multiplier = item.selectedUnit?.multiplier || 1;
-      const unitCost =
-        item.selectedUnit?.costPrice !== undefined
-          ? item.selectedUnit.costPrice
-          : (item.product?.costPrice ?? (item.product?.price ? item.product.price * 0.75 : 0)) * multiplier;
-      totalCogs += unitCost * (item.quantity || 1);
-    }
+    // HPP dari harga modal sebenarnya (satu aturan dengan laporan performa: src/utils/cogs.ts).
+    // Dulu: bila harga modal kosong ditebak 75% harga jual, sehingga laba di dua laporan berbeda.
+    for (const item of tx.items || []) totalCogs += lineCogs(item as any);
     totalCogs = Math.round(totalCogs);
 
     // Asset account based on payment method
@@ -547,14 +543,7 @@ export function computeIncomeStatement(options: {
     grossSales += Number(tx.subtotal) || 0;
     salesDiscounts += Number(tx.discountAmount) || 0;
 
-    for (const item of tx.items || []) {
-      const multiplier = item.selectedUnit?.multiplier || 1;
-      const unitCost =
-        item.selectedUnit?.costPrice !== undefined
-          ? item.selectedUnit.costPrice
-          : (item.product?.costPrice ?? (item.product?.price ? item.product.price * 0.75 : 0)) * multiplier;
-      costOfGoodsSold += unitCost * (item.quantity || 1);
-    }
+    for (const item of tx.items || []) costOfGoodsSold += lineCogs(item as any);
   }
 
   // 2. Sales Returns
@@ -651,7 +640,8 @@ export function computeBalanceSheet(options: {
   let merchandiseInventory = 0;
   for (const p of products) {
     const qty = Math.max(0, p.stock || 0);
-    const cost = p.costPrice !== undefined && p.costPrice > 0 ? p.costPrice : p.price * 0.75;
+    // Nilai persediaan dari harga modal sebenarnya (dulu ditebak 75% harga jual bila kosong)
+    const cost = Number(p.costPrice) > 0 ? Number(p.costPrice) : 0;
     merchandiseInventory += qty * cost;
   }
   merchandiseInventory = Math.round(merchandiseInventory);

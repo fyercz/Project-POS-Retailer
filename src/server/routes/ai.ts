@@ -2,6 +2,7 @@
 import express from 'express';
 import { callGeminiSafe, callGeminiVisionSafe, extractJsonFromText } from '../gemini.ts';
 import { toLocalDateString } from '../../utils/formatters.ts';
+import { daysUntil } from '../../domain/expiry.ts';
 
 export const aiRouter = express.Router();
 const router = aiRouter;
@@ -417,9 +418,9 @@ router.post('/api/ai/inventory-forecast', async (req, res) => {
   const now = new Date();
   let projectionDays = 14;
   if (targetDate) {
-    const target = new Date(targetDate);
-    if (!isNaN(target.getTime())) {
-      const diff = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = daysUntil(targetDate, now);
+    if (diffDays !== null) {
+      const diff = diffDays;
       projectionDays = Math.max(1, Math.min(60, diff || 7));
     }
   }

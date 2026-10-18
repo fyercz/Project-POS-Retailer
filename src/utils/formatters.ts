@@ -4,9 +4,8 @@ export const formatCurrency = (amount: number, _currency: string = 'IDR'): strin
   return `Rp ${Math.round(amount).toLocaleString('id-ID')}`;
 };
 
-export const formatRupiah = (amount: number): string => {
-  return `Rp ${Math.round(amount).toLocaleString('id-ID')}`;
-};
+/** Sama dengan formatCurrency (dipertahankan agar pemanggil lama tetap jalan) */
+export const formatRupiah = (amount: number): string => formatCurrency(amount);
 
 export const formatNumber = (val: number): string => {
   return new Intl.NumberFormat().format(val);

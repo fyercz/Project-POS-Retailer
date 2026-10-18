@@ -23,6 +23,7 @@ import {
 import { Product } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { stockStatusOf } from '../domain/stockStatus';
+import { daysUntil } from '../domain/expiry';
 
 export type InventoryAlertFilterType =
   | 'all'
@@ -47,14 +48,8 @@ export interface InventoryAlertBannerProps {
   currency?: string;
 }
 
-export const getProductExpiryDiffDays = (dateStr?: string): number | null => {
-  if (!dateStr) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const exp = new Date(dateStr);
-  exp.setHours(0, 0, 0, 0);
-  return Math.ceil((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-};
+// Satu aturan sisa hari untuk seluruh aplikasi (src/domain/expiry.ts)
+export const getProductExpiryDiffDays = (dateStr?: string): number | null => daysUntil(dateStr);
 
 export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
   products,
