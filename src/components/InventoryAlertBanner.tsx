@@ -155,7 +155,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
         <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
           <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
           <span>
-            <strong>Status Inventaris Sehat:</strong> Seluruh {products.length} produk memiliki kuantitas stok di atas batas minimum dan tidak ada tanggal kedaluwarsa kritis dalam 90 hari ke depan.
+            <strong>Status Inventaris Sehat:</strong> Seluruh {products.length.toLocaleString('id-ID')} produk memiliki kuantitas stok di atas batas minimum dan tidak ada tanggal kedaluwarsa kritis dalam 90 hari ke depan.
           </span>
         </div>
         <button
@@ -177,7 +177,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
     currentAlertFilter === 'all-exp';
 
   return (
-    <div className="border-b border-slate-200 dark:border-slate-800 bg-indigo-600 hover:bg-indigo-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 transition-all">
+    <div className="border-b border-slate-200 dark:border-slate-800 bg-amber-50/40 dark:bg-slate-900 transition-all">
       {/* Alert Header Summary Strip */}
       <div className="px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap bg-amber-100/60 dark:bg-amber-950/40 border-b border-amber-200/80 dark:border-amber-900/50">
         <div className="flex items-center gap-2.5 flex-wrap">
@@ -236,7 +236,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                   <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <span>Peringatan Kuantitas Stok</span>
                     <span className="px-1.5 py-0.2 rounded-full text-[11px] font-mono font-bold bg-amber-200 text-amber-900 dark:bg-amber-900/80 dark:text-amber-200">
-                      {allLowStockItems.length} Produk
+                      {allLowStockItems.length.toLocaleString('id-ID')} Produk
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -256,7 +256,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                     className="px-2 py-0.5 rounded-xl bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-bold text-[11px] border border-rose-300 dark:border-rose-800 cursor-pointer hover:scale-105 transition"
                     title="Klik untuk menyaring produk habis"
                   >
-                    {outOfStockItems.length} Habis (0)
+                    Habis: {outOfStockItems.length.toLocaleString('id-ID')}
                   </button>
                 )}
                 {lowStockItems.length > 0 && (
@@ -265,7 +265,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                     className="px-2 py-0.5 rounded-xl bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-bold text-[11px] border border-amber-300 dark:border-amber-800 cursor-pointer hover:scale-105 transition"
                     title="Klik untuk menyaring produk menipis"
                   >
-                    {lowStockItems.length} Menipis
+                    {lowStockItems.length.toLocaleString('id-ID')} Menipis
                   </button>
                 )}
               </div>
@@ -352,7 +352,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                 <span>
                   {currentAlertFilter === 'low-stock'
                     ? 'Lepas Saring Tabel'
-                    : `Saring Tabel (${allLowStockItems.length} Item)`}
+                    : `Saring Tabel (${allLowStockItems.length.toLocaleString('id-ID')} produk)`}
                 </span>
               </button>
 
@@ -406,7 +406,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                   <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <span>Notifikasi Kedaluwarsa (FEFO)</span>
                     <span className="px-1.5 py-0.2 rounded-full text-[11px] font-mono font-bold bg-rose-200 text-rose-900 dark:bg-rose-900/80 dark:text-rose-200">
-                      {allExpItems.length} Produk
+                      {allExpItems.length.toLocaleString('id-ID')} Produk
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -423,7 +423,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                     className="px-2 py-0.5 rounded-xl bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 font-bold text-[11px] border border-rose-300 dark:border-rose-800 cursor-pointer hover:scale-105 transition"
                     title="Sudah lewat tanggal kedaluwarsa"
                   >
-                    {expiredItems.length} Expired
+                    Kedaluwarsa: {expiredItems.length.toLocaleString('id-ID')}
                   </button>
                 )}
                 {criticalExpItems.length > 0 && (
@@ -432,7 +432,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                     className="px-2 py-0.5 rounded-xl bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 font-bold text-[11px] border border-rose-300 dark:border-rose-800 cursor-pointer hover:scale-105 transition"
                     title="Kedaluwarsa dalam ≤ 30 hari"
                   >
-                    {criticalExpItems.length} ≤30 Hari
+                    ≤ 30 hari: {criticalExpItems.length.toLocaleString('id-ID')}
                   </button>
                 )}
                 {approachingExpItems.length > 0 && (
@@ -441,7 +441,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                     className="px-2 py-0.5 rounded-xl bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-bold text-[11px] border border-amber-300 dark:border-amber-800 cursor-pointer hover:scale-105 transition"
                     title="Kedaluwarsa dalam 31-90 hari"
                   >
-                    {approachingExpItems.length} ≤90 Hari
+                    ≤ 90 hari: {approachingExpItems.length.toLocaleString('id-ID')}
                   </button>
                 )}
               </div>
@@ -496,13 +496,13 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                             }`}
                           >
                             {isPast
-                              ? `Lewat ${Math.abs(daysLeft)} hr`
+                              ? `Lewat ${Math.abs(daysLeft)} hari`
                               : daysLeft === 0
                               ? 'Hari Ini!'
                               : `${daysLeft} hari lagi`}
                           </span>
                           <span className="text-[11px] text-slate-500 block mt-0.5 font-mono">
-                            Exp: {p.expiryDate}
+                            Kedaluwarsa: {p.expiryDate}
                           </span>
                         </div>
 
@@ -553,7 +553,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                 <span>
                   {currentAlertFilter === 'all-exp'
                     ? 'Lepas Saring Tabel'
-                    : `Saring Tabel (${allExpItems.length} Item)`}
+                    : `Saring Tabel (${allExpItems.length.toLocaleString('id-ID')} produk)`}
                 </span>
               </button>
 

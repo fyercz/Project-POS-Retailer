@@ -93,6 +93,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { escapeHtml } from '../../utils/escapeHtml';
 import { purchaseOutstandingOf } from '../../utils/accountingLedger';
 import { buildStockHistoryIds, stockStatusOf } from '../../domain/stockStatus';
+import { ProductPicker } from '../ProductPicker';
 
 interface ReceivingItem {
   productId: string;
@@ -1347,7 +1348,7 @@ export const InventoryView: React.FC = () => {
               <Package className="w-3.5 h-3.5 text-emerald-500" />
               <span>Semua Produk</span>
               <span className="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                {products.length}
+                {products.length.toLocaleString('id-ID')}
               </span>
               {totalAlertsCount > 0 && (
                 <span
@@ -1803,8 +1804,8 @@ export const InventoryView: React.FC = () => {
               onChange={(e) => setProductOriginFilter(e.target.value as any)}
               className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white dark:bg-slate-800 border border-slate-500 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
             >
-              <option value="all">Semua Asal Produk ({products.length})</option>
-              <option value="imported">Khusus Hasil Impor ({importedCount})</option>
+              <option value="all">Semua Asal Produk ({products.length.toLocaleString('id-ID')})</option>
+              <option value="imported">Khusus Hasil Impor ({importedCount.toLocaleString('id-ID')})</option>
               <option value="default">Produk Non-Impor ({products.length - importedCount})</option>
             </select>
 
@@ -1913,7 +1914,7 @@ export const InventoryView: React.FC = () => {
                 title="Klik untuk menyaring produk kritis (≤30 hari)"
               >
                 <Clock className="w-3 h-3 text-rose-600" />
-                {criticalExpCount} Kritis ≤30hr
+                Hampir kedaluwarsa (≤ 30 hari): {criticalExpCount.toLocaleString('id-ID')}
               </button>
             )}
             {approachingExpCount > 0 && (
@@ -1924,7 +1925,7 @@ export const InventoryView: React.FC = () => {
                 title="Klik untuk menyaring produk mendekati exp (31-90 hari)"
               >
                 <Clock className="w-3 h-3 text-amber-700" />
-                {approachingExpCount} Mendekati Exp
+                ≤ 90 hari: {approachingExpCount.toLocaleString('id-ID')}
               </button>
             )}
             <div className="flex items-center gap-1.5 ml-auto flex-wrap">
@@ -2044,7 +2045,7 @@ export const InventoryView: React.FC = () => {
                 onClick={handleSelectAllImported}
                 className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold border border-slate-700 cursor-pointer transition-colors"
               >
-                Pilih Semua Hasil Impor ({importedCount})
+                Pilih Semua Hasil Impor ({importedCount.toLocaleString('id-ID')})
               </button>
             )}
           </div>
@@ -2285,22 +2286,22 @@ export const InventoryView: React.FC = () => {
                               isExpired ? (
                                 <span className="px-1.5 py-0.5 rounded-md text-[11px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-1 font-mono">
                                   <AlertCircle className="w-2.5 h-2.5 text-rose-600" />
-                                  Lewat {Math.abs(expiryDiff!)} hr
+                                  Lewat {Math.abs(expiryDiff!)} hari
                                 </span>
                               ) : isCriticalExp ? (
                                 <span className="px-1.5 py-0.5 rounded-md text-[11px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-1 font-mono">
                                   <Clock className="w-2.5 h-2.5 text-rose-600" />
-                                  Exp: {expiryDiff} hr lagi!
+                                  {expiryDiff} hari lagi
                                 </span>
                               ) : isApproachingExp ? (
                                 <span className="px-1.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1 font-mono">
                                   <Clock className="w-2.5 h-2.5 text-amber-700" />
-                                  Exp: {expiryDiff} hr
+                                  {expiryDiff} hari lagi
                                 </span>
                               ) : (
                                 <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1">
                                   <Clock className="w-3 h-3 text-slate-500" />
-                                  Exp: {prod.expiryDate}
+                                  Kedaluwarsa {prod.expiryDate}
                                 </span>
                               )
                             )}
@@ -2446,7 +2447,7 @@ export const InventoryView: React.FC = () => {
               <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-850 border-t border-slate-200 dark:border-slate-800 text-xs">
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                   <span>
-                    Menampilkan <strong className="text-slate-800 dark:text-slate-200 font-mono">{Math.min((productPage - 1) * productPageSize + 1, filteredProducts.length)} - {Math.min(productPage * productPageSize, filteredProducts.length)}</strong> dari <strong className="text-slate-800 dark:text-slate-200 font-mono">{filteredProducts.length}</strong> produk
+                    Menampilkan <strong className="text-slate-800 dark:text-slate-200 font-mono">{Math.min((productPage - 1) * productPageSize + 1, filteredProducts.length)} - {Math.min(productPage * productPageSize, filteredProducts.length)}</strong> dari <strong className="text-slate-800 dark:text-slate-200 font-mono">{filteredProducts.length.toLocaleString('id-ID')}</strong> produk
                   </span>
                   <span className="text-slate-300 dark:text-slate-700">|</span>
                   <label className="flex items-center gap-1.5">
@@ -3532,7 +3533,7 @@ export const InventoryView: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
                       <FileText className="w-4 h-4 text-emerald-500" />
-                      <span>Daftar Barang Yang Dibeli dari Supplier ({receivingItems.length} Baris)</span>
+                      <span>Daftar Barang Yang Dibeli dari Supplier ({receivingItems.length.toLocaleString('id-ID')} Baris)</span>
                     </span>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400">
                       Subtotal dapat diedit langsung (HPP per pcs akan dihitung otomatis)
@@ -3546,7 +3547,7 @@ export const InventoryView: React.FC = () => {
                           <th className="py-2 px-3">Produk Toko</th>
                           <th className="py-2 px-3 text-center w-28">Jumlah (Qty)</th>
                           <th className="py-2 px-3 text-right w-32">Harga Beli / Pcs</th>
-                          <th className="py-2 px-3 text-center w-36">Tgl Expired (FEFO)</th>
+                          <th className="py-2 px-3 text-center w-36">Tgl Kedaluwarsa</th>
                           <th className="py-2 px-3 text-right w-36">Subtotal (Rp)</th>
                           <th className="py-2 px-2 w-10 text-center"></th>
                         </tr>
@@ -3558,19 +3559,14 @@ export const InventoryView: React.FC = () => {
                           return (
                             <tr key={idx} className="bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
                               <td className="py-2 px-3">
-                                <select aria-label="Produk diterima"
+                                <ProductPicker
+                                  ariaLabel="Produk diterima"
+                                  products={products}
                                   value={item.productId}
-                                  onChange={(e) => handleReceivingItemChange(idx, 'productId', e.target.value)}
+                                  onChange={(id) => handleReceivingItemChange(idx, 'productId', id)}
                                   required
-                                  className="w-full p-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs cursor-pointer font-medium"
-                                >
-                                  <option value="" disabled>-- Pilih produk --</option>
-                                  {products.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.name} ({p.sku}) {p.barcode ? `• Barcode: ${p.barcode}` : ''} - Stok: {p.stock}
-                                    </option>
-                                  ))}
-                                </select>
+                                  describe={(p) => `Stok: ${p.stock}`}
+                                />
                               </td>
                               <td className="py-2 px-3">
                                 <input aria-label="Jumlah diterima"
@@ -3804,7 +3800,7 @@ export const InventoryView: React.FC = () => {
                         Total Tagihan Faktur Pembelian (Bersih):
                       </span>
                       <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {receivingItems.reduce((sum, item) => sum + item.quantity, 0)} total pcs barang ({receivingItems.length} baris barang)
+                        {receivingItems.reduce((sum, item) => sum + item.quantity, 0)} total pcs barang ({receivingItems.length.toLocaleString('id-ID')} baris barang)
                       </span>
                     </div>
                     <div className="text-xl font-black font-mono text-emerald-700 dark:text-emerald-300">
@@ -3970,19 +3966,16 @@ export const InventoryView: React.FC = () => {
                           return (
                             <tr key={idx} className="bg-white dark:bg-slate-900">
                               <td className="py-2 px-3">
-                                <select aria-label="Produk diretur"
+                                <ProductPicker
+                                  ariaLabel="Produk diretur"
+                                  products={products}
                                   value={item.productId}
-                                  onChange={(e) => handleReturnItemChange(idx, 'productId', e.target.value)}
+                                  onChange={(id) => handleReturnItemChange(idx, 'productId', id)}
                                   required
-                                  className="w-full p-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs cursor-pointer"
-                                >
-                                  <option value="" disabled>-- Pilih produk --</option>
-                                  {products.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.name} ({p.sku}) - Sisa Stok: {p.stock}
-                                    </option>
-                                  ))}
-                                </select>
+                                  // Retur hanya untuk barang yang masih ada di stok
+                                  filter={(p) => p.stock > 0}
+                                  describe={(p) => `Sisa stok: ${p.stock}`}
+                                />
                               </td>
                               <td className="py-2 px-3">
                                 <input aria-label="Jumlah diretur"
@@ -4254,7 +4247,7 @@ export const InventoryView: React.FC = () => {
                 <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
                   <span>Jumlah Data Impor Dihapus:</span>
                   <strong className="text-rose-600 dark:text-rose-400 font-mono text-sm">
-                    {importedCount} Barang
+                    {importedCount.toLocaleString('id-ID')} Barang
                   </strong>
                 </div>
                 <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
@@ -4307,7 +4300,7 @@ export const InventoryView: React.FC = () => {
                   className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Ya, Hapus Semua Data Impor ({importedCount})</span>
+                  <span>Ya, Hapus Semua Data Impor ({importedCount.toLocaleString('id-ID')})</span>
                 </button>
               </div>
             </div>

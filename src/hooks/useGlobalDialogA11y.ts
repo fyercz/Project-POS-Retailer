@@ -96,6 +96,9 @@ export function useGlobalDialogA11y(): void {
       if (!top || !document.contains(top)) return;
       if (e.key === 'Escape') {
         if (top.hasAttribute('data-no-escape')) return;
+        // Daftar pilihan yang sedang terbuka (combobox) menangani Escape-nya sendiri
+        const target = e.target as HTMLElement | null;
+        if (target?.getAttribute?.('aria-expanded') === 'true') return;
         const close = findCloseButton(top);
         e.preventDefault();
         if (close) close.click();

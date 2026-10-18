@@ -29,10 +29,12 @@ import {
   usePOSCart,
   usePOSCartActions,
   usePOSUI,
+  usePOSTransactions,
 } from '../context/POSContext';
 import { ProductCard } from './ProductCard';
 import { searchProductsFuzzy, ScoredProduct } from '../utils/fuzzySearch';
 import { playScannerSound } from '../utils/scannerAudio';
+import { buildStockHistoryIds, stockStatusOf, needsRestock } from '../domain/stockStatus';
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   LayoutGrid,
@@ -157,10 +159,15 @@ export const ProductCatalog: React.FC = () => {
     return counts;
   }, [products]);
 
-  // Count of products that have low stock
-  const lowStockCount = useMemo(() => {
-    return products.filter((p) => p.stock <= p.minStock).length;
-  }, [products]);
+  // Status stok yang sama dengan halaman Katalog & Stok: "Belum ada stok" (mis. produk impor yang
+  // belum pernah diisi) tidak dihitung sebagai menipis/habis
+  const { transactions: stockTx, supplierPurchases: stockPurchases } = usePOSTransactions();
+  const stockHistory = useMemo(() => buildStockHistoryIds(stockTx, stockPurchases), [stockTx, stockPurchases]);
+  const restockIds = useMemo(
+    () => new Set(products.filter((p) => needsRestock(stockStatusOf(p, stockHistory))).map((p) => p.id)),
+    [products, stockHistory]
+  );
+  const lowStockCount = restockIds.size;
 
   // Count of out-of-stock products in the catalog
   const outOfStockCount = useMemo(() => {
@@ -177,8 +184,9 @@ export const ProductCatalog: React.FC = () => {
 
   // Scored typo-tolerant fuzzy search results
   const scoredProducts: ScoredProduct[] = useMemo(() => {
-    return searchProductsFuzzy(products, searchQuery, selectedCategory, filterLowStock);
-  }, [products, selectedCategory, searchQuery, filterLowStock]);
+    const source = filterLowStock ? products.filter((p) => restockIds.has(p.id)) : products;
+    return searchProductsFuzzy(source, searchQuery, selectedCategory, false);
+  }, [products, selectedCategory, searchQuery, filterLowStock, restockIds]);
 
   const filteredProducts = useMemo(() => {
     const list = scoredProducts.map((sp) => sp.product);
@@ -310,7 +318,7 @@ export const ProductCatalog: React.FC = () => {
                       : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                   }`}
                 >
-                  {count}
+                  {count.toLocaleString('id-ID')}
                 </span>
               </button>
             );
@@ -342,7 +350,7 @@ export const ProductCatalog: React.FC = () => {
                   : 'bg-rose-200/70 text-rose-800 dark:bg-rose-900/80 dark:text-rose-200'
               }`}
             >
-              {lowStockCount}
+              {lowStockCount.toLocaleString('id-ID')}
             </span>
           </button>
 
@@ -389,7 +397,7 @@ export const ProductCatalog: React.FC = () => {
                   : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
               }`}
             >
-              {outOfStockCount}
+              {outOfStockCount.toLocaleString('id-ID')}
             </span>
           </button>
         </div>
@@ -483,7 +491,7 @@ export const ProductCatalog: React.FC = () => {
             <div className="flex items-center gap-2">
               <EyeOff className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
               <span>
-                <strong>{hiddenOutOfStockCount} produk stok kosong (0)</strong> saat ini disembunyikan dari layar kasir.
+                <strong>{hiddenOutOfStockCount.toLocaleString('id-ID')} produk stok kosong (0)</strong> saat ini disembunyikan dari layar kasir.
               </span>
             </div>
             <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
