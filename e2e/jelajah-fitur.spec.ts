@@ -149,6 +149,8 @@ test('jelajah semua halaman, tab, dan jendela tanpa error', async ({ page }) => 
       notes.push(`Tidak bisa dibuka: #${id}${reason ? ` (${reason})` : ' (tombol tidak terlihat di mana pun)'}`);
       continue;
     }
+    // Jendela dimuat lazy: tunggu sampai benar-benar muncul (atau memang tidak membuka jendela)
+    await dialogs().first().waitFor({ state: 'visible', timeout: 4000 }).catch(() => {});
     await checkErrors(`Jendela #${id}`);
     const dlg = dialogs().last();
     if ((await dlg.count()) > 0) await clickTabsIn(dlg, `Jendela #${id}`, 15);
