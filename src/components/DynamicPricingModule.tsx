@@ -53,6 +53,7 @@ import {
   roundToIndonesianRetailPrice,
   getEffectiveCompetitors,
 } from '../utils/dynamicPricingEngine';
+import { WebPriceSearchPanel } from './WebPriceSearchPanel';
 
 interface DynamicPricingModuleProps {
   products: Product[];
@@ -344,8 +345,9 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
     const today = new Date().toISOString().slice(0, 10);
     const saved = editableCompetitors.map((c, i) => {
       const before = original[i];
+      if (c.origin === 'web_ai' || c.origin === 'official') return { ...c, isEstimate: false }; // asal & sumber dipertahankan
       const changed = !before || before.price !== c.price || !before.isEstimate;
-      return changed ? { ...c, isEstimate: false, notes: 'Input manual', lastUpdated: today } : c;
+      return changed ? { ...c, isEstimate: false, origin: 'manual' as const, notes: 'Input manual', lastUpdated: today } : c;
     });
     if (onUpdateProductCompetitors) {
       onUpdateProductCompetitors(competitorModalItem.productId, saved);
@@ -1311,13 +1313,18 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
               Harga berlabel <strong>Estimasi</strong> dihitung otomatis dari harga modal, <strong>bukan</strong> harga asli
               di toko pesaing. Ganti dengan harga yang Anda lihat sendiri; harga yang diubah tersimpan sebagai input manual.
             </p>
+            <WebPriceSearchPanel
+              product={products.find((p) => p.id === competitorModalItem.productId)}
+              productName={competitorModalItem.productName}
+              onUse={(entry) => setEditableCompetitors((prev) => [...prev.filter((c) => c.competitorName !== entry.competitorName || c.price !== entry.price), entry])}
+            />
             <div className="space-y-3 my-4">
               {editableCompetitors.map((comp, idx) => (
                 <div key={idx} className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-xl">
                   <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 min-w-[130px]">
                     {comp.competitorName}
                     <span className={`block text-[11px] font-normal ${comp.isEstimate ? 'text-amber-700 dark:text-amber-400' : 'text-slate-500'}`}>
-                      {comp.isEstimate ? 'Estimasi (bukan harga asli)' : `Input manual${comp.lastUpdated ? ` · ${comp.lastUpdated}` : ''}`}
+                      {comp.isEstimate ? 'Estimasi (bukan harga asli)' : comp.origin === 'web_ai' || comp.origin === 'official' ? `${comp.notes || ''}` : `Input manual${comp.lastUpdated ? ` · ${comp.lastUpdated}` : ''}`}
                     </span>
                   </span>
                   <div className="flex items-center gap-1.5">

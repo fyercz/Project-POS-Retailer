@@ -46,6 +46,10 @@ export interface CompetitorPrice {
   notes?: string;
   /** true = dihitung otomatis dari harga modal (BUKAN harga asli pesaing); false/kosong = input manual */
   isEstimate?: boolean;
+  /** Asal harga: diketik sendiri, ditemukan AI di web, atau acuan pemerintah (.go.id) */
+  origin?: 'manual' | 'web_ai' | 'official';
+  /** Tautan sumber (untuk harga dari web / acuan pemerintah) */
+  sourceUrl?: string;
 }
 
 export type TurnoverSpeed = 'fast' | 'moderate' | 'slow' | 'dead_stock';
@@ -401,6 +405,8 @@ export interface StoreSettings {
   minProfitPercentForPoints: number; // e.g. 15% minimal profit margin barang untuk menghasilkan poin
   welcomeBonusPoints?: number; // Bonus poin untuk setiap member baru (default 0 = tidak ada bonus)
   /** Tampilkan margin keuntungan per barang di keranjang (default mati: layar kasir sering terlihat pembeli) */
+  /** Wilayah untuk harga acuan pemerintah, mis. 'Kabupaten Magetan, Jawa Timur' */
+  priceRegion?: string;
   showMarginInCart?: boolean;
   /** Tampilkan saran produk AI di keranjang (default mati: kurangi gangguan saat melayani) */
   showAiUpsellInCart?: boolean;

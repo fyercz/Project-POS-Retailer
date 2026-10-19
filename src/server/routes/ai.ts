@@ -1,12 +1,76 @@
 /** Endpoint /api/ai/* (fitur AI Gemini). Dipindah dari server.ts tanpa perubahan logika. */
 import express from 'express';
-import { callGeminiSafe, callGeminiVisionSafe, extractJsonFromText } from '../gemini.ts';
+import { callGeminiSafe, callGeminiVisionSafe, callGeminiWithSearch, extractJsonFromText } from '../gemini.ts';
+import { validateAiPrices, type PriceSearchMode, type RawAiPrice } from '../../domain/webPriceResults.ts';
 import { toLocalDateString } from '../../utils/formatters.ts';
 import { daysUntil } from '../../domain/expiry.ts';
 import { errorMessage } from '../../utils/errors.ts';
 
 export const aiRouter = express.Router();
 const router = aiRouter;
+
+// Cari harga di web dengan AI (Google Search grounding).
+//  mode 'competitor': harga eceran produk di minimarket/supermarket online
+//  mode 'official'  : harga acuan komoditas pokok dari sumber pemerintah (.go.id) untuk wilayah toko
+// Hanya harga yang situs sumbernya benar-benar muncul di hasil pencarian yang dikembalikan
+// (src/domain/webPriceResults.ts). Tidak ada hasil cadangan/karangan bila AI gagal.
+router.post('/api/ai/price-search', async (req, res) => {
+  const mode: PriceSearchMode = req.body?.mode === 'official' ? 'official' : 'competitor';
+  const productName = String(req.body?.productName || '').slice(0, 160).trim();
+  const brand = String(req.body?.brand || '').slice(0, 80).trim();
+  const barcode = String(req.body?.barcode || '').slice(0, 32).trim();
+  const commodity = String(req.body?.commodity || '').slice(0, 80).trim();
+  const unit = req.body?.unit === 'liter' ? 'liter' : 'kg';
+  const region = String(req.body?.region || '').slice(0, 120).trim();
+
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(503).json({ success: false, error: 'Fitur ini memerlukan GEMINI_API_KEY di file .env.' });
+  }
+  if (mode === 'competitor' && !productName) return res.status(400).json({ success: false, error: 'Nama produk kosong.' });
+  if (mode === 'official' && !commodity) return res.status(400).json({ success: false, error: 'Komoditas kosong.' });
+
+  const today = new Date().toISOString().slice(0, 10);
+  const prompt =
+    mode === 'official'
+      ? `Cari harga eceran rata-rata TERBARU komoditas "${commodity}" per ${unit} untuk wilayah "${region || 'Indonesia'}" ` +
+        `dari sumber pemerintah Indonesia: Panel Harga Pangan Badan Pangan Nasional (panelharga.badanpangan.go.id), ` +
+        `PIHPS Bank Indonesia (bi.go.id/hargapangan), atau situs dinas pemerintah daerah (.go.id). ` +
+        `Utamakan data kabupaten/kota; bila tidak ada, provinsi; bila tidak ada, rata-rata nasional (sebutkan wilayahnya). ` +
+        `JANGAN mengarang angka. Hanya laporkan harga yang benar-benar tercantum di halaman sumber.\n` +
+        `Balas HANYA JSON array: [{"source":"<domain situs sumber>","price":<angka rupiah per ${unit}>,"unit":"${unit}",` +
+        `"region":"<wilayah data>","date":"<YYYY-MM-DD tanggal data>"}]. Bila tidak ditemukan, balas [].`
+      : `Cari harga eceran TERBARU produk "${productName}"${brand ? ` merek ${brand}` : ''}${barcode ? ` (barcode ${barcode})` : ''} ` +
+        `di minimarket/supermarket Indonesia (mis. KlikIndomaret, Alfagift, situs supermarket resmi). ` +
+        `Pastikan ukuran/varian sama persis. JANGAN mengarang angka; hanya harga yang benar-benar tercantum di halaman sumber. ` +
+        `Abaikan harga grosir, paket isi banyak, dan harga lelang/bekas.\n` +
+        `Balas HANYA JSON array: [{"source":"<domain situs sumber>","price":<angka rupiah per pcs>,"unit":"pcs",` +
+        `"date":"<YYYY-MM-DD bila tercantum>","note":"<mis. harga online / promo s.d. tanggal>"}]. Bila tidak ditemukan, balas [].`;
+
+  try {
+    const result = await callGeminiWithSearch(prompt, 0);
+    if (!result) {
+      return res.status(503).json({ success: false, error: 'AI tidak dapat mencari saat ini (kuota habis atau gangguan jaringan). Coba lagi nanti.' });
+    }
+    let raw: RawAiPrice[] = [];
+    try {
+      const parsed = extractJsonFromText(result.text);
+      raw = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.results) ? parsed.results : [];
+    } catch {
+      raw = [];
+    }
+    const results = validateAiPrices(raw, result.sources, mode, today).slice(0, 6);
+    res.json({
+      success: true,
+      mode,
+      results,
+      checkedSources: result.sources.length,
+      discarded: Math.max(0, raw.length - results.length),
+    });
+  } catch (err: unknown) {
+    console.error('Price search error:', errorMessage(err));
+    res.status(503).json({ success: false, error: 'Pencarian harga gagal. Coba lagi nanti.' });
+  }
+});
 
 // 6. AI Supplier Purchase Invoice OCR / Image Scanner
 router.post('/api/ai/scan-invoice', async (req, res) => {
