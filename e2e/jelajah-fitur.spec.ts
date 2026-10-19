@@ -36,6 +36,12 @@ test('jelajah semua halaman, tab, dan jendela tanpa error', async ({ page }) => 
   page.on('dialog', (d) => d.dismiss().catch(() => {}));
   await page.addInitScript(() => {
     window.print = () => {};
+    // Diagnostik: apakah tombol Escape sampai ke window (capture) & document (capture/bubble)?
+    const w = window as any;
+    w.__esc = { win: 0, docCapture: 0, docBubble: 0 };
+    window.addEventListener('keydown', (e) => e.key === 'Escape' && w.__esc.win++, true);
+    document.addEventListener('keydown', (e) => e.key === 'Escape' && w.__esc.docCapture++, true);
+    document.addEventListener('keydown', (e) => e.key === 'Escape' && w.__esc.docBubble++, false);
   });
 
   // Data awal supaya laporan, riwayat, dan member punya isi
@@ -49,7 +55,7 @@ test('jelajah semua halaman, tab, dan jendela tanpa error', async ({ page }) => 
     if ((await page.getByText(/mengalami error/).count()) > 0) fatal.push(`Layar error setelah: ${label}`);
     where.push(label);
   };
-  const dialogs = () => page.locator('[role="dialog"][aria-modal="true"]:not([data-no-escape])');
+  const dialogs = () => page.locator('[role="dialog"][aria-modal="true"]:not([data-no-escape])').filter({ visible: true });
   const closeAll = async (label: string) => {
     for (let i = 0; i < 4 && (await dialogs().count()) > 0; i++) {
       await page.keyboard.press('Escape');
@@ -61,7 +67,22 @@ test('jelajah semua halaman, tab, dan jendela tanpa error', async ({ page }) => 
       const closers = await d.locator('button[aria-label^="Tutup"], button').evaluateAll((bs) =>
         bs.slice(0, 40).map((b) => b.getAttribute('aria-label') || (b.textContent || '').trim()).filter((t) => /tutup|batal|kembali|close/i.test(t)).slice(0, 4)
       );
-      notes.push(`Tidak tertutup dengan Escape: ${label} [judul: ${name.slice(0, 50)}; tombol tutup: ${JSON.stringify(closers)}; fokus: ${await page.evaluate(() => document.activeElement?.tagName + '#' + (document.activeElement?.id || ''))}]`);
+      const diag = await page.evaluate(() => {
+        const ds = [...document.querySelectorAll('[role="dialog"]')].map((d) => {
+          const lb = d.getAttribute('aria-labelledby');
+          return `${(lb && document.getElementById(lb)?.textContent?.trim().slice(0, 25)) || d.getAttribute('aria-label') || '?'}${d.getClientRects().length ? '' : '(tersembunyi)'}${d.hasAttribute('data-no-escape') ? '(no-esc)' : ''}`;
+        });
+        return { dialogs: ds, esc: (window as any).__esc, aktif: document.activeElement?.outerHTML.slice(0, 90) };
+      });
+      // Apakah klik manual tombol Tutup berhasil?
+      const btn = d.locator('button[aria-label^="Tutup"]').first();
+      let manual = 'tidak ada tombol';
+      if ((await btn.count()) > 0) {
+        await btn.click({ timeout: 2000 }).catch(() => {});
+        await page.waitForTimeout(300);
+        manual = (await dialogs().count()) === 0 ? 'klik Tutup BERHASIL' : 'klik Tutup GAGAL';
+      }
+      notes.push(`Tidak tertutup dengan Escape: ${label} [judul: ${name.slice(0, 50)}; tombol tutup: ${JSON.stringify(closers)}; ${manual}; diag: ${JSON.stringify(diag)}]`);
       await page.reload();
       await page.waitForTimeout(800);
     }
