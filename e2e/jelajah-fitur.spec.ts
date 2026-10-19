@@ -118,7 +118,10 @@ test('jelajah semua halaman, tab, dan jendela tanpa error', async ({ page }) => 
     await closeAll('sebelum ' + id);
     let reason = '';
     const opened = await tryOpen(id).catch((e: Error) => {
-      reason = e.message.split('\n')[0]!.slice(0, 160);
+      // Sertakan baris 'intercepts pointer events' (elemen yang menghalangi klik)
+      const lines = e.message.split('\n');
+      const blocker = lines.find((l) => /intercepts pointer events|not enabled|not visible|not stable/.test(l)) || '';
+      reason = `${lines[0]!.slice(0, 100)} ${blocker.trim().slice(0, 220)}`;
       return false;
     });
     if (!opened) {
