@@ -297,3 +297,11 @@ test('SQLite satu-satunya penyimpanan: pesanan parkir bertahan setelah restart, 
   await new Promise((r) => setTimeout(r, 1500));
   assert.equal(fs.existsSync(path.join(dataDir, 'lan-database.json')), false, 'snapshot JSON tidak lagi ditulis');
 });
+
+test('cari harga di web (AI): tanpa API key menolak jujur, tanpa harga karangan', async () => {
+  for (const body of [{ mode: 'competitor', productName: 'Gula Pasir 1kg' }, { mode: 'official', commodity: 'Gula Konsumsi', region: 'Kab. Magetan' }]) {
+    const r = await post('/api/ai/price-search', body);
+    assert.equal(r.status, 503);
+    assert.equal(r.data.results, undefined);
+  }
+});
