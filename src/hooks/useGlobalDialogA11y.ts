@@ -27,11 +27,23 @@ function isOverlay(el: Element): el is HTMLElement {
   return Boolean(el.querySelector('button, input, select, textarea, a[href]'));
 }
 
+const isShown = (el: HTMLElement) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+
 function findCloseButton(dialog: HTMLElement): HTMLElement | null {
-  const byLabel = dialog.querySelector<HTMLElement>('button[aria-label^="Tutup"], button[aria-label="Close"]');
+  // Hanya tombol yang TERLIHAT (bukan tombol di bagian yang terlipat/tersembunyi)
+  const byLabel = Array.from(dialog.querySelectorAll<HTMLElement>('button[aria-label^="Tutup"], button[aria-label="Close"]')).find(isShown);
   if (byLabel) return byLabel;
-  const buttons = Array.from(dialog.querySelectorAll<HTMLElement>('button'));
+  const buttons = Array.from(dialog.querySelectorAll<HTMLElement>('button')).filter(isShown);
   return buttons.find((b) => /^(tutup|batal|kembali)\b/i.test((b.textContent || '').trim())) || null;
+}
+
+const zOf = (el: HTMLElement) => Number.parseInt(getComputedStyle(el).zIndex, 10) || 0;
+
+/** Jendela paling atas yang TERLIHAT saat ini, ditentukan langsung dari layar (bukan dari tumpukan). */
+function topVisibleOverlay(): HTMLElement | null {
+  const list = Array.from(document.querySelectorAll('div.fixed.inset-0')).filter(isOverlay).filter(isShown);
+  if (list.length === 0) return null;
+  return list.reduce((best, el) => (zOf(el) >= zOf(best) ? el : best));
 }
 
 export function useGlobalDialogA11y(): void {
@@ -92,8 +104,12 @@ export function useGlobalDialogA11y(): void {
     scan();
 
     const onKeyDown = (e: KeyboardEvent) => {
-      const top = stack[stack.length - 1];
-      if (!top || !document.contains(top)) return;
+      if (e.key !== 'Escape' && e.key !== 'Tab') return;
+      // Jendela paling atas diambil dari layar: tumpukan internal bisa tertinggal saat isi jendela
+      // dimuat bertahap (lazy), sehingga dulu Escape kadang tidak menutup jendela yang terlihat.
+      const top = topVisibleOverlay();
+      if (!top) return;
+      if (!stack.includes(top)) setup(top);
       if (e.key === 'Escape') {
         if (top.hasAttribute('data-no-escape')) return;
         // Daftar pilihan yang sedang terbuka (combobox) menangani Escape-nya sendiri
