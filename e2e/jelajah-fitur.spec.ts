@@ -181,6 +181,7 @@ test('jelajah semua halaman, tab, dan jendela tanpa error', async ({ page }) => 
   for (const c of [...new Set(consoleErrors)].slice(0, 15)) test.info().annotations.push({ type: 'console.error', description: c });
   // Ringkasan temuan ditulis juga ke pesan kegagalan agar terbaca di CI
   expect(fatal, `FATAL:\n${fatal.join('\n')}\n\nTEMUAN:\n${notes.join('\n')}`).toEqual([]);
-  // Catat temuan non-fatal sebagai kegagalan lunak agar terlihat di ringkasan CI
+  // Temuan non-fatal juga menggagalkan tes (soft): setiap tombol harus bisa dibuka & setiap
+  // jendela harus tertutup dengan Escape. Menjaga kemunduran fitur/aksesibilitas di masa depan.
   expect.soft(notes, `TEMUAN (non-fatal):\n${notes.join('\n')}\n\nconsole.error:\n${[...new Set(consoleErrors)].slice(0, 15).join('\n')}`).toEqual([]);
 });
