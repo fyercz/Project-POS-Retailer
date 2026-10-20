@@ -836,6 +836,7 @@ export interface OperationalExpense {
 export interface BalanceSheet {
   asOfDate: string;
   assets: {
+    openingFunds?: number; // Dana awal = modal awal (tidak dipecah ke kas/bank)
     cashOnHand: number; // Kas kasir di laci
     bankAndQris: number; // Saldo QRIS & Transfer
     edcCardReceivables: number; // Piutang Kliring EDC Kartu
@@ -847,6 +848,7 @@ export interface BalanceSheet {
     accountsPayable: number; // Utang tempo supplier
     consignmentPayable?: number; // Utang titipan konsinyasi supplier
     pointsLiability: number; // Beban titipan poin member
+    storeCreditLiability?: number; // Saldo toko pelanggan dari retur
     totalCurrentLiabilities: number;
     totalLiabilities: number;
   };
@@ -854,10 +856,14 @@ export interface BalanceSheet {
     ownerInitialCapital: number; // Modal awal pemilik
     currentPeriodNetIncome: number; // Laba bersih periode berjalan
     retainedEarnings: number; // Akumulasi laba ditahan
+    /** Selisih yang tidak dijelaskan pencatatan (stok awal tanpa faktur, opname, kas awal, ...) */
+    unrecordedCapital?: number;
     totalEquity: number;
   };
   totalLiabilitiesAndEquity: number;
   isBalanced: boolean;
+  /** true bila tidak ada selisih yang belum tercatat */
+  isReconciled?: boolean;
   difference: number;
 }
 

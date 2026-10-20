@@ -108,7 +108,7 @@ export const IncomeStatementPanel: React.FC<IncomeStatementPanelProps> = ({ date
                     </div>
                     <div className="space-y-1 pl-3">
                       <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/40">
-                        <span className="font-sans text-slate-700 dark:text-slate-300">4010 • Penjualan Kotor (Gross Sales)</span>
+                        <span className="font-sans text-slate-700 dark:text-slate-300">4010 • Penjualan Kotor (sebelum diskon)</span>
                         <span>{formatCurrency(dateFilteredIncome.grossSales, settings.currency)}</span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/40 text-rose-600 dark:text-rose-400">

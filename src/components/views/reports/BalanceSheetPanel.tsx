@@ -102,6 +102,17 @@ export const BalanceSheetPanel: React.FC<BalanceSheetPanelProps> = ({ balanceShe
                     </div>
 
                     <div className="space-y-2">
+                      {(balanceSheet.assets.openingFunds ?? 0) > 0 && (
+                        <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                          <div>
+                            <span className="font-medium text-slate-800 dark:text-slate-200">1005 • Dana Awal (Modal Awal)</span>
+                            <p className="text-[11px] text-slate-500">Kas & bank saat mulai memakai aplikasi (sesuai Modal Awal di Pengaturan)</p>
+                          </div>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {formatCurrency(balanceSheet.assets.openingFunds ?? 0, settings.currency)}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                         <div>
                           <span className="font-medium text-slate-800 dark:text-slate-200">1010 • Kas di Laci Kasir (Cash on Hand)</span>
@@ -208,6 +219,18 @@ export const BalanceSheetPanel: React.FC<BalanceSheetPanelProps> = ({ balanceShe
                           </span>
                         </div>
 
+                        {(balanceSheet.liabilities.storeCreditLiability ?? 0) > 0 && (
+                        <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                          <div>
+                            <span className="font-medium text-slate-800 dark:text-slate-200">2040 • Saldo Toko Pelanggan (Retur)</span>
+                            <p className="text-[11px] text-slate-500">Retur yang dibayar dengan saldo toko dan belum dibelanjakan pelanggan</p>
+                          </div>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {formatCurrency(balanceSheet.liabilities.storeCreditLiability ?? 0, settings.currency)}
+                          </span>
+                        </div>
+                        )}
+
                         <div className="flex justify-between text-[11px] font-bold text-rose-700 dark:text-rose-300 pt-1">
                           <span>Total Kewajiban</span>
                           <span className="font-mono">{formatCurrency(balanceSheet.liabilities.totalLiabilities, settings.currency)}</span>
@@ -227,7 +250,7 @@ export const BalanceSheetPanel: React.FC<BalanceSheetPanelProps> = ({ balanceShe
                         <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                           <div>
                             <span className="font-medium text-slate-800 dark:text-slate-200">3010 • Modal Awal Pemilik Toko</span>
-                            <p className="text-[11px] text-slate-500">Investasi awal usaha ritel Ulilmart</p>
+                            <p className="text-[11px] text-slate-500">Diisi Owner di Pengaturan</p>
                           </div>
                           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                             {formatCurrency(balanceSheet.equity.ownerInitialCapital, settings.currency)}
@@ -236,22 +259,29 @@ export const BalanceSheetPanel: React.FC<BalanceSheetPanelProps> = ({ balanceShe
 
                         <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                           <div>
-                            <span className="font-medium text-slate-800 dark:text-slate-200">Laba Bersih Periode Berjalan</span>
-                            <p className="text-[11px] text-slate-500">Hasil laba bersih dari Laporan Laba Rugi</p>
+                            <span className="font-medium text-slate-800 dark:text-slate-200">Laba (Rugi) Tercatat</span>
+                            <p className="text-[11px] text-slate-500">Akumulasi laba bersih dari Laporan Laba Rugi (termasuk retur)</p>
                           </div>
                           <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                             {formatCurrency(balanceSheet.equity.currentPeriodNetIncome, settings.currency)}
                           </span>
                         </div>
 
-                        <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
-                          <div>
-                            <span className="font-medium text-slate-800 dark:text-slate-200">3020 • Akumulasi Laba Ditahan</span>
-                            <p className="text-[11px] text-slate-500">Laba ditahan dari akumulasi aset &amp; persediaan</p>
+                        {/* Dulu: "Laba ditahan" = SISA agar neraca selalu seimbang. Kini sisa ditampilkan terang-terangan. */}
+                        <div className={`py-1.5 px-2 rounded-lg border ${balanceSheet.isReconciled ? 'border-slate-100 dark:border-slate-800/60' : 'border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30'}`}>
+                          <div className="flex justify-between items-center gap-2">
+                            <span className="font-medium text-slate-800 dark:text-slate-200">Modal Persediaan Awal &amp; Selisih Belum Tercatat</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                              {formatCurrency(balanceSheet.equity.unrecordedCapital ?? 0, settings.currency)}
+                            </span>
                           </div>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            {formatCurrency(balanceSheet.equity.retainedEarnings, settings.currency)}
-                          </span>
+                          {!balanceSheet.isReconciled && (
+                            <p className="text-[11px] text-amber-800 dark:text-amber-300 mt-1">
+                              Nilai yang tidak dijelaskan oleh transaksi tercatat. Biasanya: stok awal/impor yang diinput tanpa faktur
+                              pembelian, hasil stock opname/koreksi, atau kas awal yang belum diisi di Modal Awal. Bila nilainya jauh
+                              dari perkiraan Anda, periksa data stok & harga modal.
+                            </p>
+                          )}
                         </div>
 
                         <div className="flex justify-between text-[11px] font-bold text-blue-700 dark:text-blue-300 pt-1">

@@ -64,7 +64,7 @@ import {
 import { ProjectedSalesWidget } from '../ProjectedSalesWidget';
 import { DynamicPricingModule } from '../DynamicPricingModule';
 import { usePOSCatalog } from '../../context/POSContext';
-import { lineCogs, baseUnitsOf, unitMultiplierOf } from '../../utils/cogs';
+import { lineCogs, baseUnitsOf, unitMultiplierOf, returnedCogs } from '../../utils/cogs';
 import { BalanceSheetPanel } from './reports/BalanceSheetPanel';
 import { IncomeStatementPanel } from './reports/IncomeStatementPanel';
 
@@ -325,7 +325,9 @@ export const ReportsView: React.FC = () => {
     const soldTransactions = transactions.filter((t) => t.status === 'completed' || t.status === 'refunded');
     for (let i = 0; i < soldTransactions.length; i++) {
       const tx = soldTransactions[i];
-      grossSales += tx.finalTotal;
+      // Penjualan setelah diskon, TANPA pajak/biaya layanan (sama dengan Laporan Laba Rugi);
+      // dulu memakai finalTotal sehingga pajak ikut dihitung sebagai omzet
+      grossSales += (Number(tx.subtotal) || 0) - (Number(tx.discountAmount) || 0);
       totalSubtotal += tx.subtotal;
       totalDiscounts += tx.discountAmount;
 
@@ -354,10 +356,14 @@ export const ReportsView: React.FC = () => {
     }
 
     const totalSalesReturnAmount = salesReturns.reduce((sum, r) => sum + r.totalRefundAmount, 0);
-    const netSales = Math.max(0, grossSales - totalSalesReturnAmount);
+    // Sama dengan Laporan Laba Rugi: retur mengurangi penjualan, HPP barang retur yang kembali ke
+    // stok mengurangi HPP; tidak dipotong 0 (dulu laba = penjualan - HPP tanpa retur, minimal 0)
+    const txById = new Map(transactions.map((t) => [t.id, t as any]));
+    totalCOGS -= salesReturns.reduce((sum, r) => sum + returnedCogs(r as any, txById), 0);
+    const netSales = grossSales - totalSalesReturnAmount;
     const averageTicket = soldTransactions.length > 0 ? grossSales / soldTransactions.length : 0;
-    const grossProfit = Math.max(0, grossSales - totalCOGS);
-    const profitMargin = grossSales > 0 ? ((grossProfit / grossSales) * 100).toFixed(1) : '0';
+    const grossProfit = netSales - totalCOGS;
+    const profitMargin = netSales > 0 ? ((grossProfit / netSales) * 100).toFixed(1) : '0';
 
     const topProducts = Object.values(productCountMap)
       .sort((a, b) => b.quantity - a.quantity)
@@ -1021,7 +1027,7 @@ export const ReportsView: React.FC = () => {
             {/* Gross Revenue */}
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">
-                Total Omzet Kotor
+                Total Penjualan · sepanjang waktu
               </span>
               <div className="text-xl font-black font-mono text-emerald-700 dark:text-emerald-400 mt-1">
                 {formatCurrency(reportMetrics.grossSales, settings.currency)}

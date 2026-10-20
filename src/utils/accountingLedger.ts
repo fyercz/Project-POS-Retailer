@@ -12,7 +12,7 @@ import {
   IncomeStatement,
   ExpenseCategory,
 } from '../types';
-import { lineCogs } from './cogs';
+import { lineCogs, returnedCogs } from './cogs';
 
 export type { ExpenseCategory };
 
@@ -46,6 +46,7 @@ export function purchaseOutstandingOf(po: SupplierPurchase): number {
 
 export const STANDARD_CHART_OF_ACCOUNTS: ChartOfAccount[] = [
   // 1000 - ASET LANCAR
+  { code: '1005', name: 'Dana Awal (Kas & Bank Saat Mulai)', category: 'asset', normalBalance: 'debit', description: 'Modal awal pemilik saat mulai memakai aplikasi (tidak dipecah ke kas/bank).' },
   { code: '1010', name: 'Kas di Laci Kasir', category: 'asset', normalBalance: 'debit', description: 'Uang fisik tunai di laci kasir' },
   { code: '1020', name: 'Bank & Saldo QRIS', category: 'asset', normalBalance: 'debit', description: 'Rekening penampung pembayaran QRIS & Transfer bank' },
   { code: '1030', name: 'EDC & Piutang Kartu Debit', category: 'asset', normalBalance: 'debit', description: 'Kliring settlement kartu debit/kredit mesin EDC' },
@@ -55,6 +56,7 @@ export const STANDARD_CHART_OF_ACCOUNTS: ChartOfAccount[] = [
   // 2000 - KEWAJIBAN (LIABILITAS)
   { code: '2010', name: 'Utang Dagang Supplier', category: 'liability', normalBalance: 'credit', description: 'Tagihan tempo faktur pembelian barang distributor' },
   { code: '2020', name: 'Liabilitas Poin Loyalitas', category: 'liability', normalBalance: 'credit', description: 'Titipan saldo poin member yang belum ditukarkan' },
+  { code: '2040', name: 'Saldo Toko Pelanggan (Retur)', category: 'liability', normalBalance: 'credit', description: 'Kewajiban kepada pelanggan dari retur yang dibayar dengan saldo toko (belum dibelanjakan).' },
   { code: '2030', name: 'Utang Titipan / Konsinyasi Supplier', category: 'liability', normalBalance: 'credit', description: 'Kewajiban titip jual konsinyasi supplier yang menunggu rekonsiliasi penjualan' },
 
   // 3000 - EKUITAS
@@ -103,40 +105,39 @@ export function generateJournalEntries(options: {
     supplierPurchases = [],
     shifts = [],
     expenses = [],
-    initialCapital = 50000000,
+    initialCapital = 0, // dulu bawaan Rp 50 juta karangan
   } = options;
 
   const entries: JournalEntry[] = [];
 
   // 1. Initial Capital Entry
   if (initialCapital > 0) {
+    // Tanggal: transaksi pertama yang tercatat (dulu tertanam 1 Januari 2026)
+    const firstDate = transactions
+      .map((t) => t.createdAt)
+      .filter(Boolean)
+      .sort()[0] || new Date().toISOString();
     entries.push({
       id: 'jrnl-init-capital',
-      date: '2026-01-01T00:00:00.000Z',
+      date: firstDate,
       referenceNumber: 'EQUITY-INIT',
       sourceType: 'initial_balance',
       description: 'Penyetoran Modal Awal Pemilik Toko',
       lines: [
         {
-          accountCode: '1010',
-          accountName: 'Kas di Laci Kasir',
-          debit: Math.round(initialCapital * 0.4),
+          // Utuh ke satu akun (dulu dipecah 40% kas / 60% bank secara karangan)
+          accountCode: '1005',
+          accountName: 'Dana Awal (Kas & Bank Saat Mulai)',
+          debit: initialCapital,
           credit: 0,
-          memo: 'Setoran Kas Operasional Tunai Toko',
-        },
-        {
-          accountCode: '1020',
-          accountName: 'Bank & Saldo QRIS',
-          debit: Math.round(initialCapital * 0.6),
-          credit: 0,
-          memo: 'Setoran Rekening Bank Usaha',
+          memo: 'Dana awal saat mulai memakai aplikasi',
         },
         {
           accountCode: '3010',
           accountName: 'Modal Awal Pemilik',
           debit: 0,
           credit: initialCapital,
-          memo: 'Modal Usaha Toko Ritel Ulilmart',
+          memo: 'Modal awal pemilik toko',
         },
       ],
       totalDebit: initialCapital,
@@ -238,6 +239,7 @@ export function generateJournalEntries(options: {
   }
 
   // 3. Journalize Sales Returns
+  const returnTxById = new Map(transactions.map((t) => [t.id, t as any]));
   for (const ret of salesReturns) {
     const refund = Number(ret.totalRefundAmount) || 0;
     if (refund <= 0) continue;
@@ -247,7 +249,13 @@ export function generateJournalEntries(options: {
     if (ret.refundMethod === 'transfer') {
       refundAssetCode = '1020';
       refundAssetName = 'Bank & Saldo QRIS';
+    } else if (ret.refundMethod === 'store_credit') {
+      // Saldo toko: tidak ada uang keluar; toko berutang kepada pelanggan (dulu dicatat sebagai kas keluar)
+      refundAssetCode = '2040';
+      refundAssetName = 'Saldo Toko Pelanggan (Retur)';
     }
+    // Barang yang kembali ke stok: HPP dibalik ke persediaan
+    const retCogs = returnedCogs(ret as any, returnTxById);
 
     const lines = [
       {
@@ -262,8 +270,14 @@ export function generateJournalEntries(options: {
         accountName: refundAssetName,
         debit: 0,
         credit: refund,
-        memo: `Kas keluar pengembalian retur ${ret.refundMethod.toUpperCase()}`,
+        memo: ret.refundMethod === 'store_credit' ? 'Saldo toko untuk pelanggan' : `Kas keluar pengembalian retur ${ret.refundMethod.toUpperCase()}`,
       },
+      ...(retCogs > 0
+        ? [
+            { accountCode: '1050', accountName: 'Persediaan Barang Dagang', debit: retCogs, credit: 0, memo: 'Barang retur kembali ke stok' },
+            { accountCode: '5010', accountName: 'Beban Pokok Penjualan (HPP)', debit: 0, credit: retCogs, memo: 'Pembalikan HPP barang retur' },
+          ]
+        : []),
     ];
 
     const totalDebit = lines.reduce((s, l) => s + l.debit, 0);
@@ -549,9 +563,12 @@ export function computeIncomeStatement(options: {
   // 2. Sales Returns
   const salesReturnsTotal = filteredReturns.reduce((sum, r) => sum + (Number(r.totalRefundAmount) || 0), 0);
 
-  // 3. Net Sales
-  const netSales = Math.max(0, grossSales - salesDiscounts - salesReturnsTotal);
-  costOfGoodsSold = Math.round(costOfGoodsSold);
+  // 3. Net Sales (boleh negatif bila retur > penjualan periode itu; dulu dipotong 0 sehingga tersembunyi)
+  const netSales = grossSales - salesDiscounts - salesReturnsTotal;
+  // HPP barang retur yang kembali ke stok mengurangi HPP (dulu tetap dihitung biaya -> laba tampak lebih kecil)
+  const txById = new Map(transactions.map((t) => [t.id, t as any]));
+  const returnedCostOfGoods = filteredReturns.reduce((sum, r) => sum + returnedCogs(r as any, txById), 0);
+  costOfGoodsSold = Math.round(costOfGoodsSold) - returnedCostOfGoods;
 
   // 4. Gross Profit
   const grossProfit = netSales - costOfGoodsSold;
@@ -622,6 +639,7 @@ export function computeBalanceSheet(options: {
   supplierPurchases?: SupplierPurchase[];
   shifts?: ShiftSummary[];
   expenses?: OperationalExpense[];
+  salesReturns?: SalesReturn[];
   initialCapital?: number;
   pointRedemptionRate?: number;
 }): BalanceSheet {
@@ -632,7 +650,8 @@ export function computeBalanceSheet(options: {
     supplierPurchases = [],
     shifts = [],
     expenses = [],
-    initialCapital = 50000000,
+    salesReturns = [],
+    initialCapital = 0, // dulu bawaan Rp 50 juta karangan
     pointRedemptionRate = 100,
   } = options;
 
@@ -647,9 +666,12 @@ export function computeBalanceSheet(options: {
   merchandiseInventory = Math.round(merchandiseInventory);
 
   // 2. Liquid Assets (Cash & Bank) calculation
-  // Start from initial capital split
-  let cashOnHand = Math.round(initialCapital * 0.4);
-  let bankAndQris = Math.round(initialCapital * 0.6);
+  // Modal awal dicatat utuh sebagai "dana awal" (dulu dipecah 40% kas / 60% bank secara karangan).
+  // Kas & bank di bawah hanya dari arus yang tercatat; boleh negatif bila ada pengeluaran sebelum
+  // penjualan tercatat (dulu dipotong 0 sehingga kekurangan tersembunyi).
+  const openingFunds = Math.max(0, Number(initialCapital) || 0);
+  let cashOnHand = 0;
+  let bankAndQris = 0;
   let edcCardReceivables = 0;
 
   for (const tx of transactions) {
@@ -669,9 +691,9 @@ export function computeBalanceSheet(options: {
   for (const exp of expenses) {
     const amt = Number(exp.amount) || 0;
     if (exp.paymentSource === 'bank_transfer') {
-      bankAndQris = Math.max(0, bankAndQris - amt);
+      bankAndQris -= amt;
     } else {
-      cashOnHand = Math.max(0, cashOnHand - amt);
+      cashOnHand -= amt;
     }
   }
 
@@ -680,8 +702,8 @@ export function computeBalanceSheet(options: {
     if (purchasePaymentKind(po) === 'cash') continue;
     for (const pay of po.payments || []) {
       const amt = Number(pay.amount) || 0;
-      if (pay.source === 'bank_transfer') bankAndQris = Math.max(0, bankAndQris - amt);
-      else cashOnHand = Math.max(0, cashOnHand - amt);
+      if (pay.source === 'bank_transfer') bankAndQris -= amt;
+      else cashOnHand -= amt;
     }
   }
 
@@ -692,11 +714,20 @@ export function computeBalanceSheet(options: {
     const isConsignment = termsLower.includes('konsinyasi') || termsLower.includes('titip');
     const isCredit = !isConsignment && (termsLower.includes('tempo') || termsLower.includes('kredit') || termsLower.includes('hari'));
     if (!isCredit && !isConsignment) {
-      cashOnHand = Math.max(0, cashOnHand - total);
+      cashOnHand -= total;
     }
   }
 
-  const totalCurrentAssets = cashOnHand + bankAndQris + edcCardReceivables + merchandiseInventory;
+  // Retur penjualan: tunai mengurangi kas, transfer mengurangi bank, saldo toko = kewajiban
+  let storeCreditLiability = 0;
+  for (const ret of salesReturns) {
+    const refund = Number(ret.totalRefundAmount) || 0;
+    if (ret.refundMethod === 'transfer') bankAndQris -= refund;
+    else if (ret.refundMethod === 'store_credit') storeCreditLiability += refund;
+    else cashOnHand -= refund;
+  }
+
+  const totalCurrentAssets = openingFunds + cashOnHand + bankAndQris + edcCardReceivables + merchandiseInventory;
   const totalAssets = totalCurrentAssets;
 
   // 3. Liabilities
@@ -721,24 +752,27 @@ export function computeBalanceSheet(options: {
   const totalMemberPoints = customers.reduce((sum, c) => sum + (c.points || 0), 0);
   const pointsLiability = totalMemberPoints * pointRedemptionRate;
 
-  const totalCurrentLiabilities = accountsPayable + pointsLiability + consignmentPayable;
+  const totalCurrentLiabilities = accountsPayable + pointsLiability + consignmentPayable + storeCreditLiability;
   const totalLiabilities = totalCurrentLiabilities;
 
   // 4. Equity
   // Calculate Net Profit of current period from income statement
   const incomeStmt = computeIncomeStatement({
     transactions,
+    salesReturns, // dulu tanpa retur -> laba di neraca berbeda dengan laporan Laba Rugi
     shifts,
     expenses,
   });
   const currentPeriodNetIncome = incomeStmt.netOperatingProfit;
 
-  // Balanced plug: Retained earnings brings Asset = Liability + Equity
-  // Equity = Assets - Liabilities
-  const requiredTotalEquity = totalAssets - totalLiabilities;
-  const ownerInitialCapital = initialCapital;
-  const retainedEarnings = requiredTotalEquity - ownerInitialCapital - currentPeriodNetIncome;
-  const totalEquity = ownerInitialCapital + currentPeriodNetIncome + retainedEarnings;
+  // Ekuitas dihitung dari bawah: modal awal + laba (rugi) tercatat dari laporan Laba Rugi.
+  // Sisa yang tidak dijelaskan pencatatan (mis. stok awal/impor yang diinput tanpa faktur, hasil
+  // opname, kas awal) DITAMPILKAN sebagai baris sendiri. Dulu seluruh sisa disembunyikan sebagai
+  // "laba ditahan" sehingga neraca selalu tampak seimbang apa pun datanya.
+  const ownerInitialCapital = openingFunds;
+  const retainedEarnings = 0;
+  const unrecordedCapital = Math.round(totalAssets - totalLiabilities - ownerInitialCapital - currentPeriodNetIncome);
+  const totalEquity = ownerInitialCapital + currentPeriodNetIncome + retainedEarnings + unrecordedCapital;
 
   const totalLiabilitiesAndEquity = totalLiabilities + totalEquity;
   const difference = totalAssets - totalLiabilitiesAndEquity;
@@ -746,6 +780,7 @@ export function computeBalanceSheet(options: {
   return {
     asOfDate: new Date().toISOString(),
     assets: {
+      openingFunds,
       cashOnHand,
       bankAndQris,
       edcCardReceivables,
@@ -757,6 +792,7 @@ export function computeBalanceSheet(options: {
       accountsPayable,
       consignmentPayable,
       pointsLiability,
+      storeCreditLiability,
       totalCurrentLiabilities,
       totalLiabilities,
     },
@@ -764,10 +800,12 @@ export function computeBalanceSheet(options: {
       ownerInitialCapital,
       currentPeriodNetIncome,
       retainedEarnings,
+      unrecordedCapital,
       totalEquity,
     },
     totalLiabilitiesAndEquity,
     isBalanced: Math.abs(difference) < 1,
+    isReconciled: Math.abs(unrecordedCapital) < 1,
     difference,
   };
 }
