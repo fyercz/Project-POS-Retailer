@@ -3521,7 +3521,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       supplierPurchases,
       shifts: allShifts,
       expenses,
-      initialCapital: settings.initialCapital || 50000000,
+      initialCapital: settings.initialCapital ?? 0, // ?? (bukan ||): modal 0 tetap 0
     });
   }, [transactions, salesReturns, supplierPurchases, allShifts, expenses, settings.initialCapital]);
 
@@ -3533,10 +3533,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       supplierPurchases,
       shifts: allShifts,
       expenses,
-      initialCapital: settings.initialCapital || 50000000,
+      salesReturns,
+      // ?? (bukan ||): modal 0 tetap 0. Dulu 0 berubah menjadi Rp 50 juta karangan
+      initialCapital: settings.initialCapital ?? 0,
       pointRedemptionRate: settings.pointRedemptionRate || 100,
     });
-  }, [products, transactions, customers, supplierPurchases, allShifts, expenses, settings.initialCapital, settings.pointRedemptionRate]);
+  }, [products, transactions, customers, supplierPurchases, allShifts, expenses, salesReturns, settings.initialCapital, settings.pointRedemptionRate]);
 
   const incomeStatement = useMemo(() => {
     return computeIncomeStatement({

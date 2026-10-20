@@ -26,7 +26,7 @@ import { formatCurrency, formatNumber, formatDate, toLocalDateString } from '../
 import { printViaIframe, openPrintWindow, exportToCSV } from '../utils/printHelper';
 import { Transaction, Product, SupplierPurchase, PurchaseReturn, SalesReturn } from '../types';
 import { escapeHtml } from '../utils/escapeHtml';
-import { lineCogs, unitMultiplierOf } from '../utils/cogs';
+import { lineCogs, unitMultiplierOf, returnedCogs } from '../utils/cogs';
 import { isUlilMartStore } from './StoreLogo';
 
 export type ReportType =
@@ -128,7 +128,11 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
   const totalSubtotal = filteredTransactions.reduce((sum, t) => sum + t.subtotal, 0);
   const totalDiscounts = filteredTransactions.reduce((sum, t) => sum + t.discountAmount, 0);
   const totalRefundAmount = filteredSalesReturns.reduce((sum, r) => sum + r.totalRefundAmount, 0);
-  const netSales = Math.max(0, grossSales - totalRefundAmount);
+  // grossSales = uang diterima (termasuk pajak; dipakai untuk porsi metode bayar).
+  // Penjualan bersih & laba: setelah diskon, TANPA pajak, dikurangi retur (sama dengan Laba Rugi);
+  // tidak dipotong 0 (dulu Math.max(0, finalTotal - retur))
+  const salesAfterDiscount = totalSubtotal - totalDiscounts;
+  const netSales = salesAfterDiscount - totalRefundAmount;
 
   // HPP per baris memakai isi satuan grosir (mis. Dus isi 40), sama seperti laporan keuangan
   const unitMultiplier = (item: any) => unitMultiplierOf(item);
@@ -142,8 +146,11 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
       totalCOGS += lineCOGS(item);
     });
   });
-  const grossProfit = Math.max(0, grossSales - totalCOGS);
-  const profitMargin = grossSales > 0 ? ((grossProfit / grossSales) * 100).toFixed(1) : '0';
+  // HPP barang retur yang kembali ke stok mengurangi HPP
+  const txById = new Map(transactions.map((t) => [t.id, t as any]));
+  totalCOGS -= filteredSalesReturns.reduce((sum, r) => sum + returnedCogs(r as any, txById), 0);
+  const grossProfit = netSales - totalCOGS;
+  const profitMargin = netSales > 0 ? ((grossProfit / netSales) * 100).toFixed(1) : '0';
 
   // Payment Breakdown
   const paymentBreakdown = {
@@ -242,7 +249,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               <span style="font-weight: bold;">${totalUnitsSold} Pcs</span>
             </div>
             <div style="display: flex; justify-content: space-between;">
-              <span>Total Omzet:</span>
+              <span>Total Diterima (termasuk pajak):</span>
               <span style="font-weight: bold;">${formatCurrency(grossSales, settings.currency)}</span>
             </div>
             <div style="display: flex; justify-content: space-between;">
@@ -377,7 +384,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
         <!-- Executive KPI Cards -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;">
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
-            <div style="font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase;">Total Omzet Kotor</div>
+            <div style="font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase;">Total Diterima (termasuk pajak)</div>
             <div style="font-size: 16px; font-weight: 800; color: #059669; margin-top: 2px;">${formatCurrency(grossSales, settings.currency)}</div>
             <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">${filteredTransactions.length} Struk • ${totalUnitsSold} Pcs</div>
           </div>
@@ -395,7 +402,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
           </div>
 
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
-            <div style="font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase;">Estimasi Laba Kotor</div>
+            <div style="font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase;">Laba Kotor</div>
             <div style="font-size: 16px; font-weight: 800; color: #0d9488; margin-top: 2px;">${formatCurrency(grossProfit, settings.currency)}</div>
             <div style="font-size: 10px; color: #0d9488; font-weight: 600; margin-top: 2px;">Margin: ${profitMargin}%</div>
           </div>
@@ -768,7 +775,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
       `Waktu Cetak: ${new Date().toLocaleString('id-ID')}\n\n` +
       `• Total Transaksi: ${filteredTransactions.length} Struk\n` +
       `• Total Produk Terjual: ${totalUnitsSold} Pcs\n` +
-      `• Total Omzet Kotor: ${formatCurrency(grossSales, settings.currency)}\n` +
+      `• Total Diterima (termasuk pajak): ${formatCurrency(grossSales, settings.currency)}\n` +
       `• Total Diskon: ${formatCurrency(totalDiscounts, settings.currency)}\n` +
       `• Total Retur: ${formatCurrency(totalRefundAmount, settings.currency)}\n` +
       `• Penjualan Bersih: ${formatCurrency(netSales, settings.currency)}\n` +
