@@ -124,6 +124,7 @@ test('kategori baru (dari formulir produk) & voucher manual (dari Pengaturan) di
   await page.locator('#btn-cart-extras').click();
   await page.getByLabel('Kode promo / voucher...').fill('UJI5RB');
   await page.getByRole('button', { name: 'Pakai', exact: true }).click();
+  await expect(page.locator('#btn-cart-extras')).toContainText(/hemat\s*Rp\s*5\.000/); // voucher terpasang
   await page.locator('#btn-checkout-pay').click();
   await page.getByTestId('payment-cash-input').fill('20000');
   await page.locator('#btn-confirm-complete-payment').click();
@@ -131,7 +132,8 @@ test('kategori baru (dari formulir produk) & voucher manual (dari Pengaturan) di
 
   // 4. Muat ulang: kategori, voucher, dan transaksi bervoucher tetap ada
   await page.reload();
-  await expect.poll(async () => (await readStored(page, 'pos_retail_tx_v3')).find((t: any) => t.voucherCode === 'UJI5RB')?.finalTotal, { timeout: 15_000 }).toBe(20000);
+  const stored = async () => (await readStored(page, 'pos_retail_tx_v3')).map((t: any) => `${t.invoiceNumber}:${t.voucherCode ?? '-'}:${t.finalTotal}:${t.status}`);
+  await expect.poll(stored, { timeout: 15_000, message: 'transaksi bervoucher tersimpan' }).toContainEqual(expect.stringMatching(/:UJI5RB:20000:completed$/));
   const product = (await readStored(page, 'pos_retail_products_v3')).find((p: any) => p.name === 'Nugget Ayam Beku 500g');
   expect(product?.categoryId).toBe('c_frozen_food_uji');
   await page.locator('#nav-btn-pos').click();
