@@ -412,6 +412,9 @@ export interface StoreSettings {
   showAiUpsellInCart?: boolean;
   minStockRulePercentage?: number; // Aturan batas minimal stok (default 50 = 50% dari order terakhir)
   autoUpdateMinStockFromOrder?: boolean; // Otomatis perbarui minStock saat terima barang PO (default: true)
+  /** Bagian modal awal berupa uang di laci & saldo bank (sisanya dana awal lainnya, mis. stok awal) */
+  initialCashInDrawer?: number;
+  initialBankBalance?: number;
   initialCapital?: number; // Modal awal usaha toko untuk Neraca Keuangan (default: 50.000.000)
 }
 
@@ -804,7 +807,7 @@ export interface JournalEntry {
   id: string;
   date: string;
   referenceNumber: string; // e.g. INV-..., RET-..., PO-..., EXP-...
-  sourceType: 'sale' | 'sales_return' | 'purchase_order' | 'supplier_payment' | 'shift_adjustment' | 'expense' | 'initial_balance';
+  sourceType: 'sale' | 'sales_return' | 'purchase_order' | 'supplier_payment' | 'shift_adjustment' | 'expense' | 'initial_balance' | 'purchase_return';
   description: string;
   lines: JournalLineItem[];
   totalDebit: number;
@@ -836,7 +839,8 @@ export interface OperationalExpense {
 export interface BalanceSheet {
   asOfDate: string;
   assets: {
-    openingFunds?: number; // Dana awal = modal awal (tidak dipecah ke kas/bank)
+    openingFunds?: number; // Dana awal lainnya (bagian modal awal yang tidak dirinci ke laci/bank)
+    supplierReturnReceivable?: number; // Piutang retur supplier (akun 1060)
     cashOnHand: number; // Kas kasir di laci
     bankAndQris: number; // Saldo QRIS & Transfer
     edcCardReceivables: number; // Piutang Kliring EDC Kartu
@@ -880,6 +884,7 @@ export interface IncomeStatement {
   operatingExpenses: {
     byCategory: Record<ExpenseCategory, number>;
     cashShortExpense: number; // Beban selisih kas minus saat tutup shift
+    pointsExpense?: number; // Beban program poin member (akun 6040)
     totalOperatingExpenses: number;
   };
   /** Pendapatan lain-lain: kelebihan kas saat tutup shift (akun 4030) */

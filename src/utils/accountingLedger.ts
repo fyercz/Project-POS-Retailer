@@ -44,9 +44,43 @@ export function purchaseOutstandingOf(po: SupplierPurchase): number {
   return Math.max(0, purchaseTotalOf(po) - purchasePaidOf(po));
 }
 
+/**
+ * Retur ke supplier: nilainya mengurangi hutang ke supplier itu (tempo dulu, lalu konsinyasi);
+ * sisanya menjadi piutang retur supplier (uang/barang pengganti yang masih harus diterima, mis.
+ * untuk pembelian tunai). Dipakai bersama oleh jurnal & neraca agar konsisten.
+ * Dulu retur ke supplier hanya mengurangi stok tanpa pencatatan apa pun.
+ */
+export function allocateSupplierReturns(
+  purchases: SupplierPurchase[],
+  purchaseReturns: Array<{ id: string; supplierName: string; totalAmount: number; createdAt: string; status?: string }>
+) {
+  const pool = new Map<string, { credit: number; consignment: number }>();
+  for (const po of purchases) {
+    const kind = purchasePaymentKind(po);
+    if (kind === 'cash') continue;
+    const key = (po.supplierName || '').trim().toLowerCase();
+    const p = pool.get(key) || { credit: 0, consignment: 0 };
+    p[kind === 'credit' ? 'credit' : 'consignment'] += purchaseOutstandingOf(po);
+    pool.set(key, p);
+  }
+  const byReturn = new Map<string, { toPayable: number; toConsignment: number; toReceivable: number }>();
+  let payableReduction = 0, consignmentReduction = 0, receivable = 0;
+  const sorted = [...purchaseReturns].filter((r) => r.status !== 'pending').sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+  for (const r of sorted) {
+    let left = Math.max(0, Number(r.totalAmount) || 0);
+    const p = pool.get((r.supplierName || '').trim().toLowerCase()) || { credit: 0, consignment: 0 };
+    const toPayable = Math.min(left, p.credit); p.credit -= toPayable; left -= toPayable;
+    const toConsignment = Math.min(left, p.consignment); p.consignment -= toConsignment; left -= toConsignment;
+    byReturn.set(r.id, { toPayable, toConsignment, toReceivable: left });
+    payableReduction += toPayable; consignmentReduction += toConsignment; receivable += left;
+  }
+  return { byReturn, payableReduction, consignmentReduction, receivable };
+}
+
 export const STANDARD_CHART_OF_ACCOUNTS: ChartOfAccount[] = [
   // 1000 - ASET LANCAR
   { code: '1005', name: 'Dana Awal (Kas & Bank Saat Mulai)', category: 'asset', normalBalance: 'debit', description: 'Modal awal pemilik saat mulai memakai aplikasi (tidak dipecah ke kas/bank).' },
+  { code: '1060', name: 'Piutang Retur Supplier', category: 'asset', normalBalance: 'debit', description: 'Nilai barang yang diretur ke supplier dan belum dikembalikan dalam bentuk uang/potongan hutang.' },
   { code: '1010', name: 'Kas di Laci Kasir', category: 'asset', normalBalance: 'debit', description: 'Uang fisik tunai di laci kasir' },
   { code: '1020', name: 'Bank & Saldo QRIS', category: 'asset', normalBalance: 'debit', description: 'Rekening penampung pembayaran QRIS & Transfer bank' },
   { code: '1030', name: 'EDC & Piutang Kartu Debit', category: 'asset', normalBalance: 'debit', description: 'Kliring settlement kartu debit/kredit mesin EDC' },
@@ -74,6 +108,7 @@ export const STANDARD_CHART_OF_ACCOUNTS: ChartOfAccount[] = [
   // 6000 - BEBAN OPERASIONAL
   { code: '6010', name: 'Beban Operasional Toko', category: 'expense', normalBalance: 'debit', description: 'Biaya utilitas, token listrik, internet, air, operasional' },
   { code: '6020', name: 'Beban Selisih Kas Shift', category: 'expense', normalBalance: 'debit', description: 'Kerugian selisih minus fisik uang saat tutup shift kasir' },
+  { code: '6040', name: 'Beban Program Poin Member', category: 'expense', normalBalance: 'debit', description: 'Nilai poin loyalitas yang diberikan kepada member (dicatat saat poin diperoleh).' },
   { code: '6030', name: 'Beban Retur Penjualan', category: 'expense', normalBalance: 'debit', description: 'Pengembalian dana akibat retur barang konsumen' },
 ];
 
@@ -91,6 +126,15 @@ export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
 // AUTOMATED JOURNAL GENERATOR (DOUBLE-ENTRY)
 // ============================================================================
 
+/** Rincian modal awal: [kode akun, nama, jumlah] untuk laci, bank, dan sisanya (dana awal lainnya). */
+function openingSplit(total: number, cash: number, bank: number): Array<[string, string, number]> {
+  const t = Math.max(0, Number(total) || 0);
+  const c = Math.min(t, Math.max(0, Number(cash) || 0));
+  const b = Math.min(t - c, Math.max(0, Number(bank) || 0));
+  const rest = t - c - b;
+  return ([['1010', 'Kas di Laci Kasir', c], ['1020', 'Bank & Saldo QRIS', b], ['1005', 'Dana Awal Lainnya (mis. stok awal)', rest]] as Array<[string, string, number]>).filter(([, , v]) => v > 0);
+}
+
 export function generateJournalEntries(options: {
   transactions: Transaction[];
   salesReturns?: SalesReturn[];
@@ -98,6 +142,11 @@ export function generateJournalEntries(options: {
   shifts?: ShiftSummary[];
   expenses?: OperationalExpense[];
   initialCapital?: number;
+  /** Bagian modal awal berupa uang di laci / saldo bank (sisanya = dana awal lainnya, mis. stok awal) */
+  initialCashInDrawer?: number;
+  initialBankBalance?: number;
+  purchaseReturns?: Array<{ id: string; returnNumber?: string; supplierName: string; totalAmount: number; createdAt: string; status?: string }>;
+  pointRedemptionRate?: number;
 }): JournalEntry[] {
   const {
     transactions = [],
@@ -106,6 +155,10 @@ export function generateJournalEntries(options: {
     shifts = [],
     expenses = [],
     initialCapital = 0, // dulu bawaan Rp 50 juta karangan
+    initialCashInDrawer = 0,
+    initialBankBalance = 0,
+    purchaseReturns = [],
+    pointRedemptionRate = 100,
   } = options;
 
   const entries: JournalEntry[] = [];
@@ -124,14 +177,15 @@ export function generateJournalEntries(options: {
       sourceType: 'initial_balance',
       description: 'Penyetoran Modal Awal Pemilik Toko',
       lines: [
-        {
-          // Utuh ke satu akun (dulu dipecah 40% kas / 60% bank secara karangan)
-          accountCode: '1005',
-          accountName: 'Dana Awal (Kas & Bank Saat Mulai)',
-          debit: initialCapital,
+        // Dirinci sesuai isian Owner (uang di laci / saldo bank); sisanya dana awal lainnya.
+        // Tanpa isian: utuh ke Dana Awal (dulu dipecah 40% kas / 60% bank secara karangan)
+        ...openingSplit(initialCapital, initialCashInDrawer, initialBankBalance).map(([code, name, amount]) => ({
+          accountCode: code,
+          accountName: name,
+          debit: amount,
           credit: 0,
-          memo: 'Dana awal saat mulai memakai aplikasi',
-        },
+          memo: 'Modal awal saat mulai memakai aplikasi',
+        })),
         {
           accountCode: '3010',
           accountName: 'Modal Awal Pemilik',
@@ -184,15 +238,27 @@ export function generateJournalEntries(options: {
       memo: `Penerimaan bayar ${method.toUpperCase()} nota ${tx.invoiceNumber}`,
     });
 
-    // Debit discount if any
-    if (discount > 0) {
+    // Diskon promo/voucher/member = pengurang penjualan. Penukaran poin BUKAN diskon: poin sudah
+    // dibebankan saat diperoleh, jadi penukaran mengurangi kewajiban poin (2020).
+    const pointsPart = Math.min(discount, Math.max(0, Number(tx.pointsDiscount) || 0));
+    const promoPart = discount - pointsPart;
+    if (promoPart > 0) {
       lines.push({
         accountCode: '4020',
         accountName: 'Diskon & Promo Penjualan',
-        debit: discount,
+        debit: promoPart,
         credit: 0,
         memo: `Potongan promo/voucher/member nota ${tx.invoiceNumber}`,
       });
+    }
+    if (pointsPart > 0) {
+      lines.push({ accountCode: '2020', accountName: 'Liabilitas Poin Loyalitas', debit: pointsPart, credit: 0, memo: `Penukaran poin nota ${tx.invoiceNumber}` });
+    }
+    // Poin yang diperoleh: beban program poin & kewajiban poin bertambah
+    const earnedValue = Math.max(0, Number(tx.pointsEarned) || 0) * pointRedemptionRate;
+    if (earnedValue > 0) {
+      lines.push({ accountCode: '6040', accountName: 'Beban Program Poin Member', debit: earnedValue, credit: 0, memo: `Poin diperoleh nota ${tx.invoiceNumber}` });
+      lines.push({ accountCode: '2020', accountName: 'Liabilitas Poin Loyalitas', debit: 0, credit: earnedValue, memo: 'Kewajiban poin member bertambah' });
     }
 
     // Credit Sales Revenue
@@ -477,6 +543,31 @@ export function generateJournalEntries(options: {
   }
 
   // Sort chronologically descending
+  // Retur ke supplier: persediaan keluar; mengurangi hutang (tempo/konsinyasi) atau menjadi piutang
+  const supAlloc = allocateSupplierReturns(supplierPurchases, purchaseReturns);
+  for (const r of purchaseReturns) {
+    const a = supAlloc.byReturn.get(r.id);
+    const total = Math.max(0, Number(r.totalAmount) || 0);
+    if (!a || total <= 0) continue;
+    const lines = [
+      ...(a.toPayable > 0 ? [{ accountCode: '2010', accountName: 'Utang Dagang Supplier', debit: a.toPayable, credit: 0, memo: `Potong hutang ${r.supplierName}` }] : []),
+      ...(a.toConsignment > 0 ? [{ accountCode: '2030', accountName: 'Utang Titipan / Konsinyasi Supplier', debit: a.toConsignment, credit: 0, memo: `Potong hutang konsinyasi ${r.supplierName}` }] : []),
+      ...(a.toReceivable > 0 ? [{ accountCode: '1060', accountName: 'Piutang Retur Supplier', debit: a.toReceivable, credit: 0, memo: `Tagihan retur ke ${r.supplierName}` }] : []),
+      { accountCode: '1050', accountName: 'Persediaan Barang Dagang', debit: 0, credit: total, memo: 'Barang dikembalikan ke supplier' },
+    ];
+    entries.push({
+      id: `jrnl-pret-${r.id}`,
+      date: r.createdAt,
+      referenceNumber: r.returnNumber || r.id,
+      sourceType: 'purchase_return',
+      description: `Retur ke supplier ${r.supplierName}`,
+      lines,
+      totalDebit: total,
+      totalCredit: total,
+      isBalanced: true,
+    });
+  }
+
   return entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
@@ -491,6 +582,7 @@ export function computeIncomeStatement(options: {
   expenses?: OperationalExpense[];
   startDate?: string;
   endDate?: string;
+  pointRedemptionRate?: number;
 }): IncomeStatement {
   const {
     transactions = [],
@@ -499,6 +591,7 @@ export function computeIncomeStatement(options: {
     expenses = [],
     startDate,
     endDate,
+    pointRedemptionRate = 100,
   } = options;
 
   let startMs = 0;
@@ -552,10 +645,14 @@ export function computeIncomeStatement(options: {
   let grossSales = 0;
   let salesDiscounts = 0;
   let costOfGoodsSold = 0;
+  let pointsExpense = 0;
 
   for (const tx of filteredTx) {
     grossSales += Number(tx.subtotal) || 0;
-    salesDiscounts += Number(tx.discountAmount) || 0;
+    // Penukaran poin bukan diskon (sudah dibebankan saat poin diperoleh; lihat beban poin di bawah)
+    const disc = Number(tx.discountAmount) || 0;
+    salesDiscounts += disc - Math.min(disc, Math.max(0, Number(tx.pointsDiscount) || 0));
+    pointsExpense += Math.max(0, Number(tx.pointsEarned) || 0) * pointRedemptionRate;
 
     for (const item of tx.items || []) costOfGoodsSold += lineCogs(item as any);
   }
@@ -603,7 +700,7 @@ export function computeIncomeStatement(options: {
   }
 
   const expenseItemsSum = Object.values(byCategory).reduce((a, b) => a + b, 0);
-  const totalOperatingExpenses = expenseItemsSum + cashShortExpense;
+  const totalOperatingExpenses = expenseItemsSum + cashShortExpense + pointsExpense;
 
   // 6. Net Operating Profit
   const netOperatingProfit = grossProfit - totalOperatingExpenses + cashOverIncome;
@@ -622,6 +719,7 @@ export function computeIncomeStatement(options: {
     operatingExpenses: {
       byCategory,
       cashShortExpense,
+      pointsExpense,
       totalOperatingExpenses,
     },
     otherIncome: cashOverIncome,
@@ -642,7 +740,10 @@ export function computeBalanceSheet(options: {
   shifts?: ShiftSummary[];
   expenses?: OperationalExpense[];
   salesReturns?: SalesReturn[];
+  purchaseReturns?: Array<{ id: string; supplierName: string; totalAmount: number; createdAt: string; status?: string }>;
   initialCapital?: number;
+  initialCashInDrawer?: number;
+  initialBankBalance?: number;
   pointRedemptionRate?: number;
 }): BalanceSheet {
   const {
@@ -653,7 +754,10 @@ export function computeBalanceSheet(options: {
     shifts = [],
     expenses = [],
     salesReturns = [],
+    purchaseReturns = [],
     initialCapital = 0, // dulu bawaan Rp 50 juta karangan
+    initialCashInDrawer = 0,
+    initialBankBalance = 0,
     pointRedemptionRate = 100,
   } = options;
 
@@ -671,9 +775,13 @@ export function computeBalanceSheet(options: {
   // Modal awal dicatat utuh sebagai "dana awal" (dulu dipecah 40% kas / 60% bank secara karangan).
   // Kas & bank di bawah hanya dari arus yang tercatat; boleh negatif bila ada pengeluaran sebelum
   // penjualan tercatat (dulu dipotong 0 sehingga kekurangan tersembunyi).
-  const openingFunds = Math.max(0, Number(initialCapital) || 0);
-  let cashOnHand = 0;
-  let bankAndQris = 0;
+  // Bila Owner merinci modal awal (uang di laci / saldo bank), bagian itu langsung menjadi kas/bank;
+  // sisanya tetap "dana awal lainnya" (mis. nilai stok awal). Dulu bank bisa tampil negatif.
+  const split = openingSplit(initialCapital, initialCashInDrawer, initialBankBalance);
+  const part = (code: string) => split.filter(([c]) => c === code).reduce((a, [, , v]) => a + v, 0);
+  const openingFunds = part('1005');
+  let cashOnHand = part('1010');
+  let bankAndQris = part('1020');
   let edcCardReceivables = 0;
 
   for (const tx of transactions) {
@@ -736,7 +844,9 @@ export function computeBalanceSheet(options: {
     else cashOnHand -= refund;
   }
 
-  const totalCurrentAssets = openingFunds + cashOnHand + bankAndQris + edcCardReceivables + merchandiseInventory;
+  const supAlloc = allocateSupplierReturns(supplierPurchases, purchaseReturns);
+  const supplierReturnReceivable = supAlloc.receivable;
+  const totalCurrentAssets = openingFunds + cashOnHand + bankAndQris + edcCardReceivables + merchandiseInventory + supplierReturnReceivable;
   const totalAssets = totalCurrentAssets;
 
   // 3. Liabilities
@@ -757,6 +867,10 @@ export function computeBalanceSheet(options: {
     }
   }
 
+  // Retur ke supplier mengurangi hutang (lihat allocateSupplierReturns)
+  accountsPayable -= supAlloc.payableReduction;
+  consignmentPayable -= supAlloc.consignmentReduction;
+
   // Points Liability: Outstanding points in circulation
   const totalMemberPoints = customers.reduce((sum, c) => sum + (c.points || 0), 0);
   const pointsLiability = totalMemberPoints * pointRedemptionRate;
@@ -771,6 +885,7 @@ export function computeBalanceSheet(options: {
     salesReturns, // dulu tanpa retur -> laba di neraca berbeda dengan laporan Laba Rugi
     shifts,
     expenses,
+    pointRedemptionRate,
   });
   const currentPeriodNetIncome = incomeStmt.netOperatingProfit;
 
@@ -778,7 +893,8 @@ export function computeBalanceSheet(options: {
   // Sisa yang tidak dijelaskan pencatatan (mis. stok awal/impor yang diinput tanpa faktur, hasil
   // opname, kas awal) DITAMPILKAN sebagai baris sendiri. Dulu seluruh sisa disembunyikan sebagai
   // "laba ditahan" sehingga neraca selalu tampak seimbang apa pun datanya.
-  const ownerInitialCapital = openingFunds;
+  // Ekuitas = TOTAL modal awal (bagian laci/bank sudah masuk ke kas/bank, sisanya dana awal lainnya)
+  const ownerInitialCapital = split.reduce((a, [, , v]) => a + v, 0);
   const retainedEarnings = 0;
   const unrecordedCapital = Math.round(totalAssets - totalLiabilities - ownerInitialCapital - currentPeriodNetIncome);
   const totalEquity = ownerInitialCapital + currentPeriodNetIncome + retainedEarnings + unrecordedCapital;
@@ -790,6 +906,7 @@ export function computeBalanceSheet(options: {
     asOfDate: new Date().toISOString(),
     assets: {
       openingFunds,
+      supplierReturnReceivable,
       cashOnHand,
       bankAndQris,
       edcCardReceivables,

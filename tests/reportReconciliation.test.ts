@@ -84,3 +84,26 @@ test('jurnal modal awal: utuh ke Dana Awal, tanggal transaksi pertama (bukan 1 J
   assert.equal(init.date, D);
   assert.deepEqual(init.lines.map((l: any) => [l.accountCode, l.debit, l.credit]), [['1005', 500000, 0], ['3010', 0, 500000]]);
 });
+
+test('retur ke supplier: kurangi hutang tempo dulu, sisanya piutang retur; jurnal & neraca sama', async () => {
+  const { allocateSupplierReturns } = await import('../src/utils/accountingLedger.ts');
+  const purchases: any[] = [
+    { id: 'po1', invoiceNumber: 'F1', supplierName: 'Maju', paymentTerms: 'Tempo 14 Hari', items: [], totalAmount: 100000, finalTotal: 100000, createdAt: D, payments: [{ amount: 70000 }] },
+    { id: 'po2', invoiceNumber: 'F2', supplierName: 'Tunai Jaya', paymentTerms: 'Tunai / Cash', items: [], totalAmount: 50000, finalTotal: 50000, createdAt: D },
+  ];
+  const returns = [
+    { id: 'r1', supplierName: 'Maju', totalAmount: 45000, createdAt: D }, // hutang tersisa 30.000 -> 30.000 potong hutang, 15.000 piutang
+    { id: 'r2', supplierName: 'Tunai Jaya', totalAmount: 8000, createdAt: D }, // tunai -> piutang
+  ];
+  const a = allocateSupplierReturns(purchases, returns);
+  assert.deepEqual(a.byReturn.get('r1'), { toPayable: 30000, toConsignment: 0, toReceivable: 15000 });
+  assert.deepEqual(a.byReturn.get('r2'), { toPayable: 0, toConsignment: 0, toReceivable: 8000 });
+  const bs = computeBalanceSheet({ products: [], transactions: [], supplierPurchases: purchases, purchaseReturns: returns } as any);
+  assert.equal(bs.liabilities.accountsPayable, 0);
+  assert.equal(bs.assets.supplierReturnReceivable, 23000);
+  const je = generateJournalEntries({ transactions: [], supplierPurchases: purchases, purchaseReturns: returns } as any);
+  const ret = je.filter((e: any) => e.sourceType === 'purchase_return');
+  assert.equal(ret.length, 2);
+  assert.ok(ret.every((e: any) => e.isBalanced));
+  assert.equal(ret.flatMap((e: any) => e.lines).filter((l: any) => l.accountCode === '1050').reduce((s: number, l: any) => s + l.credit, 0), 53000);
+});

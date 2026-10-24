@@ -9,26 +9,29 @@ export interface ClosingRow { area: string; item: string; app: number; shadow: n
 
 export function monthClosing(sim: ReturnType<typeof runMonthSimulation>) {
   const startDate = '2026-09-30T17:00:00.000Z', endDate = '2026-10-31T16:59:59.999Z';
-  const pl = computeIncomeStatement({ transactions: sim.transactions, salesReturns: sim.salesReturns, shifts: sim.shifts, expenses: sim.expenses, startDate, endDate });
-  const bs = computeBalanceSheet({ products: sim.products, transactions: sim.transactions, customers: sim.customers, supplierPurchases: sim.purchases, shifts: sim.shifts, expenses: sim.expenses, salesReturns: sim.salesReturns, initialCapital: sim.INITIAL_CAPITAL, pointRedemptionRate: sim.settings.pointRedemptionRate } as any);
-  const je = generateJournalEntries({ transactions: sim.transactions, salesReturns: sim.salesReturns, supplierPurchases: sim.purchases, shifts: sim.shifts, expenses: sim.expenses, initialCapital: sim.INITIAL_CAPITAL } as any);
+  const rate = sim.settings.pointRedemptionRate;
+  const pl = computeIncomeStatement({ transactions: sim.transactions, salesReturns: sim.salesReturns, shifts: sim.shifts, expenses: sim.expenses, startDate, endDate, pointRedemptionRate: rate });
+  const bs = computeBalanceSheet({ products: sim.products, transactions: sim.transactions, customers: sim.customers, supplierPurchases: sim.purchases, shifts: sim.shifts, expenses: sim.expenses, salesReturns: sim.salesReturns, purchaseReturns: sim.purchaseReturns, initialCapital: sim.INITIAL_CAPITAL, initialCashInDrawer: sim.INITIAL_CASH, initialBankBalance: sim.INITIAL_BANK, pointRedemptionRate: rate } as any);
+  const je = generateJournalEntries({ transactions: sim.transactions, salesReturns: sim.salesReturns, supplierPurchases: sim.purchases, shifts: sim.shifts, expenses: sim.expenses, purchaseReturns: sim.purchaseReturns, initialCapital: sim.INITIAL_CAPITAL, initialCashInDrawer: sim.INITIAL_CASH, initialBankBalance: sim.INITIAL_BANK, pointRedemptionRate: rate } as any);
   const sh = shadowIncome(sim);
   const rows: ClosingRow[] = [];
   const add = (area: string, item: string, app: number, shadow: number, note?: string) => rows.push({ area, item, app: Math.round(app), shadow: Math.round(shadow), ok: Math.abs(app - shadow) < 1, note });
 
   // Laba rugi
   add('Laba Rugi', 'Penjualan kotor (sebelum diskon)', pl.grossSales, sh.gross);
-  add('Laba Rugi', 'Diskon (voucher, member, poin)', pl.salesDiscounts, sh.discounts);
+  add('Laba Rugi', 'Diskon (voucher & member; penukaran poin bukan diskon)', pl.salesDiscounts, sh.discounts);
   add('Laba Rugi', 'Retur penjualan', pl.salesReturns, sh.returns);
   add('Laba Rugi', 'Penjualan bersih', pl.netSales, sh.netSales);
   add('Laba Rugi', 'HPP (dikurangi HPP retur kembali ke stok)', pl.costOfGoodsSold, sh.cogs);
   add('Laba Rugi', 'Laba kotor', pl.grossProfit, sh.grossProfit);
-  add('Laba Rugi', 'Beban operasional (pengeluaran + kekurangan kas)', pl.operatingExpenses.totalOperatingExpenses, sh.expenses + sh.shortage);
+  add('Laba Rugi', 'Beban program poin member', pl.operatingExpenses.pointsExpense ?? 0, sh.pointsExpense);
+  add('Laba Rugi', 'Beban operasional (pengeluaran + poin + kekurangan kas)', pl.operatingExpenses.totalOperatingExpenses, sh.expenses + sh.shortage);
   add('Laba Rugi', 'Laba bersih', pl.netOperatingProfit, sh.net, sh.overage ? 'Bayangan memasukkan kelebihan kas shift sebagai pendapatan lain' : undefined);
 
   // Neraca: aset & kewajiban dari arus kas bayangan
   const s = sim.shadow;
-  add('Neraca', 'Dana awal (modal awal)', bs.assets.openingFunds ?? 0, sim.INITIAL_CAPITAL);
+  add('Neraca', 'Dana awal lainnya (modal awal di luar laci/bank)', bs.assets.openingFunds ?? 0, sim.INITIAL_CAPITAL - sim.INITIAL_CASH - sim.INITIAL_BANK);
+  add('Neraca', 'Piutang retur supplier', bs.assets.supplierReturnReceivable ?? 0, s.supplierReceivable);
   add('Neraca', 'Kas di laci', bs.assets.cashOnHand, s.cashDrawer, 'Bayangan: tunai masuk - retur tunai - void tunai - belanja tunai - pengeluaran laci - setoran konsinyasi +/- selisih hitung');
   add('Neraca', 'Bank & QRIS', bs.assets.bankAndQris, s.bank);
   add('Neraca', 'Piutang EDC (kartu)', bs.assets.edcCardReceivables, s.edc);
@@ -42,20 +45,15 @@ export function monthClosing(sim: ReturnType<typeof runMonthSimulation>) {
 
   // Selisih belum tercatat = jumlah komponen yang DIKETAHUI tidak dicatat aplikasi. Bila semua pos
   // lain benar, kedua angka harus sama persis.
-  const currentInventory = sim.products.reduce((a, p) => a + p.stock * p.costPrice, 0);
-  const purchased = sim.purchases.flatMap((p) => p.items).reduce((a, i) => a + i.subtotal, 0);
-  const histInventory = purchased - sh.cogs - s.supplierReturnValue;
-  const revaluation = Math.round(currentInventory - histInventory - s.opnameLossValue);
-  const unfundedPoints = -bs.liabilities.pointsLiability;
-  const explainedTotal = Math.round(s.opnameLossValue - s.supplierReturnValue + revaluation + unfundedPoints);
   const components = {
     opname: Math.round(s.opnameLossValue),
-    returSupplierTanpaPencatatan: -Math.round(s.supplierReturnValue),
-    revaluasiHargaModal: revaluation,
-    poinMemberTanpaBiaya: Math.round(unfundedPoints),
+    pembulatanModalRataRata: Math.round(s.revaluationRounding),
+    returKembaliKeStokSelisihModal: Math.round(s.returnRevaluation),
+    poinAwalSebelumAplikasi: -Math.round(sim.openingPoints * rate),
   };
+  const explainedTotal = components.opname + components.pembulatanModalRataRata + components.returKembaliKeStokSelisihModal + components.poinAwalSebelumAplikasi;
   add('Neraca', 'Selisih belum tercatat', bs.equity.unrecordedCapital ?? 0, explainedTotal,
-    `Komponen: opname ${components.opname}, retur supplier tanpa pencatatan ${components.returSupplierTanpaPencatatan}, revaluasi harga modal ${components.revaluasiHargaModal}, poin member tanpa biaya ${components.poinMemberTanpaBiaya}`);
+    `Komponen: opname ${components.opname}, pembulatan modal rata-rata ${components.pembulatanModalRataRata}, retur kembali ke stok (selisih modal) ${components.returKembaliKeStokSelisihModal}, poin awal sebelum aplikasi ${components.poinAwalSebelumAplikasi}`);
 
   // Jurnal
   const unbalanced = je.filter((e: any) => Math.abs(e.totalDebit - e.totalCredit) > 0.5).length;
@@ -63,6 +61,8 @@ export function monthClosing(sim: ReturnType<typeof runMonthSimulation>) {
   const net = (code: string) => je.reduce((a: number, e: any) => a + e.lines.filter((l: any) => l.accountCode === code).reduce((x: number, l: any) => x + l.debit - l.credit, 0), 0);
   add('Jurnal', 'HPP bersih di jurnal (5010)', net('5010'), sh.cogs);
   add('Jurnal', 'Kas laci di jurnal (1010)', net('1010'), s.cashDrawer);
+  add('Jurnal', 'Bank di jurnal (1020)', net('1020'), s.bank);
+  add('Jurnal', 'Kewajiban poin di jurnal (2020) = poin diperoleh - ditukar', -net('2020'), (s.pointsEarned - s.pointsUsed) * rate);
 
   // Poin & shift
   add('Member', 'Saldo poin = awal + diperoleh - ditukar', pointsNow, sim.openingPoints + s.pointsEarned - s.pointsUsed);

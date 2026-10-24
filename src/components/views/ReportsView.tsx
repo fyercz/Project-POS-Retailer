@@ -70,7 +70,7 @@ import { IncomeStatementPanel } from './reports/IncomeStatementPanel';
 
 export const ReportsView: React.FC = () => {
   const { products, categories, recordProductPriceChange, updateProduct } = usePOSCatalog();
-  const { transactions, salesReturns, setActiveReceipt } = usePOSTransactions();
+  const { transactions, salesReturns, setActiveReceipt, allShifts } = usePOSTransactions();
   const {
     settings,
     openGeminiCopilot,
@@ -171,10 +171,12 @@ export const ReportsView: React.FC = () => {
       transactions,
       salesReturns,
       expenses,
+      shifts: allShifts, // dulu tanpa shift: selisih kas tutup shift tidak muncul di laporan ini
+      pointRedemptionRate: settings.pointRedemptionRate || 100,
       startDate: startIso,
       endDate: endIso,
     });
-  }, [transactions, salesReturns, expenses, startDate, endDate]);
+  }, [transactions, salesReturns, expenses, allShifts, settings.pointRedemptionRate, startDate, endDate]);
 
   // Dynamic Date-filtered & Search-filtered General Journal
   const dateFilteredJournal = useMemo(() => {

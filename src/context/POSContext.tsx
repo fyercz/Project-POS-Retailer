@@ -105,6 +105,7 @@ import {
   INITIAL_PRODUCTS as DEMO_PRODUCTS,
 } from '../data/mockData';
 import { errorMessage } from '../utils/errors';
+import { weightedAverageCost } from '../domain/costing';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -197,6 +198,8 @@ export interface POSCartContextType extends POSCartActionsContextType {
 }
 
 export interface POSTransactionsContextType {
+  /** Shift aktif + riwayat (untuk selisih kas di laporan laba rugi) */
+  allShifts: ShiftSummary[];
   isPaymentModalOpen: boolean;
   setIsPaymentModalOpen: (isOpen: boolean) => void;
   processPayment: (payment: PaymentDetails) => Transaction;
@@ -2501,21 +2504,23 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setProducts((prev) =>
         prev.map((p) => {
           if (p.id === item.productId) {
-            const hasCostChanged = item.costPrice > 0 && item.costPrice !== p.costPrice;
+            // Modal rata-rata tertimbang (dulu langsung diganti harga beli terbaru)
+            const newCost = weightedAverageCost(p.stock, p.costPrice, item.quantity, item.costPrice);
+            const hasCostChanged = newCost !== p.costPrice;
             let updatedHistory = p.priceHistory ? [...p.priceHistory] : [];
             if (hasCostChanged) {
               const rec: PriceHistoryRecord = {
                 id: `ph-sup-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
                 productId: p.id,
                 date: new Date().toISOString(),
-                costPrice: item.costPrice,
+                costPrice: newCost,
                 sellingPrice: p.price,
                 previousCostPrice: p.costPrice,
                 previousSellingPrice: p.price,
                 changeType: 'purchase_receiving',
                 sourceReference: `Faktur ${newPurchase.invoiceNumber}`,
                 supplierName: newPurchase.supplierName,
-                notes: `Penerimaan barang dari faktur pembelian (+${item.quantity} ${p.unit})`,
+                notes: `Penerimaan barang dari faktur pembelian (+${item.quantity} ${p.unit}); harga beli Rp ${Math.round(item.costPrice).toLocaleString('id-ID')}, modal rata-rata Rp ${newCost.toLocaleString('id-ID')}`,
                 recordedBy: newPurchase.receivedBy || 'Staff Gudang',
               };
               updatedHistory.push(rec);
@@ -2531,7 +2536,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return {
               ...p,
               stock: p.stock + item.quantity,
-              costPrice: item.costPrice > 0 ? item.costPrice : p.costPrice,
+              costPrice: newCost,
               expiryDate: item.expiryDate || p.expiryDate,
               lastOrderQuantity: item.quantity,
               lastOrderDate: newPurchase.createdAt,
@@ -3425,8 +3430,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   // --- Domain Split 4: Transactions, CRM, Returns, Suppliers ---
+  const allShifts = useMemo(() => {
+    return [currentShift, ...pastShifts].filter(Boolean) as ShiftSummary[];
+  }, [currentShift, pastShifts]);
+
   const transactionsValue = useMemo<POSTransactionsContextType>(
     () => ({
+      allShifts,
       isPaymentModalOpen,
       setIsPaymentModalOpen,
       processPayment: stableFns.processPayment,
@@ -3456,6 +3466,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       clearAllTransactions: stableFns.clearAllTransactions,
     }),
     [
+      allShifts,
       isPaymentModalOpen,
       transactions,
       activeReceipt,
@@ -3510,9 +3521,6 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // --- Domain Split 6: UI, Modals, Offline Sync, Settings, AI Copilot, Diagnostics & Accounting ---
   const chartOfAccounts = STANDARD_CHART_OF_ACCOUNTS;
 
-  const allShifts = useMemo(() => {
-    return [currentShift, ...pastShifts].filter(Boolean) as ShiftSummary[];
-  }, [currentShift, pastShifts]);
 
   const journalEntries = useMemo(() => {
     return generateJournalEntries({
@@ -3521,9 +3529,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       supplierPurchases,
       shifts: allShifts,
       expenses,
+      purchaseReturns,
       initialCapital: settings.initialCapital ?? 0, // ?? (bukan ||): modal 0 tetap 0
+      initialCashInDrawer: settings.initialCashInDrawer ?? 0,
+      initialBankBalance: settings.initialBankBalance ?? 0,
+      pointRedemptionRate: settings.pointRedemptionRate || 100,
     });
-  }, [transactions, salesReturns, supplierPurchases, allShifts, expenses, settings.initialCapital]);
+  }, [transactions, salesReturns, supplierPurchases, allShifts, expenses, purchaseReturns, settings.initialCapital, settings.initialCashInDrawer, settings.initialBankBalance, settings.pointRedemptionRate]);
 
   const balanceSheet = useMemo(() => {
     return computeBalanceSheet({
@@ -3534,11 +3546,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       shifts: allShifts,
       expenses,
       salesReturns,
+      purchaseReturns,
       // ?? (bukan ||): modal 0 tetap 0. Dulu 0 berubah menjadi Rp 50 juta karangan
       initialCapital: settings.initialCapital ?? 0,
+      initialCashInDrawer: settings.initialCashInDrawer ?? 0,
+      initialBankBalance: settings.initialBankBalance ?? 0,
       pointRedemptionRate: settings.pointRedemptionRate || 100,
     });
-  }, [products, transactions, customers, supplierPurchases, allShifts, expenses, salesReturns, settings.initialCapital, settings.pointRedemptionRate]);
+  }, [products, transactions, customers, supplierPurchases, allShifts, expenses, salesReturns, purchaseReturns, settings.initialCapital, settings.initialCashInDrawer, settings.initialBankBalance, settings.pointRedemptionRate]);
 
   const incomeStatement = useMemo(() => {
     return computeIncomeStatement({
@@ -3546,8 +3561,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       salesReturns,
       shifts: allShifts,
       expenses,
+      pointRedemptionRate: settings.pointRedemptionRate || 100,
     });
-  }, [transactions, salesReturns, allShifts, expenses]);
+  }, [transactions, salesReturns, allShifts, expenses, settings.pointRedemptionRate]);
 
   const uiValue = useMemo<POSUIContextType>(
     () => ({
