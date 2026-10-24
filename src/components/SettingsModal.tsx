@@ -47,6 +47,7 @@ import { executeSystemCleanup } from '../utils/desktopHelper';
 import { errorMessage } from '../utils/errors';
 import { StoreLogo } from './StoreLogo';
 import { formatCurrency } from '../utils/formatters';
+import { buildVoucher } from '../domain/voucherInput';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -75,9 +76,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
     databaseEngine,
     vouchers,
     deleteVoucher,
+    addVoucher,
   } = usePOS();
   const [formData, setFormData] = useState<StoreSettings>({ ...settings });
   const [saved, setSaved] = useState(false);
+  // Voucher manual
+  const [vCode, setVCode] = useState('');
+  const [vType, setVType] = useState<'percentage' | 'fixed'>('percentage');
+  const [vValue, setVValue] = useState('');
+  const [vMin, setVMin] = useState('');
+  const [vMax, setVMax] = useState('');
+  const [vExpiry, setVExpiry] = useState('');
+  const [vMessage, setVMessage] = useState('');
+  const vInput = 'w-full px-2 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100';
+  const handleCreateVoucher = () => {
+    const today = new Date();
+    const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const r = buildVoucher(
+      { code: vCode, discountType: vType, value: Number(vValue), minSpend: Number(vMin) || 0, maxDiscount: Number(vMax) || undefined, expiresAt: vExpiry || undefined },
+      ymd
+    );
+    if (!r.ok) {
+      setVMessage(r.message);
+      return;
+    }
+    const replacing = vouchers.some((v) => v.code.toUpperCase() === r.voucher.code);
+    addVoucher(r.voucher);
+    setVMessage(`Voucher ${r.voucher.code} ${replacing ? 'diperbarui' : 'dibuat'}: ${r.voucher.description}`);
+    setVCode('');
+    setVValue('');
+    setVMin('');
+    setVMax('');
+    setVExpiry('');
+  };
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   // Tabs: 'settings' or 'launch'
@@ -1048,6 +1079,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
               Semua kode di bawah ini bisa dipakai di kasir. Hapus voucher yang sudah tidak berlaku atau tidak pernah dibuat toko.
             </p>
+
+            {/* Buat voucher manual (dulu hanya lewat Promo AI: tanpa API key tidak bisa membuat voucher) */}
+            <div className="p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-2">
+              <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Buat Voucher Baru</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                <input aria-label="Kode voucher" data-testid="voucher-code" value={vCode} onChange={(e) => setVCode(e.target.value.toUpperCase())} placeholder="Kode, mis. HEMAT10" className={vInput} />
+                <select aria-label="Jenis potongan" data-testid="voucher-type" value={vType} onChange={(e) => setVType(e.target.value as 'percentage' | 'fixed')} className={vInput}>
+                  <option value="percentage">Persen (%)</option>
+                  <option value="fixed">Nominal (Rp)</option>
+                </select>
+                <input aria-label={vType === 'percentage' ? 'Besar diskon (%)' : 'Besar potongan (Rp)'} data-testid="voucher-value" type="number" min={1} value={vValue} onChange={(e) => setVValue(e.target.value)} placeholder={vType === 'percentage' ? 'Diskon %' : 'Potongan Rp'} className={vInput} />
+                <input aria-label="Minimal belanja (Rp)" data-testid="voucher-min" type="number" min={0} value={vMin} onChange={(e) => setVMin(e.target.value)} placeholder="Min. belanja Rp" className={vInput} />
+                {vType === 'percentage' && (
+                  <input aria-label="Maksimal potongan (Rp, opsional)" data-testid="voucher-max" type="number" min={0} value={vMax} onChange={(e) => setVMax(e.target.value)} placeholder="Maks. potongan Rp" className={vInput} />
+                )}
+                <input aria-label="Berlaku sampai (opsional)" data-testid="voucher-expiry" type="date" value={vExpiry} onChange={(e) => setVExpiry(e.target.value)} className={vInput} />
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" data-testid="voucher-create" onClick={handleCreateVoucher} className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer">
+                  Buat Voucher
+                </button>
+                {vMessage && (
+                  <span role="status" className="text-[11px] text-slate-700 dark:text-slate-300">
+                    {vMessage}
+                  </span>
+                )}
+              </div>
+            </div>
             {vouchers.length === 0 ? (
               <p className="text-[11px] text-slate-500">Belum ada voucher.</p>
             ) : (

@@ -71,7 +71,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onPrintQRShelfLabel,
   onViewPriceHistory,
 }) => {
-  const { categories, addProduct, updateProduct, settings, products } = usePOS();
+  const { categories, addCategory, addProduct, updateProduct, settings, products } = usePOS();
 
   const isEditMode = Boolean(productToEdit);
 
@@ -81,6 +81,19 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [sku, setSku] = useState('');
   const [barcode, setBarcode] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [isNewCategoryOpen, setIsNewCategoryOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryMessage, setNewCategoryMessage] = useState('');
+  const handleCreateCategory = () => {
+    const r = addCategory(newCategoryName);
+    setNewCategoryMessage(r.message);
+    if (r.success && r.id) {
+      setCategoryId(r.id);
+      setHasManuallySelectedCategory(true);
+      setIsNewCategoryOpen(false);
+      setNewCategoryName('');
+    }
+  };
   const [price, setPrice] = useState<number>(0);
   const [costPrice, setCostPrice] = useState<number>(0);
   const [stock, setStock] = useState<number>(0);
@@ -662,6 +675,57 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       </option>
                     ))}
                 </select>
+                {/* Tambah kategori baru (dulu daftar kategori tetap, tidak bisa ditambah) */}
+                {!isNewCategoryOpen ? (
+                  <button
+                    type="button"
+                    data-testid="btn-new-category"
+                    onClick={() => {
+                      setIsNewCategoryOpen(true);
+                      setNewCategoryMessage('');
+                    }}
+                    className="mt-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    + Kategori baru
+                  </button>
+                ) : (
+                  <div className="mt-1.5 flex gap-1.5">
+                    <input
+                      aria-label="Nama kategori baru"
+                      data-testid="new-category-name"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleCreateCategory();
+                        }
+                      }}
+                      placeholder="Mis. Frozen Food"
+                      className="flex-1 px-2 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                    <button
+                      type="button"
+                      data-testid="save-new-category"
+                      onClick={handleCreateCategory}
+                      className="px-2.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer"
+                    >
+                      Simpan
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsNewCategoryOpen(false)}
+                      className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                )}
+                {newCategoryMessage && (
+                  <p role="status" className="mt-1 text-[11px] text-slate-600 dark:text-slate-300">
+                    {newCategoryMessage}
+                  </p>
+                )}
                 {errors.categoryId && <p id="err-productformmodal-categoryId" role="alert" className="text-[11px] text-rose-600 mt-1">{errors.categoryId}</p>}
 
                 {/* AI Mapping Status / Feedback Indicator */}

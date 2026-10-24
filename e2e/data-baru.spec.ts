@@ -80,3 +80,60 @@ test('produk, supplier, faktur, dan member baru dibuat lewat formulir, dipakai, 
   await page.locator('#nav-btn-customers').click();
   await expect(page.getByText(MEMBER).first()).toBeVisible();
 });
+
+test('kategori baru (dari formulir produk) & voucher manual (dari Pengaturan) dipakai di kasir dan bertahan setelah reload', async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.addInitScript(() => {
+    window.print = () => {};
+  });
+  await registerOwner(page, { store: 'Toko Kategori Voucher' });
+
+  // 1. Produk dengan kategori baru yang dibuat langsung dari formulir produk
+  await page.locator('#nav-btn-inventory').click();
+  await page.locator('#btn-add-product').click();
+  await page.getByTestId('product-name').fill('Nugget Ayam Beku 500g');
+  await page.getByTestId('btn-new-category').click();
+  await page.getByTestId('new-category-name').fill('Frozen Food Uji');
+  await page.getByTestId('save-new-category').click();
+  await expect(page.getByTestId('product-category')).toHaveValue('c_frozen_food_uji');
+  await page.getByTestId('product-sku').fill('NUG-500');
+  await page.getByTestId('product-barcode').fill('2000000000993');
+  await page.getByTestId('product-cost').fill('20000');
+  await page.getByTestId('product-price').fill('25000');
+  await page.getByTestId('product-stock').fill('10');
+  await page.getByTestId('product-submit').click();
+  await expect(page.getByTestId('product-submit')).toBeHidden();
+
+  // 2. Voucher manual dari Pengaturan (tanpa AI)
+  await page.locator('#btn-employee-menu').click();
+  await page.locator('#menu-item-settings').click();
+  await page.getByTestId('voucher-code').fill('UJI5RB');
+  await page.getByTestId('voucher-type').selectOption('fixed');
+  await page.getByTestId('voucher-value').fill('5000');
+  await page.getByTestId('voucher-min').fill('20000');
+  await page.getByTestId('voucher-create').click();
+  await expect(page.getByText(/Voucher UJI5RB dibuat/)).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  // 3. Kasir: filter kategori baru, pasang voucher, bayar
+  await page.locator('#nav-btn-pos').click();
+  await page.getByRole('button', { name: /Frozen Food Uji/ }).first().click();
+  const card = page.locator('[id^="product-card-"]', { hasText: 'Nugget Ayam Beku 500g' }).first();
+  await expect(card).toBeVisible();
+  await card.click();
+  await page.locator('#btn-cart-extras').click();
+  await page.getByLabel('Kode promo / voucher...').fill('UJI5RB');
+  await page.getByRole('button', { name: 'Pakai', exact: true }).click();
+  await page.locator('#btn-checkout-pay').click();
+  await page.getByTestId('payment-cash-input').fill('20000');
+  await page.locator('#btn-confirm-complete-payment').click();
+  await page.getByTestId('receipt-close').click();
+
+  // 4. Muat ulang: kategori, voucher, dan transaksi bervoucher tetap ada
+  await page.reload();
+  await expect.poll(async () => (await readStored(page, 'pos_retail_tx_v3')).find((t: any) => t.voucherCode === 'UJI5RB')?.finalTotal, { timeout: 15_000 }).toBe(20000);
+  const product = (await readStored(page, 'pos_retail_products_v3')).find((p: any) => p.name === 'Nugget Ayam Beku 500g');
+  expect(product?.categoryId).toBe('c_frozen_food_uji');
+  await page.locator('#nav-btn-pos').click();
+  await expect(page.getByRole('button', { name: /Frozen Food Uji/ }).first()).toBeVisible();
+});

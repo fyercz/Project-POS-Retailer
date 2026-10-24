@@ -106,12 +106,15 @@ import {
 } from '../data/mockData';
 import { errorMessage } from '../utils/errors';
 import { weightedAverageCost } from '../domain/costing';
+import { mergeCategories, validateNewCategory } from '../domain/categories';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
 export interface POSCatalogContextType {
   products: Product[];
   categories: typeof INITIAL_CATEGORIES;
+  /** Tambah kategori buatan toko (disimpan di Pengaturan, ikut backup) */
+  addCategory: (name: string) => { success: boolean; message: string; id?: string };
   selectedCategory: string;
   setSelectedCategory: (categoryId: string) => void;
   searchQuery: string;
@@ -2866,6 +2869,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const addCategory = (name: string): { success: boolean; message: string; id?: string } => {
+    const current = mergeCategories(INITIAL_CATEGORIES, settings.customCategories, products);
+    const r = validateNewCategory(name, current);
+    if (!r.ok) return { success: false, message: r.message };
+    updateSettings({ customCategories: [...(settings.customCategories || []), r.category] });
+    return { success: true, message: `Kategori "${r.category.name}" ditambahkan.`, id: r.category.id };
+  };
+
   const updateSettings = (newSettings: Partial<StoreSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
@@ -3244,7 +3255,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // lama); sebagian memo lain malah dihitung ulang tiap render. Pola ini menutup keduanya.
   // -------------------------------------------------------------
   const latestFns = useRef<Record<string, (...args: any[]) => any>>({});
+  // Kategori: bawaan + buatan toko + yang dipakai produk (dulu daftar tetap, tidak bisa ditambah)
+  const categories = useMemo(
+    () => mergeCategories(INITIAL_CATEGORIES, settings.customCategories, products),
+    [settings.customCategories, products]
+  );
+
   latestFns.current = {
+    addCategory,
     handleSetPointsToRedeem,
     addCustomer,
     addEmployee,
@@ -3307,14 +3325,15 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const stableFns = useMemo(() => {
     const wrapped: Record<string, any> = {};
-    for (const key of ['handleSetPointsToRedeem', 'addCustomer', 'addEmployee', 'addExpense', 'addProduct', 'addProductsBatch', 'addSupplier', 'addToCart', 'addVoucher', 'adjustCustomerPoints', 'applyCustomerDiscount', 'applyMinStockRuleToAllProducts', 'applyVoucher', 'bulkAdjustProducts', 'clearAllProducts', 'clearAllTransactions', 'clearCart', 'clearImportedProducts', 'closeCurrentShift', 'completeFirstRunSetup', 'deleteEmployee', 'deleteExpense', 'deleteHeldOrder', 'deleteProduct', 'deleteProductsBatch', 'deleteSupplier', 'deleteVoucher', 'holdCurrentOrder', 'lockScreen', 'loginWithPin', 'logoutEmployee', 'openGeminiCopilot', 'processPayment', 'processPurchaseReturn', 'processSalesReturn', 'processSupplierPurchase', 'quickSwitchEmployee', 'recallHeldOrder', 'recordProductPriceChange', 'recordSupplierPayment', 'removeCustomerDiscount', 'removeFromCart', 'removeVoucher', 'setCartItemQuantity', 'setUsePoints', 'startNewShift', 'unlockScreen', 'updateCartItemDiscount', 'updateCartItemNote', 'updateCartItemQuantity', 'updateCartItemUnit', 'updateCustomer', 'updateEmployee', 'updateProduct', 'updateProductStock', 'updateSettings', 'updateShiftStartingCash', 'updateSupplier', 'voidTransaction']) wrapped[key] = (...args: any[]) => latestFns.current[key](...args);
+    for (const key of ['addCategory', 'handleSetPointsToRedeem', 'addCustomer', 'addEmployee', 'addExpense', 'addProduct', 'addProductsBatch', 'addSupplier', 'addToCart', 'addVoucher', 'adjustCustomerPoints', 'applyCustomerDiscount', 'applyMinStockRuleToAllProducts', 'applyVoucher', 'bulkAdjustProducts', 'clearAllProducts', 'clearAllTransactions', 'clearCart', 'clearImportedProducts', 'closeCurrentShift', 'completeFirstRunSetup', 'deleteEmployee', 'deleteExpense', 'deleteHeldOrder', 'deleteProduct', 'deleteProductsBatch', 'deleteSupplier', 'deleteVoucher', 'holdCurrentOrder', 'lockScreen', 'loginWithPin', 'logoutEmployee', 'openGeminiCopilot', 'processPayment', 'processPurchaseReturn', 'processSalesReturn', 'processSupplierPurchase', 'quickSwitchEmployee', 'recallHeldOrder', 'recordProductPriceChange', 'recordSupplierPayment', 'removeCustomerDiscount', 'removeFromCart', 'removeVoucher', 'setCartItemQuantity', 'setUsePoints', 'startNewShift', 'unlockScreen', 'updateCartItemDiscount', 'updateCartItemNote', 'updateCartItemQuantity', 'updateCartItemUnit', 'updateCustomer', 'updateEmployee', 'updateProduct', 'updateProductStock', 'updateSettings', 'updateShiftStartingCash', 'updateSupplier', 'voidTransaction']) wrapped[key] = (...args: any[]) => latestFns.current[key](...args);
     return wrapped;
   }, []);
 
   const catalogValue = useMemo<POSCatalogContextType>(
     () => ({
       products,
-      categories: INITIAL_CATEGORIES,
+      categories,
+      addCategory: stableFns.addCategory,
       selectedCategory,
       setSelectedCategory,
       searchQuery,
@@ -3333,6 +3352,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteProduct: stableFns.deleteProduct,
     }),
     [
+      categories,
       products,
       selectedCategory,
       searchQuery,
