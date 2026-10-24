@@ -51,13 +51,16 @@ test('produk, supplier, faktur, dan member baru dibuat lewat formulir, dipakai, 
   await page.locator('#nav-btn-pos').click();
   const card = page.locator('[id^="product-card-"]', { hasText: PRODUCT }).first();
   for (let i = 0; i < 3; i++) await card.click();
-  await page.getByText('Pilih Member', { exact: false }).first().click();
+  // Baris lipat keranjang berlabel "Member, Voucher & Poin"
+  await expect(page.locator('#btn-cart-extras')).toContainText('Member');
+  await page.locator('#btn-cart-extras').click();
+  await page.getByRole('button', { name: /Pilih Member/ }).first().click();
   await page.getByRole('button', { name: /\+ Member Baru/ }).click();
   await page.getByLabel('Nama Lengkap Member').fill(MEMBER);
   await page.getByLabel('Nomor Handphone / WhatsApp').fill('081299990000');
   await page.getByLabel('Tier Member Awal').selectOption('Silver');
   await page.getByRole('button', { name: /Daftarkan & Pilih Member Ini/ }).click();
-  await expect(page.getByText(MEMBER).first()).toBeVisible();
+  await expect(page.locator('#btn-cart-extras')).toContainText(MEMBER); // nama member tampil di baris keranjang
   await page.locator('#btn-checkout-pay').click();
   await page.getByTestId('payment-cash-input').fill('20000');
   await page.locator('#btn-confirm-complete-payment').click();
