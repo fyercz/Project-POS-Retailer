@@ -62,20 +62,20 @@ test('jurnal: seimbang, saldo toko = kewajiban (bukan kas), HPP retur dibalik ke
 
 test('neraca: ekuitas dari bawah, selisih belum tercatat ditampilkan, tanpa angka karangan', () => {
   const bs = computeBalanceSheet({ products: [A, B], transactions, customers: [], supplierPurchases: [], shifts, expenses, salesReturns } as any);
-  assert.equal(bs.assets.cashOnHand, -2000, '60.000 tunai - 50.000 listrik - 12.000 retur tunai (boleh negatif)');
+  assert.equal(bs.assets.cashOnHand, -4000, '60.000 tunai - 50.000 listrik - 12.000 retur tunai - 2.000 kekurangan kas shift (boleh negatif)');
   assert.equal(bs.assets.bankAndQris, 110000);
   assert.equal(bs.assets.merchandiseInventory, 1200000);
   assert.equal(bs.assets.openingFunds, 0, 'tanpa modal awal: 0 (dulu Rp 50 juta)');
   assert.equal(bs.liabilities.storeCreditLiability, 12000);
   assert.equal(bs.equity.ownerInitialCapital, 0);
   assert.equal(bs.equity.currentPeriodNetIncome, -36000, 'laba neraca = laporan laba rugi (termasuk retur)');
-  assert.equal(bs.equity.unrecordedCapital, 1332000, 'stok yang diinput tanpa faktur terlihat sebagai selisih');
+  assert.equal(bs.equity.unrecordedCapital, 1330000, 'stok yang diinput tanpa faktur terlihat sebagai selisih');
   assert.equal(bs.isReconciled, false);
   assert.equal(bs.isBalanced, true);
 
   const withCapital = computeBalanceSheet({ products: [A, B], transactions, customers: [], supplierPurchases: [], shifts, expenses, salesReturns, initialCapital: 100000 } as any);
   assert.equal(withCapital.assets.openingFunds, 100000, 'modal awal utuh (dulu dipecah 40/60)');
-  assert.equal(withCapital.equity.unrecordedCapital, 1332000);
+  assert.equal(withCapital.equity.unrecordedCapital, 1330000);
 });
 
 test('jurnal modal awal: utuh ke Dana Awal, tanggal transaksi pertama (bukan 1 Jan 2026)', () => {

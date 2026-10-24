@@ -10,6 +10,7 @@ import {
   getProductByIdOrBarcode as getSqliteProductByIdOrBarcode,
   upsertProducts as upsertSqliteProducts,
   applyStockMovement as applySqliteStockMovement,
+  hasStockMovement as hasSqliteStockMovement,
   type StockMovementItem,
   getAllTransactions as getSqliteTransactions,
   upsertTransactions as upsertSqliteTransactions,
@@ -446,6 +447,15 @@ async function applyStockMovement(
   return { duplicate: false, updatedStocks };
 }
 
+/** Apakah pergerakan stok dengan kunci ini sudah pernah diterapkan (SQLite, atau memori bila SQLite tidak ada)? */
+async function isStockMovementApplied(key: string): Promise<boolean> {
+  try {
+    return await hasSqliteStockMovement(key);
+  } catch {
+    return memoryAppliedMovements.has(key);
+  }
+}
+
 /** Simpan transaksi ke memori tanpa menghapus penanda "stok sudah diproses". */
 function putTransaction(key: string, tx: any): any {
   const existing = lanTransactionsStore.get(key);
@@ -515,7 +525,10 @@ app.post('/api/lan/data/push-transaction', async (req, res) => {
       cust.totalSpent = (cust.totalSpent || 0) + (transaction.finalTotal || 0);
       cust.ordersCount = (cust.ordersCount || 0) + 1;
       if (transaction.pointsEarned) cust.points = (cust.points || 0) + transaction.pointsEarned;
-      if (transaction.pointsRedeemed) cust.points = Math.max(0, (cust.points || 0) - transaction.pointsRedeemed);
+      // Aplikasi kasir menyimpan poin yang ditukar di 'pointsUsed' (dulu server membaca 'pointsRedeemed'
+      // yang tidak pernah diisi -> poin yang ditukar tidak pernah dipotong di server)
+      const redeemed = Number(transaction.pointsUsed ?? transaction.pointsRedeemed) || 0;
+      if (redeemed > 0) cust.points = Math.max(0, (cust.points || 0) - redeemed);
       await upsertSqliteCustomers([cust]).catch((e: any) =>
         console.error('[SQLite Server] Gagal menyimpan poin member:', e?.message || e)
       );
@@ -568,6 +581,18 @@ app.post('/api/lan/data/stock-return', async (req, res) => {
         return res.status(400).json({ success: false, error: 'Jumlah barang retur tidak valid.' });
       }
       movement.push({ productId, delta: qty * mult });
+    }
+
+    // Void hanya mengembalikan stok bila penjualannya MEMANG pernah memotong stok. Saat jaringan
+    // putus-sambung, transaksi bisa terkirim sudah berstatus void (tidak memotong stok) atau void
+    // tiba lebih dulu dari penjualannya; dulu stok tetap dikembalikan -> stok server membengkak.
+    // Bila penjualan belum diproses: tandai "sudah diproses tanpa potong stok" agar kiriman
+    // penjualan yang terlambat tidak memotong stok transaksi yang sudah dibatalkan.
+    if (movementKind === 'void' && typeof transactionId === 'string' && transactionId) {
+      if (!(await isStockMovementApplied(`sale:${transactionId}`))) {
+        await applyStockMovement(`sale:${transactionId}`, 'sale', []);
+        movement.length = 0;
+      }
     }
 
     const result = await applyStockMovement(`${movementKind}:${key}`, movementKind, movement);

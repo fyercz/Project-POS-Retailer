@@ -882,6 +882,8 @@ export interface IncomeStatement {
     cashShortExpense: number; // Beban selisih kas minus saat tutup shift
     totalOperatingExpenses: number;
   };
+  /** Pendapatan lain-lain: kelebihan kas saat tutup shift (akun 4030) */
+  otherIncome?: number;
   netOperatingProfit: number;
   netProfitMarginPercent: number;
 }

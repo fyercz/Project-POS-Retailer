@@ -593,19 +593,20 @@ export function computeIncomeStatement(options: {
     }
   }
 
-  // Cash Shortage from closed shifts
+  // Selisih kas tutup shift: kekurangan = beban (6020), kelebihan = pendapatan lain-lain (4030).
+  // Dulu kelebihan diabaikan di laba rugi padahal jurnal mencatatnya -> laba berbeda dengan jurnal.
   let cashShortExpense = 0;
+  let cashOverIncome = 0;
   for (const sh of filteredShifts) {
-    if (sh.difference && sh.difference < 0) {
-      cashShortExpense += Math.abs(sh.difference);
-    }
+    if (sh.difference && sh.difference < 0) cashShortExpense += Math.abs(sh.difference);
+    else if (sh.difference && sh.difference > 0) cashOverIncome += sh.difference;
   }
 
   const expenseItemsSum = Object.values(byCategory).reduce((a, b) => a + b, 0);
   const totalOperatingExpenses = expenseItemsSum + cashShortExpense;
 
   // 6. Net Operating Profit
-  const netOperatingProfit = grossProfit - totalOperatingExpenses;
+  const netOperatingProfit = grossProfit - totalOperatingExpenses + cashOverIncome;
   const netProfitMarginPercent = netSales > 0 ? (netOperatingProfit / netSales) * 100 : 0;
 
   return {
@@ -623,6 +624,7 @@ export function computeIncomeStatement(options: {
       cashShortExpense,
       totalOperatingExpenses,
     },
+    otherIncome: cashOverIncome,
     netOperatingProfit,
     netProfitMarginPercent,
   };
@@ -716,6 +718,13 @@ export function computeBalanceSheet(options: {
     if (!isCredit && !isConsignment) {
       cashOnHand -= total;
     }
+  }
+
+  // Selisih hitung kas saat tutup shift: kas fisik mengikuti hasil hitungan (kekurangan mengurangi
+  // kas, kelebihan menambah). Dulu diabaikan sehingga kas di neraca lebih besar dari uang di laci,
+  // padahal laba rugi & jurnal sudah mencatat kekurangannya.
+  for (const sh of shifts) {
+    if (sh.status === 'closed' && typeof sh.difference === 'number') cashOnHand += sh.difference;
   }
 
   // Retur penjualan: tunai mengurangi kas, transfer mengurangi bank, saldo toko = kewajiban

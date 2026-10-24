@@ -176,6 +176,32 @@ test('void mengembalikan stok dan mengubah status transaksi', async () => {
   assert.equal(stored.status, 'void');
 });
 
+test('jaringan putus-sambung: transaksi terkirim sudah void tidak menambah stok', async () => {
+  await post('/api/lan/data/sync-products', { products: [{ id: 'p-off1', name: 'Off1', price: 1000, stock: 10 }] });
+  // Dijual & di-void saat offline: penjualan tiba berstatus void (tidak memotong stok), lalu void-nya
+  await post('/api/lan/data/push-transaction', { transaction: { id: 'tx-off1', status: 'void', finalTotal: 3000, items: [{ productId: 'p-off1', quantity: 3 }] } });
+  await post('/api/lan/data/stock-return', { key: 'void-off1', kind: 'void', items: [{ productId: 'p-off1', quantity: 3 }], transactionId: 'tx-off1', transactionUpdate: { status: 'void' } });
+  assert.equal(await stockOf('p-off1'), 10, 'stok tidak boleh membengkak menjadi 13');
+});
+
+test('jaringan putus-sambung: void tiba lebih dulu dari penjualannya, stok tetap benar', async () => {
+  await post('/api/lan/data/sync-products', { products: [{ id: 'p-off2', name: 'Off2', price: 1000, stock: 10 }] });
+  await post('/api/lan/data/stock-return', { key: 'void-off2', kind: 'void', items: [{ productId: 'p-off2', quantity: 2 }], transactionId: 'tx-off2', transactionUpdate: { status: 'void' } });
+  await post('/api/lan/data/push-transaction', { transaction: { id: 'tx-off2', finalTotal: 2000, items: [{ productId: 'p-off2', quantity: 2 }] } });
+  assert.equal(await stockOf('p-off2'), 10, 'penjualan yang sudah dibatalkan tidak boleh memotong stok');
+});
+
+test('poin yang ditukar member dipotong di server (field pointsUsed)', async () => {
+  await post('/api/lan/database/seed', {
+    customers: [{ id: 'c-tukar', name: 'Pak Tukar', phone: '0813', tier: 'Gold', points: 100, totalSpent: 0, ordersCount: 0 }],
+  });
+  await post('/api/lan/data/push-transaction', {
+    transaction: { id: 'tx-tukar', finalTotal: 40000, pointsUsed: 50, pointsEarned: 4, customer: { id: 'c-tukar', name: 'Pak Tukar' }, items: [] },
+  });
+  const c = (await pull()).customers.find((x: any) => x.id === 'c-tukar');
+  assert.equal(c.points, 54, '100 - 50 ditukar + 4 diperoleh');
+});
+
 test('poin dan riwayat member tetap ada setelah restart', async () => {
   await post('/api/lan/database/seed', {
     customers: [{ id: 'c-1', name: 'Bu Ani', phone: '0812', tier: 'Gold', points: 10, totalSpent: 0, ordersCount: 0, pointsHistory: [{ id: 'h1', points: 10 }] }],
