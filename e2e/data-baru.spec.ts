@@ -34,7 +34,7 @@ test('produk, supplier, faktur, dan member baru dibuat lewat formulir, dipakai, 
   // 3. Terima barang dari supplier baru: termin terisi dari data supplier; modal rata-rata tertimbang
   await page.getByRole('button', { name: /Faktur Masuk/ }).first().click();
   await page.locator('#btn-open-receiving-tab').click();
-  await page.getByLabel('Nama Supplier / Distributor').selectOption({ label: SUPPLIER });
+  await page.getByLabel('Nama Supplier / Distributor').selectOption(SUPPLIER); // label: 'Nama (Kategori)'
   await expect(page.getByLabel('Syarat Pembayaran')).toHaveValue('Tempo 14 Hari');
   const picker = page.getByRole('combobox', { name: 'Produk diterima' });
   await picker.click();
