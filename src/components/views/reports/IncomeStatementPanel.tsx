@@ -162,6 +162,13 @@ export const IncomeStatementPanel: React.FC<IncomeStatementPanelProps> = ({ date
                         );
                       })}
 
+                      {(dateFilteredIncome.operatingExpenses.pointsExpense ?? 0) > 0 && (
+                        <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/40">
+                          <span className="font-sans">6040 • Beban Program Poin Member (poin diberikan)</span>
+                          <span>-{formatCurrency(dateFilteredIncome.operatingExpenses.pointsExpense ?? 0, settings.currency)}</span>
+                        </div>
+                      )}
+
                       {dateFilteredIncome.operatingExpenses.cashShortExpense > 0 && (
                         <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/40 text-rose-600 dark:text-rose-400">
                           <span className="font-sans">6020 • Beban Selisih Kurang Kas Tutup Shift Kasir</span>

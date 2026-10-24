@@ -102,11 +102,22 @@ export const BalanceSheetPanel: React.FC<BalanceSheetPanelProps> = ({ balanceShe
                     </div>
 
                     <div className="space-y-2">
+                      {(balanceSheet.assets.supplierReturnReceivable ?? 0) > 0 && (
+                        <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                          <div>
+                            <span className="font-medium text-slate-800 dark:text-slate-200">1060 • Piutang Retur Supplier</span>
+                            <p className="text-[11px] text-slate-500">Barang diretur ke supplier yang belum diganti uang/potongan hutang</p>
+                          </div>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {formatCurrency(balanceSheet.assets.supplierReturnReceivable ?? 0, settings.currency)}
+                          </span>
+                        </div>
+                      )}
                       {(balanceSheet.assets.openingFunds ?? 0) > 0 && (
                         <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
                           <div>
-                            <span className="font-medium text-slate-800 dark:text-slate-200">1005 • Dana Awal (Modal Awal)</span>
-                            <p className="text-[11px] text-slate-500">Kas & bank saat mulai memakai aplikasi (sesuai Modal Awal di Pengaturan)</p>
+                            <span className="font-medium text-slate-800 dark:text-slate-200">1005 • Dana Awal Lainnya</span>
+                            <p className="text-[11px] text-slate-500">Bagian Modal Awal yang tidak dirinci sebagai uang di laci/bank (mis. stok awal) - Pengaturan</p>
                           </div>
                           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                             {formatCurrency(balanceSheet.assets.openingFunds ?? 0, settings.currency)}

@@ -46,6 +46,7 @@ import {
 import { executeSystemCleanup } from '../utils/desktopHelper';
 import { errorMessage } from '../utils/errors';
 import { StoreLogo } from './StoreLogo';
+import { formatCurrency } from '../utils/formatters';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -157,6 +158,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
       pointRedemptionRate: Math.max(1, Number(formData.pointRedemptionRate) || 100),
       minRedeemPoints: Math.max(0, formData.minRedeemPoints !== undefined && !isNaN(Number(formData.minRedeemPoints)) ? Number(formData.minRedeemPoints) : 10),
     };
+    // Modal awal: tidak negatif; rincian laci + bank tidak melebihi total
+    {
+      const total = Math.max(0, Math.round(Number(formData.initialCapital) || 0));
+      const cash = Math.min(total, Math.max(0, Math.round(Number(formData.initialCashInDrawer) || 0)));
+      const bank = Math.min(total - cash, Math.max(0, Math.round(Number(formData.initialBankBalance) || 0)));
+      sanitizedSettings.initialCapital = total;
+      sanitizedSettings.initialCashInDrawer = cash;
+      sanitizedSettings.initialBankBalance = bank;
+    }
     updateSettings(sanitizedSettings);
     savePrinterConfig(printerConfig);
     setSaved(true);
@@ -579,6 +589,72 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 <span className="text-[11px] text-slate-500">Bebas diisi angka bulat berapa saja (cth: 10 atau 100)</span>
               </div>
             </div>
+          </div>
+
+          {/* Modal awal untuk neraca (dulu tidak bisa diisi dari aplikasi) */}
+          <div className="space-y-3 bg-slate-50 dark:bg-slate-950/50 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+              <DollarSign className="w-4 h-4 text-emerald-500" />
+              <span>Modal Awal &amp; Pembukuan</span>
+            </div>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400">
+              Nilai usaha saat mulai memakai aplikasi ini: uang di laci + saldo bank + nilai stok awal. Dipakai di Neraca.
+              Rincian laci/bank membuat kas & bank di Neraca sesuai kenyataan; sisanya dicatat sebagai &quot;dana awal lainnya&quot; (mis. stok awal).
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">Total Modal Awal (Rp)</label>
+                <input
+                  aria-label="Total Modal Awal (Rp)"
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={formData.initialCapital ?? 0}
+                  onChange={(e) => setFormData({ ...formData, initialCapital: e.target.value === '' ? 0 : Number(e.target.value) })}
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                />
+                <span className="text-[11px] text-slate-500">Uang + stok awal</span>
+              </div>
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">Bagian: Uang di Laci (Rp)</label>
+                <input
+                  aria-label="Bagian: Uang di Laci (Rp)"
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={formData.initialCashInDrawer ?? 0}
+                  onChange={(e) => setFormData({ ...formData, initialCashInDrawer: e.target.value === '' ? 0 : Number(e.target.value) })}
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                />
+                <span className="text-[11px] text-slate-500">Uang tunai saat mulai</span>
+              </div>
+              <div>
+                <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">Bagian: Saldo Bank (Rp)</label>
+                <input
+                  aria-label="Bagian: Saldo Bank (Rp)"
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={formData.initialBankBalance ?? 0}
+                  onChange={(e) => setFormData({ ...formData, initialBankBalance: e.target.value === '' ? 0 : Number(e.target.value) })}
+                  className="w-full p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+                />
+                <span className="text-[11px] text-slate-500">Rekening / QRIS saat mulai</span>
+              </div>
+            </div>
+            {(() => {
+              const total = Number(formData.initialCapital) || 0;
+              const rest = total - (Number(formData.initialCashInDrawer) || 0) - (Number(formData.initialBankBalance) || 0);
+              return rest < 0 ? (
+                <p role="alert" className="text-[11px] font-semibold text-rose-700 dark:text-rose-400">
+                  Uang di laci + saldo bank melebihi total modal awal. Saat disimpan, rincian akan dibatasi sesuai total.
+                </p>
+              ) : (
+                <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                  Dana awal lainnya (mis. nilai stok awal): <strong>{formatCurrency(rest, formData.currency)}</strong>
+                </p>
+              );
+            })()}
           </div>
 
           {/* Thermal Receipt Settings */}

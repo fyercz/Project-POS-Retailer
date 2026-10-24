@@ -19,10 +19,15 @@ export function baseUnitsOf(item: CogsLine): number {
 }
 
 export function lineCogs(item: CogsLine): number {
+  // HPP = nilai stok yang benar-benar keluar: harga modal produk (per satuan dasar, rata-rata
+  // tertimbang) x isi satuan. Harga modal Dus/Slop yang disimpan di produk TIDAK ikut diperbarui
+  // saat barang diterima, sehingga dulu HPP grosir memakai angka usang (simulasi bulanan: HPP
+  // grosir lebih kecil Rp 67 rb/bulan dari stok yang keluar). Kini hanya cadangan bila modal kosong.
+  const baseCost = Number(item.product?.costPrice) || 0;
   const perSellingUnit =
-    item.selectedUnit?.costPrice !== undefined
-      ? Number(item.selectedUnit.costPrice) || 0
-      : (Number(item.product?.costPrice) || 0) * unitMultiplierOf(item);
+    baseCost > 0
+      ? baseCost * unitMultiplierOf(item)
+      : Number(item.selectedUnit?.costPrice) || 0;
   return perSellingUnit * (Number(item.quantity) || 0);
 }
 

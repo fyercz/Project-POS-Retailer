@@ -8,8 +8,10 @@ test('HPP satuan grosir: 2 Dus isi 40 dihitung 80 pcs, bukan 2 pcs', () => {
   assert.equal(baseUnitsOf(dus), 80);
 });
 
-test('HPP memakai harga modal satuan grosir bila tersedia, dan pcs biasa tetap benar', () => {
-  assert.equal(lineCogs({ quantity: 3, product: { costPrice: 2750 }, selectedUnit: { multiplier: 40, costPrice: 105000 } }), 315000);
+test('HPP grosir = modal produk x isi (nilai stok yang keluar); modal Dus hanya cadangan bila modal produk kosong', () => {
+  // Modal Dus tersimpan 105.000 (usang) tetapi stok yang keluar 3 x 40 x 2.750
+  assert.equal(lineCogs({ quantity: 3, product: { costPrice: 2750 }, selectedUnit: { multiplier: 40, costPrice: 105000 } }), 330000);
+  assert.equal(lineCogs({ quantity: 3, product: { costPrice: 0 }, selectedUnit: { multiplier: 40, costPrice: 105000 } }), 315000);
   assert.equal(lineCogs({ quantity: 5, product: { costPrice: 2750 } }), 13750);
   assert.equal(lineCogs({ quantity: 1, product: {} }), 0);
 });

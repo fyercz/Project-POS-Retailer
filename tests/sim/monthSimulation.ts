@@ -12,6 +12,7 @@ import { computeCartTotals, tierPointsMultiplier } from '../../src/domain/cartTo
 import { saleStockDeltas, applyStockDeltas, linesToDeltas, voidRestockLines } from '../../src/domain/stockMovements.ts';
 import { newShift, applySaleToShift, applyCashOut, closeShift, expectedCashOf } from '../../src/domain/shiftCash.ts';
 import { lineCogs, returnedCogs } from '../../src/utils/cogs.ts';
+import { weightedAverageCost } from '../../src/domain/costing.ts';
 
 // ---------- RNG deterministik ----------
 function mulberry32(seed: number) {
@@ -70,7 +71,8 @@ export function runMonthSimulation(seed = 20261001) {
     { code: 'POTONG2RB', discountType: 'fixed', value: 2000, minSpend: 25000, description: 'Potong Rp 2.000' },
   ];
   const settings = { pointsRatio: 10000, pointRedemptionRate: 100 };
-  const INITIAL_CAPITAL = 30_000_000;
+  const INITIAL_CAPITAL = 30_000_000; // dirinci: Rp 25 jt di laci, Rp 5 jt di bank
+  const INITIAL_CASH = 25_000_000, INITIAL_BANK = 5_000_000;
 
   const transactions: any[] = [];
   const salesReturns: any[] = [];
@@ -87,7 +89,7 @@ export function runMonthSimulation(seed = 20261001) {
   const cashiers = [{ id: 'k1', name: 'Siti (Kasir)', role: 'cashier' }, { id: 'k2', name: 'Dewi (Kasir)', role: 'cashier' }];
 
   // Bayangan (dihitung terpisah dari fungsi laporan aplikasi)
-  const shadow = { cashDrawer: 0, bank: 0, edc: 0, payable: 0, consignmentPayable: 0, storeCredit: 0, opnameLossValue: 0, supplierReturnValue: 0, pointsEarned: 0, pointsUsed: 0 };
+  const shadow = { cashDrawer: INITIAL_CASH, bank: INITIAL_BANK, edc: 0, payable: 0, consignmentPayable: 0, storeCredit: 0, supplierReceivable: 0, opnameLossValue: 0, supplierReturnValue: 0, pointsEarned: 0, pointsUsed: 0, revaluationRounding: 0, returnRevaluation: 0 };
 
   const setStock = (deltas: { productId: string; delta: number }[]) => {
     const updated = applyStockDeltas(products, deltas);
@@ -108,8 +110,11 @@ export function runMonthSimulation(seed = 20261001) {
     // seperti processSupplierPurchase: stok bertambah, harga modal = harga beli terbaru
     for (const l of lines) {
       const p = byId.get(l.productId)!;
-      if (l.costPrice !== p.costPrice) priceChanges.push({ date: ymd(day), productId: p.id, field: 'harga modal', from: p.costPrice, to: l.costPrice });
-      const np = { ...p, stock: p.stock + l.quantity, costPrice: l.costPrice };
+      // seperti aplikasi: harga modal rata-rata tertimbang
+      const newCost = weightedAverageCost(p.stock, p.costPrice, l.quantity, l.costPrice);
+      shadow.revaluationRounding += (p.stock + l.quantity) * newCost - (p.stock * p.costPrice + l.quantity * l.costPrice);
+      if (newCost !== p.costPrice) priceChanges.push({ date: ymd(day), productId: p.id, field: 'harga modal (rata-rata)', from: p.costPrice, to: newCost });
+      const np = { ...p, stock: p.stock + l.quantity, costPrice: newCost };
       products[products.findIndex((x) => x.id === p.id)] = np; byId.set(p.id, np);
     }
     serverOps.push({ path: '/api/lan/data/stock-adjust', body: { key: `adj-${po.id}`, items: lines.map((l) => ({ productId: l.productId, delta: l.quantity })), reason: `Terima ${po.invoiceNumber}` } });
@@ -219,6 +224,8 @@ export function runMonthSimulation(seed = 20261001) {
         salesReturns.push(r);
         src.returnedAmount = refund;
         if (restock) {
+          // Barang masuk lagi dinilai modal TERKINI, HPP dibalik memakai modal SAAT DIJUAL
+          shadow.returnRevaluation += mult * (byId.get(line.product.id)!.costPrice - line.product.costPrice);
           setStock([{ productId: line.product.id, delta: mult }]);
           serverOps.push({ path: '/api/lan/data/stock-return', body: { key: `ret-${r.id}`, kind: 'return', items: [{ productId: line.product.id, quantity: 1, unitMultiplier: mult }], transactionId: src.id } });
         }
@@ -263,7 +270,9 @@ export function runMonthSimulation(seed = 20261001) {
       setStock([{ productId: 'susu', delta: -qty }]);
       serverOps.push({ path: '/api/lan/data/stock-adjust', body: { key: 'adj-pr-1', items: [{ productId: 'susu', delta: -qty }], reason: 'Retur supplier RET-SUP-001' } });
       shadow.supplierReturnValue += qty * p.costPrice;
-      log.push(`${ymd(day)} Retur ke supplier ${qty} susu (Rp ${qty * p.costPrice}) - tidak ada pencatatan uang/hutang di aplikasi`);
+      // Pembelian ke supplier ini tunai (tanpa hutang): nilai retur menjadi piutang retur supplier
+      shadow.supplierReceivable += qty * p.costPrice;
+      log.push(`${ymd(day)} Retur ke supplier ${qty} susu (Rp ${qty * p.costPrice}) -> piutang retur supplier`);
     }
     // Pengeluaran
     const addExp = (category: string, description: string, amount: number, source: 'cash_drawer' | 'bank_transfer') => {
@@ -296,20 +305,21 @@ export function runMonthSimulation(seed = 20261001) {
   }
   serverOps.push({ path: '/api/lan/data/stock-adjust', body: { key: 'adj-opname-okt', items: opname.map((o) => ({ productId: o.productId, delta: o.delta })), reason: 'Stock opname Oktober' } });
 
-  return { products, customers, vouchers, transactions, salesReturns, purchases, purchaseReturns, expenses, shifts, opname, priceChanges, daily, log, serverOps, shadow, openingPoints, INITIAL_CAPITAL, settings };
+  return { products, customers, vouchers, transactions, salesReturns, purchases, purchaseReturns, expenses, shifts, opname, priceChanges, daily, log, serverOps, shadow, openingPoints, INITIAL_CAPITAL, INITIAL_CASH, INITIAL_BANK, settings };
 }
 
 /** Pembukuan bayangan: laba rugi dihitung langsung dari data mentah, terpisah dari accountingLedger. */
 export function shadowIncome(sim: ReturnType<typeof runMonthSimulation>) {
   const sold = sim.transactions.filter((t) => t.status !== 'void');
   const gross = sold.reduce((s, t) => s + t.subtotal, 0);
-  const discounts = sold.reduce((s, t) => s + t.discountAmount, 0);
+  const discounts = sold.reduce((s, t) => s + t.discountAmount - Math.min(t.discountAmount, t.pointsDiscount || 0), 0);
+  const pointsExpense = sold.reduce((s, t) => s + (t.pointsEarned || 0) * sim.settings.pointRedemptionRate, 0);
   const returns = sim.salesReturns.reduce((s, r) => s + r.totalRefundAmount, 0);
   const txById = new Map(sim.transactions.map((t) => [t.id, t]));
   const cogs = sold.flatMap((t) => t.items).reduce((s, l) => s + lineCogs(l), 0) - sim.salesReturns.reduce((s, r) => s + returnedCogs(r, txById as any), 0);
-  const expenses = sim.expenses.reduce((s, e) => s + e.amount, 0);
+  const expenses = sim.expenses.reduce((s, e) => s + e.amount, 0) + pointsExpense;
   const shortage = sim.shifts.reduce((s, sh) => s + Math.max(0, -(sh.difference || 0)), 0);
   const overage = sim.shifts.reduce((s, sh) => s + Math.max(0, sh.difference || 0), 0);
   const netSales = gross - discounts - returns;
-  return { gross, discounts, returns, netSales, cogs: Math.round(cogs), grossProfit: netSales - Math.round(cogs), expenses, shortage, overage, net: netSales - Math.round(cogs) - expenses - shortage + overage };
+  return { gross, discounts, returns, netSales, cogs: Math.round(cogs), grossProfit: netSales - Math.round(cogs), expenses, pointsExpense, shortage, overage, net: netSales - Math.round(cogs) - expenses - shortage + overage };
 }
