@@ -89,3 +89,24 @@ export async function sellProductByName(page: Page, productName: string, cashAmo
   await page.locator('#btn-confirm-complete-payment').click();
   await page.getByTestId('receipt-close').click();
 }
+
+/** Baca isi sebuah daftar (array) yang tersimpan di IndexedDB aplikasi. */
+export async function readStored<T = any>(page: Page, key: string): Promise<T[]> {
+  return page.evaluate(
+    (k) =>
+      new Promise<any[]>((resolve) => {
+        const open = indexedDB.open('ulilmart_pos_main_db', 1);
+        open.onerror = () => resolve([]);
+        open.onsuccess = () => {
+          try {
+            const req = open.result.transaction('pos_state_store', 'readonly').objectStore('pos_state_store').get(k);
+            req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+            req.onerror = () => resolve([]);
+          } catch {
+            resolve([]);
+          }
+        };
+      }),
+    key
+  );
+}
