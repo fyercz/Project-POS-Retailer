@@ -110,3 +110,24 @@ export async function readStored<T = any>(page: Page, key: string): Promise<T[]>
     key
   );
 }
+
+/** Baca satu nilai (objek) yang tersimpan di IndexedDB aplikasi. */
+export async function readStoredValue<T = any>(page: Page, key: string): Promise<T | null> {
+  return page.evaluate(
+    (k) =>
+      new Promise<any>((resolve) => {
+        const open = indexedDB.open('ulilmart_pos_main_db', 1);
+        open.onerror = () => resolve(null);
+        open.onsuccess = () => {
+          try {
+            const req = open.result.transaction('pos_state_store', 'readonly').objectStore('pos_state_store').get(k);
+            req.onsuccess = () => resolve(req.result ?? null);
+            req.onerror = () => resolve(null);
+          } catch {
+            resolve(null);
+          }
+        };
+      }),
+    key
+  );
+}

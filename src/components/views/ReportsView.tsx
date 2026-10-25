@@ -1475,8 +1475,23 @@ export const ReportsView: React.FC = () => {
                           <Clock className="w-3.5 h-3.5" />
                           <span>{formatDate(entry.date)}</span>
                           <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
-                            Balanced
+                            Seimbang
                           </span>
+                          {/* Pengeluaran salah catat bisa dihapus (dulu tidak ada tombolnya) */}
+                          {entry.sourceType === 'expense' && entry.id.startsWith('jrnl-exp-') && (
+                            <button
+                              type="button"
+                              aria-label={`Hapus pengeluaran ${entry.description}`}
+                              onClick={() => {
+                                if (confirm(`Hapus pengeluaran "${entry.description}"? Bila dibayar dari laci pada shift ini, kas laci dikembalikan.`)) {
+                                  deleteExpense(entry.id.slice('jrnl-exp-'.length));
+                                }
+                              }}
+                              className="px-2 py-0.5 rounded-md border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 font-sans font-bold hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                            >
+                              Hapus
+                            </button>
+                          )}
                         </div>
                       </div>
 

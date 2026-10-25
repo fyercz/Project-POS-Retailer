@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { usePOSTransactions, usePOSUI, usePOSAuthShift } from '../../context/POSContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { Transaction, SalesReturn, SalesReturnItem } from '../../types';
+import { Employee, Transaction, SalesReturn, SalesReturnItem } from '../../types';
 import { ReportPrintModal } from '../ReportPrintModal';
 import { DateFilterBar } from '../DateFilterBar';
 import {
@@ -42,6 +42,8 @@ import {
   formatPeriodLabel,
 } from '../../utils/dateFilters';
 import { activateOnKey } from '../../utils/a11y';
+import { AuthorityModal } from '../AuthorityModal';
+import { hasActionPermission } from '../../utils/permissions';
 
 export const TransactionsView: React.FC = () => {
   const {
@@ -60,6 +62,12 @@ export const TransactionsView: React.FC = () => {
     setIsBackupRestoreOpen,
   } = usePOSUI();
   const { activeEmployee } = usePOSAuthShift();
+  // Void & retur (pengembalian uang) butuh Supervisor/Owner. Kasir/staf gudang: minta PIN atasan dulu.
+  // Dulu aturan canVoidTransaction tidak pernah diperiksa sehingga Kasir bisa void & retur sendiri.
+  const canApproveRefund = hasActionPermission(activeEmployee?.role, 'canVoidTransaction');
+  const [authorizer, setAuthorizer] = useState<Employee | null>(null);
+  const [authorityRequest, setAuthorityRequest] = useState<{ action: 'void' | 'return'; tx: Transaction } | null>(null);
+  const [refundError, setRefundError] = useState('');
   const [activeTab, setActiveTab] = useState<'sales' | 'returns'>('sales');
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState<string>('all');
@@ -155,7 +163,7 @@ export const TransactionsView: React.FC = () => {
 
     if (activeReturnItems.length === 0) return;
 
-    processSalesReturn({
+    const created = processSalesReturn({
       returnNumber: `RET-SLS-${Date.now().toString().slice(-6)}`,
       transactionId: selectedTxForReturn.id,
       invoiceNumber: selectedTxForReturn.invoiceNumber,
@@ -165,8 +173,9 @@ export const TransactionsView: React.FC = () => {
       refundMethod,
       note: returnNote || 'Retur penjualan kasir',
       cashierName: selectedTxForReturn.cashierName || 'Kasir Aktif',
-    });
-
+    }, authorizer ?? undefined);
+    if (!created) setRefundError('Retur ditolak: perlu otorisasi PIN Supervisor/Owner.');
+    setAuthorizer(null);
     setSelectedTxForReturn(null);
   };
 
@@ -399,7 +408,12 @@ export const TransactionsView: React.FC = () => {
 
   const handleConfirmVoid = async () => {
     if (selectedTxForVoid) {
-      voidTransaction(selectedTxForVoid.id);
+      if (!voidTransaction(selectedTxForVoid.id, authorizer ?? undefined)) {
+        setRefundError('Void ditolak: perlu otorisasi PIN Supervisor/Owner.');
+        setSelectedTxForVoid(null);
+        return;
+      }
+      setAuthorizer(null);
       try {
         await fetch('/api/pos/transactions', {
           method: 'POST',
@@ -414,6 +428,29 @@ export const TransactionsView: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-100 dark:bg-slate-950 overflow-hidden select-none">
+      {refundError && (
+        <div role="alert" className="mx-4 mt-3 p-2.5 rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30 text-xs font-semibold text-rose-800 dark:text-rose-300 flex justify-between gap-2">
+          <span>{refundError}</span>
+          <button type="button" onClick={() => setRefundError('')} className="underline cursor-pointer">
+            Tutup pesan
+          </button>
+        </div>
+      )}
+      <AuthorityModal
+        isOpen={authorityRequest !== null}
+        onClose={() => setAuthorityRequest(null)}
+        title={authorityRequest?.action === 'void' ? 'Otorisasi Void Transaksi' : 'Otorisasi Retur Penjualan'}
+        description={`${authorityRequest?.action === 'void' ? 'Membatalkan' : 'Mengembalikan uang untuk'} nota ${authorityRequest?.tx.invoiceNumber ?? ''} membutuhkan PIN Supervisor atau Owner.`}
+        requiredRole="supervisor"
+        onSuccess={(emp) => {
+          const req = authorityRequest;
+          setAuthorityRequest(null);
+          if (!req) return;
+          setAuthorizer(emp);
+          if (req.action === 'void') setSelectedTxForVoid(req.tx);
+          else openReturnModal(req.tx);
+        }}
+      />
       {/* Top Filter Bar */}
       <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-4 flex-wrap">
@@ -743,7 +780,7 @@ export const TransactionsView: React.FC = () => {
                               {/* Retur Penjualan Button */}
                               {!isVoid && (
                                 <button
-                                  onClick={() => openReturnModal(tx)}
+                                  onClick={() => (canApproveRefund ? openReturnModal(tx) : setAuthorityRequest({ action: 'return', tx }))}
                                   className="px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-500 hover:text-slate-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1 cursor-pointer transition-colors font-semibold"
                                   title="Retur Item Penjualan"
                                 >
@@ -755,7 +792,7 @@ export const TransactionsView: React.FC = () => {
                               {/* Void Button */}
                               {!isVoid && (
                                 <button aria-label="Batalkan / Void Transaksi"
-                                  onClick={() => setSelectedTxForVoid(tx)}
+                                  onClick={() => (canApproveRefund ? setSelectedTxForVoid(tx) : setAuthorityRequest({ action: 'void', tx }))}
                                   className="p-1.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
                                   title="Batalkan / Void Transaksi"
                                 >

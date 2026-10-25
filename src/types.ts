@@ -265,6 +265,9 @@ export interface Transaction {
   cashierName: string;
   branchName: string;
   createdAt: string;
+  /** Siapa yang menyetujui void & kapan (jejak audit) */
+  voidedBy?: string;
+  voidedAt?: string;
   status: 'completed' | 'refunded' | 'void';
   returnedAmount?: number;
   returnReason?: string;
@@ -289,6 +292,8 @@ export interface SalesReturnItem {
 }
 
 export interface SalesReturn {
+  /** Supervisor/Owner yang menyetujui pengembalian uang (jejak audit) */
+  authorizedBy?: string;
   id: string;
   returnNumber: string; // e.g., 'RET-SALES-100234'
   transactionId: string;
