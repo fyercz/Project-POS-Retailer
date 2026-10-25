@@ -39,6 +39,7 @@ import { LoyaltyCalculator } from './loyalty/LoyaltyCalculator';
 import { LoyaltyLedger } from './loyalty/LoyaltyLedger';
 import { LoyaltyRulesConfig } from './loyalty/LoyaltyRulesConfig';
 import { MarketingPromoSection } from './loyalty/MarketingPromoSection';
+import { validateCustomerEdit } from '../../domain/customerEdit';
 
 export const CustomersView: React.FC = () => {
   const { customers, transactions, adjustCustomerPoints, updateCustomer } = usePOSTransactions();
@@ -57,6 +58,8 @@ export const CustomersView: React.FC = () => {
   const [selectedTierFilter, setSelectedTierFilter] = useState<'All' | MemberTier>('All');
   const [isNewCustomerModalOpen, setIsNewCustomerModalOpen] = useState(false);
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
+  const [editForm, setEditForm] = useState<{ name: string; phone: string; email: string; tier: string } | null>(null);
+  const [editMessage, setEditMessage] = useState('');
   const [calculatorTargetCustomer, setCalculatorTargetCustomer] = useState<Customer | null>(null);
 
   // Manual point adjustment form states inside detail modal
@@ -551,7 +554,11 @@ export const CustomersView: React.FC = () => {
                 </div>
               </div>
               <button aria-label="Tutup"
-                onClick={() => setDetailCustomer(null)}
+                onClick={() => {
+                  setDetailCustomer(null);
+                  setEditForm(null);
+                  setEditMessage('');
+                }}
                 className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-4 h-4" />
@@ -560,6 +567,63 @@ export const CustomersView: React.FC = () => {
 
             {/* Modal Body */}
             <div className="p-5 flex-1 overflow-y-auto space-y-4">
+              {/* Ubah data member (dulu tidak bisa diubah dari tampilan) */}
+              {!editForm ? (
+                <button
+                  type="button"
+                  data-testid="btn-edit-customer"
+                  onClick={() => {
+                    setEditForm({ name: detailCustomer.name, phone: detailCustomer.phone || '', email: detailCustomer.email || '', tier: detailCustomer.tier || 'Bronze' });
+                    setEditMessage('');
+                  }}
+                  className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  Ubah Data Member
+                </button>
+              ) : (
+                <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input aria-label="Nama member" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs" />
+                    <input aria-label="Nomor HP member" inputMode="tel" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs" />
+                    <input aria-label="Email member (opsional)" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs" />
+                    <select aria-label="Tier member" value={editForm.tier} onChange={(e) => setEditForm({ ...editForm, tier: e.target.value })} className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs">
+                      {['Bronze', 'Silver', 'Gold', 'Platinum'].map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      data-testid="btn-save-customer"
+                      onClick={() => {
+                        const r = validateCustomerEdit(detailCustomer.id, editForm, customers);
+                        if (!r.ok) {
+                          setEditMessage(r.message);
+                          return;
+                        }
+                        updateCustomer(detailCustomer.id, r.updates as any);
+                        setDetailCustomer({ ...detailCustomer, ...(r.updates as any) });
+                        setEditForm(null);
+                        setEditMessage('Data member disimpan.');
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer"
+                    >
+                      Simpan Data Member
+                    </button>
+                    <button type="button" onClick={() => setEditForm(null)} className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs cursor-pointer">
+                      Batal
+                    </button>
+                  </div>
+                </div>
+              )}
+              {editMessage && (
+                <p role="status" className="text-[11px] text-slate-600 dark:text-slate-300">
+                  {editMessage}
+                </p>
+              )}
               {/* Tier Progress Card */}
               {(() => {
                 const progress = getTierProgress(detailCustomer.totalSpent || 0);
