@@ -54,11 +54,16 @@ test('member di kasir: klaim & lepas diskon sambutan, lepas voucher, tukar poin'
   // Kasir: pilih member yang sudah ada
   await page.locator('#nav-btn-pos').click();
   await page.locator('[id^="product-card-"]', { hasText: 'Beras Uji 5kg' }).first().click();
-  await page.locator('#btn-cart-extras').click();
-  await page.getByRole('button', { name: /Pilih Member/ }).first().click();
-  await page.getByLabel('Cari nama member, nomor WhatsApp...').fill('Bu Tukar');
-  await page.getByRole('dialog').getByText('Bu Tukar').first().click();
-  await expect(page.locator('#btn-cart-extras')).toContainText('Bu Tukar');
+  // Mendaftarkan member dari halaman Member langsung memilihnya untuk kasir; pilih hanya bila belum
+  const extras = page.locator('#btn-cart-extras');
+  if ((await extras.getAttribute('aria-expanded')) !== 'true') await extras.click();
+  if (!(await extras.innerText()).includes('Bu Tukar')) {
+    await page.getByRole('button', { name: /Pilih Member/ }).first().click();
+    await page.getByLabel('Cari nama member, nomor WhatsApp...').fill('Bu Tukar');
+    await page.getByRole('dialog').getByText('Bu Tukar').first().click();
+  }
+  await expect(extras).toContainText('Bu Tukar');
+  await expect(extras).toHaveAttribute('aria-expanded', 'true');
 
   // Diskon sambutan: klaim -> lepas -> klaim lagi
   await page.getByRole('button', { name: 'Klaim Cepat' }).click();
@@ -116,7 +121,7 @@ test('hapus pesanan parkir & hapus pengeluaran', async ({ page }) => {
   await page.getByLabel('Kategori Beban Operasional').selectOption({ index: 1 });
   await page.getByRole('button', { name: /Simpan Beban & Jurnal/ }).click();
   await expect.poll(async () => (await readStored(page, 'pos_operational_expenses')).length).toBe(1);
-  await page.getByRole('button', { name: 'Hapus pengeluaran Salah catat' }).click();
+  await page.getByRole('button', { name: /Hapus pengeluaran .*Salah catat/ }).first().click();
   await expect.poll(async () => (await readStored(page, 'pos_operational_expenses')).length, { message: 'sebelum reload' }).toBe(0);
 
   await page.reload();
@@ -133,8 +138,8 @@ test('ganti kasir cepat, aturan stok minimal, hapus transaksi uji coba', async (
   await page.locator('#btn-employee-menu').click();
   await page.locator('#menu-item-manage-employees').click();
   await page.locator('div', { hasText: 'Siti Kasir' }).getByRole('button', { name: 'Login sebagai karyawan ini' }).last().click();
+  await page.keyboard.press('Escape'); // tutup jendela Kelola Karyawan
   await expect(page.locator('#btn-employee-menu')).toContainText('Siti');
-  await expect.poll(async () => (await page.evaluate(() => document.querySelector('#btn-employee-menu')?.textContent || ''))).toContain('Siti');
   // Kembali ke Owner: wajib PIN
   await lockAndLogin(page, 'Pak Uji', '2580');
 
