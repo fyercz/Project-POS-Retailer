@@ -49,7 +49,7 @@ import {
   QrCode,
 } from 'lucide-react';
 import {
-  usePOSCatalog,
+  usePOSCatalog, usePOSAuthShift,
   usePOSTransactions,
   usePOSUI,
 } from '../../context/POSContext';
@@ -144,6 +144,7 @@ export const InventoryView: React.FC = () => {
     setIsBackupRestoreOpen,
     createRestorePoint,
   } = usePOSUI();
+  const { activeEmployee } = usePOSAuthShift();
 
   const [activeTab, setActiveTab] = useState<'inventory' | 'price_history' | 'dynamic_pricing' | 'suppliers' | 'purchases' | 'returns'>('inventory');
   const [search, setSearch] = useState('');
@@ -1636,6 +1637,23 @@ export const InventoryView: React.FC = () => {
                     <div className="text-[11px] text-slate-500 font-normal">Pembersihan ejaan singkatan &amp; gramasi</div>
                   </div>
                 </button>
+                {/* Hapus produk hasil impor (dulu jendelanya ada tetapi tidak ada tombol pembukanya) */}
+                {importedCount > 0 && (activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor') && (
+                  <button
+                    id="btn-clear-imported"
+                    onClick={() => {
+                      setIsAuditDropdownOpen(false);
+                      setIsClearImportedModalOpen(true);
+                    }}
+                    className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4 shrink-0" />
+                    <div>
+                      <div>Hapus Data Impor ({importedCount.toLocaleString('id-ID')})</div>
+                      <div className="text-[11px] text-slate-500 font-normal">Hanya produk hasil impor; produk yang dibuat manual tetap</div>
+                    </div>
+                  </button>
+                )}
               </div>
             )}
           </div>

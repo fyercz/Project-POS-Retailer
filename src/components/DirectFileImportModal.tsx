@@ -60,6 +60,19 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
     setItemsState(parsedItems);
   }, [parsedItems]);
 
+  // Setiap kali jendela dibuka: mulai bersih. Komponen ini hanya disembunyikan saat ditutup, jadi
+  // dulu sisa sesi sebelumnya (teks file, status proses) tertinggal: mengunggah file yang sama
+  // lagi tidak terbaca ulang dan tombol impor tetap nonaktif.
+  React.useEffect(() => {
+    if (!isOpen) return;
+    setRawText('');
+    setFileName(null);
+    setItemsState([]);
+    setIsProcessing(false);
+    setSuccessMessage(null);
+    setFilterQuery('');
+  }, [isOpen]);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -73,6 +86,8 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
       }
     };
     reader.readAsText(file);
+    // Kosongkan kolom file agar memilih file yang SAMA tetap memicu pembacaan ulang
+    e.target.value = '';
   };
 
   const handleToggleSelect = (id: string) => {

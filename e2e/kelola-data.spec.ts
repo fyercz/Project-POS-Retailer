@@ -54,7 +54,7 @@ test('produk: edit harga tercatat di riwayat, koreksi stok, hapus satu, hapus ba
   expect((teh.priceHistory || []).some((h: any) => h.sellingPrice === 4500 || h.price === 4500 || h.newPrice === 4500)).toBe(true);
 });
 
-test('member: koreksi poin manual tercatat', async ({ page }) => {
+test('member: koreksi poin manual & ubah data member tercatat', async ({ page }) => {
   test.setTimeout(180_000);
   await registerOwner(page, { store: 'Toko Member' });
   await page.locator('#nav-btn-customers').click();
@@ -74,8 +74,20 @@ test('member: koreksi poin manual tercatat', async ({ page }) => {
   await page.getByRole('button', { name: 'Simpan Penyesuaian' }).click();
   await expect.poll(async () => (await readStored(page, 'pos_retail_customers_v3')).find((c: any) => c.name === 'Pak Poin')?.points, { timeout: 10_000, message: 'sebelum reload' }).toBe(50);
 
+  // Ubah data member (nama & nomor HP)
+  await page.getByTestId('btn-edit-customer').click();
+  await page.getByLabel('Nama member', { exact: true }).fill('Pak Poin Baru');
+  await page.getByLabel('Nomor HP member').fill('081399998888');
+  await page.getByLabel('Tier member').selectOption('Silver');
+  await page.getByTestId('btn-save-customer').click();
+  const member = async () => {
+    const c = (await readStored(page, 'pos_retail_customers_v3'))[0];
+    return c ? `${c.name}|${c.phone}|${c.tier}|${c.points}` : '';
+  };
+  await expect.poll(member, { timeout: 10_000, message: 'sebelum reload' }).toBe('Pak Poin Baru|081399998888|Silver|50');
+
   await page.reload();
-  await expect.poll(async () => (await readStored(page, 'pos_retail_customers_v3')).find((c: any) => c.name === 'Pak Poin')?.points, { timeout: 15_000 }).toBe(50);
+  await expect.poll(member, { timeout: 15_000 }).toBe('Pak Poin Baru|081399998888|Silver|50');
 });
 
 test('supplier: edit nama lalu hapus', async ({ page }) => {
