@@ -76,7 +76,7 @@ test('member: koreksi poin manual & ubah data member tercatat', async ({ page })
 
   // Ubah data member (nama & nomor HP)
   await page.getByTestId('btn-edit-customer').click();
-  await page.getByLabel('Nama member').fill('Pak Poin Baru');
+  await page.getByLabel('Nama member', { exact: true }).fill('Pak Poin Baru');
   await page.getByLabel('Nomor HP member').fill('081399998888');
   await page.getByLabel('Tier member').selectOption('Silver');
   await page.getByTestId('btn-save-customer').click();

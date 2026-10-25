@@ -79,7 +79,7 @@ test('backup diunduh, data dihapus, lalu dipulihkan dari file', async ({ page },
   await page.locator('#btn-employee-menu').click();
   await page.locator('#menu-item-backup-restore').click();
   const downloadPromise = page.waitForEvent('download', { timeout: 20_000 }).catch(() => null);
-  await page.getByRole('button', { name: /Unduh Cadangan Lengkap/ }).first().click();
+  await page.getByRole('button', { name: /Unduh Cadangan \.JSON/ }).first().click(); // tombol unduh di bagian atas jendela
   const download = await downloadPromise;
   expect(download, `unduhan tidak terjadi; notifikasi: ${await page.locator('[role="status"],[role="alert"]').allInnerTexts().catch(() => [])}; log: ${JSON.stringify(logs)}`).not.toBeNull();
   const file = testInfo.outputPath('cadangan.json');
