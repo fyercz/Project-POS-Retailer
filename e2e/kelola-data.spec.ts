@@ -44,7 +44,7 @@ test('produk: edit harga tercatat di riwayat, koreksi stok, hapus satu, hapus ba
   await page.getByRole('button', { name: 'Hapus 2 Produk' }).click();
 
   await page.reload();
-  await expect.poll(async () => (await products(page)).length, { timeout: 15_000 }).toBe(1);
+  await expect.poll(async () => (await products(page)).map((p: any) => p.name), { timeout: 15_000 }).toEqual(['Teh Kotak 200ml']);
   const teh = (await products(page))[0];
   expect(teh.name).toBe('Teh Kotak 200ml');
   expect(teh.price).toBe(4500);
@@ -64,7 +64,7 @@ test('member: koreksi poin manual tercatat', async ({ page }) => {
   await page.getByRole('dialog').locator('button[type="submit"]').click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
-  await row(page, 'Pak Poin').getByRole('button', { name: 'Detail' }).click();
+  await page.getByRole('button', { name: 'Detail' }).first().click(); // daftar member berbentuk kartu
   await page.getByRole('button', { name: /Sesuaikan Poin/ }).click();
   await page.getByRole('button', { name: /Tambah Poin \(\+\)/ }).click();
   await page.getByLabel('Jumlah Poin').fill('50');

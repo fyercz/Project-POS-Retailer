@@ -382,6 +382,7 @@ export const POSAuthShiftContext = createContext<POSAuthShiftContextType | undef
 export const POSUIContext = createContext<POSUIContextType | undefined>(undefined);
 export const POSContext = createContext<POSContextType | undefined>(undefined);
 
+const SAVE_EVERYTHING_IMMEDIATELY = true;
 /** Kunci penyimpanan yang ditulis seketika (tanpa jeda): stok, kas, poin, retur, pembelian. */
 const IMMEDIATE_SAVE_KEYS = new Set([
   'pos_retail_products_v3',
@@ -1068,7 +1069,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Data yang berubah karena transaksi uang/stok disimpan SEKETIKA: bila aplikasi dimuat ulang /
     // listrik padam tepat setelah void, retur, atau pembayaran, stok & kas tidak boleh tertinggal
     // dari transaksinya (dulu stok hasil void hilang bila reload dalam jeda 250 ms).
-    if (IMMEDIATE_SAVE_KEYS.has(key)) {
+    // Semua data kini disimpan seketika. Antrean berjeda 250 ms sudah tiga kali terbukti membuat
+    // perubahan hilang bila aplikasi dimuat ulang / listrik padam tepat setelahnya (transaksi, stok
+    // hasil void, hapus supplier). Data yang paling sering berubah (keranjang) berukuran kecil.
+    if (IMMEDIATE_SAVE_KEYS.has(key) || SAVE_EVERYTHING_IMMEDIATELY) {
       delete pendingStorageSaves.current[key];
       posStorage.setItem(key, data).catch((err) => console.warn(`[posStorage] Gagal menyimpan ${key}:`, err));
       return;
