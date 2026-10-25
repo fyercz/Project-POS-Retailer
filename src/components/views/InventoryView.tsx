@@ -3195,6 +3195,7 @@ export const InventoryView: React.FC = () => {
               </label>
               <input
                 type="number"
+                aria-label="Jumlah koreksi stok"
                 min={0}
                 value={adjustmentValue || ''}
                 onChange={(e) => setAdjustmentValue(Number(e.target.value))}
