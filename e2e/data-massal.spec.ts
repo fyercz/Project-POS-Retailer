@@ -27,12 +27,22 @@ async function openAudit(page: Page, itemSelector: string) {
 
 async function importStoreCsv(page: Page) {
   await openAudit(page, '#btn-import-direct-file');
-  await page.getByRole('dialog').locator('input[type="file"]').setInputFiles({ name: 'produk-toko.csv', mimeType: 'text/csv', buffer: Buffer.from(STORE_CSV) });
+  const dlg = page.locator('[role="dialog"]', { hasText: 'Impor File Produk Langsung' }).last();
+  await dlg.locator('input[type="file"]').setInputFiles({ name: 'produk-toko.csv', mimeType: 'text/csv', buffer: Buffer.from(STORE_CSV) });
+  // Bukti: isi file masuk ke area teks & tombol impor aktif
+  await expect(dlg.locator('textarea').first(), `log: ${JSON.stringify(logs)}`).toHaveValue(/A MILD 16/, { timeout: 10_000 });
+  await expect(page.getByRole('button', { name: /Impor \d+ Produk Langsung/ }), `log: ${JSON.stringify(logs)}`).toBeEnabled({ timeout: 10_000 });
   await page.getByRole('button', { name: /Impor \d+ Produk Langsung/ }).click();
   await page.keyboard.press('Escape');
 }
 
+const logs: string[] = [];
 test.beforeEach(async ({ page }) => {
+  logs.length = 0;
+  page.on('pageerror', (e) => logs.push(`pageerror: ${e.message.slice(0, 200)}`));
+  page.on('console', (m) => {
+    if (m.type() === 'error' || m.type() === 'warning') logs.push(`${m.type()}: ${m.text().slice(0, 200)}`);
+  });
   page.on('dialog', (d) => d.accept().catch(() => {}));
 });
 
@@ -68,9 +78,12 @@ test('backup diunduh, data dihapus, lalu dipulihkan dari file', async ({ page },
 
   await page.locator('#btn-employee-menu').click();
   await page.locator('#menu-item-backup-restore').click();
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /Unduh Cadangan Lengkap/ }).first().click()]);
+  const downloadPromise = page.waitForEvent('download', { timeout: 20_000 }).catch(() => null);
+  await page.getByRole('button', { name: /Unduh Cadangan Lengkap/ }).first().click();
+  const download = await downloadPromise;
+  expect(download, `unduhan tidak terjadi; notifikasi: ${await page.locator('[role="status"],[role="alert"]').allInnerTexts().catch(() => [])}; log: ${JSON.stringify(logs)}`).not.toBeNull();
   const file = testInfo.outputPath('cadangan.json');
-  await download.saveAs(file);
+  await download!.saveAs(file);
   expect(fs.readFileSync(file, 'utf8')).toContain('Barang Penting');
   await page.keyboard.press('Escape');
 
@@ -103,6 +116,7 @@ test('stock opname dengan CSV: stok disetel sesuai hitungan fisik', async ({ pag
   const csv = ['barcode,sku,nama_produk,stok_tercatat,stok_fisik_hitung', '2000000002003,SUS-1,Susu Kotak,20,18', '2000000002004,MIE-1,Mie Instan,40,41'].join('\n');
   await page.getByRole('dialog').locator('input[type="file"]').setInputFiles({ name: 'opname.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
   await page.locator('#btn-mode-set').click();
+  await page.locator('#btn-submit-stocktake-csv').click(); // tinjau dulu, lalu konfirmasi
   await page.locator('#btn-confirm-apply-stocktake').click();
 
   const stock = async () => Object.fromEntries((await products(page)).map((p: any) => [p.name, p.stock]));
