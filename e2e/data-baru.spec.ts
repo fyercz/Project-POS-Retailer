@@ -69,6 +69,8 @@ test('produk, supplier, faktur, dan member baru dibuat lewat formulir, dipakai, 
   // 5. Muat ulang: semua data baru tetap ada & saling terhubung
   await page.reload();
   await expect.poll(async () => (await readStored(page, 'pos_retail_customers_v3')).find((c: any) => c.name === MEMBER)?.ordersCount, { timeout: 15_000 }).toBe(1);
+  // Penjualan yang baru selesai tepat sebelum reload tetap tersimpan
+  expect((await readStored(page, 'pos_retail_tx_v3')).some((t: any) => t.customer?.name === MEMBER && t.status === 'completed')).toBe(true);
   const product = (await readStored(page, 'pos_retail_products_v3')).find((p: any) => p.name === PRODUCT);
   expect(product?.stock).toBe(27);
   expect(product?.costPrice).toBe(4200);
@@ -85,6 +87,10 @@ test('kategori baru (dari formulir produk) & voucher manual (dari Pengaturan) di
   test.setTimeout(180_000);
   await page.addInitScript(() => {
     window.print = () => {};
+  });
+  const storageWarnings: string[] = [];
+  page.on('console', (m) => {
+    if (/posStorage/.test(m.text())) storageWarnings.push(m.text().slice(0, 200));
   });
   await registerOwner(page, { store: 'Toko Kategori Voucher' });
 
@@ -133,7 +139,7 @@ test('kategori baru (dari formulir produk) & voucher manual (dari Pengaturan) di
   // 4. Muat ulang: kategori, voucher, dan transaksi bervoucher tetap ada
   await page.reload();
   const stored = async () => (await readStored(page, 'pos_retail_tx_v3')).map((t: any) => `${t.invoiceNumber}:${t.voucherCode ?? '-'}:${t.finalTotal}:${t.status}`);
-  await expect.poll(stored, { timeout: 15_000, message: 'transaksi bervoucher tersimpan' }).toContainEqual(expect.stringMatching(/:UJI5RB:20000:completed$/));
+  await expect.poll(stored, { timeout: 15_000, message: `transaksi bervoucher tersimpan; peringatan penyimpanan: ${JSON.stringify(storageWarnings)}` }).toContainEqual(expect.stringMatching(/:UJI5RB:20000:completed$/));
   const product = (await readStored(page, 'pos_retail_products_v3')).find((p: any) => p.name === 'Nugget Ayam Beku 500g');
   expect(product?.categoryId).toBe('c_frozen_food_uji');
   await page.locator('#nav-btn-pos').click();

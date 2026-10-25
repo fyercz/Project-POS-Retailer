@@ -1050,7 +1050,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const scheduleSave = useCallback((key: string, data: any) => {
     pendingStorageSaves.current[key] = data;
-    if (!saveTimeoutRef.current) {
+    const run = () => {
       saveTimeoutRef.current = setTimeout(async () => {
         try {
           const saves = { ...pendingStorageSaves.current };
@@ -1062,9 +1062,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           console.warn('[posStorage] Background persistence error:', err);
         } finally {
           saveTimeoutRef.current = null;
+          // Perubahan yang masuk SAAT penyimpanan berjalan dulu tertahan tanpa dijadwalkan ulang
+          // (baru tersimpan bila ada perubahan lain) -> jadwalkan putaran berikutnya.
+          if (Object.keys(pendingStorageSaves.current).length > 0) run();
         }
       }, 250);
-    }
+    };
+    if (!saveTimeoutRef.current) run();
   }, []);
 
   // Tulis simpanan yang masih tertunda saat tab disembunyikan / ditutup, agar perubahan terakhir
@@ -1207,8 +1211,12 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     if (!isStorageHydrated) return;
-    scheduleSave('pos_retail_tx_v3', transactions);
-  }, [transactions, scheduleSave, isStorageHydrated]);
+    // Transaksi = data terpenting: disimpan SEKETIKA (tanpa jeda & tanpa antre di belakang data
+    // lain). Dulu ikut antrean simpan tertunda; transaksi bisa hilang bila aplikasi dimuat ulang /
+    // ditutup / listrik padam tepat setelah pembayaran.
+    delete pendingStorageSaves.current['pos_retail_tx_v3'];
+    posStorage.setItem('pos_retail_tx_v3', transactions).catch((err) => console.warn('[posStorage] Gagal menyimpan transaksi:', err));
+  }, [transactions, isStorageHydrated]);
 
   useEffect(() => {
     if (!isStorageHydrated) return;
