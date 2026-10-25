@@ -42,6 +42,8 @@ test('produk: edit harga tercatat di riwayat, koreksi stok, hapus satu, hapus ba
   await page.getByRole('checkbox', { name: 'Pilih Wafer Coklat' }).check();
   await page.getByRole('button', { name: /Hapus.*2/ }).first().click();
   await page.getByRole('button', { name: 'Hapus 2 Produk' }).click();
+  // Tahap 1: perubahan benar-benar tertulis ke penyimpanan (bila tidak -> bug), tahap 2: tetap ada setelah reload
+  await expect.poll(async () => (await products(page)).map((p: any) => p.name), { timeout: 10_000, message: 'sebelum reload' }).toEqual(['Teh Kotak 200ml']);
 
   await page.reload();
   await expect.poll(async () => (await products(page)).map((p: any) => p.name), { timeout: 15_000 }).toEqual(['Teh Kotak 200ml']);
@@ -70,6 +72,7 @@ test('member: koreksi poin manual tercatat', async ({ page }) => {
   await page.getByLabel('Jumlah Poin').fill('50');
   await page.getByLabel('Alasan / Keterangan').fill('Bonus pembukaan toko');
   await page.getByRole('button', { name: 'Simpan Penyesuaian' }).click();
+  await expect.poll(async () => (await readStored(page, 'pos_retail_customers_v3')).find((c: any) => c.name === 'Pak Poin')?.points, { timeout: 10_000, message: 'sebelum reload' }).toBe(50);
 
   await page.reload();
   await expect.poll(async () => (await readStored(page, 'pos_retail_customers_v3')).find((c: any) => c.name === 'Pak Poin')?.points, { timeout: 15_000 }).toBe(50);
@@ -93,6 +96,7 @@ test('supplier: edit nama lalu hapus', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Hapus Supplier' }).first().click();
   await page.getByRole('button', { name: /Ya, Hapus Supplier/ }).click();
+  await expect.poll(async () => (await readStored(page, 'pos_retail_suppliers_v2')).length, { timeout: 10_000, message: 'sebelum reload' }).toBe(0);
 
   await page.reload();
   await expect.poll(async () => (await readStored(page, 'pos_retail_suppliers_v2')).length, { timeout: 15_000 }).toBe(0);
@@ -115,6 +119,8 @@ test('karyawan & voucher bisa dihapus', async ({ page }) => {
   await page.getByTestId('voucher-create').click();
   await expect(page.getByText(/Voucher HAPUSAKU dibuat/)).toBeVisible();
   await page.locator('div', { hasText: /^HAPUSAKU/ }).getByRole('button').last().click();
+  await expect.poll(async () => (await readStored(page, 'pos_vouchers')).some((v: any) => v.code === 'HAPUSAKU'), { timeout: 10_000, message: 'voucher terhapus, sebelum reload' }).toBe(false);
+  await expect.poll(async () => (await readStored(page, 'pos_employees_v2')).some((e: any) => e.name === 'Rudi Sementara'), { timeout: 10_000, message: 'karyawan terhapus, sebelum reload' }).toBe(false);
 
   await page.reload();
   await expect.poll(async () => (await readStored(page, 'pos_employees_v2')).some((e: any) => e.name === 'Rudi Sementara'), { timeout: 15_000 }).toBe(false);
