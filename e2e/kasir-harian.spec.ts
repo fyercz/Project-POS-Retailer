@@ -97,20 +97,22 @@ test('retur & void oleh Owner: stok kembali, penyetuju tercatat', async ({ page 
   await sellProductByName(page, 'Sabun Cuci 800g', 20000);
   await expect.poll(() => stockOf(page, 'Sabun Cuci 800g')).toBe(7);
 
-  // Retur 1 dari nota terbaru (1 barang), kembali ke stok, tunai
+  // Void satu nota dulu (tidak bergantung urutan daftar), stok kembali sejumlah isi nota itu
   await page.locator('#nav-btn-transactions').click();
+  await page.getByRole('button', { name: 'Batalkan / Void Transaksi' }).first().click();
+  await page.getByRole('button', { name: 'Konfirmasi Void' }).click();
+  await expect.poll(async () => (await txs(page)).filter((t: any) => t.status === 'void').length).toBe(1);
+  const voidedQty = (await txs(page)).find((t: any) => t.status === 'void').items.reduce((a: number, l: any) => a + l.quantity, 0);
+  await expect.poll(() => stockOf(page, 'Sabun Cuci 800g'), { message: `log: ${JSON.stringify(logs)}` }).toBe(7 + voidedQty);
+
+  // Retur 1 barang dari nota yang tersisa (tombol Retur tersembunyi untuk nota void), kembali ke stok, tunai
   await page.getByTitle('Retur Item Penjualan').first().click();
   await page.getByRole('dialog').getByRole('button', { name: 'Tambah' }).first().click();
   await page.getByLabel('Alasan Retur').first().selectOption({ index: 1 });
   await page.getByRole('dialog').locator('input[type="checkbox"]').first().check(); // kembalikan ke stok (bawaan: tidak)
   await page.getByRole('button', { name: 'Tunai', exact: true }).click();
   await page.getByRole('button', { name: /Konfirmasi & Proses Retur/ }).click();
-  await expect.poll(() => stockOf(page, 'Sabun Cuci 800g'), { message: `log: ${JSON.stringify(logs)}` }).toBe(8);
-
-  // Void nota pertama (2 barang): stok kembali 2
-  await page.getByRole('button', { name: 'Batalkan / Void Transaksi' }).last().click();
-  await page.getByRole('button', { name: 'Konfirmasi Void' }).click();
-  await expect.poll(() => stockOf(page, 'Sabun Cuci 800g')).toBe(10);
+  await expect.poll(() => stockOf(page, 'Sabun Cuci 800g')).toBe(8 + voidedQty);
 
   await page.reload();
   await expect.poll(async () => (await txs(page)).filter((t: any) => t.status === 'void').length, { timeout: 15_000 }).toBe(1);
@@ -120,7 +122,7 @@ test('retur & void oleh Owner: stok kembali, penyetuju tercatat', async ({ page 
   expect(ret.length).toBe(1);
   expect(ret[0].totalRefundAmount).toBe(19000);
   expect(ret[0].authorizedBy).toBe('Pak Uji');
-  expect(await stockOf(page, 'Sabun Cuci 800g')).toBe(10);
+  expect(await stockOf(page, 'Sabun Cuci 800g')).toBe(8 + voidedQty);
 });
 
 test('kasir tidak bisa void tanpa PIN atasan; PIN salah ditolak, PIN Owner diterima', async ({ page }) => {
