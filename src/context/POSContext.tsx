@@ -382,6 +382,19 @@ export const POSAuthShiftContext = createContext<POSAuthShiftContextType | undef
 export const POSUIContext = createContext<POSUIContextType | undefined>(undefined);
 export const POSContext = createContext<POSContextType | undefined>(undefined);
 
+/** Kunci penyimpanan yang ditulis seketika (tanpa jeda): stok, kas, poin, retur, pembelian. */
+const IMMEDIATE_SAVE_KEYS = new Set([
+  'pos_retail_products_v3',
+  'pos_retail_customers_v3',
+  'pos_current_shift_v1',
+  'pos_past_shifts_v1',
+  'pos_sales_returns',
+  'pos_operational_expenses',
+  'pos_supplier_purchases_v2',
+  'pos_purchase_returns',
+  'pos_held_orders',
+]);
+
 export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation view
   const [activeView, setActiveView] = useState<'pos' | 'transactions' | 'inventory' | 'reports' | 'customers'>('pos');
@@ -1052,6 +1065,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scheduleSave = useCallback((key: string, data: any) => {
+    // Data yang berubah karena transaksi uang/stok disimpan SEKETIKA: bila aplikasi dimuat ulang /
+    // listrik padam tepat setelah void, retur, atau pembayaran, stok & kas tidak boleh tertinggal
+    // dari transaksinya (dulu stok hasil void hilang bila reload dalam jeda 250 ms).
+    if (IMMEDIATE_SAVE_KEYS.has(key)) {
+      delete pendingStorageSaves.current[key];
+      posStorage.setItem(key, data).catch((err) => console.warn(`[posStorage] Gagal menyimpan ${key}:`, err));
+      return;
+    }
     pendingStorageSaves.current[key] = data;
     const run = () => {
       saveTimeoutRef.current = setTimeout(async () => {
