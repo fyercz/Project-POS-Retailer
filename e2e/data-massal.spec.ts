@@ -96,7 +96,8 @@ test('backup diunduh, data dihapus, lalu dipulihkan dari file', async ({ page },
   // Pulihkan dari file
   await page.locator('#btn-employee-menu').click();
   await page.locator('#menu-item-backup-restore').click();
-  await page.getByRole('dialog').locator('input[type="file"]').setInputFiles(file);
+  await page.getByRole('button', { name: /Ekspor & Impor Berkas/ }).click(); // tab unggah berkas
+  await page.locator('input[type="file"][accept*="json"]').setInputFiles(file);
   await page.getByRole('button', { name: /Lanjutkan Pemulihan Berkas Terverifikasi/ }).click();
   await page.getByRole('button', { name: /Ya, Saya Yakin/ }).click();
   await expect.poll(() => names(page), { timeout: 10_000, message: 'sebelum reload' }).toEqual(['Barang Penting']);
