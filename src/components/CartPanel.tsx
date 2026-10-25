@@ -523,7 +523,8 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
             <span className="flex items-center gap-1.5 min-w-0">
               <Tag className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 shrink-0" />
               <span className="truncate">
-                Voucher, Diskon &amp; Poin
+                {/* "Member" disebut di label: tombol Pilih Member ada di dalam lipatan ini */}
+                {selectedCustomer ? `Member: ${selectedCustomer.name}` : 'Member, Voucher & Poin'}
                 {(appliedVoucher || totalDiscount > 0) && (
                   <span className="ml-1.5 text-emerald-700 dark:text-emerald-400">
                     · hemat {formatCurrency(totalDiscount, settings.currency)}

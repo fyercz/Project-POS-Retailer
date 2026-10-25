@@ -413,6 +413,8 @@ export interface StoreSettings {
   minStockRulePercentage?: number; // Aturan batas minimal stok (default 50 = 50% dari order terakhir)
   autoUpdateMinStockFromOrder?: boolean; // Otomatis perbarui minStock saat terima barang PO (default: true)
   /** Bagian modal awal berupa uang di laci & saldo bank (sisanya dana awal lainnya, mis. stok awal) */
+  /** Kategori produk buatan toko (selain kategori bawaan) */
+  customCategories?: Array<{ id: string; name: string }>;
   initialCashInDrawer?: number;
   initialBankBalance?: number;
   initialCapital?: number; // Modal awal usaha toko untuk Neraca Keuangan (default: 50.000.000)
