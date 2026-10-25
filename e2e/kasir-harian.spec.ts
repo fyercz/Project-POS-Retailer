@@ -9,7 +9,12 @@ import { registerOwner, addProduct, addEmployee, lockAndLogin, sellProductByName
 const stockOf = async (page: Page, name: string) => (await readStored(page, 'pos_retail_products_v3')).find((p: any) => p.name === name)?.stock;
 const txs = (page: Page) => readStored(page, 'pos_retail_tx_v3');
 
+const logs: string[] = [];
 test.beforeEach(async ({ page }) => {
+  logs.length = 0;
+  page.on('console', (m) => {
+    if (/\[(void|retur|posStorage)\]|shift|Shift/.test(m.text())) logs.push(m.text().slice(0, 160));
+  });
   page.on('dialog', (d) => d.accept().catch(() => {}));
   await page.addInitScript(() => {
     window.print = () => {};
@@ -47,7 +52,7 @@ test('keranjang: jumlah, satuan grosir, catatan, parkir & lanjutkan, hapus item,
 
   // Parkir lalu lanjutkan: isi keranjang (satuan & catatan) kembali utuh
   await page.locator('#btn-hold-order').click();
-  await expect(page.locator('#btn-checkout-pay')).toHaveCount(0);
+  await expect(page.locator('#pos-cart-panel')).not.toContainText('tanpa plastik');
   await page.locator('#btn-open-held-orders').click();
   await page.getByRole('button', { name: /Lanjutkan Pesanan/ }).click();
   await expect(page.getByText('tanpa plastik')).toBeVisible();
@@ -60,10 +65,10 @@ test('keranjang: jumlah, satuan grosir, catatan, parkir & lanjutkan, hapus item,
   // Hapus item (kurangi dari 1) & kosongkan keranjang
   await page.locator('[id^="product-card-"]', { hasText: 'Permen Jahe' }).first().click();
   await page.getByRole('button', { name: 'Hapus Permen Jahe dari keranjang' }).click();
-  await expect(page.locator('#btn-checkout-pay')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Hapus Permen Jahe dari keranjang' })).toHaveCount(0);
   await page.locator('[id^="product-card-"]', { hasText: 'Permen Jahe' }).first().click();
   await page.locator('#btn-clear-cart').click();
-  await expect(page.locator('#btn-checkout-pay')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Permen Jahe dari keranjang/ })).toHaveCount(0);
 
   await page.reload();
   await expect.poll(async () => (await txs(page)).length, { timeout: 15_000 }).toBe(1);
@@ -97,9 +102,10 @@ test('retur & void oleh Owner: stok kembali, penyetuju tercatat', async ({ page 
   await page.getByRole('button', { name: 'Retur' }).last().click();
   await page.getByRole('button', { name: 'Tambah' }).first().click();
   await page.getByLabel('Alasan Retur').first().selectOption({ index: 1 });
+  await page.getByRole('dialog').locator('input[type="checkbox"]').first().check(); // kembalikan ke stok (bawaan: tidak)
   await page.getByRole('button', { name: 'Tunai', exact: true }).click();
   await page.getByRole('button', { name: /Konfirmasi & Proses Retur/ }).click();
-  await expect.poll(() => stockOf(page, 'Sabun Cuci 800g')).toBe(8);
+  await expect.poll(() => stockOf(page, 'Sabun Cuci 800g'), { message: `log: ${JSON.stringify(logs)}` }).toBe(8);
 
   // Void nota kedua
   await page.getByRole('button', { name: 'Batalkan / Void Transaksi' }).first().click();
@@ -136,6 +142,8 @@ test('kasir tidak bisa void tanpa PIN atasan; PIN salah ditolak, PIN Owner diter
   await page.getByLabel('PIN Otoritas').fill('2580'); // PIN Owner
   await page.getByLabel('PIN Otoritas').press('Enter');
   await page.getByRole('button', { name: 'Konfirmasi Void' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: /ditolak/ })).toHaveCount(0);
+  await expect.poll(async () => (await txs(page)).find((t: any) => t.status === 'void')?.voidedBy, { timeout: 10_000, message: `sebelum reload; log: ${JSON.stringify(logs)}` }).toBe('Pak Uji');
 
   await page.reload();
   await expect.poll(async () => (await txs(page)).find((t: any) => t.status === 'void')?.voidedBy, { timeout: 15_000 }).toBe('Pak Uji');
@@ -161,6 +169,8 @@ test('pengeluaran & modal awal laci tercatat dan bertahan setelah reload', async
   await page.getByRole('button', { name: 'Ubah', exact: true }).first().click();
   await page.getByLabel('Uang di laci saat shift dimulai').fill('150000');
   await page.getByRole('button', { name: 'Simpan', exact: true }).first().click();
+  await expect(page.getByRole('dialog')).toContainText('150.000');
+  await expect.poll(async () => (await readStoredValue(page, 'pos_current_shift_v1'))?.startingCash, { timeout: 10_000, message: `sebelum reload; log: ${JSON.stringify(logs)}` }).toBe(150000);
   await page.keyboard.press('Escape');
 
   await page.reload();
