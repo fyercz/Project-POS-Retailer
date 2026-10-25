@@ -114,6 +114,8 @@ import { hasActionPermission } from '../utils/permissions';
 export interface POSCatalogContextType {
   products: Product[];
   categories: typeof INITIAL_CATEGORIES;
+  /** Perbarui harga jual banyak produk sekaligus (Owner/Supervisor); dicatat di riwayat harga */
+  applyPriceUpdates: (changes: Array<{ productId: string; newPrice: number }>, sourceNote: string) => number;
   /** Tambah kategori buatan toko (disimpan di Pengaturan, ikut backup) */
   addCategory: (name: string) => { success: boolean; message: string; id?: string };
   selectedCategory: string;
@@ -2925,6 +2927,44 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  // Perbarui harga dari file: satu kali setProducts untuk semua produk (bukan ratusan kali),
+  // riwayat harga dicatat seperti updateProduct. Hanya Owner/Supervisor.
+  const applyPriceUpdates = (changes: Array<{ productId: string; newPrice: number }>, sourceNote: string): number => {
+    if (!activeEmployee || !['owner', 'supervisor'].includes(activeEmployee.role)) return 0;
+    const byId = new Map(changes.filter((c) => Number(c.newPrice) > 0).map((c) => [c.productId, Math.round(Number(c.newPrice))]));
+    if (byId.size === 0) return 0;
+    const now = new Date().toISOString();
+    let applied = 0;
+    setProducts((prev) =>
+      prev.map((p) => {
+        const newPrice = byId.get(p.id);
+        if (newPrice === undefined || newPrice === p.price) return p;
+        applied++;
+        return {
+          ...p,
+          price: newPrice,
+          priceHistory: [
+            ...(p.priceHistory || []),
+            {
+              id: `ph-file-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              productId: p.id,
+              date: now,
+              costPrice: p.costPrice,
+              sellingPrice: newPrice,
+              previousCostPrice: p.costPrice,
+              previousSellingPrice: p.price,
+              changeType: 'manual_update',
+              sourceReference: sourceNote,
+              notes: 'Perbarui harga dari file',
+              recordedBy: activeEmployee.name,
+            },
+          ],
+        };
+      })
+    );
+    return applied || byId.size;
+  };
+
   const addCategory = (name: string): { success: boolean; message: string; id?: string } => {
     const current = mergeCategories(INITIAL_CATEGORIES, settings.customCategories, products);
     const r = validateNewCategory(name, current);
@@ -3318,6 +3358,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   latestFns.current = {
+    applyPriceUpdates,
     addCategory,
     handleSetPointsToRedeem,
     addCustomer,
@@ -3381,7 +3422,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const stableFns = useMemo(() => {
     const wrapped: Record<string, any> = {};
-    for (const key of ['addCategory', 'handleSetPointsToRedeem', 'addCustomer', 'addEmployee', 'addExpense', 'addProduct', 'addProductsBatch', 'addSupplier', 'addToCart', 'addVoucher', 'adjustCustomerPoints', 'applyCustomerDiscount', 'applyMinStockRuleToAllProducts', 'applyVoucher', 'bulkAdjustProducts', 'clearAllProducts', 'clearAllTransactions', 'clearCart', 'clearImportedProducts', 'closeCurrentShift', 'completeFirstRunSetup', 'deleteEmployee', 'deleteExpense', 'deleteHeldOrder', 'deleteProduct', 'deleteProductsBatch', 'deleteSupplier', 'deleteVoucher', 'holdCurrentOrder', 'lockScreen', 'loginWithPin', 'logoutEmployee', 'openGeminiCopilot', 'processPayment', 'processPurchaseReturn', 'processSalesReturn', 'processSupplierPurchase', 'quickSwitchEmployee', 'recallHeldOrder', 'recordProductPriceChange', 'recordSupplierPayment', 'removeCustomerDiscount', 'removeFromCart', 'removeVoucher', 'setCartItemQuantity', 'setUsePoints', 'startNewShift', 'unlockScreen', 'updateCartItemDiscount', 'updateCartItemNote', 'updateCartItemQuantity', 'updateCartItemUnit', 'updateCustomer', 'updateEmployee', 'updateProduct', 'updateProductStock', 'updateSettings', 'updateShiftStartingCash', 'updateSupplier', 'voidTransaction']) wrapped[key] = (...args: any[]) => latestFns.current[key](...args);
+    for (const key of ['applyPriceUpdates', 'addCategory', 'handleSetPointsToRedeem', 'addCustomer', 'addEmployee', 'addExpense', 'addProduct', 'addProductsBatch', 'addSupplier', 'addToCart', 'addVoucher', 'adjustCustomerPoints', 'applyCustomerDiscount', 'applyMinStockRuleToAllProducts', 'applyVoucher', 'bulkAdjustProducts', 'clearAllProducts', 'clearAllTransactions', 'clearCart', 'clearImportedProducts', 'closeCurrentShift', 'completeFirstRunSetup', 'deleteEmployee', 'deleteExpense', 'deleteHeldOrder', 'deleteProduct', 'deleteProductsBatch', 'deleteSupplier', 'deleteVoucher', 'holdCurrentOrder', 'lockScreen', 'loginWithPin', 'logoutEmployee', 'openGeminiCopilot', 'processPayment', 'processPurchaseReturn', 'processSalesReturn', 'processSupplierPurchase', 'quickSwitchEmployee', 'recallHeldOrder', 'recordProductPriceChange', 'recordSupplierPayment', 'removeCustomerDiscount', 'removeFromCart', 'removeVoucher', 'setCartItemQuantity', 'setUsePoints', 'startNewShift', 'unlockScreen', 'updateCartItemDiscount', 'updateCartItemNote', 'updateCartItemQuantity', 'updateCartItemUnit', 'updateCustomer', 'updateEmployee', 'updateProduct', 'updateProductStock', 'updateSettings', 'updateShiftStartingCash', 'updateSupplier', 'voidTransaction']) wrapped[key] = (...args: any[]) => latestFns.current[key](...args);
     return wrapped;
   }, []);
 
@@ -3389,6 +3430,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     () => ({
       products,
       categories,
+      applyPriceUpdates: stableFns.applyPriceUpdates,
       addCategory: stableFns.addCategory,
       selectedCategory,
       setSelectedCategory,
