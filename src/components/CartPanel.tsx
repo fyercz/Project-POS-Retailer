@@ -432,12 +432,13 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                       autoFocus
                     />
                     <button
+                      aria-label="Simpan catatan"
                       onClick={() => handleSaveNote(item.id)}
                       className="px-2 py-1 text-[11px] bg-emerald-500 text-slate-950 rounded-xl font-bold cursor-pointer"
                     >
                       Simpan
                     </button>
-                    <button aria-label="Tutup"
+                    <button aria-label="Batal ubah catatan"
                       onClick={() => setActiveEditingNoteId(null)}
                       className="px-1.5 py-1 text-[11px] text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                     >
@@ -550,7 +551,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                     </span>
                   )}
                 </div>
-                <button aria-label="Tutup"
+                <button aria-label="Lepas voucher"
                   onClick={removeVoucher}
                   className="text-emerald-700 dark:text-emerald-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
                 >

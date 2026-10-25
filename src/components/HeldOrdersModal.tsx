@@ -25,10 +25,10 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
             <PauseCircle className="w-5 h-5 text-amber-500" />
             <div>
               <h3 className="font-bold text-sm text-slate-900 dark:text-white leading-none">
-                Parked & Held Orders
+                Pesanan Parkir
               </h3>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                {heldOrders.length} orders on hold
+                {heldOrders.length} pesanan menunggu dilanjutkan
               </p>
             </div>
           </div>
@@ -77,10 +77,10 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                  <button aria-label="Discard order"
+                  <button aria-label="Hapus pesanan parkir"
                     onClick={() => deleteHeldOrder(held.id)}
                     className="p-1.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
-                    title="Discard order"
+                    title="Hapus pesanan parkir"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -92,7 +92,7 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
                     }}
                     className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
                   >
-                    <span>Recall Order</span>
+                    <span>Lanjutkan Pesanan</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -101,9 +101,9 @@ export const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClos
           ) : (
             <div className="py-12 flex flex-col items-center justify-center text-center text-slate-500 dark:text-slate-400">
               <ShoppingBag className="w-10 h-10 stroke-[1.2] mb-2 opacity-40 text-amber-500" />
-              <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">No Orders On Hold</p>
+              <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Belum ada pesanan parkir</p>
               <p className="text-[11px] text-slate-500 max-w-xs mt-0.5">
-                You can park orders anytime by clicking "Hold" or pressing F4.
+                Parkir pesanan kapan saja dengan tombol "Parkir" di keranjang atau tombol F4.
               </p>
             </div>
           )}

@@ -107,6 +107,7 @@ import {
 import { errorMessage } from '../utils/errors';
 import { weightedAverageCost } from '../domain/costing';
 import { mergeCategories, validateNewCategory } from '../domain/categories';
+import { hasActionPermission } from '../utils/permissions';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -211,9 +212,11 @@ export interface POSTransactionsContextType {
   setActiveReceipt: (tx: Transaction | null, isNewPayment?: boolean) => void;
   isReceiptFromNewPayment: boolean;
   setIsReceiptFromNewPayment: (isNew: boolean) => void;
-  voidTransaction: (txId: string) => void;
+  /** Void butuh pengguna berhak (Supervisor/Owner) atau otorisasi PIN; mengembalikan false bila ditolak */
+  voidTransaction: (txId: string, authorizedBy?: Employee) => boolean;
   salesReturns: SalesReturn[];
-  processSalesReturn: (returnData: Omit<SalesReturn, 'id' | 'createdAt'>) => SalesReturn;
+  /** Retur (pengembalian uang) butuh pengguna berhak atau otorisasi PIN; null bila ditolak */
+  processSalesReturn: (returnData: Omit<SalesReturn, 'id' | 'createdAt'>, authorizedBy?: Employee) => SalesReturn | null;
   purchaseReturns: PurchaseReturn[];
   processPurchaseReturn: (returnData: Omit<PurchaseReturn, 'id' | 'createdAt'>) => PurchaseReturn;
   supplierPurchases: SupplierPurchase[];
@@ -2344,12 +2347,25 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .catch(() => queueLANStockReturn(payload));
   };
 
-  const voidTransaction = (txId: string) => {
+  // Hak membatalkan transaksi / mengembalikan uang: aturan canVoidTransaction di permissions.ts.
+  // Dulu aturan itu tidak pernah diperiksa: Kasir bisa void & retur tunai tanpa PIN atasan.
+  const approverOf = (authorizedBy?: Employee): Employee | null => {
+    if (activeEmployee && hasActionPermission(activeEmployee.role, 'canVoidTransaction')) return activeEmployee;
+    if (authorizedBy && hasActionPermission(authorizedBy.role, 'canVoidTransaction')) return authorizedBy;
+    return null;
+  };
+
+  const voidTransaction = (txId: string, authorizedBy?: Employee): boolean => {
     const tx = transactions.find((t) => t.id === txId);
-    if (!tx || tx.status === 'void' || tx.status === 'refunded') return;
+    if (!tx || tx.status === 'void' || tx.status === 'refunded') return false;
+    const approver = approverOf(authorizedBy);
+    if (!approver) {
+      console.warn('[void] Ditolak: perlu otorisasi Supervisor/Owner');
+      return false;
+    }
 
     setTransactions((prev) =>
-      prev.map((t) => (t.id === txId ? { ...t, status: 'void' as const } : t))
+      prev.map((t) => (t.id === txId ? { ...t, status: 'void' as const, voidedBy: approver.name, voidedAt: new Date().toISOString() } : t))
     );
     if (tx.payment?.method === 'cash') {
       recordShiftCashOut(Math.max(0, (tx.finalTotal || 0) - (tx.returnedAmount || 0)));
@@ -2376,11 +2392,18 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       transactionId: tx.id,
       transactionUpdate: { status: 'void' },
     });
+    return true;
   };
 
-  const processSalesReturn = (returnData: Omit<SalesReturn, 'id' | 'createdAt'>): SalesReturn => {
+  const processSalesReturn = (returnData: Omit<SalesReturn, 'id' | 'createdAt'>, authorizedBy?: Employee): SalesReturn | null => {
+    const approver = approverOf(authorizedBy);
+    if (!approver) {
+      console.warn('[retur] Ditolak: perlu otorisasi Supervisor/Owner');
+      return null;
+    }
     const newReturn: SalesReturn = {
       ...returnData,
+      authorizedBy: approver.name,
       id: `ret-sale-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       createdAt: new Date().toISOString(),
     };
