@@ -938,7 +938,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 className="px-3 py-1.5 rounded-xl border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition"
               >
                 <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span>Terapkan Aturan 50% ke Semua Produk Sekarang</span>
+                {/* Angka mengikuti kolom persentase (dulu tertulis mati 50%, padahal yang diterapkan angka di kolom) */}
+                <span>Terapkan Aturan {formData.minStockRulePercentage ?? 50}% ke Semua Produk Sekarang</span>
               </button>
               {syncMessage && (
                 <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 animate-in fade-in">
