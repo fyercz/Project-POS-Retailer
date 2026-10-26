@@ -2157,6 +2157,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Complete Payment & Save Transaction
   const processPayment = (payment: PaymentDetails): Transaction => {
     const pointsUsed = usePoints && selectedCustomer ? Math.min(effectivePointsToRedeem, selectedCustomer.points) : 0;
+    // Saldo toko member: dibatasi saldo yang ada & total tagihan
+    const storeCreditUsed = selectedCustomer
+      ? Math.max(0, Math.min(Math.round(Number(payment.storeCreditUsed) || 0), Math.round(selectedCustomer.storeCredit || 0), Math.round(finalTotal)))
+      : 0;
     const currentCashierName = activeEmployee
       ? `${activeEmployee.name} (${activeEmployee.roleTitle || activeEmployee.role})`
       : 'Kasir Utama';
@@ -2179,6 +2183,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       customerDiscount: customerDiscount || undefined,
       customerDiscountAmount: customerDiscountAmount > 0 ? customerDiscountAmount : undefined,
       pointsUsed: pointsUsed > 0 ? pointsUsed : undefined,
+      storeCreditUsed: storeCreditUsed > 0 ? storeCreditUsed : undefined,
       pointsDiscount: pointsDiscount > 0 ? pointsDiscount : undefined,
       pointsEarned,
       pointsEligibleSpend,
@@ -2226,7 +2231,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     // Update Shift Metrics
-    setCurrentShift((prev) => (prev ? applySaleToShift(prev, finalTotal, payment.method === 'cash') : prev));
+    // Bagian yang dibayar dengan saldo toko tidak masuk laci/bank
+    setCurrentShift((prev) => (prev ? applySaleToShift(prev, finalTotal - storeCreditUsed, payment.method === 'cash') : prev));
 
     // 1. Deduct Product Stock (mengalikan quantity dengan multiplier satuan grosir jika ada)
     // Server LAN memotong stoknya sendiri dari transaksi ini, jadi bukan "penyesuaian" yang perlu dikirim.
@@ -2240,6 +2246,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCustomers((prevCustomers) =>
         prevCustomers.map((cust) => {
           if (cust.id === selectedCustomer.id) {
+            const nextStoreCredit = Math.max(0, (cust.storeCredit || 0) - storeCreditUsed);
             const actualPointsUsed = pointsUsed;
             const updatedSpent = cust.totalSpent + finalTotal;
             const updatedOrders = cust.ordersCount + 1;
@@ -2288,6 +2295,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             return {
               ...cust,
+              storeCredit: nextStoreCredit,
               points: runningBalance,
               totalSpent: updatedSpent,
               ordersCount: updatedOrders,
@@ -2395,7 +2403,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prev.map((t) => (t.id === txId ? { ...t, status: 'void' as const, voidedBy: approver.name, voidedAt: new Date().toISOString() } : t))
     );
     if (tx.payment?.method === 'cash') {
-      recordShiftCashOut(Math.max(0, (tx.finalTotal || 0) - (tx.returnedAmount || 0)));
+      recordShiftCashOut(Math.max(0, (tx.finalTotal || 0) - (tx.storeCreditUsed || 0) - (tx.returnedAmount || 0)));
+    }
+    // Saldo toko yang terpakai di nota ini dikembalikan ke member
+    if ((tx.storeCreditUsed || 0) > 0 && tx.customer?.id) {
+      setCustomers((prev) => prev.map((c) => (c.id === tx.customer!.id ? { ...c, storeCredit: (c.storeCredit || 0) + (tx.storeCreditUsed || 0) } : c)));
     }
 
     // Barang dari transaksi yang dibatalkan kembali ke stok. Jika sebagian sudah diretur
@@ -2427,6 +2439,16 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!approver) {
       console.warn('[retur] Ditolak: perlu otorisasi Supervisor/Owner');
       return null;
+    }
+    // Retur "Saldo Toko": saldo harus dimiliki member nota itu (dulu tidak tercatat milik siapa)
+    const memberId = transactions.find((t) => t.id === returnData.transactionId || t.invoiceNumber === returnData.invoiceNumber)?.customer?.id;
+    if (returnData.refundMethod === 'store_credit') {
+      if (!memberId) {
+        console.warn('[retur] Saldo toko hanya untuk nota bermember');
+        return null;
+      }
+      const amount = Math.round(Number(returnData.totalRefundAmount) || 0);
+      setCustomers((prev) => prev.map((c) => (c.id === memberId ? { ...c, storeCredit: (c.storeCredit || 0) + amount } : c)));
     }
     const newReturn: SalesReturn = {
       ...returnData,

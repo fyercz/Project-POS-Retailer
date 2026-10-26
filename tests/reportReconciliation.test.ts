@@ -107,3 +107,22 @@ test('retur ke supplier: kurangi hutang tempo dulu, sisanya piutang retur; jurna
   assert.ok(ret.every((e: any) => e.isBalanced));
   assert.equal(ret.flatMap((e: any) => e.lines).filter((l: any) => l.accountCode === '1050').reduce((s: number, l: any) => s + l.credit, 0), 53000);
 });
+
+test('saldo toko dipakai belanja: kas hanya bagian tunai, kewajiban berkurang, jurnal seimbang', () => {
+  const member = { id: 'm1', name: 'Bu Saldo' };
+  const sale1: any = { ...tx('S1', [line(A, 1, 12000)], 0, 'cash'), customer: member };
+  const ret: any = { ...ret0('RS1', 'S1', 'store_credit'), totalRefundAmount: 12000 };
+  const sale2: any = { ...tx('S2', [line(A, 1, 15000)], 0, 'cash'), customer: member, finalTotal: 15000, subtotal: 15000, storeCreditUsed: 10000 };
+  const bs = computeBalanceSheet({ products: [], transactions: [sale1, sale2], salesReturns: [ret] } as any);
+  assert.equal(bs.assets.cashOnHand, 17000, 'S1 tunai 12.000 + S2 tunai 5.000 (retur saldo tidak mengurangi kas)');
+  assert.equal(bs.liabilities.storeCreditLiability, 2000, 'saldo 12.000 - terpakai 10.000');
+  const je = generateJournalEntries({ transactions: [sale1, sale2], salesReturns: [ret], supplierPurchases: [] } as any);
+  assert.equal(je.filter((e: any) => Math.abs(e.totalDebit - e.totalCredit) > 0.5).length, 0);
+  const net = (code: string) => je.reduce((a: number, e: any) => a + e.lines.filter((l: any) => l.accountCode === code).reduce((x: number, l: any) => x + l.debit - l.credit, 0), 0);
+  assert.equal(net('1010'), 17000, 'kas: 12.000 + 5.000');
+  assert.equal(-net('2040'), 2000, 'kewajiban saldo toko tersisa 2.000');
+});
+
+function ret0(id: string, txId: string, method: string): any {
+  return { id, returnNumber: id, transactionId: txId, invoiceNumber: txId, cashierName: 'Uji', createdAt: D, refundMethod: method, totalRefundAmount: 12000, items: [{ productId: 'A', productName: 'A', quantity: 1, unitPrice: 12000, totalRefund: 12000, reason: 'uji', restockToInventory: false }] };
+}

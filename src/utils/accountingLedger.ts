@@ -229,14 +229,20 @@ export function generateJournalEntries(options: {
 
     const lines = [];
 
-    // Debit payment asset
-    lines.push({
-      accountCode: assetCode,
-      accountName: assetName,
-      debit: finalTotal,
-      credit: 0,
-      memo: `Penerimaan bayar ${method.toUpperCase()} nota ${tx.invoiceNumber}`,
-    });
+    // Debit payment asset (bagian yang dibayar dengan saldo toko mengurangi kewajiban 2040)
+    const storeCreditPart = Math.min(finalTotal, Math.max(0, Number(tx.storeCreditUsed) || 0));
+    if (finalTotal - storeCreditPart > 0) {
+      lines.push({
+        accountCode: assetCode,
+        accountName: assetName,
+        debit: finalTotal - storeCreditPart,
+        credit: 0,
+        memo: `Penerimaan bayar ${method.toUpperCase()} nota ${tx.invoiceNumber}`,
+      });
+    }
+    if (storeCreditPart > 0) {
+      lines.push({ accountCode: '2040', accountName: 'Saldo Toko Pelanggan (Retur)', debit: storeCreditPart, credit: 0, memo: `Dibayar dengan saldo toko nota ${tx.invoiceNumber}` });
+    }
 
     // Diskon promo/voucher/member = pengurang penjualan. Penukaran poin BUKAN diskon: poin sudah
     // dibebankan saat diperoleh, jadi penukaran mengurangi kewajiban poin (2020).
@@ -784,9 +790,13 @@ export function computeBalanceSheet(options: {
   let bankAndQris = part('1020');
   let edcCardReceivables = 0;
 
+  let storeCreditUsedTotal = 0;
   for (const tx of transactions) {
     if (tx.status === 'void') continue;
-    const finalTotal = Number(tx.finalTotal) || 0;
+    // Bagian yang dibayar dengan saldo toko tidak masuk kas/bank
+    const used = Math.min(Number(tx.finalTotal) || 0, Math.max(0, Number(tx.storeCreditUsed) || 0));
+    storeCreditUsedTotal += used;
+    const finalTotal = (Number(tx.finalTotal) || 0) - used;
     const method = tx.payment?.method || 'cash';
     if (method === 'cash') {
       cashOnHand += finalTotal;
@@ -866,6 +876,9 @@ export function computeBalanceSheet(options: {
       consignmentPayable += outstanding;
     }
   }
+
+  // Saldo toko yang sudah dibelanjakan mengurangi kewajiban
+  storeCreditLiability -= storeCreditUsedTotal;
 
   // Retur ke supplier mengurangi hutang (lihat allocateSupplierReturns)
   accountsPayable -= supAlloc.payableReduction;
