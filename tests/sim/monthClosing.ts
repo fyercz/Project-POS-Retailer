@@ -10,9 +10,9 @@ export interface ClosingRow { area: string; item: string; app: number; shadow: n
 export function monthClosing(sim: ReturnType<typeof runMonthSimulation>) {
   const startDate = '2026-09-30T17:00:00.000Z', endDate = '2026-10-31T16:59:59.999Z';
   const rate = sim.settings.pointRedemptionRate;
-  const pl = computeIncomeStatement({ transactions: sim.transactions, salesReturns: sim.salesReturns, shifts: sim.shifts, expenses: sim.expenses, startDate, endDate, pointRedemptionRate: rate });
-  const bs = computeBalanceSheet({ products: sim.products, transactions: sim.transactions, customers: sim.customers, supplierPurchases: sim.purchases, shifts: sim.shifts, expenses: sim.expenses, salesReturns: sim.salesReturns, purchaseReturns: sim.purchaseReturns, initialCapital: sim.INITIAL_CAPITAL, initialCashInDrawer: sim.INITIAL_CASH, initialBankBalance: sim.INITIAL_BANK, pointRedemptionRate: rate } as any);
-  const je = generateJournalEntries({ transactions: sim.transactions, salesReturns: sim.salesReturns, supplierPurchases: sim.purchases, shifts: sim.shifts, expenses: sim.expenses, purchaseReturns: sim.purchaseReturns, initialCapital: sim.INITIAL_CAPITAL, initialCashInDrawer: sim.INITIAL_CASH, initialBankBalance: sim.INITIAL_BANK, pointRedemptionRate: rate } as any);
+  const pl = computeIncomeStatement({ transactions: sim.transactions, salesReturns: sim.salesReturns, shifts: sim.shifts, expenses: sim.expenses, startDate, endDate, pointRedemptionRate: rate, stockAdjustments: sim.stockAdjustments });
+  const bs = computeBalanceSheet({ products: sim.products, transactions: sim.transactions, customers: sim.customers, supplierPurchases: sim.purchases, shifts: sim.shifts, expenses: sim.expenses, salesReturns: sim.salesReturns, purchaseReturns: sim.purchaseReturns, initialCapital: sim.INITIAL_CAPITAL, initialCashInDrawer: sim.INITIAL_CASH, initialBankBalance: sim.INITIAL_BANK, pointRedemptionRate: rate, stockAdjustments: sim.stockAdjustments } as any);
+  const je = generateJournalEntries({ transactions: sim.transactions, salesReturns: sim.salesReturns, supplierPurchases: sim.purchases, shifts: sim.shifts, expenses: sim.expenses, purchaseReturns: sim.purchaseReturns, initialCapital: sim.INITIAL_CAPITAL, initialCashInDrawer: sim.INITIAL_CASH, initialBankBalance: sim.INITIAL_BANK, pointRedemptionRate: rate, stockAdjustments: sim.stockAdjustments } as any);
   const sh = shadowIncome(sim);
   const rows: ClosingRow[] = [];
   const add = (area: string, item: string, app: number, shadow: number, note?: string) => rows.push({ area, item, app: Math.round(app), shadow: Math.round(shadow), ok: Math.abs(app - shadow) < 1, note });
@@ -25,7 +25,9 @@ export function monthClosing(sim: ReturnType<typeof runMonthSimulation>) {
   add('Laba Rugi', 'HPP (dikurangi HPP retur kembali ke stok)', pl.costOfGoodsSold, sh.cogs);
   add('Laba Rugi', 'Laba kotor', pl.grossProfit, sh.grossProfit);
   add('Laba Rugi', 'Beban program poin member', pl.operatingExpenses.pointsExpense ?? 0, sh.pointsExpense);
-  add('Laba Rugi', 'Beban operasional (pengeluaran + poin + kekurangan kas)', pl.operatingExpenses.totalOperatingExpenses, sh.expenses + sh.shortage);
+  add('Laba Rugi', 'Beban selisih persediaan (opname)', pl.operatingExpenses.inventoryLoss ?? 0, sh.inventoryLoss);
+  add('Laba Rugi', 'Pendapatan selisih persediaan (opname)', pl.inventoryGain ?? 0, sh.inventoryGain);
+  add('Laba Rugi', 'Beban operasional (pengeluaran + poin + kekurangan kas + selisih stok)', pl.operatingExpenses.totalOperatingExpenses, sh.expenses + sh.shortage + sh.inventoryLoss);
   add('Laba Rugi', 'Laba bersih', pl.netOperatingProfit, sh.net, sh.overage ? 'Bayangan memasukkan kelebihan kas shift sebagai pendapatan lain' : undefined);
 
   // Neraca: aset & kewajiban dari arus kas bayangan
@@ -46,7 +48,7 @@ export function monthClosing(sim: ReturnType<typeof runMonthSimulation>) {
   // Selisih belum tercatat = jumlah komponen yang DIKETAHUI tidak dicatat aplikasi. Bila semua pos
   // lain benar, kedua angka harus sama persis.
   const components = {
-    opname: Math.round(s.opnameLossValue),
+    opname: 0, // kini dicatat sebagai penyesuaian persediaan (jurnal 6050/4040)
     pembulatanModalRataRata: Math.round(s.revaluationRounding),
     returKembaliKeStokSelisihModal: Math.round(s.returnRevaluation),
     poinAwalSebelumAplikasi: -Math.round(sim.openingPoints * rate),
