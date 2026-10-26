@@ -3042,6 +3042,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         transactions,
         salesReturns,
         purchaseReturns,
+        stockAdjustments,
         supplierPurchases,
         settings,
         vouchers,
@@ -3070,6 +3071,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     transactions,
     salesReturns,
     purchaseReturns,
+    stockAdjustments,
     supplierPurchases,
     vouchers,
     employees,
@@ -3231,6 +3233,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (cleanTransactions !== null) setTransactions(cleanTransactions);
           if (Array.isArray(d.salesReturns)) setSalesReturns(d.salesReturns);
           if (Array.isArray(d.purchaseReturns)) setPurchaseReturns(d.purchaseReturns);
+          // Riwayat penyesuaian persediaan (sejak v1.8.0; backup lama tidak memilikinya)
+          if (Array.isArray((d as any).stockAdjustments)) setStockAdjustments((d as any).stockAdjustments);
           if (Array.isArray(d.supplierPurchases)) setSupplierPurchases(d.supplierPurchases);
           // Pengaturan digabung: backup versi lama tidak punya pengaturan baru (jangan sampai kosong)
           if (d.settings && typeof d.settings === 'object') setSettings((prev) => mergeRestoredSettings(prev, d.settings));

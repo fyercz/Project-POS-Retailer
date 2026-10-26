@@ -701,6 +701,8 @@ export interface BackupPayload {
     transactions?: Transaction[];
     salesReturns?: SalesReturn[];
     purchaseReturns?: PurchaseReturn[];
+    /** Riwayat penyesuaian persediaan (opname/koreksi) untuk pembukuan */
+    stockAdjustments?: Array<{ id: string; date: string; productId: string; productName: string; delta: number; unitCost: number; value: number; reason: string; recordedBy?: string }>;
     supplierPurchases?: SupplierPurchase[];
     settings?: StoreSettings;
     vouchers?: Voucher[];
