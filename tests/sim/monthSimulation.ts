@@ -12,7 +12,7 @@ import { computeCartTotals, tierPointsMultiplier } from '../../src/domain/cartTo
 import { saleStockDeltas, applyStockDeltas, linesToDeltas, voidRestockLines } from '../../src/domain/stockMovements.ts';
 import { newShift, applySaleToShift, applyCashOut, closeShift, expectedCashOf } from '../../src/domain/shiftCash.ts';
 import { lineCogs, returnedCogs } from '../../src/utils/cogs.ts';
-import { weightedAverageCost } from '../../src/domain/costing.ts';
+import { weightedAverageCost, invoiceCostFactor, landedUnitCost } from '../../src/domain/costing.ts';
 import { makeStockAdjustments } from '../../src/domain/stockAdjustments.ts';
 
 // ---------- RNG deterministik ----------
@@ -105,15 +105,21 @@ export function runMonthSimulation(seed = 20261001) {
       const c = cost ?? p.costPrice;
       return { productId: pid, productName: p.name, quantity: qty, costPrice: c, subtotal: qty * c };
     });
-    const total = lines.reduce((s, l) => s + l.subtotal, 0);
-    const po = { id: `po-${++poSeq}`, invoiceNumber: `FKT-${String(poSeq).padStart(3, '0')}`, supplierName, paymentTerms: terms, items: lines, totalAmount: total, finalTotal: total, createdAt: iso(day, 8), receivedBy: 'Owner', payments: [] as any[] };
+    const subtotal = lines.reduce((s, l) => s + l.subtotal, 0);
+    // Faktur ke-3, 6, 9...: diskon 2% lalu PPN 11% (dulu tidak pernah diuji)
+    const withTax = (poSeq + 1) % 3 === 0;
+    const afterDisc = withTax ? Math.round(subtotal * 0.98) : subtotal;
+    const total = withTax ? afterDisc + Math.round(afterDisc * 0.11) : subtotal;
+    const po = { id: `po-${++poSeq}`, invoiceNumber: `FKT-${String(poSeq).padStart(3, '0')}`, supplierName, paymentTerms: terms, items: lines, subtotal, ...(withTax ? { discountAmount: subtotal - afterDisc, ppnRate: 11, ppnAmount: total - afterDisc } : {}), totalAmount: total, finalTotal: total, createdAt: iso(day, 8), receivedBy: 'Owner', payments: [] as any[] };
     purchases.push(po);
     // seperti processSupplierPurchase: stok bertambah, harga modal = harga beli terbaru
     for (const l of lines) {
       const p = byId.get(l.productId)!;
-      // seperti aplikasi: harga modal rata-rata tertimbang
-      const newCost = weightedAverageCost(p.stock, p.costPrice, l.quantity, l.costPrice);
-      shadow.revaluationRounding += (p.stock + l.quantity) * newCost - (p.stock * p.costPrice + l.quantity * l.costPrice);
+      // seperti aplikasi: modal setelah diskon/PPN faktur, rata-rata tertimbang
+      const landed = landedUnitCost(l.costPrice, invoiceCostFactor(po));
+      const newCost = weightedAverageCost(p.stock, p.costPrice, l.quantity, landed);
+      // Selisih pembulatan: nilai stok baru vs (stok lama + yang BENAR-BENAR dibayar untuk baris ini)
+      shadow.revaluationRounding += (p.stock + l.quantity) * newCost - (p.stock * p.costPrice + l.subtotal * invoiceCostFactor(po));
       if (newCost !== p.costPrice) priceChanges.push({ date: ymd(day), productId: p.id, field: 'harga modal (rata-rata)', from: p.costPrice, to: newCost });
       const np = { ...p, stock: p.stock + l.quantity, costPrice: newCost };
       products[products.findIndex((x) => x.id === p.id)] = np; byId.set(p.id, np);
