@@ -20,6 +20,7 @@ import { formatCurrency } from '../utils/formatters';
 import { parseRetailLineRaw, parseFullCSVText, ParsedItem } from '../utils/retailNormalizer';
 import { downloadCategoryGuideCSV, downloadCategoryGuideTXT } from '../data/categoryGuide';
 import { activateOnKey } from '../utils/a11y';
+import { readXlsx, sheetToDelimited } from '../utils/xlsxReader';
 
 interface DirectFileImportModalProps {
   isOpen: boolean;
@@ -78,6 +79,23 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
     if (!file) return;
 
     setFileName(file.name);
+    // Excel: dulu dibaca sebagai teks biasa (arsip ZIP) sehingga isinya karakter acak
+    if (/\.xlsx$/i.test(file.name)) {
+      file
+        .arrayBuffer()
+        .then((buf) => {
+          const sheet = readXlsx(buf).find((sh) => sh.rows.some((r) => r.some((c) => (c || '').trim() !== '')));
+          setRawText(sheet ? sheetToDelimited(sheet) : '');
+        })
+        .catch(() => setRawText(''));
+      e.target.value = '';
+      return;
+    }
+    if (/\.xls$/i.test(file.name)) {
+      alert('Format .xls lama tidak didukung. Simpan ulang di Excel sebagai .xlsx atau .csv.');
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target?.result as string;
@@ -232,7 +250,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv, .txt, .tsv, .xlsx, .xls, .json"
+                accept=".csv, .txt, .tsv, .xlsx, .json"
                 onChange={handleFileUpload}
                 className="hidden"
               />

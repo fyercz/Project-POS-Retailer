@@ -94,6 +94,7 @@ import { escapeHtml } from '../../utils/escapeHtml';
 import { purchaseOutstandingOf } from '../../utils/accountingLedger';
 import { buildStockHistoryIds, stockStatusOf } from '../../domain/stockStatus';
 import { ProductPicker } from '../ProductPicker';
+import { PriceUpdateFromFileModal } from '../PriceUpdateFromFileModal';
 
 interface ReceivingItem {
   productId: string;
@@ -179,6 +180,7 @@ export const InventoryView: React.FC = () => {
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [isClearImportedModalOpen, setIsClearImportedModalOpen] = useState(false);
+  const [isPriceUpdateOpen, setIsPriceUpdateOpen] = useState(false);
   const [isResetCatalogModalOpen, setIsResetCatalogModalOpen] = useState(false);
 
   // Bulk Stock & Expiry Adjustment Modal State
@@ -1637,6 +1639,22 @@ export const InventoryView: React.FC = () => {
                     <div className="text-[11px] text-slate-500 font-normal">Pembersihan ejaan singkatan &amp; gramasi</div>
                   </div>
                 </button>
+                {(activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor') && (
+                  <button
+                    id="btn-price-update-file"
+                    onClick={() => {
+                      setIsAuditDropdownOpen(false);
+                      setIsPriceUpdateOpen(true);
+                    }}
+                    className="w-full px-2.5 py-2 rounded-xl flex items-center gap-2.5 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 shrink-0 text-emerald-700" />
+                    <div>
+                      <div>Perbarui Harga dari File</div>
+                      <div className="text-[11px] text-slate-500 font-normal">Excel/CSV: barcode + harga baru, ditinjau dulu</div>
+                    </div>
+                  </button>
+                )}
                 {/* Hapus produk hasil impor (dulu jendelanya ada tetapi tidak ada tombol pembukanya) */}
                 {importedCount > 0 && (activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor') && (
                   <button
@@ -4129,6 +4147,8 @@ export const InventoryView: React.FC = () => {
           setTimeout(() => setNotificationMsg(null), 5000);
         }}
       />
+
+      <PriceUpdateFromFileModal isOpen={isPriceUpdateOpen} onClose={() => setIsPriceUpdateOpen(false)} />
 
       {/* Supplier Add / Edit Modal */}
       <SupplierFormModal

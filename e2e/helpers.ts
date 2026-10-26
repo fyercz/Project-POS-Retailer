@@ -27,7 +27,23 @@ export async function addProduct(
   await page.getByTestId('product-price').fill(String(p.price));
   await page.getByTestId('product-stock').fill(String(p.stock));
   await page.getByTestId('product-submit').click();
-  await expect(page.getByTestId('product-submit')).toBeHidden();
+  // Bila ditolak, tampilkan pesan galat formulir agar penyebabnya terlihat
+  const closed = await page.getByTestId('product-submit').waitFor({ state: 'hidden', timeout: 15_000 }).then(() => true).catch(() => false);
+  if (!closed) {
+    const errors: string[] = await page
+      .locator('[role="dialog"] [role="alert"], [role="dialog"] [id$="-error"]')
+      .allInnerTexts()
+      .catch(() => []);
+    // Validasi bawaan browser (mis. step/min) tidak tampil sebagai teks: ambil pesannya langsung
+    const native = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('[role="dialog"] input, [role="dialog"] select'))
+        .filter((el) => !(el as HTMLInputElement).checkValidity())
+        .map((el) => `${(el as HTMLElement).dataset.testid || (el as HTMLInputElement).name}: ${(el as HTMLInputElement).validationMessage}`)
+    );
+    errors.push(...native);
+    const category = await page.getByTestId('product-category').inputValue().catch(() => '?');
+    throw new Error(`Produk "${p.name}" tidak tersimpan. Kategori="${category}". Pesan formulir: ${JSON.stringify(errors.filter(Boolean))}`);
+  }
 }
 
 /** Tunggu sampai sebuah daftar (array) dengan panjang minimal tertentu tersimpan di IndexedDB aplikasi. */
