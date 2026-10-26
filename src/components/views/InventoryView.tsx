@@ -4196,9 +4196,15 @@ export const InventoryView: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3">
           <div role="dialog" aria-modal="true" aria-labelledby="margin-alert-title" className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-              <h3 id="margin-alert-title" className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-rose-600" /> Periksa Harga Jual ({marginAlerts.items.length} produk)
-              </h3>
+              <div className="flex items-start justify-between gap-2">
+                <h3 id="margin-alert-title" className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-rose-600" /> Periksa Harga Jual ({marginAlerts.items.length} produk)
+                </h3>
+                {/* Tombol "Tutup" juga dipakai Escape (useGlobalDialogA11y) */}
+                <button type="button" aria-label="Tutup" onClick={() => setMarginAlerts(null)} className="px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs cursor-pointer">
+                  ✕
+                </button>
+              </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
                 Harga kulakan baru di faktur {marginAlerts.invoice} membuat margin produk berikut rugi atau di bawah {settings.minMarginPercent ?? 10}%. Usulan = kulakan + margin minimal, dibulatkan ke Rp 500.
               </p>

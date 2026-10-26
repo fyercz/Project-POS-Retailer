@@ -44,6 +44,11 @@ test('produk, supplier, faktur, dan member baru dibuat lewat formulir, dipakai, 
   await page.getByLabel('Harga modal per unit').first().fill('4600');
   await page.getByRole('button', { name: /Proses & Tambah ke Stok Toko/ }).click();
   await expect(page.getByRole('button', { name: /Proses & Tambah ke Stok Toko/ })).toHaveCount(0);
+  // Kulakan 4.600 vs jual 5.000 = margin 8% (< 10%): jendela Periksa Harga Jual muncul (margin tipis)
+  const marginDlg = page.getByRole('dialog', { name: /Periksa Harga Jual/ });
+  await expect(marginDlg).toContainText('Margin tipis');
+  await marginDlg.getByRole('button', { name: 'Nanti Saja' }).click();
+  await expect(marginDlg).toHaveCount(0);
 
   await expect.poll(async () => (await readStored(page, 'pos_retail_products_v3')).find((p: any) => p.name === PRODUCT)?.costPrice, { timeout: 10_000 }).toBe(4200);
 
