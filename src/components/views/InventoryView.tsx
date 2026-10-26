@@ -95,6 +95,7 @@ import { purchaseOutstandingOf } from '../../utils/accountingLedger';
 import { buildStockHistoryIds, stockStatusOf } from '../../domain/stockStatus';
 import { ProductPicker } from '../ProductPicker';
 import { PriceUpdateFromFileModal } from '../PriceUpdateFromFileModal';
+import { checkMargin } from '../../domain/marginCheck';
 
 interface ReceivingItem {
   productId: string;
@@ -122,6 +123,7 @@ export const InventoryView: React.FC = () => {
     clearAllProducts,
     recordProductPriceChange,
     updateProduct,
+    applyPriceUpdates,
   } = usePOSCatalog();
 
   const {
@@ -181,6 +183,12 @@ export const InventoryView: React.FC = () => {
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [isClearImportedModalOpen, setIsClearImportedModalOpen] = useState(false);
   const [isPriceUpdateOpen, setIsPriceUpdateOpen] = useState(false);
+  // Ringkasan margin setelah terima barang (harga jual vs harga kulakan baru)
+  const [marginAlerts, setMarginAlerts] = useState<{
+    invoice: string;
+    items: Array<{ productId: string; name: string; price: number; cost: number; status: 'loss' | 'thin'; newPrice: number; apply: boolean }>;
+    message?: string;
+  } | null>(null);
   const [isResetCatalogModalOpen, setIsResetCatalogModalOpen] = useState(false);
 
   // Bulk Stock & Expiry Adjustment Modal State
@@ -1052,7 +1060,19 @@ export const InventoryView: React.FC = () => {
     };
 
     const generatedInvoiceId = `SUP-PUR-${Date.now()}`;
+    // Periksa margin SEBELUM produk diperbarui (harga jual saat ini vs harga kulakan baru)
+    const minMargin = settings.minMarginPercent ?? 10;
+    const marginIssues = receivingItems
+      .filter((it) => it.productId && it.costPrice > 0)
+      .map((it) => {
+        const prod = products.find((p) => p.id === it.productId);
+        if (!prod) return null;
+        const m = checkMargin(prod.price, it.costPrice, minMargin);
+        return m.status === 'ok' ? null : { productId: prod.id, name: prod.name, price: prod.price, cost: it.costPrice, status: m.status as 'loss' | 'thin', newPrice: m.suggestedPrice, apply: true };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
     processSupplierPurchase(purchasePayload);
+    if (marginIssues.length > 0) setMarginAlerts({ invoice: purchasePayload.invoiceNumber, items: marginIssues });
     setIsReceivingOpen(false);
 
     const createdPurchaseForModal: SupplierPurchase = {
@@ -3593,6 +3613,9 @@ export const InventoryView: React.FC = () => {
                         {receivingItems.map((item, idx) => {
                           const itemSubtotal = item.subtotal !== undefined ? item.subtotal : item.quantity * item.costPrice;
                           const calculatedMin = Math.max(1, Math.ceil((item.quantity || 0) * 0.5));
+                          // Margin harga jual saat ini terhadap harga kulakan baru
+                          const rowProd = products.find((p) => p.id === item.productId);
+                          const margin = rowProd && item.costPrice > 0 ? checkMargin(rowProd.price, item.costPrice, settings.minMarginPercent ?? 10) : null;
                           return (
                             <tr key={idx} className="bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
                               <td className="py-2 px-3">
@@ -3627,6 +3650,24 @@ export const InventoryView: React.FC = () => {
                                   onChange={(e) => handleReceivingItemChange(idx, 'costPrice', e.target.value)}
                                   className="w-full p-1.5 text-right font-mono font-bold rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
                                 />
+                                {margin && rowProd && (
+                                  <div
+                                    data-testid={`receiving-margin-${idx}`}
+                                    role={margin.status === 'ok' ? undefined : 'alert'}
+                                    className={`mt-1 text-[11px] font-semibold text-right ${
+                                      margin.status === 'loss'
+                                        ? 'text-rose-700 dark:text-rose-400'
+                                        : margin.status === 'thin'
+                                        ? 'text-amber-700 dark:text-amber-400'
+                                        : 'text-slate-500'
+                                    }`}
+                                  >
+                                    Jual {formatCurrency(rowProd.price, settings.currency)} ·{' '}
+                                    {margin.status === 'loss'
+                                      ? `RUGI ${formatCurrency(-margin.marginRp, settings.currency)}/pcs`
+                                      : `margin ${margin.marginPct}%${margin.status === 'thin' ? ' (tipis)' : ''}`}
+                                  </div>
+                                )}
                               </td>
                               <td className="py-2 px-3">
                                 <input aria-label="Tanggal kedaluwarsa"
@@ -4149,6 +4190,104 @@ export const InventoryView: React.FC = () => {
       />
 
       <PriceUpdateFromFileModal isOpen={isPriceUpdateOpen} onClose={() => setIsPriceUpdateOpen(false)} />
+
+      {/* Periksa harga jual setelah terima barang (dulu tidak ada peringatan sama sekali) */}
+      {marginAlerts && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3">
+          <div role="dialog" aria-modal="true" aria-labelledby="margin-alert-title" className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-start justify-between gap-2">
+                <h3 id="margin-alert-title" className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-rose-600" /> Periksa Harga Jual ({marginAlerts.items.length} produk)
+                </h3>
+                {/* Tombol "Tutup" juga dipakai Escape (useGlobalDialogA11y) */}
+                <button type="button" aria-label="Tutup" onClick={() => setMarginAlerts(null)} className="px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs cursor-pointer">
+                  ✕
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+                Harga kulakan baru di faktur {marginAlerts.invoice} membuat margin produk berikut rugi atau di bawah {settings.minMarginPercent ?? 10}%. Usulan = kulakan + margin minimal, dibulatkan ke Rp 500.
+              </p>
+            </div>
+            <div className="p-4 overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="text-slate-600 dark:text-slate-400">
+                  <tr>
+                    <th className="p-1.5 text-left">Produk</th>
+                    <th className="p-1.5 text-right">Jual saat ini</th>
+                    <th className="p-1.5 text-right">Kulakan baru</th>
+                    <th className="p-1.5 text-right">Harga jual baru</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {marginAlerts.items.map((it, i) => (
+                    <tr key={it.productId} className="border-t border-slate-100 dark:border-slate-800">
+                      <td className="p-1.5">
+                        <div className="font-semibold text-slate-800 dark:text-slate-100">{it.name}</div>
+                        <div className={`text-[11px] font-bold ${it.status === 'loss' ? 'text-rose-700 dark:text-rose-400' : 'text-amber-700 dark:text-amber-400'}`}>
+                          {it.status === 'loss' ? `Rugi ${formatCurrency(it.cost - it.price, settings.currency)}/pcs` : 'Margin tipis'}
+                        </div>
+                      </td>
+                      <td className="p-1.5 text-right font-mono">{formatCurrency(it.price, settings.currency)}</td>
+                      <td className="p-1.5 text-right font-mono">{formatCurrency(it.cost, settings.currency)}</td>
+                      <td className="p-1.5 text-right">
+                        {activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor' ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <input
+                              type="checkbox"
+                              aria-label={`Ubah harga ${it.name}`}
+                              checked={it.apply}
+                              onChange={(e) => setMarginAlerts({ ...marginAlerts, items: marginAlerts.items.map((x, j) => (j === i ? { ...x, apply: e.target.checked } : x)) })}
+                            />
+                            <input
+                              type="number"
+                              min={1}
+                              step={1}
+                              aria-label={`Harga jual baru ${it.name}`}
+                              value={it.newPrice}
+                              onChange={(e) => setMarginAlerts({ ...marginAlerts, items: marginAlerts.items.map((x, j) => (j === i ? { ...x, newPrice: Number(e.target.value) || 0 } : x)) })}
+                              className="w-24 p-1 text-right font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900"
+                            />
+                          </span>
+                        ) : (
+                          <span className="font-mono">{formatCurrency(it.newPrice, settings.currency)}</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {marginAlerts.message && (
+                <p role="status" className="mt-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                  {marginAlerts.message}
+                </p>
+              )}
+              {!(activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor') && (
+                <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Minta Owner/Supervisor mengubah harga jual produk di atas.</p>
+              )}
+            </div>
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
+              <button type="button" onClick={() => setMarginAlerts(null)} className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs cursor-pointer">
+                {marginAlerts.message ? 'Tutup' : 'Nanti Saja'}
+              </button>
+              {(activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor') && !marginAlerts.message && (
+                <button
+                  type="button"
+                  disabled={!marginAlerts.items.some((x) => x.apply && x.newPrice > 0)}
+                  onClick={() => {
+                    const chosen = marginAlerts.items.filter((x) => x.apply && x.newPrice > 0);
+                    applyPriceUpdates(chosen.map((x) => ({ productId: x.productId, newPrice: x.newPrice })), `Penerimaan faktur ${marginAlerts.invoice}`);
+                    setMarginAlerts({ ...marginAlerts, message: `${chosen.length} harga jual diperbarui dan dicatat di Riwayat Harga.` });
+                  }}
+                  className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-xs font-bold cursor-pointer disabled:cursor-not-allowed"
+                >
+                  Simpan Harga Jual Baru
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Supplier Add / Edit Modal */}
       <SupplierFormModal
