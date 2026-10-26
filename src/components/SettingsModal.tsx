@@ -948,6 +948,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
               )}
             </div>
 
+            {/* Batas margin minimal: peringatan saat terima barang bila harga jual terlalu dekat/di bawah harga kulakan baru */}
+            <div className="mt-3">
+              <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1 text-xs">Margin minimal (%)</label>
+              <input
+                aria-label="Margin minimal (%)"
+                type="number"
+                min={0}
+                max={90}
+                value={formData.minMarginPercent ?? 10}
+                onChange={(e) => setFormData({ ...formData, minMarginPercent: e.target.value === '' ? 0 : Number(e.target.value) })}
+                className="w-28 p-2 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs"
+              />
+              <span className="block text-[11px] text-slate-500 mt-1">
+                Saat terima barang: merah bila harga jual &le; harga kulakan baru (rugi), kuning bila margin di bawah angka ini.
+              </span>
+            </div>
+
             {/* Pengaturan Tampilan Barang Stok Kosong / Habis (0 Pcs) */}
             <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
               <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1.5 text-xs">
