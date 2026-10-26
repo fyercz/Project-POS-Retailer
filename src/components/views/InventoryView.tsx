@@ -96,6 +96,7 @@ import { buildStockHistoryIds, stockStatusOf } from '../../domain/stockStatus';
 import { ProductPicker } from '../ProductPicker';
 import { PriceUpdateFromFileModal } from '../PriceUpdateFromFileModal';
 import { checkMargin } from '../../domain/marginCheck';
+import { invoiceCostFactor, landedUnitCost } from '../../domain/costing';
 
 interface ReceivingItem {
   productId: string;
@@ -186,7 +187,7 @@ export const InventoryView: React.FC = () => {
   // Ringkasan margin setelah terima barang (harga jual vs harga kulakan baru)
   const [marginAlerts, setMarginAlerts] = useState<{
     invoice: string;
-    items: Array<{ productId: string; name: string; price: number; cost: number; status: 'loss' | 'thin'; newPrice: number; apply: boolean }>;
+    items: Array<{ productId: string; name: string; price: number; cost: number; status: 'loss' | 'thin'; newPrice: number; apply: boolean; unitName?: string }>;
     message?: string;
   } | null>(null);
   const [isResetCatalogModalOpen, setIsResetCatalogModalOpen] = useState(false);
@@ -1016,6 +1017,20 @@ export const InventoryView: React.FC = () => {
         : Math.min(grossTotalWithPpn, discountRate || 0);
     finalReceivingTotal = Math.max(0, grossTotalWithPpn - discountAmount);
   }
+  // Modal per unit setelah diskon & PPN faktur (sama dengan yang akan tercatat sebagai modal)
+  const receivingCostFactor = invoiceCostFactor({ subtotal: receivingSubtotal, totalAmount: finalReceivingTotal });
+  // Periksa margin satu baris: satuan dasar + satuan grosir (Dus/Slop) terhadap modal setelah diskon/PPN
+  const marginIssuesFor = (productId: string, unitCost: number) => {
+    const prod = products.find((p) => p.id === productId);
+    if (!prod || !(unitCost > 0)) return null;
+    const landed = landedUnitCost(unitCost, receivingCostFactor);
+    const min = settings.minMarginPercent ?? 10;
+    const base = checkMargin(prod.price, landed, min);
+    const units = (prod.wholesaleUnits || [])
+      .map((u) => ({ unit: u.name, price: u.price, cost: landed * (u.multiplier || 1), m: checkMargin(u.price, landed * (u.multiplier || 1), min) }))
+      .filter((u) => u.m.status !== 'ok');
+    return { prod, landed, base, units };
+  };
 
   const handleSubmitReceiving = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1061,16 +1076,16 @@ export const InventoryView: React.FC = () => {
 
     const generatedInvoiceId = `SUP-PUR-${Date.now()}`;
     // Periksa margin SEBELUM produk diperbarui (harga jual saat ini vs harga kulakan baru)
-    const minMargin = settings.minMarginPercent ?? 10;
-    const marginIssues = receivingItems
-      .filter((it) => it.productId && it.costPrice > 0)
-      .map((it) => {
-        const prod = products.find((p) => p.id === it.productId);
-        if (!prod) return null;
-        const m = checkMargin(prod.price, it.costPrice, minMargin);
-        return m.status === 'ok' ? null : { productId: prod.id, name: prod.name, price: prod.price, cost: it.costPrice, status: m.status as 'loss' | 'thin', newPrice: m.suggestedPrice, apply: true };
-      })
-      .filter((x): x is NonNullable<typeof x> => x !== null);
+    const marginIssues: Array<{ productId: string; name: string; price: number; cost: number; status: 'loss' | 'thin'; newPrice: number; apply: boolean; unitName?: string }> = [];
+    for (const it of receivingItems) {
+      const c = it.productId ? marginIssuesFor(it.productId, it.costPrice) : null;
+      if (!c) continue;
+      if (c.base.status !== 'ok')
+        marginIssues.push({ productId: c.prod.id, name: c.prod.name, price: c.prod.price, cost: c.landed, status: c.base.status as 'loss' | 'thin', newPrice: c.base.suggestedPrice, apply: true });
+      // Satuan grosir: ditampilkan sebagai informasi (diubah lewat formulir produk)
+      for (const u of c.units)
+        marginIssues.push({ productId: c.prod.id, name: `${c.prod.name} (${u.unit})`, price: u.price, cost: u.cost, status: u.m.status as 'loss' | 'thin', newPrice: u.m.suggestedPrice, apply: false, unitName: u.unit });
+    }
     processSupplierPurchase(purchasePayload);
     if (marginIssues.length > 0) setMarginAlerts({ invoice: purchasePayload.invoiceNumber, items: marginIssues });
     setIsReceivingOpen(false);
@@ -3614,8 +3629,9 @@ export const InventoryView: React.FC = () => {
                           const itemSubtotal = item.subtotal !== undefined ? item.subtotal : item.quantity * item.costPrice;
                           const calculatedMin = Math.max(1, Math.ceil((item.quantity || 0) * 0.5));
                           // Margin harga jual saat ini terhadap harga kulakan baru
-                          const rowProd = products.find((p) => p.id === item.productId);
-                          const margin = rowProd && item.costPrice > 0 ? checkMargin(rowProd.price, item.costPrice, settings.minMarginPercent ?? 10) : null;
+                          const rowCheck = marginIssuesFor(item.productId, item.costPrice);
+                          const rowProd = rowCheck?.prod;
+                          const margin = rowCheck?.base ?? null;
                           return (
                             <tr key={idx} className="bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
                               <td className="py-2 px-3">
@@ -3666,6 +3682,14 @@ export const InventoryView: React.FC = () => {
                                     {margin.status === 'loss'
                                       ? `RUGI ${formatCurrency(-margin.marginRp, settings.currency)}/pcs`
                                       : `margin ${margin.marginPct}%${margin.status === 'thin' ? ' (tipis)' : ''}`}
+                                    {rowCheck && rowCheck.landed !== Math.round(item.costPrice) && (
+                                      <span className="block font-normal text-slate-500">modal setelah diskon/PPN {formatCurrency(rowCheck.landed, settings.currency)}</span>
+                                    )}
+                                    {rowCheck?.units.map((u) => (
+                                      <span key={u.unit} className={`block ${u.m.status === 'loss' ? 'text-rose-700 dark:text-rose-400' : 'text-amber-700 dark:text-amber-400'}`}>
+                                        {u.unit}: {u.m.status === 'loss' ? `RUGI ${formatCurrency(-u.m.marginRp, settings.currency)}` : `margin ${u.m.marginPct}% (tipis)`}
+                                      </span>
+                                    ))}
                                   </div>
                                 )}
                               </td>
@@ -4221,7 +4245,7 @@ export const InventoryView: React.FC = () => {
                 </thead>
                 <tbody>
                   {marginAlerts.items.map((it, i) => (
-                    <tr key={it.productId} className="border-t border-slate-100 dark:border-slate-800">
+                    <tr key={it.productId + (it.unitName || '')} className="border-t border-slate-100 dark:border-slate-800">
                       <td className="p-1.5">
                         <div className="font-semibold text-slate-800 dark:text-slate-100">{it.name}</div>
                         <div className={`text-[11px] font-bold ${it.status === 'loss' ? 'text-rose-700 dark:text-rose-400' : 'text-amber-700 dark:text-amber-400'}`}>
@@ -4231,7 +4255,11 @@ export const InventoryView: React.FC = () => {
                       <td className="p-1.5 text-right font-mono">{formatCurrency(it.price, settings.currency)}</td>
                       <td className="p-1.5 text-right font-mono">{formatCurrency(it.cost, settings.currency)}</td>
                       <td className="p-1.5 text-right">
-                        {activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor' ? (
+                        {it.unitName ? (
+                          <span className="text-[11px] text-slate-600 dark:text-slate-400">
+                            usulan {formatCurrency(it.newPrice, settings.currency)}; ubah harga {it.unitName} di formulir produk
+                          </span>
+                        ) : activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor' ? (
                           <span className="inline-flex items-center gap-1.5">
                             <input
                               type="checkbox"
@@ -4273,9 +4301,9 @@ export const InventoryView: React.FC = () => {
               {(activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor') && !marginAlerts.message && (
                 <button
                   type="button"
-                  disabled={!marginAlerts.items.some((x) => x.apply && x.newPrice > 0)}
+                  disabled={!marginAlerts.items.some((x) => !x.unitName && x.apply && x.newPrice > 0)}
                   onClick={() => {
-                    const chosen = marginAlerts.items.filter((x) => x.apply && x.newPrice > 0);
+                    const chosen = marginAlerts.items.filter((x) => !x.unitName && x.apply && x.newPrice > 0);
                     applyPriceUpdates(chosen.map((x) => ({ productId: x.productId, newPrice: x.newPrice })), `Penerimaan faktur ${marginAlerts.invoice}`);
                     setMarginAlerts({ ...marginAlerts, message: `${chosen.length} harga jual diperbarui dan dicatat di Riwayat Harga.` });
                   }}

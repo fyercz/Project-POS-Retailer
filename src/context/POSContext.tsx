@@ -105,7 +105,7 @@ import {
   INITIAL_PRODUCTS as DEMO_PRODUCTS,
 } from '../data/mockData';
 import { errorMessage } from '../utils/errors';
-import { weightedAverageCost } from '../domain/costing';
+import { weightedAverageCost, invoiceCostFactor, landedUnitCost } from '../domain/costing';
 import { mergeCategories, validateNewCategory } from '../domain/categories';
 import { hasActionPermission } from '../utils/permissions';
 import { makeStockAdjustments, type StockAdjustment } from '../domain/stockAdjustments';
@@ -2599,7 +2599,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         prev.map((p) => {
           if (p.id === item.productId) {
             // Modal rata-rata tertimbang (dulu langsung diganti harga beli terbaru)
-            const newCost = weightedAverageCost(p.stock, p.costPrice, item.quantity, item.costPrice);
+            // Modal per unit setelah diskon & PPN faktur (sama dengan jurnal yang mencatat total faktur)
+            const landed = landedUnitCost(item.costPrice, invoiceCostFactor(purchaseData));
+            const newCost = weightedAverageCost(p.stock, p.costPrice, item.quantity, landed);
             const hasCostChanged = newCost !== p.costPrice;
             let updatedHistory = p.priceHistory ? [...p.priceHistory] : [];
             if (hasCostChanged) {
@@ -2614,7 +2616,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 changeType: 'purchase_receiving',
                 sourceReference: `Faktur ${newPurchase.invoiceNumber}`,
                 supplierName: newPurchase.supplierName,
-                notes: `Penerimaan barang dari faktur pembelian (+${item.quantity} ${p.unit}); harga beli Rp ${Math.round(item.costPrice).toLocaleString('id-ID')}, modal rata-rata Rp ${newCost.toLocaleString('id-ID')}`,
+                notes: `Penerimaan barang dari faktur pembelian (+${item.quantity} ${p.unit}); harga beli Rp ${Math.round(item.costPrice).toLocaleString('id-ID')}${landed !== Math.round(item.costPrice) ? ` (setelah diskon/PPN Rp ${landed.toLocaleString('id-ID')})` : ''}, modal rata-rata Rp ${newCost.toLocaleString('id-ID')}`,
                 recordedBy: newPurchase.receivedBy || 'Staff Gudang',
               };
               updatedHistory.push(rec);

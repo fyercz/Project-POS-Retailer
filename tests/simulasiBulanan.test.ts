@@ -56,6 +56,7 @@ test('cakupan: semua fitur operasional terpakai dalam sebulan', () => {
   for (const m of ['cash', 'transfer', 'store_credit']) assert.ok(rm.has(m), `retur ${m}`);
   assert.ok(sim.salesReturns.some((r) => !r.items[0].restockToInventory), 'retur barang rusak');
   assert.ok(sim.shadow.storeCreditUsedCount > 0, 'saldo toko dipakai belanja');
+  assert.ok(sim.purchases.some((p: any) => p.ppnAmount > 0 && p.discountAmount > 0), 'faktur dengan diskon & PPN');
   assert.ok(sim.customers.every((c: any) => (c.storeCredit || 0) >= 0), 'saldo toko tidak pernah negatif');
   const terms = sim.purchases.map((p) => p.paymentTerms).join('|');
   assert.match(terms, /Tunai/); assert.match(terms, /Tempo/); assert.match(terms, /Konsinyasi/);
