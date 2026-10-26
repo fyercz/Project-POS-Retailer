@@ -27,7 +27,16 @@ export async function addProduct(
   await page.getByTestId('product-price').fill(String(p.price));
   await page.getByTestId('product-stock').fill(String(p.stock));
   await page.getByTestId('product-submit').click();
-  await expect(page.getByTestId('product-submit')).toBeHidden();
+  // Bila ditolak, tampilkan pesan galat formulir agar penyebabnya terlihat
+  const closed = await page.getByTestId('product-submit').waitFor({ state: 'hidden', timeout: 15_000 }).then(() => true).catch(() => false);
+  if (!closed) {
+    const errors = await page
+      .locator('[role="dialog"] [role="alert"], [role="dialog"] [id$="-error"], [role="dialog"] .text-rose-600, [role="dialog"] .text-rose-700')
+      .allInnerTexts()
+      .catch(() => []);
+    const category = await page.getByTestId('product-category').inputValue().catch(() => '?');
+    throw new Error(`Produk "${p.name}" tidak tersimpan. Kategori="${category}". Pesan formulir: ${JSON.stringify(errors.filter(Boolean))}`);
+  }
 }
 
 /** Tunggu sampai sebuah daftar (array) dengan panjang minimal tertentu tersimpan di IndexedDB aplikasi. */
