@@ -32,7 +32,7 @@ test.beforeEach(async ({ page }) => {
 test('perbarui harga dari file: pratinjau, centang, terapkan, riwayat harga; kasir tidak bisa', async ({ page }) => {
   test.setTimeout(180_000);
   await registerOwner(page, { store: 'Toko Harga' });
-  await addProduct(page, { name: 'Merica Bubuk 4G', sku: 'MRC-4', barcode: '2000000004001', cost: 792, price: 500, stock: 50 });
+  await addProduct(page, { name: 'Merica Bubuk 4G', sku: 'MRC-4', barcode: '2000000004001', cost: 450, price: 500, stock: 50 });
   await addProduct(page, { name: 'Air Botol 330ml', sku: 'AIR-330', barcode: '2000000004002', cost: 1400, price: 1500, stock: 30 });
   await addProduct(page, { name: 'Permen Mint', sku: 'PRM-1', barcode: '2000000004003', cost: 400, price: 500, stock: 100 });
 
