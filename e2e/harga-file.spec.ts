@@ -58,7 +58,11 @@ test('perbarui harga dari file: pratinjau, centang, terapkan, riwayat harga; kas
   // Kasir tidak melihat menu perbarui harga
   await addEmployee(page, { name: 'Siti Kasir', role: 'cashier', pin: '4826' });
   await lockAndLogin(page, 'Siti Kasir', '4826');
-  await expect(page.locator('#nav-btn-inventory')).toHaveCount(0);
+  // Tombol Katalog tetap tampil (bertanda kunci), tetapi Kasir tidak bisa sampai ke menu perbarui harga
+  await page.locator('#nav-btn-inventory').click().catch(() => {});
+  const audit = page.locator('#btn-dropdown-audit');
+  if (await audit.isVisible().catch(() => false)) await audit.click();
+  await expect(page.locator('#btn-price-update-file')).toHaveCount(0);
 });
 
 test('impor produk dari file Excel (.xlsx) lewat Impor File Langsung', async ({ page }) => {
