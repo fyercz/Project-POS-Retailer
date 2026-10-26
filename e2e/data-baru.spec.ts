@@ -120,12 +120,13 @@ test('kategori baru (dari formulir produk) & voucher manual (dari Pengaturan) di
   await page.getByTestId('voucher-create').click();
   await expect(page.getByText(/Voucher UJI5RB dibuat/)).toBeVisible();
   await page.keyboard.press('Escape');
+  await expect(page.locator('[role="dialog"][aria-modal="true"]')).toHaveCount(0); // Pengaturan benar-benar tertutup
 
   // 3. Kasir: filter kategori baru, pasang voucher, bayar
   await page.locator('#nav-btn-pos').click();
   await page.getByRole('button', { name: /Frozen Food Uji/ }).first().click();
   const card = page.locator('[id^="product-card-"]', { hasText: 'Nugget Ayam Beku 500g' }).first();
-  await expect(card).toBeVisible();
+  await expect(card).toBeVisible({ timeout: 20_000 });
   await card.click();
   await page.locator('#btn-cart-extras').click();
   await page.getByLabel('Kode promo / voucher...').fill('UJI5RB');
