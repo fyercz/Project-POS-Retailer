@@ -4218,7 +4218,8 @@ export const InventoryView: React.FC = () => {
       {/* Periksa harga jual setelah terima barang (dulu tidak ada peringatan sama sekali) */}
       {marginAlerts && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3">
-          <div role="dialog" aria-modal="true" aria-labelledby="margin-alert-title" className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
+          {/* role="dialog" & label dipasang otomatis di lapisan luar oleh useGlobalDialogA11y */}
+          <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-start justify-between gap-2">
                 <h3 id="margin-alert-title" className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
