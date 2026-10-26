@@ -38,10 +38,14 @@ test('retur ke saldo toko member lalu dipakai belanja; nota tanpa member tidak b
   const txs = await readStored(page, 'pos_retail_tx_v3');
   const withMember = txs.find((t: any) => t.customer?.name === 'Bu Saldo');
   const without = txs.find((t: any) => !t.customer);
-  await page.locator('tr, [role="row"], div', { hasText: without.invoiceNumber }).getByTitle('Retur Item Penjualan').first().click();
+  // Tombol retur pada baris TERDEKAT yang memuat nomor nota (bukan wadah berisi semua nota)
+  const returnButtonOf = (invoice: string) =>
+    page.locator(`xpath=//*[contains(normalize-space(text()), "${invoice}")]/ancestor::*[.//button[@title="Retur Item Penjualan"]][1]//button[@title="Retur Item Penjualan"]`).first();
+  await returnButtonOf(without.invoiceNumber).click();
   await expect(page.getByRole('button', { name: 'Saldo Toko', exact: true })).toBeDisabled();
   await page.keyboard.press('Escape');
-  await page.locator('tr, [role="row"], div', { hasText: withMember.invoiceNumber }).getByTitle('Retur Item Penjualan').first().click();
+  await returnButtonOf(withMember.invoiceNumber).click();
+  await expect(page.getByRole('button', { name: 'Saldo Toko', exact: true })).toBeEnabled();
   await page.getByRole('dialog').getByRole('button', { name: 'Tambah' }).first().click();
   await page.getByLabel('Alasan Retur').first().selectOption({ index: 1 });
   await page.getByRole('button', { name: 'Saldo Toko', exact: true }).click();
