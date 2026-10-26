@@ -82,3 +82,20 @@ test('impor produk dari file Excel (.xlsx) lewat Impor File Langsung', async ({ 
   await page.reload();
   await expect.poll(stock, { timeout: 15_000 }).toEqual({ 'A MILD 16': '44000/7', 'ABAH NAGET AYAM 250G': '13000/3' });
 });
+
+test('formulir produk menerima harga bukan kelipatan 100 (mis. modal impor Rp 35.425)', async ({ page }) => {
+  test.setTimeout(120_000);
+  await registerOwner(page, { store: 'Toko Harga Ganjil' });
+  // Dulu kolom harga berkelipatan Rp 100: browser diam-diam menolak Simpan untuk modal seperti 35.425
+  await addProduct(page, { name: 'A MILD 16', sku: 'AMILD-16', barcode: '8999909096004', cost: 35425, price: 44000, stock: 7 });
+  await page.locator('tr', { hasText: 'A MILD 16' }).first().getByRole('button', { name: 'Edit Data Item Barang' }).click();
+  await page.getByTestId('product-name').fill('A MILD 16 BTG');
+  await page.getByTestId('product-price').fill('44150');
+  await page.getByTestId('product-submit').click();
+  await expect(page.getByTestId('product-submit')).toBeHidden();
+  const p = async () => {
+    const x = (await readStored(page, 'pos_retail_products_v3'))[0];
+    return x ? `${x.name}|${x.costPrice}|${x.price}` : '';
+  };
+  await expect.poll(p, { timeout: 10_000 }).toBe('A MILD 16 BTG|35425|44150');
+});

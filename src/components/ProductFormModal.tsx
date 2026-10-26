@@ -896,7 +896,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <input aria-invalid={Boolean(errors.costPrice)} aria-describedby={errors.costPrice ? 'err-productformmodal-costPrice' : undefined} aria-label="Harga Modal / Beli (HPP)"
                     type="number"
                     min={0}
-                    step={100}
+                    step={1}
                     data-testid="product-cost" value={costPrice || ''}
                     onChange={(e) => setCostPrice(Number(e.target.value))}
                     placeholder="0"
@@ -915,7 +915,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <input aria-invalid={Boolean(errors.price)} aria-describedby={errors.price ? 'err-productformmodal-price' : undefined} aria-label="Harga Jual Konsumen (Eceran)"
                     type="number"
                     min={0}
-                    step={100}
+                    step={1}
                     data-testid="product-price" value={price || ''}
                     onChange={(e) => setPrice(Number(e.target.value))}
                     placeholder="0"

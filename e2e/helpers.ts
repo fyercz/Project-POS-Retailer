@@ -30,10 +30,17 @@ export async function addProduct(
   // Bila ditolak, tampilkan pesan galat formulir agar penyebabnya terlihat
   const closed = await page.getByTestId('product-submit').waitFor({ state: 'hidden', timeout: 15_000 }).then(() => true).catch(() => false);
   if (!closed) {
-    const errors = await page
-      .locator('[role="dialog"] [role="alert"], [role="dialog"] [id$="-error"], [role="dialog"] .text-rose-600, [role="dialog"] .text-rose-700')
+    const errors: string[] = await page
+      .locator('[role="dialog"] [role="alert"], [role="dialog"] [id$="-error"]')
       .allInnerTexts()
       .catch(() => []);
+    // Validasi bawaan browser (mis. step/min) tidak tampil sebagai teks: ambil pesannya langsung
+    const native = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('[role="dialog"] input, [role="dialog"] select'))
+        .filter((el) => !(el as HTMLInputElement).checkValidity())
+        .map((el) => `${(el as HTMLElement).dataset.testid || (el as HTMLInputElement).name}: ${(el as HTMLInputElement).validationMessage}`)
+    );
+    errors.push(...native);
     const category = await page.getByTestId('product-category').inputValue().catch(() => '?');
     throw new Error(`Produk "${p.name}" tidak tersimpan. Kategori="${category}". Pesan formulir: ${JSON.stringify(errors.filter(Boolean))}`);
   }
