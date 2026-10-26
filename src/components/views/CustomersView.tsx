@@ -568,6 +568,12 @@ export const CustomersView: React.FC = () => {
             {/* Modal Body */}
             <div className="p-5 flex-1 overflow-y-auto space-y-4">
               {/* Ubah data member (dulu tidak bisa diubah dari tampilan) */}
+              {(detailCustomer.storeCredit || 0) > 0 && (
+                <div data-testid="customer-store-credit" className="p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 text-xs flex justify-between">
+                  <span className="text-slate-700 dark:text-slate-200">Saldo toko (dari retur, bisa dipakai saat belanja)</span>
+                  <strong className="font-mono text-emerald-700 dark:text-emerald-400">{formatCurrency(detailCustomer.storeCredit || 0, settings.currency)}</strong>
+                </div>
+              )}
               {!editForm ? (
                 <button
                   type="button"

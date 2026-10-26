@@ -89,7 +89,7 @@ export function runMonthSimulation(seed = 20261001) {
   const cashiers = [{ id: 'k1', name: 'Siti (Kasir)', role: 'cashier' }, { id: 'k2', name: 'Dewi (Kasir)', role: 'cashier' }];
 
   // Bayangan (dihitung terpisah dari fungsi laporan aplikasi)
-  const shadow = { cashDrawer: INITIAL_CASH, bank: INITIAL_BANK, edc: 0, payable: 0, consignmentPayable: 0, storeCredit: 0, supplierReceivable: 0, opnameLossValue: 0, supplierReturnValue: 0, pointsEarned: 0, pointsUsed: 0, revaluationRounding: 0, returnRevaluation: 0 };
+  const shadow = { cashDrawer: INITIAL_CASH, bank: INITIAL_BANK, edc: 0, payable: 0, consignmentPayable: 0, storeCredit: 0, supplierReceivable: 0, opnameLossValue: 0, supplierReturnValue: 0, pointsEarned: 0, pointsUsed: 0, revaluationRounding: 0, returnRevaluation: 0, storeCreditUsedCount: 0 };
 
   const setStock = (deltas: { productId: string; delta: number }[]) => {
     const updated = applyStockDeltas(products, deltas);
@@ -173,24 +173,30 @@ export function runMonthSimulation(seed = 20261001) {
       const wantPoints = customer && customer.points >= 50 && rnd() < 0.3 ? Math.min(customer.points, 100) : 0;
       const totals = computeCartTotals({ cart, voucher, customer, pointsToRedeem: wantPoints, pointRedemptionRate: settings.pointRedemptionRate, pointsRatio: settings.pointsRatio });
       const method = ((r) => (r < 0.6 ? 'cash' : r < 0.85 ? 'qris' : r < 0.93 ? 'card' : 'transfer'))(rnd());
-      const tendered = method === 'cash' ? Math.ceil(totals.finalTotal / 5000) * 5000 : totals.finalTotal;
+      // Member yang punya saldo toko memakainya (seperti processPayment: dibatasi saldo & total)
+      const storeCreditUsed = customer && (customer.storeCredit || 0) > 0 ? Math.min(customer.storeCredit, totals.finalTotal) : 0;
+      const due = totals.finalTotal - storeCreditUsed;
+      const tendered = method === 'cash' ? Math.ceil(due / 5000) * 5000 : due;
       const tx: any = {
         id: `tx-${++txSeq}`, invoiceNumber: `INV-202610${String(day).padStart(2, '0')}-${String(txSeq).padStart(4, '0')}`, orderType: 'takeaway',
         customer: customer ? { ...customer } : undefined, items: cart, subtotal: totals.subtotal, taxAmount: 0, serviceChargeAmount: 0,
         discountAmount: totals.totalDiscount, voucherCode: voucher && totals.voucherDiscount > 0 ? voucher.code : undefined,
         pointsUsed: totals.effectivePointsToRedeem, pointsDiscount: totals.pointsDiscount, pointsEarned: customer ? totals.pointsEarned : 0,
-        finalTotal: totals.finalTotal, payment: { method, amountTendered: tendered, change: tendered - totals.finalTotal },
+        finalTotal: totals.finalTotal, storeCreditUsed: storeCreditUsed || undefined, payment: { method, amountTendered: tendered, change: tendered - due },
         cashierName: cashier.name, branchName: 'Uji', createdAt: iso(day, hour, minute), status: 'completed',
       };
       transactions.push(tx);
       setStock(saleStockDeltas(cart));
-      shift = applySaleToShift(shift, tx.finalTotal, method === 'cash');
+      shift = applySaleToShift(shift, tx.finalTotal - storeCreditUsed, method === 'cash');
       if (customer) {
         customer.points = customer.points - tx.pointsUsed + tx.pointsEarned;
         customer.totalSpent += tx.finalTotal; customer.ordersCount++;
+        customer.storeCredit = (customer.storeCredit || 0) - storeCreditUsed;
+        shadow.storeCredit -= storeCreditUsed;
+        shadow.storeCreditUsedCount += storeCreditUsed > 0 ? 1 : 0;
         shadow.pointsEarned += tx.pointsEarned; shadow.pointsUsed += tx.pointsUsed;
       }
-      if (method === 'cash') shadow.cashDrawer += tx.finalTotal; else if (method === 'card') shadow.edc += tx.finalTotal; else shadow.bank += tx.finalTotal;
+      if (method === 'cash') shadow.cashDrawer += due; else if (method === 'card') shadow.edc += due; else shadow.bank += due;
       serverOps.push({ path: '/api/lan/data/push-transaction', body: { transaction: structuredClone(tx), clientId: 'sim', clientName: 'Simulasi' } }); // salinan, seperti antrean kirim
       dayStart.sales += tx.finalTotal; dayStart.tx++;
 
@@ -207,14 +213,16 @@ export function runMonthSimulation(seed = 20261001) {
 
     // Retur penjualan (~2-3 per minggu): tunai / transfer / saldo toko; kembali ke stok atau rusak
     if (rnd() < 0.4) {
-      const candidates = transactions.filter((x) => x.status === 'completed' && x.createdAt < iso(day, 7) && !x.returnedAmount);
+      const nextMethod = (['cash', 'transfer', 'store_credit', 'cash'] as const)[retSeq % 4];
+      // Retur "Saldo Toko" hanya untuk nota bermember (aturan aplikasi)
+      const candidates = transactions.filter((x) => x.status === 'completed' && x.createdAt < iso(day, 7) && !x.returnedAmount && (nextMethod !== 'store_credit' || x.customer?.id));
       const src: any = candidates.length ? pick(candidates) : null;
       if (src) {
         const line: any = pick(src.items as any[]);
         const mult = line.selectedUnit?.multiplier ?? 1;
         const share = src.subtotal > 0 ? src.finalTotal / src.subtotal : 1; // refund mengikuti harga setelah diskon
         const refund = Math.round(line.unitPrice * share);
-        const method = (['cash', 'transfer', 'store_credit', 'cash'] as const)[retSeq % 4]; // bergiliran: semua jalur teruji
+        const method = nextMethod; // bergiliran: semua jalur teruji
         const restock = (retSeq + 1) % 4 !== 0 && rnd() < 0.9; // setiap retur ke-4: barang rusak (tidak kembali ke stok)
         const r: any = {
           id: `ret-${++retSeq}`, returnNumber: `RTR-${String(retSeq).padStart(3, '0')}`, transactionId: src.id, invoiceNumber: src.invoiceNumber, customerName: src.customer?.name,
@@ -230,7 +238,12 @@ export function runMonthSimulation(seed = 20261001) {
           serverOps.push({ path: '/api/lan/data/stock-return', body: { key: `ret-${r.id}`, kind: 'return', items: [{ productId: line.product.id, quantity: 1, unitMultiplier: mult }], transactionId: src.id } });
         }
         if (method === 'cash') { shift = applyCashOut(shift, refund); shadow.cashDrawer -= refund; }
-        else if (method === 'transfer') shadow.bank -= refund; else shadow.storeCredit += refund;
+        else if (method === 'transfer') shadow.bank -= refund;
+        else {
+          shadow.storeCredit += refund;
+          const owner = customers.find((c) => c.id === src.customer.id)!;
+          owner.storeCredit = (owner.storeCredit || 0) + refund;
+        }
         dayStart.returns++;
       }
     }
