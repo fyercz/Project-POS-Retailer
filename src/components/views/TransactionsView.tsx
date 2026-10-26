@@ -1243,6 +1243,10 @@ export const TransactionsView: React.FC = () => {
                       <button
                         key={m.id}
                         type="button"
+                        aria-pressed={refundMethod === m.id}
+                        // Saldo toko harus dimiliki member: hanya untuk nota bermember
+                        disabled={m.id === 'store_credit' && !selectedTxForReturn?.customer?.id}
+                        title={m.id === 'store_credit' && !selectedTxForReturn?.customer?.id ? 'Hanya untuk nota yang memakai member' : undefined}
                         onClick={() => setRefundMethod(m.id as any)}
                         className={`py-1.5 px-2 rounded-xl text-xs font-semibold cursor-pointer border transition-colors text-center ${
                           refundMethod === m.id
@@ -1254,6 +1258,15 @@ export const TransactionsView: React.FC = () => {
                       </button>
                     ))}
                   </div>
+                  {!selectedTxForReturn?.customer?.id ? (
+                    <p className="text-[11px] text-slate-500 mt-1">Saldo Toko hanya untuk nota yang memakai member.</p>
+                  ) : (
+                    refundMethod === 'store_credit' && (
+                      <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-1">
+                        Saldo masuk ke member {selectedTxForReturn.customer.name} dan bisa dipakai saat belanja berikutnya.
+                      </p>
+                    )
+                  )}
                 </div>
 
                 {/* Note */}

@@ -26,7 +26,12 @@ interface PaymentModalProps {
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) => {
-  const { finalTotal, cart, selectedCustomer, pointsEarned } = usePOSCart();
+  const { finalTotal: billTotal, cart, selectedCustomer, pointsEarned } = usePOSCart();
+  // Saldo toko member: bila dipakai, 'finalTotal' di komponen ini = SISA yang dibayar lewat metode lain
+  const storeCreditBalance = Math.max(0, Math.round(selectedCustomer?.storeCredit || 0));
+  const [useStoreCredit, setUseStoreCredit] = useState(false);
+  const storeCreditApplied = useStoreCredit ? Math.min(storeCreditBalance, Math.round(billTotal)) : 0;
+  const finalTotal = billTotal - storeCreditApplied;
   const { processPayment } = usePOSTransactions();
   const { settings, isOnline } = usePOSUI();
 
@@ -44,6 +49,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
   // Kosongkan kolom setiap kali layar pembayaran dibuka
   useEffect(() => {
     if (isOpen) {
+      setUseStoreCredit(false);
       setCashTendered(0);
       setCardBank('');
       setQrisRefCode('');
@@ -52,7 +58,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
       setCardBatch('');
       setCardLast4('');
     }
-  }, [isOpen, finalTotal]);
+  }, [isOpen, billTotal]); // total belanja (bukan sisa): mencentang saldo toko tidak mengosongkan isian
 
   if (!isOpen) return null;
 
@@ -126,7 +132,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
       };
     }
 
-    processPayment(paymentDetails);
+    processPayment({ ...paymentDetails, ...(storeCreditApplied > 0 ? { storeCreditUsed: storeCreditApplied } : {}) });
   };
 
   return (
@@ -529,11 +535,24 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
               )}
             </div>
 
+            {/* Saldo toko member */}
+            {storeCreditBalance > 0 && (
+              <label className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 text-xs cursor-pointer">
+                <span className="flex items-center gap-2">
+                  <input type="checkbox" data-testid="use-store-credit" checked={useStoreCredit} onChange={(e) => setUseStoreCredit(e.target.checked)} />
+                  <span>
+                    Pakai saldo toko <strong>{selectedCustomer?.name}</strong> ({formatCurrency(storeCreditBalance, settings.currency)})
+                  </span>
+                </span>
+                {storeCreditApplied > 0 && <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">-{formatCurrency(storeCreditApplied, settings.currency)}</span>}
+              </label>
+            )}
+
             {/* Total Block & Submit Button */}
             <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
               <div className="flex items-baseline justify-between">
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  Total Tagihan
+                  {storeCreditApplied > 0 ? 'Sisa Dibayar' : 'Total Tagihan'}
                 </span>
                 <span className="text-xl font-black font-mono text-emerald-700 dark:text-emerald-400">
                   {formatCurrency(finalTotal, settings.currency)}

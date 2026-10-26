@@ -175,6 +175,8 @@ export interface Customer {
   phone: string;
   email?: string;
   tier: MemberTier;
+  /** Saldo toko (Rp) dari retur yang dibayar dengan saldo; bisa dipakai saat belanja */
+  storeCredit?: number;
   points: number;
   totalSpent: number;
   ordersCount: number;
@@ -240,6 +242,8 @@ export interface PaymentDetails {
   referenceCode?: string;
   edcBatchNumber?: string;
   approvalCode?: string;
+  /** Bagian tagihan yang dibayar dengan saldo toko member (sisanya lewat metode di atas) */
+  storeCreditUsed?: number;
 }
 
 export interface Transaction {
@@ -265,6 +269,8 @@ export interface Transaction {
   cashierName: string;
   branchName: string;
   createdAt: string;
+  /** Bagian tagihan yang dibayar dengan saldo toko member */
+  storeCreditUsed?: number;
   /** Siapa yang menyetujui void & kapan (jejak audit) */
   voidedBy?: string;
   voidedAt?: string;
