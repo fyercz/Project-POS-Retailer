@@ -701,6 +701,8 @@ export interface BackupPayload {
     transactions?: Transaction[];
     salesReturns?: SalesReturn[];
     purchaseReturns?: PurchaseReturn[];
+    /** Riwayat penyesuaian persediaan (opname/koreksi) untuk pembukuan */
+    stockAdjustments?: Array<{ id: string; date: string; productId: string; productName: string; delta: number; unitCost: number; value: number; reason: string; recordedBy?: string }>;
     supplierPurchases?: SupplierPurchase[];
     settings?: StoreSettings;
     vouchers?: Voucher[];
@@ -820,7 +822,7 @@ export interface JournalEntry {
   id: string;
   date: string;
   referenceNumber: string; // e.g. INV-..., RET-..., PO-..., EXP-...
-  sourceType: 'sale' | 'sales_return' | 'purchase_order' | 'supplier_payment' | 'shift_adjustment' | 'expense' | 'initial_balance' | 'purchase_return';
+  sourceType: 'sale' | 'sales_return' | 'purchase_order' | 'supplier_payment' | 'shift_adjustment' | 'expense' | 'initial_balance' | 'purchase_return' | 'stock_adjustment';
   description: string;
   lines: JournalLineItem[];
   totalDebit: number;
@@ -898,8 +900,11 @@ export interface IncomeStatement {
     byCategory: Record<ExpenseCategory, number>;
     cashShortExpense: number; // Beban selisih kas minus saat tutup shift
     pointsExpense?: number; // Beban program poin member (akun 6040)
+    inventoryLoss?: number; // Beban selisih persediaan (akun 6050)
     totalOperatingExpenses: number;
   };
+  /** Pendapatan selisih persediaan (akun 4040), sudah termasuk di otherIncome */
+  inventoryGain?: number;
   /** Pendapatan lain-lain: kelebihan kas saat tutup shift (akun 4030) */
   otherIncome?: number;
   netOperatingProfit: number;

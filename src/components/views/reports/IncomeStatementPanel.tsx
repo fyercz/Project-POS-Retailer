@@ -162,6 +162,13 @@ export const IncomeStatementPanel: React.FC<IncomeStatementPanelProps> = ({ date
                         );
                       })}
 
+                      {(dateFilteredIncome.operatingExpenses.inventoryLoss ?? 0) > 0 && (
+                        <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/40">
+                          <span className="font-sans">6050 • Beban Selisih Persediaan (opname / koreksi stok)</span>
+                          <span>-{formatCurrency(dateFilteredIncome.operatingExpenses.inventoryLoss ?? 0, settings.currency)}</span>
+                        </div>
+                      )}
+
                       {(dateFilteredIncome.operatingExpenses.pointsExpense ?? 0) > 0 && (
                         <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/40">
                           <span className="font-sans">6040 • Beban Program Poin Member (poin diberikan)</span>
@@ -185,7 +192,7 @@ export const IncomeStatementPanel: React.FC<IncomeStatementPanelProps> = ({ date
 
                   {(dateFilteredIncome.otherIncome ?? 0) > 0 && (
                     <div className="flex justify-between py-1.5 px-2 text-xs">
-                      <span className="font-sans text-slate-700 dark:text-slate-300">4030 • Pendapatan lain-lain (kelebihan kas shift)</span>
+                      <span className="font-sans text-slate-700 dark:text-slate-300">4030/4040 • Pendapatan lain-lain (kelebihan kas shift, selisih stok lebih)</span>
                       <span className="font-mono text-emerald-700 dark:text-emerald-400">+{formatCurrency(dateFilteredIncome.otherIncome ?? 0, settings.currency)}</span>
                     </div>
                   )}

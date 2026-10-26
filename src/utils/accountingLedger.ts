@@ -13,6 +13,7 @@ import {
   ExpenseCategory,
 } from '../types';
 import { lineCogs, returnedCogs } from './cogs';
+import { summarizeAdjustments, type StockAdjustment } from '../domain/stockAdjustments';
 
 export type { ExpenseCategory };
 
@@ -108,6 +109,8 @@ export const STANDARD_CHART_OF_ACCOUNTS: ChartOfAccount[] = [
   // 6000 - BEBAN OPERASIONAL
   { code: '6010', name: 'Beban Operasional Toko', category: 'expense', normalBalance: 'debit', description: 'Biaya utilitas, token listrik, internet, air, operasional' },
   { code: '6020', name: 'Beban Selisih Kas Shift', category: 'expense', normalBalance: 'debit', description: 'Kerugian selisih minus fisik uang saat tutup shift kasir' },
+  { code: '6050', name: 'Beban Selisih Persediaan', category: 'expense', normalBalance: 'debit', description: 'Barang hilang/rusak hasil stock opname atau koreksi stok (dinilai harga modal).' },
+  { code: '4040', name: 'Pendapatan Selisih Persediaan', category: 'revenue', normalBalance: 'credit', description: 'Barang lebih dari catatan hasil stock opname atau koreksi stok.' },
   { code: '6040', name: 'Beban Program Poin Member', category: 'expense', normalBalance: 'debit', description: 'Nilai poin loyalitas yang diberikan kepada member (dicatat saat poin diperoleh).' },
   { code: '6030', name: 'Beban Retur Penjualan', category: 'expense', normalBalance: 'debit', description: 'Pengembalian dana akibat retur barang konsumen' },
 ];
@@ -147,6 +150,7 @@ export function generateJournalEntries(options: {
   initialBankBalance?: number;
   purchaseReturns?: Array<{ id: string; returnNumber?: string; supplierName: string; totalAmount: number; createdAt: string; status?: string }>;
   pointRedemptionRate?: number;
+  stockAdjustments?: StockAdjustment[];
 }): JournalEntry[] {
   const {
     transactions = [],
@@ -159,6 +163,7 @@ export function generateJournalEntries(options: {
     initialBankBalance = 0,
     purchaseReturns = [],
     pointRedemptionRate = 100,
+    stockAdjustments = [],
   } = options;
 
   const entries: JournalEntry[] = [];
@@ -549,6 +554,32 @@ export function generateJournalEntries(options: {
   }
 
   // Sort chronologically descending
+  // Penyesuaian persediaan (opname/koreksi): dulu tidak dijurnal sama sekali
+  for (const a of stockAdjustments) {
+    const v = Math.round(Math.abs(Number(a.value) || 0));
+    if (v <= 0) continue;
+    const loss = a.value < 0;
+    entries.push({
+      id: `jrnl-adj-${a.id}`,
+      date: a.date,
+      referenceNumber: `ADJ-${a.id.slice(-5).toUpperCase()}`,
+      sourceType: 'stock_adjustment',
+      description: `Penyesuaian stok ${a.productName} (${a.delta > 0 ? '+' : ''}${a.delta}): ${a.reason}`,
+      lines: loss
+        ? [
+            { accountCode: '6050', accountName: 'Beban Selisih Persediaan', debit: v, credit: 0, memo: a.reason },
+            { accountCode: '1050', accountName: 'Persediaan Barang Dagang', debit: 0, credit: v, memo: 'Barang berkurang' },
+          ]
+        : [
+            { accountCode: '1050', accountName: 'Persediaan Barang Dagang', debit: v, credit: 0, memo: 'Barang lebih dari catatan' },
+            { accountCode: '4040', accountName: 'Pendapatan Selisih Persediaan', debit: 0, credit: v, memo: a.reason },
+          ],
+      totalDebit: v,
+      totalCredit: v,
+      isBalanced: true,
+    });
+  }
+
   // Retur ke supplier: persediaan keluar; mengurangi hutang (tempo/konsinyasi) atau menjadi piutang
   const supAlloc = allocateSupplierReturns(supplierPurchases, purchaseReturns);
   for (const r of purchaseReturns) {
@@ -589,6 +620,7 @@ export function computeIncomeStatement(options: {
   startDate?: string;
   endDate?: string;
   pointRedemptionRate?: number;
+  stockAdjustments?: StockAdjustment[];
 }): IncomeStatement {
   const {
     transactions = [],
@@ -598,6 +630,7 @@ export function computeIncomeStatement(options: {
     startDate,
     endDate,
     pointRedemptionRate = 100,
+    stockAdjustments = [],
   } = options;
 
   let startMs = 0;
@@ -706,10 +739,14 @@ export function computeIncomeStatement(options: {
   }
 
   const expenseItemsSum = Object.values(byCategory).reduce((a, b) => a + b, 0);
-  const totalOperatingExpenses = expenseItemsSum + cashShortExpense + pointsExpense;
+  // Selisih persediaan (opname/koreksi) dalam periode: kurang = beban 6050, lebih = pendapatan 4040
+  const adj = summarizeAdjustments(stockAdjustments, startMs, endMs);
+  const inventoryLoss = adj.loss;
+  const inventoryGain = adj.gain;
+  const totalOperatingExpenses = expenseItemsSum + cashShortExpense + pointsExpense + inventoryLoss;
 
   // 6. Net Operating Profit
-  const netOperatingProfit = grossProfit - totalOperatingExpenses + cashOverIncome;
+  const netOperatingProfit = grossProfit - totalOperatingExpenses + cashOverIncome + inventoryGain;
   const netProfitMarginPercent = netSales > 0 ? (netOperatingProfit / netSales) * 100 : 0;
 
   return {
@@ -726,9 +763,11 @@ export function computeIncomeStatement(options: {
       byCategory,
       cashShortExpense,
       pointsExpense,
+      inventoryLoss,
       totalOperatingExpenses,
     },
-    otherIncome: cashOverIncome,
+    otherIncome: cashOverIncome + inventoryGain,
+    inventoryGain,
     netOperatingProfit,
     netProfitMarginPercent,
   };
@@ -751,6 +790,7 @@ export function computeBalanceSheet(options: {
   initialCashInDrawer?: number;
   initialBankBalance?: number;
   pointRedemptionRate?: number;
+  stockAdjustments?: StockAdjustment[];
 }): BalanceSheet {
   const {
     products = [],
@@ -765,6 +805,7 @@ export function computeBalanceSheet(options: {
     initialCashInDrawer = 0,
     initialBankBalance = 0,
     pointRedemptionRate = 100,
+    stockAdjustments = [],
   } = options;
 
   // 1. Merchandise Inventory Valuation (Nilai Total Fisik Stok Toko)
@@ -899,6 +940,7 @@ export function computeBalanceSheet(options: {
     shifts,
     expenses,
     pointRedemptionRate,
+    stockAdjustments,
   });
   const currentPeriodNetIncome = incomeStmt.netOperatingProfit;
 

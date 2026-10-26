@@ -13,6 +13,7 @@ import { saleStockDeltas, applyStockDeltas, linesToDeltas, voidRestockLines } fr
 import { newShift, applySaleToShift, applyCashOut, closeShift, expectedCashOf } from '../../src/domain/shiftCash.ts';
 import { lineCogs, returnedCogs } from '../../src/utils/cogs.ts';
 import { weightedAverageCost } from '../../src/domain/costing.ts';
+import { makeStockAdjustments } from '../../src/domain/stockAdjustments.ts';
 
 // ---------- RNG deterministik ----------
 function mulberry32(seed: number) {
@@ -309,16 +310,18 @@ export function runMonthSimulation(seed = 20261001) {
     daily.push({ date: ymd(day), transaksi: dayStart.tx, penjualan: dayStart.sales, void: dayStart.voids, retur: dayStart.returns, kasDiharapkan: expectedCashOf(shift), kasDihitung: counted, selisih: diff });
   }
 
-  // ---------- Stock opname 31 Oktober: beberapa barang hilang/rusak ----------
+  // ---------- Stock opname 31 Oktober: beberapa barang hilang/rusak (dicatat sebagai penyesuaian) ----------
+  const stockAdjustments: any[] = [];
   for (const [pid, delta] of [['permen', -12], ['sampo', -5], ['keripik', -2], ['kopi', 3]] as Array<[string, number]>) {
     const p = byId.get(pid)!; const d = Math.max(-p.stock, delta);
     opname.push({ productId: pid, name: p.name, before: p.stock, after: p.stock + d, delta: d, value: d * p.costPrice });
+    stockAdjustments.push(...makeStockAdjustments([p], [{ id: pid, stock: p.stock + d }], 'Stock opname Oktober', 'Owner', new Date(iso(31, 21))));
     setStock([{ productId: pid, delta: d }]);
     shadow.opnameLossValue += d * p.costPrice;
   }
   serverOps.push({ path: '/api/lan/data/stock-adjust', body: { key: 'adj-opname-okt', items: opname.map((o) => ({ productId: o.productId, delta: o.delta })), reason: 'Stock opname Oktober' } });
 
-  return { products, customers, vouchers, transactions, salesReturns, purchases, purchaseReturns, expenses, shifts, opname, priceChanges, daily, log, serverOps, shadow, openingPoints, INITIAL_CAPITAL, INITIAL_CASH, INITIAL_BANK, settings };
+  return { products, customers, vouchers, transactions, salesReturns, purchases, purchaseReturns, expenses, shifts, opname, stockAdjustments, priceChanges, daily, log, serverOps, shadow, openingPoints, INITIAL_CAPITAL, INITIAL_CASH, INITIAL_BANK, settings };
 }
 
 /** Pembukuan bayangan: laba rugi dihitung langsung dari data mentah, terpisah dari accountingLedger. */
@@ -333,6 +336,8 @@ export function shadowIncome(sim: ReturnType<typeof runMonthSimulation>) {
   const expenses = sim.expenses.reduce((s, e) => s + e.amount, 0) + pointsExpense;
   const shortage = sim.shifts.reduce((s, sh) => s + Math.max(0, -(sh.difference || 0)), 0);
   const overage = sim.shifts.reduce((s, sh) => s + Math.max(0, sh.difference || 0), 0);
+  const inventoryLoss = sim.opname.reduce((s: number, o: any) => s + Math.max(0, -o.value), 0);
+  const inventoryGain = sim.opname.reduce((s: number, o: any) => s + Math.max(0, o.value), 0);
   const netSales = gross - discounts - returns;
-  return { gross, discounts, returns, netSales, cogs: Math.round(cogs), grossProfit: netSales - Math.round(cogs), expenses, pointsExpense, shortage, overage, net: netSales - Math.round(cogs) - expenses - shortage + overage };
+  return { gross, discounts, returns, netSales, cogs: Math.round(cogs), grossProfit: netSales - Math.round(cogs), expenses, pointsExpense, shortage, overage, inventoryLoss, inventoryGain, net: netSales - Math.round(cogs) - expenses - shortage + overage - inventoryLoss + inventoryGain };
 }
