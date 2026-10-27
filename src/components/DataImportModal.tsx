@@ -413,7 +413,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
                   title="Unggah file CSV, TXT, atau TSV"
                 >
                   <FileUp className="w-3.5 h-3.5" />
@@ -463,7 +463,7 @@ export const DataImportModal: React.FC<DataImportModalProps> = ({ isOpen, onClos
               value={rawInput}
               onChange={(e) => setRawInput(e.target.value)}
               placeholder="Contoh: 8999999190112, indomi grg spsial 80 gr, 2700, 3100, 120&#10;8992775211029, myk grg bmol 2 ltr, 33500, 38500, 36..."
-              className="w-full p-3 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none leading-relaxed shadow-inner"
+              className="w-full p-3 text-xs font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none leading-relaxed"
             />
           </div>
 

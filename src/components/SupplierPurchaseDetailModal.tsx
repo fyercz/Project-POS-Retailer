@@ -479,7 +479,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
             <button
               type="button"
               onClick={() => handlePrintDocument('a4')}
-              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition"
+              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition"
               title="Cetak dokumen faktur lembar A4 resmi"
             >
               <Printer className="w-3.5 h-3.5" />

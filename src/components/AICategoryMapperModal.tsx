@@ -368,7 +368,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
               type="button"
               onClick={handleApplySelected}
               disabled={selectedCount === 0}
-              className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20 disabled:opacity-40 transition active:scale-95"
+              className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20 disabled:opacity-40 transition active:scale-95"
             >
               <Check className="w-4 h-4" />
               <span>Terapkan Kategori Terpilih ({selectedCount})</span>

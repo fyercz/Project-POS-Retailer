@@ -520,13 +520,13 @@ export const EmployeeManagementModal: React.FC = () => {
                   <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-700">
                     <tr>
                       <th className="p-3.5">Jabatan / Role</th>
-                      <th className="p-2.5 text-center">🛒 Kasir</th>
-                      <th className="p-2.5 text-center">🧾 Nota</th>
-                      <th className="p-2.5 text-center">📦 Stok</th>
-                      <th className="p-2.5 text-center">✨ Member</th>
-                      <th className="p-2.5 text-center">📊 Laporan</th>
-                      <th className="p-2.5 text-center">❌ Void</th>
-                      <th className="p-2.5 text-center">⚙️ Toko</th>
+                      <th className="p-2.5 text-center">Kasir</th>
+                      <th className="p-2.5 text-center">Nota</th>
+                      <th className="p-2.5 text-center">Stok</th>
+                      <th className="p-2.5 text-center">Member</th>
+                      <th className="p-2.5 text-center">Laporan</th>
+                      <th className="p-2.5 text-center">Void</th>
+                      <th className="p-2.5 text-center">Toko</th>
                       <th className="p-3 text-center">Uji Coba Akun</th>
                     </tr>
                   </thead>

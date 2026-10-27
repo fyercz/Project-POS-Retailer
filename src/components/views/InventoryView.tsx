@@ -1486,7 +1486,7 @@ export const InventoryView: React.FC = () => {
             <button
               id="btn-add-product"
               onClick={handleOpenAddProduct}
-              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
+              className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>+ Tambah Produk</span>
@@ -2389,7 +2389,7 @@ export const InventoryView: React.FC = () => {
                               <button
                                 onClick={() => handleOpenReceivingForProduct(prod)}
                                 title="Restock / Terima Barang dari Faktur"
-                                className="px-2 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+                                className="px-2 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
                               >
                                 <Truck className="w-3 h-3" />
                                 <span>+ Terima</span>
@@ -2501,7 +2501,7 @@ export const InventoryView: React.FC = () => {
                         )}
                         <button
                           onClick={handleOpenAddProduct}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 text-white font-bold text-xs hover:bg-emerald-500 cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 text-white font-bold text-xs hover:bg-emerald-800 cursor-pointer"
                         >
                           <Plus className="w-4 h-4" />
                           Tambah Item Sekarang
@@ -3026,7 +3026,7 @@ export const InventoryView: React.FC = () => {
                                 setPurchaseStartDate('');
                                 setPurchaseEndDate('');
                               }}
-                              className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition"
+                              className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition"
                             >
                               <span>Tampilkan Seluruh Faktur ({supplierPurchases.length})</span>
                             </button>
@@ -3297,7 +3297,7 @@ export const InventoryView: React.FC = () => {
               </button>
               <button
                 onClick={handleApplyAdjustment}
-                className="px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer transition-colors shadow-sm"
+                className="px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs cursor-pointer transition-colors shadow-sm"
               >
                 Terapkan Koreksi
               </button>
@@ -3547,7 +3547,7 @@ export const InventoryView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleScanBarcode(barcodeInput)}
-                          className="px-2.5 py-1 rounded-md bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer transition shadow-sm active:scale-95"
+                          className="px-2.5 py-1 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[11px] cursor-pointer transition shadow-sm active:scale-95"
                         >
                           + Tambah
                         </button>
@@ -4226,8 +4226,8 @@ export const InventoryView: React.FC = () => {
                   <AlertTriangle className="w-5 h-5 text-rose-600" /> Periksa Harga Jual ({marginAlerts.items.length} produk)
                 </h3>
                 {/* Tombol "Tutup" juga dipakai Escape (useGlobalDialogA11y) */}
-                <button type="button" aria-label="Tutup" onClick={() => setMarginAlerts(null)} className="px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs cursor-pointer">
-                  ✕
+                <button type="button" aria-label="Tutup" onClick={() => setMarginAlerts(null)} className="px-2 py-0.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs cursor-pointer">
+                  
                 </button>
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
@@ -4275,7 +4275,7 @@ export const InventoryView: React.FC = () => {
                               aria-label={`Harga jual baru ${it.name}`}
                               value={it.newPrice}
                               onChange={(e) => setMarginAlerts({ ...marginAlerts, items: marginAlerts.items.map((x, j) => (j === i ? { ...x, newPrice: Number(e.target.value) || 0 } : x)) })}
-                              className="w-24 p-1 text-right font-mono rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900"
+                              className="w-24 p-1 text-right font-mono rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900"
                             />
                           </span>
                         ) : (
@@ -4609,7 +4609,7 @@ export const InventoryView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleConfirmResetDefault}
-                  className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20 transition-all active:scale-95"
+                  className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20 transition-all active:scale-95"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Reset ke 40 Produk Bawaan</span>

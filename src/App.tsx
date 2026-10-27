@@ -177,7 +177,7 @@ const POSMainApp: React.FC = () => {
                             type="button"
                             id="mobile-btn-open-cart-floating"
                             onClick={() => setMobilePosTab('cart')}
-                            className="w-full py-3 px-4 rounded-2xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-sm shadow-xl shadow-emerald-950/30 flex items-center justify-between active:scale-98 transition-all border border-emerald-400/40"
+                            className="w-full py-3 px-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-xl shadow-emerald-950/30 flex items-center justify-between active:scale-98 transition-all border border-emerald-400/40"
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-xl bg-slate-950/25 flex items-center justify-center">

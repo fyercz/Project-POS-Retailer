@@ -823,7 +823,7 @@ export const TransactionsView: React.FC = () => {
                                 setStartDate('');
                                 setEndDate('');
                               }}
-                              className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition"
+                              className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition"
                             >
                               <span>Tampilkan Seluruh Nota ({transactions.length})</span>
                             </button>
@@ -1135,7 +1135,7 @@ export const TransactionsView: React.FC = () => {
                 aria-label="Tutup"
                 className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
-                ✕
+                
               </button>
             </div>
 

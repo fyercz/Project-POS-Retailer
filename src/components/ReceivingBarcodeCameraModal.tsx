@@ -172,7 +172,7 @@ export const ReceivingBarcodeCameraModal: React.FC<ReceivingBarcodeCameraModalPr
           <button
             type="button"
             onClick={handleClose}
-            className="px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer transition shadow-sm"
+            className="px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs cursor-pointer transition shadow-sm"
           >
             Selesai
           </button>

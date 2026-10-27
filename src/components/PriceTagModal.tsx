@@ -725,7 +725,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleSelectInvoice(activeInvoice.id, 'invoice_qty')}
-                      className="px-2 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white text-[11px] font-bold cursor-pointer transition-colors shadow-sm text-center"
+                      className="px-2 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold cursor-pointer transition-colors shadow-sm text-center"
                       title="Salinan label disesuaikan persis dengan jumlah pcs yang dibeli di faktur"
                     >
                       Set Salinan = Qty Faktur
@@ -1043,7 +1043,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                       </p>
                       <button
                         onClick={() => setActiveTab('items')}
-                        className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-sm"
+                        className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs cursor-pointer shadow-sm"
                       >
                         Buka Pemilih Produk ({products.length} Produk Tersedia)
                       </button>
@@ -1102,7 +1102,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => handleSelectInvoice(activeInvoice.id, 'invoice_qty')}
-                          className="px-2.5 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer transition-colors shadow-sm"
+                          className="px-2.5 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[11px] cursor-pointer transition-colors shadow-sm"
                         >
                           Salinan = Qty Faktur
                         </button>
@@ -1307,7 +1307,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
             <button
               onClick={handlePrint}
               disabled={totalTagsCount === 0}
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-500 text-white flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-500/20 active:scale-95 disabled:opacity-40 transition-all"
+              className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-500/20 active:scale-95 disabled:opacity-40 transition-all"
             >
               <Printer className="w-4 h-4" />
               <span>Cetak Pricetag ({paperSize.toUpperCase()})</span>

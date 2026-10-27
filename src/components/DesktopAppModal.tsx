@@ -296,7 +296,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
         {/* Header */}
         <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 text-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center backdrop-blur-xs shadow-inner">
+            <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center backdrop-blur-xs">
               <Monitor className="w-5 h-5 text-blue-200" />
             </div>
             <div>
@@ -1241,7 +1241,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <button
                       onClick={() => downloadWindowsNativeExe({ kioskMode: false })}
-                      className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
+                      className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
                     >
                       <Download className="w-4 h-4" />
                       <span>Unduh UlilmartPOS.exe (Desktop)</span>
@@ -1282,7 +1282,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                     </button>
                   ) : (
                     <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
-                      💡 <strong>Petunjuk Manual:</strong> Pada Google Chrome atau Microsoft Edge, klik titik tiga menu &rarr; pilih <strong>"Simpan &amp; bagikan"</strong> &rarr; pilih <strong>"Instal situs ini sebagai aplikasi"</strong>.
+                      <strong>Petunjuk Manual:</strong> Pada Google Chrome atau Microsoft Edge, klik titik tiga menu &rarr; pilih <strong>"Simpan &amp; bagikan"</strong> &rarr; pilih <strong>"Instal situs ini sebagai aplikasi"</strong>.
                     </div>
                   )}
                 </div>

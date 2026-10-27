@@ -281,7 +281,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                   const top = customerDiscountSuggestions.find((s) => s.isApplicable);
                   if (top) applyCustomerDiscount(top);
                 }}
-                className="px-2 py-0.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer shrink-0 transition-transform active:scale-95 shadow-sm"
+                className="px-2 py-0.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[11px] cursor-pointer shrink-0 transition-transform active:scale-95 shadow-sm"
                 title="Klaim diskon rekomendasi terbaik"
               >
                 Klaim Cepat

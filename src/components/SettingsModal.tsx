@@ -88,7 +88,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
   const [vMax, setVMax] = useState('');
   const [vExpiry, setVExpiry] = useState('');
   const [vMessage, setVMessage] = useState('');
-  const vInput = 'w-full px-2 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100';
+  const vInput = 'w-full px-2 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100';
   const handleCreateVoucher = () => {
     const today = new Date();
     const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -998,7 +998,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   }`}
                 >
                   <div className="flex items-center gap-1.5 font-bold">
-                    <span>👁️‍🗨️ Sembunyikan</span>
+                    <span>‍Sembunyikan</span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
                     Barang stok 0 disembunyikan sepenuhnya dari katalog kasir agar hanya menampilkan barang siap jual.
@@ -1015,7 +1015,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   }`}
                 >
                   <div className="flex items-center gap-1.5 font-bold">
-                    <span>📋 Urutan Normal</span>
+                    <span>Urutan Normal</span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-normal leading-tight">
                     Barang ditampilkan apa adanya sesuai urutan asli kategori tanpa pemisahan stok.
@@ -1077,7 +1077,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                     onClose();
                     setIsBackupRestoreOpen(true);
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all active:scale-95"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all active:scale-95"
                 >
                   <span>Pusat Cadangan</span>
                 </button>

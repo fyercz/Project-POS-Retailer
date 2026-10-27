@@ -28,6 +28,9 @@ disatukan ke 5 warna di atas.
 - Teks berwarna di latar terang: `emerald-700`, `rose-600`, `amber-700`, `blue-600`.
 - Tombol bertulisan putih: `bg-emerald-700`, `bg-blue-600`, `bg-rose-600`.
   Untuk `bg-emerald-500` pakai teks gelap (`text-slate-950`).
+- **Hover tombol bertulisan putih menjadi lebih GELAP** (`hover:bg-emerald-800`, `hover:bg-rose-700`),
+  bukan lebih terang. `hover:bg-emerald-500` dengan tulisan putih hanya 2,5:1 (audit 2026-10-26
+  menemukan 53 tombol seperti ini).
 - Garis tepi kolom isian: `border-slate-500` (≥ 3:1).
 
 ## 2. Tipografi
@@ -91,6 +94,53 @@ Minimal 24 px; tombol yang sering ditekan di layar sentuh (jumlah +/−, Bayar) 
 
 ## 10. Panel keranjang
 
-Urutan tetap: barang → Subtotal → potongan → **Total** → **Bayar**. Voucher, diskon member, dan
-penukaran poin dilipat dalam satu baris "Voucher, Diskon & Poin" (terbuka otomatis saat member
-dipilih). Saran AI di keranjang hanya bila diaktifkan di Pengaturan.
+Urutan tetap: barang → Subtotal → potongan → **Total** → **Bayar**. Member, voucher, diskon
+member, dan penukaran poin dilipat dalam satu baris **"Member, Voucher & Poin"** (menampilkan nama
+member bila dipilih; terbuka otomatis saat member dipilih). Saran AI di keranjang hanya bila diaktifkan di Pengaturan.
+
+## 11. Komponen bersama (`src/components/ui`)
+
+Komponen baru **wajib** memakai komponen ini; komponen lama dipindahkan bertahap saat disentuh.
+Contoh acuan: `PriceUpdateFromFileModal.tsx`.
+
+| Komponen | Pakai untuk | Catatan |
+|---|---|---|
+| `Button` variant `primary` | Aksi utama (Bayar, Simpan, Terapkan) | emerald-700, hover emerald-800, tulisan putih |
+| `Button` variant `secondary` | Batal, Tutup, aksi pendamping | Bergaris slate |
+| `Button` variant `danger` | Hapus, Void, tindakan merusak | rose-600, hover rose-700 |
+| `Button` variant `ghost` | Aksi ringan di dalam tabel/daftar | Tanpa latar |
+| `ModalShell` | Semua jendela | Judul, tombol "Tutup", isi bergulir, kaki. **Jangan** menambah `role="dialog"` sendiri (dialog ganda) |
+| `Field` + `inputClass` | Kolom isian | Label, keterangan, pesan galat; `aria-invalid`/`aria-describedby` otomatis |
+| `StatusText` | Pesan hasil / peringatan | success/info/muted → `role="status"`; warning/danger → `role="alert"` |
+
+Satu aksi utama per jendela. Urutan kaki: `secondary` (Batal) lalu `primary` di kanan.
+
+## 12. Pola
+
+**Otorisasi PIN atasan** (`AuthorityModal`): tindakan berisiko oleh jabatan yang tidak berhak
+(void, retur uang) membuka jendela PIN Supervisor/Owner **sebelum** jendela tindakannya. Nama
+penyetuju dicatat. Fungsi di belakangnya juga menolak tanpa otorisasi (bukan hanya tombolnya).
+
+**Pratinjau sebelum terapkan** (impor, perbarui harga dari file, stock opname CSV): baca berkas →
+ringkasan (berubah / sama / tidak ditemukan / tidak valid) → tabel dengan centang per baris dan
+peringatan → tombol primary "Terapkan N …" yang menyebut jumlahnya. Tidak ada yang berubah sebelum
+tombol itu ditekan.
+
+**Peringatan dalam baris** (mis. margin saat terima barang): teks kecil `text-[11px]` tepat di
+bawah kolom terkait; merah = rugi/bahaya (`role="alert"`), kuning = perlu perhatian, abu = aman.
+Bila ada peringatan, ringkasannya muncul lagi setelah tindakan selesai, lengkap dengan aksi
+perbaikan langsung (mis. "Simpan Harga Jual Baru").
+
+**Konfirmasi tindakan merusak**: tindakan yang menimpa/menghapus banyak data (restore backup, hapus
+data impor, hapus transaksi uji coba) memakai jendela konfirmasi yang menyebut jumlahnya; restore
+yang menimpa data wajib kotak centang persetujuan sebelum tombolnya aktif.
+
+**Pesan hasil**: setelah tindakan, tampilkan `StatusText` (mis. "2 harga diperbarui dan dicatat di
+Riwayat Harga") — sebutkan angka & di mana hasilnya bisa dilihat.
+
+## 13. Pemeriksaan otomatis
+
+`tests/designSystem.test.ts` dijalankan CI di setiap perubahan dan gagal bila ada: tulisan putih
+di atas emerald-400/500 (termasuk hover), warna di luar palet, teks slate-400 di latar terang,
+huruf < 11 px, sudut/bayangan di luar tingkat yang diizinkan, `animate-pulse` pada elemen besar,
+atau emoji di teks antarmuka. Emoji di isi pesan WhatsApp/templat cetak tetap boleh.

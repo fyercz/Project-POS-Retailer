@@ -263,7 +263,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                   type="button"
                   id="btn-confirm-add-unregistered-product"
                   onClick={handleDirectAddProduct}
-                  className="flex-2 py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 text-xs"
+                  className="flex-2 py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 text-xs"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Tambah Produk Sekarang</span>

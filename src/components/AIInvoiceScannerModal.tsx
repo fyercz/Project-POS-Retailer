@@ -374,7 +374,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
 
           {/* Camera Streaming Mode */}
           {isCameraActive ? (
-            <div className="relative rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center shadow-inner">
+            <div className="relative rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center">
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-contain" />
               <canvas ref={canvasRef} className="hidden" />
 
@@ -387,7 +387,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                 </button>
                 <button
                   onClick={handleCaptureCamera}
-                  className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2"
+                  className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2"
                 >
                   <Camera className="w-4 h-4" /> Ambil Foto Faktur
                 </button>
@@ -482,7 +482,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                     <button
                       type="button"
                       onClick={() => nativeCameraInputRef.current?.click()}
-                      className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer"
                       title="Gunakan aplikasi kamera bawaan HP (paling stabil di Android)"
                     >
                       <Camera className="w-3.5 h-3.5" /> Foto Kamera HP
