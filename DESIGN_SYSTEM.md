@@ -20,7 +20,8 @@ komponen baru.
 | Netral | `slate` | Teks, latar, garis |
 
 Jangan memakai teal, purple, violet, cyan, sky, orange, red, pink, green, dll. — sudah
-disatukan ke 5 warna di atas.
+disatukan ke 5 warna di atas. Warna hex yang ditulis langsung (templat cetak, grafik, label QR)
+juga wajib diambil dari palet yang sama; satu-satunya pengecualian adalah logo merek.
 
 **Kontras (WCAG AA):**
 - Teks di latar terang: minimal `slate-500` (keterangan), `slate-700`–`900` (isi).
@@ -67,8 +68,9 @@ Angka uang memakai `font-mono` agar sejajar.
 
 ## 6. Ikon
 
-Satu gaya: **lucide-react**. Jangan emoji di tombol, label, atau pilihan dropdown
-(pembaca layar membacakan nama emoji).
+Satu gaya: **lucide-react**. Jangan emoji di tombol, label, pilihan dropdown, judul kolom, menu,
+atau notifikasi — termasuk teks yang dibentuk lewat kode (pembaca layar membacakan nama emoji).
+Emoji boleh di **isi** pesan WhatsApp, teks yang disalin/dibagikan, dan templat cetak.
 
 ## 7. Ukuran target sentuh
 
@@ -79,7 +81,9 @@ Minimal 24 px; tombol yang sering ditekan di layar sentuh (jumlah +/−, Bayar) 
 - Tombol ikon wajib `aria-label` ("Tutup", "Hapus", ...).
 - Kolom isian wajib terhubung ke label (`<label>` pembungkus, `htmlFor`/`id`, atau `aria-label`).
 - Pesan error: `id` + `role="alert"`, kolomnya `aria-invalid` + `aria-describedby`.
-- Modal: cukup lapisan `fixed inset-0` berlatar gelap berisi tombol "Tutup" —
+- Modal: lapisan latar standar `fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs` (jendela di
+  atas jendela lain: `z-60`). Satu-satunya pengecualian: layar kunci (`data-overlay="lock"`,
+  lebih gelap). Isi dengan tombol "Tutup" (atau tombol berteks Tutup/Batal/Kembali) —
   `useGlobalDialogA11y` otomatis menambahkan `role="dialog"`, fokus, dan Escape.
   Layar yang tidak boleh ditutup Escape diberi `data-no-escape`.
 - Tombol pilihan/tab: `aria-pressed` atau `aria-selected`.
@@ -140,7 +144,12 @@ Riwayat Harga") — sebutkan angka & di mana hasilnya bisa dilihat.
 
 ## 13. Pemeriksaan otomatis
 
-`tests/designSystem.test.ts` dijalankan CI di setiap perubahan dan gagal bila ada: tulisan putih
-di atas emerald-400/500 (termasuk hover), warna di luar palet, teks slate-400 di latar terang,
-huruf < 11 px, sudut/bayangan di luar tingkat yang diizinkan, `animate-pulse` pada elemen besar,
-atau emoji di teks antarmuka. Emoji di isi pesan WhatsApp/templat cetak tetap boleh.
+`tests/designSystem.test.ts` (11 aturan) dijalankan CI di setiap perubahan dan gagal bila ada:
+tulisan putih di atas emerald-400/500 (termasuk hover), kelas warna di luar palet, **warna hex di
+luar palet**, teks slate-400 di latar terang, huruf < 11 px, sudut/bayangan di luar tingkat yang
+diizinkan, `animate-pulse` pada elemen besar, emoji di teks antarmuka (JSX **maupun** string
+label/notifikasi), atau **lapisan jendela yang tidak standar**.
+
+`e2e/kontras-hover.spec.ts` menyorot setiap tombol berwarna di layar kasir, jendela pembayaran,
+Pengaturan, dan formulir produk, lalu memeriksa kontrasnya dengan axe **dalam keadaan tersorot**
+(pemeriksaan axe biasa hanya melihat keadaan diam).

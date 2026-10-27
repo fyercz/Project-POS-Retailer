@@ -160,7 +160,8 @@ export const EmployeeLockScreen: React.FC = () => {
       id="employee-lock-screen"
       data-no-escape
       aria-label="Layar kunci kasir"
-      className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+      data-overlay="lock"
+          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}

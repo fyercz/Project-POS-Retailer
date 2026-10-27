@@ -77,7 +77,7 @@ export const AuthorityModal: React.FC<AuthorityModalProps> = ({
   return (
     <div
       id="authority-pin-modal"
-      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto select-none"
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto select-none"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}

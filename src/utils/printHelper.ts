@@ -71,7 +71,7 @@ export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             font-size: ${isThermal ? '10px' : '12px'};
             line-height: ${isThermal ? '1.3' : '1.5'};
-            color: #111827;
+            color: #0f172a;
             background: #ffffff;
             margin: 0;
             padding: ${isThermal ? '4px' : '0'};
@@ -126,7 +126,7 @@ export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS
             font-weight: 600;
           }
           .badge-success { background: #d1fae5; color: #065f46; }
-          .badge-info { background: #e0f2fe; color: #0369a1; }
+          .badge-info { background: #dbeafe; color: #1e40af; }
           .badge-warning { background: #fef3c7; color: #92400e; }
           .footer-sign {
             margin-top: 30px;
@@ -220,7 +220,7 @@ export const openPrintWindow = (contentHtml: string, title: string = 'Laporan PO
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             font-size: ${isThermal ? '10px' : '12px'};
             line-height: ${isThermal ? '1.3' : '1.5'};
-            color: #111827;
+            color: #0f172a;
             background: #ffffff;
             margin: 0;
             padding: ${isThermal ? '8px' : '20px'};

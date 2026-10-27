@@ -1543,7 +1543,7 @@ export const ReportsView: React.FC = () => {
       {/* MODAL: INPUT BEBAN OPERASIONAL KAS KELUAR                     */}
       {/* ============================================================== */}
       {isExpenseModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="p-4 bg-gradient-to-r from-indigo-600 to-indigo-600 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">

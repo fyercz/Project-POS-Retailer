@@ -374,17 +374,17 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
       priceColor = '#0f172a';
       themeBorder = showCutGuide ? '1px dashed #94a3b8' : '1px solid #0f172a';
     } else if (themeStyle === 'modern_retail') {
-      themeHeaderBg = '#0284c7';
+      themeHeaderBg = '#2563eb';
       themeHeaderColor = '#ffffff';
-      priceColor = '#0369a1';
-      accentColor = '#0284c7';
-      themeBorder = showCutGuide ? '1px dashed #7dd3fc' : '1px solid #0284c7';
+      priceColor = '#1e40af';
+      accentColor = '#2563eb';
+      themeBorder = showCutGuide ? '1px dashed #93c5fd' : '1px solid #2563eb';
     } else if (themeStyle === 'promo_yellow') {
-      themeHeaderBg = '#facc15';
-      themeHeaderColor = '#854d0e';
-      priceColor = '#dc2626';
-      accentColor = '#dc2626';
-      themeBorder = showCutGuide ? '1px dashed #f59e0b' : '1px solid #eab308';
+      themeHeaderBg = '#fbbf24';
+      themeHeaderColor = '#92400e';
+      priceColor = '#e11d48';
+      accentColor = '#e11d48';
+      themeBorder = showCutGuide ? '1px dashed #f59e0b' : '1px solid #f59e0b';
     }
 
     if (template === 'standard_shelf') {
@@ -407,7 +407,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
               </div>
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 7px; color: #64748b; margin-top: 1px;">
                 ${showSku ? `<span>SKU: <strong>${product.sku}</strong></span>` : '<span></span>'}
-                ${showAisle && product.aisle ? `<span style="font-weight: 600; color: #0369a1; background: #f0f9ff; padding: 0 2px; border-radius: 2px;">${product.aisle}</span>` : ''}
+                ${showAisle && product.aisle ? `<span style="font-weight: 600; color: #1e40af; background: #eff6ff; padding: 0 2px; border-radius: 2px;">${product.aisle}</span>` : ''}
               </div>
             </div>
 
@@ -446,7 +446,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
             <div style="margin-top: 4px;">
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 7.5px; color: #64748b; font-weight: 600;">
                 <span>${product.brand ? product.brand.toUpperCase() : categoryName.toUpperCase()}</span>
-                ${showAisle && product.aisle ? `<span style="color: #0369a1; background: #e0f2fe; padding: 1px 4px; border-radius: 3px; font-size: 7px;">${product.aisle}</span>` : ''}
+                ${showAisle && product.aisle ? `<span style="color: #1e40af; background: #dbeafe; padding: 1px 4px; border-radius: 3px; font-size: 7px;">${product.aisle}</span>` : ''}
               </div>
               <div style="font-size: 11px; font-weight: 800; color: #0f172a; line-height: 1.2; max-height: 28px; overflow: hidden; margin-top: 1px;">
                 ${product.name}
@@ -473,11 +473,11 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
 
     if (template === 'promo_pop') {
       return `
-        <div style="box-sizing: border-box; width: 100%; height: 100%; padding: 8px; border: 2px solid #dc2626; background: #fffdf5; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: relative;">
+        <div style="box-sizing: border-box; width: 100%; height: 100%; padding: 8px; border: 2px solid #e11d48; background: #fffbeb; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: relative;">
           <!-- Promo Banner -->
-          <div style="background: #dc2626; color: #ffffff; padding: 3px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; border-radius: 4px;">
+          <div style="background: #e11d48; color: #ffffff; padding: 3px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; border-radius: 4px;">
             <span>★ ${safePromoText} ★</span>
-            <span style="font-size: 8px; background: #fef08a; color: #854d0e; padding: 1px 4px; border-radius: 2px;">${safeStoreName}</span>
+            <span style="font-size: 8px; background: #fde68a; color: #92400e; padding: 1px 4px; border-radius: 2px;">${safeStoreName}</span>
           </div>
 
           <div style="margin: 4px 0;">
@@ -485,21 +485,21 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
             <div style="font-size: 13px; font-weight: 900; color: #0f172a; line-height: 1.2; max-height: 34px; overflow: hidden;">
               ${product.name}
             </div>
-            ${showAisle && product.aisle ? `<div style="font-size: 8px; color: #0369a1; margin-top: 2px;">Lokasi: <strong>${product.aisle}</strong></div>` : ''}
+            ${showAisle && product.aisle ? `<div style="font-size: 8px; color: #1e40af; margin-top: 2px;">Lokasi: <strong>${product.aisle}</strong></div>` : ''}
           </div>
 
-          <div style="background: #fef2f2; border: 1px dashed #f87171; border-radius: 6px; padding: 6px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="background: #fff1f2; border: 1px dashed #fb7185; border-radius: 6px; padding: 6px; display: flex; justify-content: space-between; align-items: center;">
             <div style="max-width: 45%;">
               ${barcodeSvg}
               <div style="font-family: monospace; font-size: 8px; text-align: center; color: #475569; font-weight: bold;">${safeBarcodeCode}</div>
             </div>
 
             <div style="text-align: right;">
-              <div style="font-size: 8.5px; color: #991b1b; font-weight: 800; text-transform: uppercase;">SPESIAL HARGA:</div>
-              <div style="font-size: 20px; font-weight: 900; color: #dc2626; font-family: ui-monospace, monospace; line-height: 1; margin-top: 2px;">
+              <div style="font-size: 8.5px; color: #9f1239; font-weight: 800; text-transform: uppercase;">SPESIAL HARGA:</div>
+              <div style="font-size: 20px; font-weight: 900; color: #e11d48; font-family: ui-monospace, monospace; line-height: 1; margin-top: 2px;">
                 ${formattedPrice}
               </div>
-              ${showUnit ? `<div style="font-size: 7.5px; color: #7f1d1d; font-weight: 600; margin-top: 2px;">per ${product.unit || 'pcs'} (Termasuk Pajak)</div>` : `<div style="font-size: 7.5px; color: #7f1d1d; font-weight: 600; margin-top: 2px;">(Termasuk Pajak)</div>`}
+              ${showUnit ? `<div style="font-size: 7.5px; color: #78350f; font-weight: 600; margin-top: 2px;">per ${product.unit || 'pcs'} (Termasuk Pajak)</div>` : `<div style="font-size: 7.5px; color: #78350f; font-weight: 600; margin-top: 2px;">(Termasuk Pajak)</div>`}
             </div>
           </div>
         </div>
@@ -699,7 +699,7 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
                 <option value="all">Semua Master Katalog Produk</option>
                 {supplierPurchases.map((inv) => (
                   <option key={inv.id} value={inv.id}>
-                    📄 {inv.invoiceNumber} - {inv.supplierName} ({inv.items.length} item)
+                    {inv.invoiceNumber} - {inv.supplierName} ({inv.items.length} item)
                   </option>
                 ))}
               </select>

@@ -172,7 +172,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
     // Check if barcode already exists in catalog
     const existing = products.find((p) => p.barcode === item.barcode);
     if (existing) {
-      showToast(`⚠️ Produk dengan barcode ${item.barcode} (${existing.name}) sudah ada di katalog.`);
+      showToast(`Produk dengan barcode ${item.barcode} (${existing.name}) sudah ada di katalog.`);
       return;
     }
 
@@ -217,14 +217,14 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
     addProduct(newProduct);
     setAddedIds((prev) => new Set([...prev, item.barcode]));
-    showToast(`✅ "${item.name}" berhasil dimasukkan ke sistem katalog toko!`);
+    showToast(`"${item.name}" berhasil dimasukkan ke sistem katalog toko!`);
   };
 
   // Mass-import Top 3 Google Search Results into system catalog
   const handleImportTop3ToCatalog = () => {
     const targetItems = searchResults.slice(0, 3);
     if (targetItems.length === 0) {
-      showToast('⚠️ Tidak ada produk hasil pencarian yang dapat dimasukkan.');
+      showToast('Tidak ada produk hasil pencarian yang dapat dimasukkan.');
       return;
     }
 
@@ -279,7 +279,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
 
     setAddedIds(newlyAdded);
     if (countAdded > 0) {
-      showToast(`🎉 Berhasil memasukkan ${countAdded} produk Top 3 Google Search ke dalam sistem toko!`);
+      showToast(`Berhasil memasukkan ${countAdded} produk Top 3 Google Search ke dalam sistem toko!`);
     } else {
       showToast(`ℹ️ Semua produk dari Top 3 Google Search sudah ada di sistem toko.`);
     }
@@ -331,7 +331,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-150">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-xl flex flex-col max-h-[92vh] overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-emerald-900/40 via-emerald-900/30 to-slate-900">

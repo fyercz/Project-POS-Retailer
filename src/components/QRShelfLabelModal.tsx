@@ -808,9 +808,9 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                   <div className="flex items-center gap-1.5 flex-wrap text-xs">
                     {[
                       { id: 'all', label: 'Semua' },
-                      { id: 'recent_price', label: '⚡ Update Harga Baru' },
-                      { id: 'low_stock', label: '⚠️ Stok Kritis' },
-                      { id: 'has_promo', label: '🏷️ Promo' },
+                      { id: 'recent_price', label: 'Update Harga Baru' },
+                      { id: 'low_stock', label: 'Stok Kritis' },
+                      { id: 'has_promo', label: 'Promo' },
                     ].map((f) => (
                       <button
                         key={f.id}

@@ -943,7 +943,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
               </button>
               {syncMessage && (
                 <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 animate-in fade-in">
-                  ✓ {syncMessage}
+                  {syncMessage}
                 </span>
               )}
             </div>

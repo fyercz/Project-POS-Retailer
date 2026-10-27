@@ -181,7 +181,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
     activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor' || authorizedByPin;
   if (!canManageBackup) {
     return (
-      <div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4" onClick={onClose}>
         <div
           className="max-w-sm w-full rounded-2xl bg-white dark:bg-slate-900 p-5 text-center space-y-3 shadow-xl"
           onClick={(e) => e.stopPropagation()}
@@ -1365,12 +1365,12 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                               Database Aktif (Saat Ini)
                             </div>
                             <div className="font-bold text-slate-800 dark:text-slate-200 truncate">
-                              🏪 {settings.storeName || 'Toko Ritel'}
+                              {settings.storeName || 'Toko Ritel'}
                             </div>
                             <div className="text-slate-600 dark:text-slate-400 space-y-0.5">
-                              <div>📦 {products.length} Produk</div>
-                              <div>🧾 {transactions.length} Transaksi</div>
-                              <div>👥 {customers.length} Pelanggan</div>
+                              <div>{products.length} Produk</div>
+                              <div>{transactions.length} Transaksi</div>
+                              <div>{customers.length} Pelanggan</div>
                             </div>
                           </div>
 
@@ -1388,12 +1388,12 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                               )}
                             </div>
                             <div className="font-bold text-blue-900 dark:text-blue-200 truncate">
-                              🏪 {validationReport.fileInfo.storeName || 'Tidak Diketahui'}
+                              {validationReport.fileInfo.storeName || 'Tidak Diketahui'}
                             </div>
                             <div className="text-slate-600 dark:text-slate-400 space-y-0.5">
-                              <div>📦 {validationReport.metrics.validProductsCount} Produk Valid</div>
-                              <div>🧾 {validationReport.metrics.validTransactionsCount} Transaksi Valid</div>
-                              <div>👥 {validationReport.metrics.validCustomersCount} Pelanggan Valid</div>
+                              <div>{validationReport.metrics.validProductsCount} Produk Valid</div>
+                              <div>{validationReport.metrics.validTransactionsCount} Transaksi Valid</div>
+                              <div>{validationReport.metrics.validCustomersCount} Pelanggan Valid</div>
                             </div>
                           </div>
                         </div>

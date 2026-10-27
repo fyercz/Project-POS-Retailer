@@ -316,7 +316,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
   return (
     <div
       id="ai-invoice-scanner-modal"
-      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}

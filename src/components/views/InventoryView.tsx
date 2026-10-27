@@ -3194,7 +3194,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Fast Stock Correction Modal */}
       {editingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -3308,7 +3308,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Delete Product Confirmation Modal */}
       {productToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-5 space-y-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 border border-rose-500/20">
@@ -3356,7 +3356,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Delete Supplier Confirmation Modal */}
       {supplierToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-5 space-y-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 border border-rose-500/20">
@@ -4217,7 +4217,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Periksa harga jual setelah terima barang (dulu tidak ada peringatan sama sekali) */}
       {marginAlerts && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3">
           {/* role="dialog" & label dipasang otomatis di lapisan luar oleh useGlobalDialogA11y */}
           <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800">
@@ -4433,7 +4433,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Confirmation Modal: Hapus Semua Data Impor */}
       {isClearImportedModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400 mb-4">
@@ -4517,7 +4517,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Confirmation Modal: Hapus Terpilih (Batch Delete) */}
       {isBulkDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400 mb-4">
@@ -4577,7 +4577,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Confirmation Modal: Reset ke Default 40 Produk */}
       {isResetCatalogModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <div className="flex items-center gap-3 text-emerald-700 dark:text-emerald-400 mb-4">
