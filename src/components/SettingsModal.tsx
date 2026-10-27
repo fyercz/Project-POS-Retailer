@@ -1038,7 +1038,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   onClose();
                   setIsSyncModalOpen(true);
                 }}
-                className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all active:scale-95"
+                className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all active:scale-95"
               >
                 <span>Pusat Sinkronisasi &amp; SQLite WAL</span>
               </button>
@@ -1190,7 +1190,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                   }
                 }}
                 disabled={isCleaningInSettings}
-                className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 transition"
+                className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50 transition"
               >
                 <Trash2 className={`w-3.5 h-3.5 ${isCleaningInSettings ? 'animate-spin' : ''}`} />
                 <span>{isCleaningInSettings ? 'Sedang Membersihkan...' : 'Bersihkan File Usang Sekarang'}</span>

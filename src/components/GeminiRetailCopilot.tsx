@@ -1318,7 +1318,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                 ? 'bg-emerald-700 text-slate-950'
                                 : forecastData.healthScore >= 60
                                 ? 'bg-amber-500 text-slate-950'
-                                : 'bg-rose-500 text-white'
+                                : 'bg-rose-600 text-white'
                             }`}
                           >
                             {forecastData.healthScore}/100

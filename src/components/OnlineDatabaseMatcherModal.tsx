@@ -696,7 +696,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                         {onSelectForForm && (
                           <button
                             onClick={() => handleSendToForm(barcodeResult)}
-                            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-blue-600/20 cursor-pointer"
+                            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-blue-600/20 cursor-pointer"
                           >
                             <ExternalLink className="w-4 h-4" />
                             <span>Isi ke Formulir Produk</span>
@@ -856,7 +856,7 @@ export const OnlineDatabaseMatcherModal: React.FC<OnlineDatabaseMatcherModalProp
                             {onSelectForForm && (
                               <button aria-label="Gunakan di formulir"
                                 onClick={() => handleSendToForm(item)}
-                                className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer"
+                                className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer"
                                 title="Gunakan di formulir"
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />

@@ -22,8 +22,9 @@ function violations(test: (line: string) => boolean) {
 }
 const report = (v: string[]) => `${v.length} pelanggaran:\n${v.slice(0, 15).join('\n')}`;
 
-test('kontras: tulisan putih tidak di atas emerald-400/500 (diam maupun hover)', () => {
-  const v = violations((l) => /text-white/.test(l) && /(?<![\w:-])(?:hover:)?bg-emerald-(?:400|500)\b/.test(l));
+test('kontras: tulisan putih tidak di atas warna terang 400/500 (diam maupun hover), semua warna', () => {
+  // Audit pertama hanya memeriksa hijau; tes hover E2E menemukan tombol biru & merah yang sama (3,75:1)
+  const v = violations((l) => /(?<![\w:-])text-white\b/.test(l) && /(?<![\w:-])(?:hover:)?bg-(?:emerald|blue|rose|indigo|amber)-(?:400|500)\b/.test(l));
   assert.equal(v.length, 0, report(v));
 });
 

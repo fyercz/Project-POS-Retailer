@@ -762,7 +762,7 @@ export const StockTakeCSVModal: React.FC<StockTakeCSVModalProps> = ({
                     onClick={() => setFilterTab('unmatched')}
                     className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       filterTab === 'unmatched'
-                        ? 'bg-amber-600 text-white shadow-sm'
+                        ? 'bg-amber-600 text-slate-950 shadow-sm'
                         : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
                     }`}
                   >

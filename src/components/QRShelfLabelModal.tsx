@@ -362,7 +362,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
             <button
               onClick={handlePrint}
               disabled={totalLabelTagsCount === 0}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-indigo-600/30 cursor-pointer transition active:scale-95"
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-indigo-600/30 cursor-pointer transition active:scale-95"
             >
               <Printer className="w-4 h-4" />
               <span>Cetak {totalLabelTagsCount} Label</span>
@@ -655,7 +655,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveTab('select')}
-                        className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer shadow-md"
+                        className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs cursor-pointer shadow-md"
                       >
                         Buka Pemilih Produk
                       </button>
@@ -995,7 +995,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
             <button
               onClick={handlePrint}
               disabled={totalLabelTagsCount === 0}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-indigo-600/30 cursor-pointer transition active:scale-95"
+              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-indigo-600/30 cursor-pointer transition active:scale-95"
             >
               <Printer className="w-4 h-4" />
               <span>Cetak Sekarang ({totalLabelTagsCount} Label)</span>

@@ -484,7 +484,7 @@ export const TransactionsView: React.FC = () => {
               onClick={() => setActiveTab('returns')}
               className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'returns'
-                  ? 'bg-rose-500 text-white shadow-sm'
+                  ? 'bg-rose-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400'
               }`}
             >
@@ -950,7 +950,7 @@ export const TransactionsView: React.FC = () => {
                                 setStartDate('');
                                 setEndDate('');
                               }}
-                              className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition"
+                              className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition"
                             >
                               <span>Tampilkan Seluruh Retur ({salesReturns.length})</span>
                             </button>
@@ -1341,7 +1341,7 @@ export const TransactionsView: React.FC = () => {
               </button>
               <button
                 onClick={handleConfirmVoid}
-                className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold cursor-pointer"
+                className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer"
               >
                 Konfirmasi Void
               </button>

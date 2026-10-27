@@ -464,7 +464,7 @@ export const OfflineSyncModal: React.FC = () => {
                       <Server className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       Mesin Basis Data: SQLite Relasional (WAL Mode)
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500 text-white font-mono">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-600 text-white font-mono">
                       ACID Guaranteed
                     </span>
                   </div>
@@ -477,7 +477,7 @@ export const OfflineSyncModal: React.FC = () => {
                   <button
                     onClick={handleCheckIntegrity}
                     disabled={isCheckingIntegrity}
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm cursor-pointer flex items-center gap-1.5"
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm cursor-pointer flex items-center gap-1.5"
                   >
                     <ShieldCheck className={`w-3.5 h-3.5 ${isCheckingIntegrity ? 'animate-spin' : ''}`} />
                     <span>{isCheckingIntegrity ? 'Memeriksa...' : 'Cek Integritas (PRAGMA)'}</span>

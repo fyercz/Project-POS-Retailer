@@ -418,7 +418,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
             <ShoppingBag className="w-4 h-4" />
             <span>Parkir Antar-Kasir</span>
             {sharedHeldOrders.length > 0 && (
-              <span className="px-1.5 py-0.2 text-[11px] rounded-full bg-amber-500 text-white font-bold">
+              <span className="px-1.5 py-0.2 text-[11px] rounded-full bg-amber-500 text-slate-950 font-bold">
                 {sharedHeldOrders.length}
               </span>
             )}
@@ -487,7 +487,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                         : 'border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
                     }`}
                   >
-                    <div className="w-7 h-7 rounded-xl bg-indigo-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5">
                       <Server className="w-4 h-4" />
                     </div>
                     <div>
@@ -510,7 +510,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                         : 'border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
                     }`}
                   >
-                    <div className="w-7 h-7 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5">
                       <Laptop className="w-4 h-4" />
                     </div>
                     <div>
@@ -1174,7 +1174,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           onClick={() => handleRecallOrder(order)}
-                          className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer transition-colors"
+                          className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer transition-colors"
                         >
                           <ShoppingBag className="w-3.5 h-3.5" />
                           <span>Buka di Kasir Ini</span>

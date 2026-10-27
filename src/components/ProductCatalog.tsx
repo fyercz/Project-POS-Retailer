@@ -572,7 +572,7 @@ export const ProductCatalog: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => openUnregisteredBarcodePrompt(searchQuery.trim())}
-                  className="px-3 py-1.5 text-xs rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-600/20 transition-all"
+                  className="px-3 py-1.5 text-xs rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-600/20 transition-all"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Daftarkan Produk (Otoritas Supervisor)</span>

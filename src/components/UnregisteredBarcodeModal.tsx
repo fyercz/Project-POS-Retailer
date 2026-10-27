@@ -401,7 +401,7 @@ export const UnregisteredBarcodeModal: React.FC<UnregisteredBarcodeModalProps> =
                   <button
                     type="submit"
                     id="btn-verify-supervisor-pin"
-                    className="flex-2 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 text-xs"
+                    className="flex-2 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 text-xs"
                   >
                     <ShieldCheck className="w-4 h-4" />
                     <span>Verifikasi &amp; Tambah Produk</span>

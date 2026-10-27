@@ -361,7 +361,7 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+              className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
             >
               <Save className="w-4 h-4" />
               <span>{isEditMode ? 'Simpan Perubahan' : 'Simpan Data Supplier'}</span>

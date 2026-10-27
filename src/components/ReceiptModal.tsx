@@ -544,7 +544,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 printMode === 'serial'
                   ? 'bg-emerald-700 hover:bg-emerald-800 text-white'
                   : printMode === 'bluetooth'
-                  ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
                   : 'bg-emerald-700 hover:bg-emerald-400 text-slate-950'
               } disabled:opacity-50`}
             >

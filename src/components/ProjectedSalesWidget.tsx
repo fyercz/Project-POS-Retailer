@@ -1039,7 +1039,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                 <div className="flex justify-end pt-1">
                   <button
                     type="submit"
-                    className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition active:scale-95"
+                    className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition active:scale-95"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Simpan Event ke Kalender</span>

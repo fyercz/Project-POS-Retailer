@@ -768,7 +768,7 @@ export const MarketingPromoSection: React.FC = () => {
               <div className="px-5">
                 <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-amber-50 dark:from-amber-950/30 dark:to-amber-950/20 border border-amber-300 dark:border-amber-800/60 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-white font-black flex items-center justify-center text-sm shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-sm shadow-sm">
                       %
                     </div>
                     <div>
