@@ -524,7 +524,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                 <button
                   type="button"
                   onClick={handleApplyUniformQuantity}
-                  className="ml-auto px-3 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-semibold text-[11px] transition cursor-pointer"
+                  className="ml-auto px-3 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[11px] transition cursor-pointer"
                 >
                   Terapkan Qty ke {selectedCount} Baris
                 </button>

@@ -1027,7 +1027,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
-                        👑
+                        
                       </div>
                       <div>
                         <div className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">

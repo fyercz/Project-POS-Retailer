@@ -579,7 +579,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
             <button
               type="button"
               onClick={handleQuickDownload}
-              className="px-3 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95"
+              className="px-3 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95"
               title="Unduh seluruh basis data saat ini ke berkas .json"
             >
               <HardDriveDownload className="w-3.5 h-3.5" />
@@ -764,7 +764,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                     <button
                       type="submit"
                       disabled={isCreatingPoint || !newTitle.trim()}
-                      className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
+                      className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>{isCreatingPoint ? 'Menyimpan...' : 'Simpan Titik Pemulihan Ini'}</span>
@@ -882,20 +882,20 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                           {/* Point Summary Badges */}
                           <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-3 sm:gap-4 flex-wrap text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                             <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                              📦 <strong>{rp.summary.totalProducts}</strong> Produk
+                              <strong>{rp.summary.totalProducts}</strong> Produk
                             </span>
                             <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                              🧾 <strong>{rp.summary.totalTransactions}</strong> Nota Transaksi
+                              <strong>{rp.summary.totalTransactions}</strong> Nota Transaksi
                             </span>
                             <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                              👥 <strong>{rp.summary.totalCustomers}</strong> Pelanggan
+                              <strong>{rp.summary.totalCustomers}</strong> Pelanggan
                             </span>
                             <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                              🏢 <strong>{rp.summary.totalSuppliers}</strong> Supplier
+                              <strong>{rp.summary.totalSuppliers}</strong> Supplier
                             </span>
                             {rp.summary.totalStockValue !== undefined && rp.summary.totalStockValue > 0 && (
                               <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-md">
-                                💰 Aset: <strong>{formatRupiah(rp.summary.totalStockValue)}</strong>
+                                Aset: <strong>{formatRupiah(rp.summary.totalStockValue)}</strong>
                               </span>
                             )}
                           </div>
@@ -966,7 +966,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                   <button
                     type="button"
                     onClick={handleQuickDownload}
-                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95"
                   >
                     <HardDriveDownload className="w-4 h-4" />
                     <span>Unduh Cadangan Lengkap (.json)</span>
@@ -1193,7 +1193,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                           <button
                             type="button"
                             onClick={handleCustomDownload}
-                            className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+                            className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
                           >
                             <FolderDown className="w-3.5 h-3.5" />
                             <span>Unduh Kustom</span>
@@ -1589,7 +1589,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
               <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-emerald-950/30 p-4 sm:p-5 rounded-2xl border border-emerald-500/30 text-white space-y-3 shadow-sm">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold shadow-inner">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold">
                       <Server className="w-5 h-5" />
                     </div>
                     <div>
@@ -2229,7 +2229,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                     handleCustomDownload();
                     setJsonPreviewModal((prev) => ({ ...prev, isOpen: false }));
                   }}
-                  className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20"
+                  className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-600/20"
                 >
                   <FolderDown className="w-4 h-4" />
                   <span>Unduh Berkas Ini (.json)</span>

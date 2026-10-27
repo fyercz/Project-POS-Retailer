@@ -281,7 +281,7 @@ export const EmployeeLockScreen: React.FC = () => {
         <div className="w-full md:w-7/12 p-6 md:p-8 flex flex-col items-center justify-between">
           <div className="w-full max-w-xs flex flex-col items-center">
             {/* Header Icon */}
-            <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 mb-3 shadow-inner">
+            <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 mb-3">
               <Lock className="w-7 h-7 text-emerald-700" />
             </div>
 

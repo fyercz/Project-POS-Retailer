@@ -1119,7 +1119,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                       type="button"
                       onClick={() => handleFetchForecast(targetRestockDate)}
                       disabled={isLoadingForecast}
-                      className="px-2.5 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50"
+                      className="px-2.5 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50"
                     >
                       Terapkan
                     </button>
@@ -1218,7 +1218,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                         }`}
                         title="Pangkas kuota order 50%"
                       >
-                        ✂️ Pangkas 50%
+                        Pangkas 50%
                       </button>
                       <button
                         type="button"
@@ -1254,7 +1254,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                         }`}
                         title="Pangkas kuota 50% untuk mitigasi produk rusak/cacat"
                       >
-                        ✂️ Pangkas 50%
+                        Pangkas 50%
                       </button>
                       <button
                         type="button"
@@ -1592,7 +1592,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                           type="button"
                           onClick={handleApplyPOToReceiving}
                           disabled={selectedPOProductIds.length === 0}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-black text-[11px] flex items-center gap-1.5 transition cursor-pointer shadow-sm disabled:opacity-50 active:scale-95"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-[11px] flex items-center gap-1.5 transition cursor-pointer shadow-sm disabled:opacity-50 active:scale-95"
                           title="Muat seluruh barang terpilih ke Form Terima Barang gudang"
                         >
                           {appliedToReceivingFeedback ? (

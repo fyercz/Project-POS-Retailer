@@ -104,7 +104,7 @@ export const WebPriceSearchPanel: React.FC<Props> = ({ product, productName, onU
             value={region}
             onChange={(e) => setRegion(e.target.value)}
             placeholder="Mis. Kabupaten Magetan, Jawa Timur"
-            className="mt-0.5 w-full px-2 py-1 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
+            className="mt-0.5 w-full px-2 py-1 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
           />
         </label>
       )}
@@ -147,7 +147,7 @@ export const WebPriceSearchPanel: React.FC<Props> = ({ product, productName, onU
                   <button
                     type="button"
                     onClick={() => onUse(entry)}
-                    className="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold cursor-pointer"
+                    className="shrink-0 px-2.5 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold cursor-pointer"
                   >
                     Pakai
                   </button>

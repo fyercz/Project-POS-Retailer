@@ -312,7 +312,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
                     <button
                       type="button"
                       onClick={handleQuickStockSave}
-                      className="px-3 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-sm"
+                      className="px-3 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs cursor-pointer shadow-sm"
                     >
                       Simpan
                     </button>
@@ -468,7 +468,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleAddToCart}
-              className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition cursor-pointer active:scale-95"
+              className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition cursor-pointer active:scale-95"
             >
               <ShoppingCart className="w-4 h-4" />
               <span>Beli di Kasir POS</span>

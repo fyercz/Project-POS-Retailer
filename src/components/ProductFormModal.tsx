@@ -702,20 +702,20 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         }
                       }}
                       placeholder="Mis. Frozen Food"
-                      className="flex-1 px-2 py-1.5 text-xs rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      className="flex-1 px-2 py-1.5 text-xs rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     />
                     <button
                       type="button"
                       data-testid="save-new-category"
                       onClick={handleCreateCategory}
-                      className="px-2.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer"
                     >
                       Simpan
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsNewCategoryOpen(false)}
-                      className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs cursor-pointer"
+                      className="px-2 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs cursor-pointer"
                     >
                       Batal
                     </button>
@@ -1169,7 +1169,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   />
                   {lastOrderQuantity > 0 && minStock === Math.max(1, Math.ceil(lastOrderQuantity * 0.5)) && (
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[11px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-md">
-                      ✓ 50%
+                      50%
                     </span>
                   )}
                 </div>
@@ -1280,7 +1280,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               <button
                 type="submit"
                 data-testid="product-submit"
-                className="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-500 rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+                className="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
               >
                 <Save className="w-4 h-4" />
                 <span>{isEditMode ? 'Simpan Perubahan' : 'Simpan Produk Baru'}</span>

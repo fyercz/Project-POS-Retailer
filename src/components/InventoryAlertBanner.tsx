@@ -316,7 +316,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                         <button
                           type="button"
                           onClick={() => onOpenReceiving(p)}
-                          className="px-2 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition shadow-sm"
+                          className="px-2 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition shadow-sm"
                           title="Buat pesanan terima barang untuk produk ini"
                         >
                           <Truck className="w-3 h-3" />

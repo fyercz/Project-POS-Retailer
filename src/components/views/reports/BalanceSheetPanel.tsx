@@ -279,7 +279,7 @@ export const BalanceSheetPanel: React.FC<BalanceSheetPanelProps> = ({ balanceShe
                         </div>
 
                         {/* Dulu: "Laba ditahan" = SISA agar neraca selalu seimbang. Kini sisa ditampilkan terang-terangan. */}
-                        <div className={`py-1.5 px-2 rounded-lg border ${balanceSheet.isReconciled ? 'border-slate-100 dark:border-slate-800/60' : 'border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30'}`}>
+                        <div className={`py-1.5 px-2 rounded-xl border ${balanceSheet.isReconciled ? 'border-slate-100 dark:border-slate-800/60' : 'border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30'}`}>
                           <div className="flex justify-between items-center gap-2">
                             <span className="font-medium text-slate-800 dark:text-slate-200">Modal Persediaan Awal &amp; Selisih Belum Tercatat</span>
                             <span className="font-mono font-bold text-slate-800 dark:text-slate-200">

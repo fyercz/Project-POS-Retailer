@@ -496,7 +496,7 @@ export const DirectFileImportModal: React.FC<DirectFileImportModalProps> = ({
               type="button"
               disabled={totalSelected === 0 || isProcessing}
               onClick={handleExecuteImport}
-              className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center gap-2 cursor-pointer transition active:scale-98"
+              className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center gap-2 cursor-pointer transition active:scale-98"
             >
               <Upload className="w-4 h-4" />
               <span>Impor {totalSelected} Produk Langsung (As-Is)</span>

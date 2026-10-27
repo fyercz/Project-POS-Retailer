@@ -4,6 +4,7 @@ import { usePOS } from '../context/POSContext';
 import { readXlsx, type SheetData } from '../utils/xlsxReader';
 import { planPriceUpdates, parseDelimitedText, type PriceUpdatePlan } from '../domain/priceUpdatePlan';
 import { formatCurrency } from '../utils/formatters';
+import { Button, ModalShell, StatusText } from './ui';
 
 /**
  * Perbarui harga jual dari file (.xlsx / .csv), mis. lembar "Harga Rp0" / "Rugi & Impas" dari file
@@ -73,25 +74,47 @@ export const PriceUpdateFromFileModal: React.FC<Props> = ({ isOpen, onClose }) =
   const rows = ok ? ok.changes.filter((c) => !onlyWarnings || c.warnings.length > 0) : [];
   const toApply = ok ? ok.changes.filter((c) => selected.has(c.productId)) : [];
 
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3">
-      <div className="w-full max-w-3xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3">
-          <div>
-            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-emerald-700" /> Perbarui Harga dari File
-            </h3>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-              Excel (.xlsx) atau CSV berisi kolom barcode (atau SKU) dan harga baru, mis. lembar &quot;Rugi &amp; Impas&quot; dari file
-              kerja perbaikan harga (kolom &quot;Harga Dipakai&quot;). Tinjau dulu; hanya yang dicentang diterapkan dan tercatat di Riwayat Harga.
-            </p>
-          </div>
-          <button type="button" aria-label="Tutup" onClick={onClose} className="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 text-xs cursor-pointer">
-            Tutup
-          </button>
-        </div>
+  const footer = (
+    <>
+      <Button variant="secondary" onClick={onClose}>
+        Batal
+      </Button>
+      <Button
+        variant="primary"
+        disabled={toApply.length === 0}
+        onClick={() => {
+          const n = applyPriceUpdates(
+            toApply.map((c) => ({ productId: c.productId, newPrice: c.newPrice })),
+            `File: ${fileName}${sheets.length > 1 ? ` (${sheets[sheetIdx]?.name})` : ''}`
+          );
+          if (n === 0) {
+            setError('Tidak diterapkan: hanya Owner/Supervisor yang boleh memperbarui harga.');
+            return;
+          }
+          setMessage(`${toApply.length} harga diperbarui dan dicatat di Riwayat Harga.`);
+          setSelected(new Set());
+        }}
+      >
+        Terapkan {toApply.length} Perubahan Harga
+      </Button>
+    </>
+  );
 
-        <div className="p-4 space-y-3 overflow-y-auto">
+  return (
+    <ModalShell
+      title="Perbarui Harga dari File"
+      icon={<FileSpreadsheet className="w-5 h-5 text-emerald-700" />}
+      onClose={onClose}
+      size="xl"
+      footer={footer}
+      description={
+        <>
+          Excel (.xlsx) atau CSV berisi kolom barcode (atau SKU) dan harga baru, mis. lembar &quot;Rugi &amp; Impas&quot; dari file kerja perbaikan
+          harga (kolom &quot;Harga Dipakai&quot;). Tinjau dulu; hanya yang dicentang diterapkan dan tercatat di Riwayat Harga.
+        </>
+      }
+    >
+
           <div className="flex flex-wrap items-center gap-2">
             <label className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer">
               Pilih Berkas
@@ -99,7 +122,7 @@ export const PriceUpdateFromFileModal: React.FC<Props> = ({ isOpen, onClose }) =
             </label>
             {fileName && <span className="text-xs text-slate-600 dark:text-slate-300">{fileName}</span>}
             {sheets.length > 1 && (
-              <select aria-label="Lembar" value={sheetIdx} onChange={(e) => setSheetIdx(Number(e.target.value))} className="px-2 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs">
+              <select aria-label="Lembar" value={sheetIdx} onChange={(e) => setSheetIdx(Number(e.target.value))} className="px-2 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs">
                 {sheets.map((s, i) => (
                   <option key={s.name + i} value={i}>
                     {s.name}
@@ -109,15 +132,15 @@ export const PriceUpdateFromFileModal: React.FC<Props> = ({ isOpen, onClose }) =
             )}
           </div>
 
-          {error && <p role="alert" className="text-xs font-semibold text-rose-700 dark:text-rose-400">{error}</p>}
-          {plan && 'error' in plan && <p role="alert" className="text-xs font-semibold text-rose-700 dark:text-rose-400">{plan.error}</p>}
+          {error && <StatusText tone="danger">{error}</StatusText>}
+          {plan && 'error' in plan && <StatusText tone="danger">{plan.error}</StatusText>}
 
           {ok && (
             <>
-              <p role="status" className="text-xs text-slate-700 dark:text-slate-300">
+              <StatusText tone="muted">
                 Kolom: <strong>{ok.keyColumn}</strong> → <strong>{ok.priceColumn}</strong>. {ok.changes.length} harga berubah, {ok.unchanged} sama,{' '}
                 {ok.unmatched.length} tidak ditemukan di katalog, {ok.invalid.length} tidak valid.
-              </p>
+              </StatusText>
               {ok.changes.some((c) => c.warnings.length) && (
                 <label className="flex items-center gap-1.5 text-xs text-amber-800 dark:text-amber-300">
                   <input type="checkbox" checked={onlyWarnings} onChange={(e) => setOnlyWarnings(e.target.checked)} />
@@ -177,34 +200,7 @@ export const PriceUpdateFromFileModal: React.FC<Props> = ({ isOpen, onClose }) =
               {rows.length > 500 && <p className="text-[11px] text-slate-500">Menampilkan 500 dari {rows.length} baris; semua yang dicentang tetap diterapkan.</p>}
             </>
           )}
-          {message && <p role="status" className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{message}</p>}
-        </div>
-
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs cursor-pointer">
-            Batal
-          </button>
-          <button
-            type="button"
-            disabled={toApply.length === 0}
-            onClick={() => {
-              const n = applyPriceUpdates(
-                toApply.map((c) => ({ productId: c.productId, newPrice: c.newPrice })),
-                `File: ${fileName}${sheets.length > 1 ? ` (${sheets[sheetIdx]?.name})` : ''}`
-              );
-              if (n === 0) {
-                setError('Tidak diterapkan: hanya Owner/Supervisor yang boleh memperbarui harga.');
-                return;
-              }
-              setMessage(`${toApply.length} harga diperbarui dan dicatat di Riwayat Harga.`);
-              setSelected(new Set());
-            }}
-            className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-xs font-bold cursor-pointer disabled:cursor-not-allowed"
-          >
-            Terapkan {toApply.length} Perubahan Harga
-          </button>
-        </div>
-      </div>
-    </div>
+          {message && <StatusText tone="success">{message}</StatusText>}
+    </ModalShell>
   );
 };

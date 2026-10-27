@@ -314,7 +314,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
       {simulatedDate && !projection.hasEventBoost && (
         <div className="px-4 sm:px-5 py-2 bg-blue-50 dark:bg-blue-950/40 border-b border-blue-200 dark:border-blue-900 flex items-center justify-between text-xs">
           <span className="text-blue-800 dark:text-blue-300">
-            🔎 Sedang mensimulasikan tanggal awal proyeksi: <strong>{formatYMD(simulatedDate)}</strong>
+            Sedang mensimulasikan tanggal awal proyeksi: <strong>{formatYMD(simulatedDate)}</strong>
           </span>
           <button
             type="button"
@@ -382,7 +382,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
               Hari Puncak (Peak Day)
             </span>
             <span className="px-1.5 py-0.2 rounded-md text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-              🔥 Teramai
+              Teramai
             </span>
           </div>
           <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mt-1 truncate">
@@ -843,7 +843,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    📅 Hari Ini
+                    Hari Ini
                   </button>
                   <button
                     type="button"

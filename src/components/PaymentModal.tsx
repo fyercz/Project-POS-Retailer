@@ -325,7 +325,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="w-4 h-4 rounded-full bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      ✓
+                      
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
                       Setelah struk EDC keluar <strong>APPROVED</strong>, catat No. Ref / RRN jika perlu.
@@ -421,7 +421,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="w-4 h-4 rounded-full bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      ✓
+                      
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
                       Setelah struk EDC keluar <strong>APPROVED</strong>, catat No. Ref / Approval / Batch jika perlu.

@@ -542,7 +542,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               id="btn-print-thermal-receipt"
               className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 transition-all ${
                 printMode === 'serial'
-                  ? 'bg-emerald-700 hover:bg-emerald-500 text-white'
+                  ? 'bg-emerald-700 hover:bg-emerald-800 text-white'
                   : printMode === 'bluetooth'
                   ? 'bg-blue-600 hover:bg-blue-500 text-white'
                   : 'bg-emerald-700 hover:bg-emerald-400 text-slate-950'

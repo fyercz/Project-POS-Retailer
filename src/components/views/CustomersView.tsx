@@ -589,10 +589,10 @@ export const CustomersView: React.FC = () => {
               ) : (
                 <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <input aria-label="Nama member" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs" />
-                    <input aria-label="Nomor HP member" inputMode="tel" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs" />
-                    <input aria-label="Email member (opsional)" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs" />
-                    <select aria-label="Tier member" value={editForm.tier} onChange={(e) => setEditForm({ ...editForm, tier: e.target.value })} className="w-full px-2.5 py-1.5 rounded-lg border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs">
+                    <input aria-label="Nama member" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs" />
+                    <input aria-label="Nomor HP member" inputMode="tel" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs" />
+                    <input aria-label="Email member (opsional)" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs" />
+                    <select aria-label="Tier member" value={editForm.tier} onChange={(e) => setEditForm({ ...editForm, tier: e.target.value })} className="w-full px-2.5 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs">
                       {['Bronze', 'Silver', 'Gold', 'Platinum'].map((t) => (
                         <option key={t} value={t}>
                           {t}
