@@ -120,7 +120,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
       datePattern: newEventDatePattern.trim(),
       category: newEventCategory,
       demandMultiplier: Math.round(mult * 100) / 100,
-      badge: `🎉 ${newEventName.trim()}`,
+      badge: `${newEventName.trim()}`,
       description: newEventDescription.trim() || `Event khusus ${newEventName.trim()} meningkatkan trafik belanja toko ritel.`,
       stockAdvice: newEventAdvice.trim() || `Tingkatkan stok barang fast-moving dan persiapkan uang kembalian kasir ekstra.`,
       isDefault: false,
@@ -654,7 +654,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                           : 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
                       }`}
                     >
-                      {hasEvent ? '🎉 Event' : isPeak ? '🔥 Puncak' : isHigh ? '⚡ Ramai' : isLow ? 'Tenang' : 'Normal'}
+                      {hasEvent ? 'Event' : isPeak ? 'Puncak' : isHigh ? 'Ramai' : isLow ? 'Tenang' : 'Normal'}
                     </span>
                   </div>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono block">
@@ -792,7 +792,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
 
       {/* 7. DEMAND EVENTS & SPECIAL CALENDAR MODAL */}
       {isEventModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95">
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
@@ -854,7 +854,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    🌙 Menjelang Idul Fitri {quickDates.lebaranLabel}
+                    Menjelang Idul Fitri {quickDates.lebaranLabel}
                   </button>
                   <button
                     type="button"
@@ -865,7 +865,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    🎆 Malam Tahun Baru (31 Des)
+                    Malam Tahun Baru (31 Des)
                   </button>
                   <button
                     type="button"
@@ -876,7 +876,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    💰 Periode Gajian (Payday tgl 25)
+                    Periode Gajian (Payday tgl 25)
                   </button>
                 </div>
               </div>
@@ -912,7 +912,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                           {evt.description}
                         </p>
                         <p className="text-[11px] text-emerald-700 dark:text-emerald-400 italic">
-                          💡 {evt.stockAdvice}
+                          {evt.stockAdvice}
                         </p>
                       </div>
 
@@ -1039,7 +1039,7 @@ export const ProjectedSalesWidget: React.FC<ProjectedSalesWidgetProps> = ({
                 <div className="flex justify-end pt-1">
                   <button
                     type="submit"
-                    className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition active:scale-95"
+                    className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition active:scale-95"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Simpan Event ke Kalender</span>

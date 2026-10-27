@@ -180,7 +180,7 @@ export const OfflineSyncModal: React.FC = () => {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div
         id="offline-sync-modal-container"
         className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl shadow-xl overflow-hidden flex flex-col max-h-[92vh]"
@@ -464,7 +464,7 @@ export const OfflineSyncModal: React.FC = () => {
                       <Server className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       Mesin Basis Data: SQLite Relasional (WAL Mode)
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500 text-white font-mono">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-600 text-white font-mono">
                       ACID Guaranteed
                     </span>
                   </div>
@@ -477,7 +477,7 @@ export const OfflineSyncModal: React.FC = () => {
                   <button
                     onClick={handleCheckIntegrity}
                     disabled={isCheckingIntegrity}
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm cursor-pointer flex items-center gap-1.5"
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm cursor-pointer flex items-center gap-1.5"
                   >
                     <ShieldCheck className={`w-3.5 h-3.5 ${isCheckingIntegrity ? 'animate-spin' : ''}`} />
                     <span>{isCheckingIntegrity ? 'Memeriksa...' : 'Cek Integritas (PRAGMA)'}</span>

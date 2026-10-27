@@ -200,7 +200,7 @@ export const AICategoryMapperModal: React.FC<AICategoryMapperModalProps> = ({
               type="button"
               onClick={handleStartAnalysis}
               disabled={isAnalyzing}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-600/20 disabled:opacity-50 transition active:scale-95 shrink-0"
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-600/20 disabled:opacity-50 transition active:scale-95 shrink-0"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? 'animate-spin' : ''}`} />
               <span>{isAnalyzing ? 'Sedang Menganalisis AI...' : candidates.length > 0 ? 'Pindai Ulang AI' : 'Mulai Analisis AI Sekarang'}</span>

@@ -1331,7 +1331,7 @@ export const InventoryView: React.FC = () => {
               ? 'bg-emerald-700 text-slate-950'
               : notificationMsg.type === 'delete'
               ? 'bg-amber-500 text-slate-950'
-              : 'bg-rose-500 text-white'
+              : 'bg-rose-600 text-white'
           }`}
         >
           <div className="flex items-center gap-3 flex-wrap">
@@ -1464,7 +1464,7 @@ export const InventoryView: React.FC = () => {
               onClick={() => setActiveTab('returns')}
               className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                 activeTab === 'returns'
-                  ? 'bg-rose-500 text-white shadow-sm'
+                  ? 'bg-rose-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400'
               }`}
             >
@@ -1497,7 +1497,7 @@ export const InventoryView: React.FC = () => {
             <button
               id="btn-add-supplier"
               onClick={handleOpenAddSupplier}
-              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95"
+              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>+ Tambah Supplier</span>
@@ -1519,7 +1519,7 @@ export const InventoryView: React.FC = () => {
             <button
               id="btn-open-return-tab"
               onClick={() => setIsReturnOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer transition-all active:scale-95"
+              className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer transition-all active:scale-95"
             >
               <RotateCcw className="w-4 h-4" />
               <span>+ Retur ke Supplier</span>
@@ -2135,7 +2135,7 @@ export const InventoryView: React.FC = () => {
                 setSelectedProductForQR(null);
                 setIsQRShelfLabelModalOpen(true);
               }}
-              className="px-3.5 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-sm active:scale-95"
+              className="px-3.5 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-sm active:scale-95"
               title="Cetak label rak QR dinamis untuk produk yang dipilih"
             >
               <QrCode className="w-3.5 h-3.5 text-indigo-200" />
@@ -2153,7 +2153,7 @@ export const InventoryView: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsBulkDeleteModalOpen(true)}
-              className="px-3.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-sm active:scale-95"
+              className="px-3.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-sm active:scale-95"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Hapus Terpilih ({selectedProductIds.length})</span>
@@ -2401,7 +2401,7 @@ export const InventoryView: React.FC = () => {
                               <button
                                 onClick={() => handleOpenReturnForProduct(prod)}
                                 title="Buat Retur Pengembalian ke Supplier"
-                                className="px-2 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+                                className="px-2 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
                               >
                                 <RotateCcw className="w-3 h-3" />
                                 <span>Retur</span>
@@ -2748,7 +2748,7 @@ export const InventoryView: React.FC = () => {
                   <p className="text-xs text-slate-500 mt-1">Daftarkan mitra distributor/supplier baru untuk memudahkan pembelian dan retur barang.</p>
                   <button
                     onClick={handleOpenAddSupplier}
-                    className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-500 cursor-pointer"
+                    className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     Tambah Supplier Baru
@@ -2823,7 +2823,7 @@ export const InventoryView: React.FC = () => {
                   <span>Tempo (TOP)</span>
                   <span className="text-[11px] opacity-75 font-mono">({purchaseTermsStats.tempoCount})</span>
                   {purchaseTermsStats.urgentTempoCount > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[11px] font-bold">
+                    <span className="px-1.5 py-0.5 rounded-full bg-rose-600 text-white text-[11px] font-bold">
                       {purchaseTermsStats.urgentTempoCount} jatuh tempo
                     </span>
                   )}
@@ -3170,7 +3170,7 @@ export const InventoryView: React.FC = () => {
                                 setReturnStartDate('');
                                 setReturnEndDate('');
                               }}
-                              className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition"
+                              className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition"
                             >
                               <span>Tampilkan Seluruh Retur ({purchaseReturns.length})</span>
                             </button>
@@ -3194,7 +3194,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Fast Stock Correction Modal */}
       {editingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -3308,7 +3308,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Delete Product Confirmation Modal */}
       {productToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-5 space-y-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 border border-rose-500/20">
@@ -3345,7 +3345,7 @@ export const InventoryView: React.FC = () => {
               </button>
               <button
                 onClick={handleConfirmDeleteProduct}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
               >
                 Ya, Hapus Produk
               </button>
@@ -3356,7 +3356,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Delete Supplier Confirmation Modal */}
       {supplierToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-5 space-y-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 border border-rose-500/20">
@@ -3395,7 +3395,7 @@ export const InventoryView: React.FC = () => {
               </button>
               <button
                 onClick={handleConfirmDeleteSupplier}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
               >
                 Ya, Hapus Supplier
               </button>
@@ -3957,7 +3957,7 @@ export const InventoryView: React.FC = () => {
             {/* Modal Header */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold">
+                <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold">
                   <RotateCcw className="w-5 h-5" />
                 </div>
                 <div>
@@ -4169,7 +4169,7 @@ export const InventoryView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black flex items-center gap-2 cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
+                  className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black flex items-center gap-2 cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
                 >
                   <Check className="w-4 h-4" />
                   <span>Proses Retur & Potong Stok Toko</span>
@@ -4217,7 +4217,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Periksa harga jual setelah terima barang (dulu tidak ada peringatan sama sekali) */}
       {marginAlerts && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3">
           {/* role="dialog" & label dipasang otomatis di lapisan luar oleh useGlobalDialogA11y */}
           <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800">
@@ -4433,7 +4433,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Confirmation Modal: Hapus Semua Data Impor */}
       {isClearImportedModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400 mb-4">
@@ -4504,7 +4504,7 @@ export const InventoryView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleConfirmClearImported}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Ya, Hapus Semua Data Impor ({importedCount.toLocaleString('id-ID')})</span>
@@ -4517,7 +4517,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Confirmation Modal: Hapus Terpilih (Batch Delete) */}
       {isBulkDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400 mb-4">
@@ -4564,7 +4564,7 @@ export const InventoryView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleConfirmBulkDelete}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-600/20 transition-all active:scale-95"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Hapus {selectedProductIds.length} Produk</span>
@@ -4577,7 +4577,7 @@ export const InventoryView: React.FC = () => {
 
       {/* Confirmation Modal: Reset ke Default 40 Produk */}
       {isResetCatalogModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <div className="flex items-center gap-3 text-emerald-700 dark:text-emerald-400 mb-4">

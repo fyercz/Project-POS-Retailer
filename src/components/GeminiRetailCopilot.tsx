@@ -662,7 +662,7 @@ export const GeminiRetailCopilot: React.FC = () => {
               <div class="meta">${escapeHtml(settings.address || 'Smart Retail Point of Sale')} | Telp: ${escapeHtml(settings.phone || '-')}</div>
             </div>
             <div style="text-align: right;">
-              <span style="display: inline-block; background: #dcfce7; color: #166534; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 11px;">PURCHASE ORDER (PO) RESMI</span>
+              <span style="display: inline-block; background: #d1fae5; color: #065f46; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 11px;">PURCHASE ORDER (PO) RESMI</span>
               <div style="font-weight: bold; margin-top: 4px; font-size: 14px;">${poNumber}</div>
               <div style="font-size: 11px; color: #64748b;">Tanggal: ${dateStr}</div>
             </div>
@@ -870,7 +870,7 @@ export const GeminiRetailCopilot: React.FC = () => {
   if (!isGeminiCopilotOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-150">
       <div
         id="gemini-retail-copilot-drawer"
         className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-200"
@@ -1206,7 +1206,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                         }`}
                         title="Eliminasi kuota order menjadi 0 untuk mencegah modal tertahan"
                       >
-                        🚫 Eliminasi (0)
+                        Eliminasi (0)
                       </button>
                       <button
                         type="button"
@@ -1266,7 +1266,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                         }`}
                         title="Eliminasi kuota order menjadi 0 hingga vendor dievaluasi"
                       >
-                        🚫 Eliminasi (0)
+                        Eliminasi (0)
                       </button>
                       <button
                         type="button"
@@ -1318,7 +1318,7 @@ export const GeminiRetailCopilot: React.FC = () => {
                                 ? 'bg-emerald-700 text-slate-950'
                                 : forecastData.healthScore >= 60
                                 ? 'bg-amber-500 text-slate-950'
-                                : 'bg-rose-500 text-white'
+                                : 'bg-rose-600 text-white'
                             }`}
                           >
                             {forecastData.healthScore}/100
@@ -2325,7 +2325,7 @@ export const GeminiRetailCopilot: React.FC = () => {
 
                     {generatedPromo.ownerSafetyNote && (
                       <p className="text-[11px] text-emerald-800 dark:text-emerald-300/90 leading-tight italic pt-0.5">
-                        💡 {generatedPromo.ownerSafetyNote}
+                        {generatedPromo.ownerSafetyNote}
                       </p>
                     )}
                   </div>

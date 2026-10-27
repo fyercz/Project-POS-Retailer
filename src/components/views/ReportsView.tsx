@@ -451,7 +451,7 @@ export const ReportsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsExpenseModalOpen(true)}
-                className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
+                className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm shadow-indigo-600/20 transition-all active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>+ Catat Beban Kas Keluar</span>
@@ -695,7 +695,7 @@ export const ReportsView: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('forecast')}
-              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1 shrink-0 cursor-pointer transition shadow-sm active:scale-95"
+              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1 shrink-0 cursor-pointer transition shadow-sm active:scale-95"
             >
               <span>Buka Proyeksi</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -1194,7 +1194,7 @@ export const ReportsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab('payments')}
-                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <span>Buka Laporan Pembayaran &amp; Settlement EDC BRI</span>
                 <ChevronRight className="w-4 h-4" />
@@ -1543,7 +1543,7 @@ export const ReportsView: React.FC = () => {
       {/* MODAL: INPUT BEBAN OPERASIONAL KAS KELUAR                     */}
       {/* ============================================================== */}
       {isExpenseModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="p-4 bg-gradient-to-r from-indigo-600 to-indigo-600 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1664,7 +1664,7 @@ export const ReportsView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold cursor-pointer shadow-md shadow-indigo-600/20 active:scale-95"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer shadow-md shadow-indigo-600/20 active:scale-95"
                 >
                   Simpan Beban &amp; Jurnal
                 </button>

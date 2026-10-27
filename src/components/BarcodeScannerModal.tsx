@@ -440,7 +440,7 @@ export const BarcodeScannerModal: React.FC = () => {
   return (
     <div
       id="barcode-scanner-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
@@ -574,7 +574,7 @@ export const BarcodeScannerModal: React.FC = () => {
                     </span>
                   </button>
                   <p className="text-[11px] text-emerald-400/90 leading-tight">
-                    ✓ Rekomendasi Tercepat: Buka kamera HP langsung &amp; produk otomatis masuk keranjang!
+                    Rekomendasi Tercepat: Buka kamera HP langsung &amp; produk otomatis masuk keranjang!
                   </p>
                 </div>
 

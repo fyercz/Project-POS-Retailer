@@ -403,7 +403,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                       type="button"
                       onClick={() => updateCartItemQuantity(item.id, -1)}
                       aria-label={item.quantity === 1 ? `Hapus ${item.product.name} dari keranjang` : `Kurangi jumlah ${item.product.name}`}
-                      className="w-8 h-8 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                      className="w-8 h-8 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-700 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                     >
                       {item.quantity === 1 ? <Trash2 className="w-4 h-4 text-rose-600" /> : <Minus className="w-4 h-4" />}
                     </button>
@@ -719,7 +719,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ onBackToCatalog }) => {
                                       onClick={() => applyCustomerDiscount(suggestion)}
                                       className={`px-2 py-0.5 rounded-md font-bold text-[11px] transition-all cursor-pointer ${
                                         suggestion.isApplicable
-                                          ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm active:scale-95'
+                                          ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm active:scale-95'
                                           : 'bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-not-allowed'
                                       }`}
                                     >

@@ -202,7 +202,7 @@ export const EmployeeManagementModal: React.FC = () => {
   return (
     <div
       id="employee-management-modal"
-      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -666,7 +666,7 @@ export const EmployeeManagementModal: React.FC = () => {
                                   message: `Berhasil berganti ke ${sampleInv.name} (Gudang). Menu Kasir & Laporan sekarang terkunci!`,
                                 });
                               }}
-                              className="px-2.5 py-1 text-[11px] font-semibold rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition flex items-center gap-1 mx-auto"
+                              className="px-2.5 py-1 text-[11px] font-semibold rounded-xl bg-amber-600 hover:bg-amber-700 text-slate-950 transition flex items-center gap-1 mx-auto"
                             >
                               <UserCheck className="w-3.5 h-3.5" /> Uji Gudang
                             </button>

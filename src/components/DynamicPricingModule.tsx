@@ -460,10 +460,10 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
             </span>
 
             {[
-              { id: 'balanced', label: '⚖️ Seimbang Otomatis (Rekomendasi AI)', desc: 'Optimalisasi laba dan perputaran' },
-              { id: 'maximize_profit', label: '💰 Maksimalkan Laba', desc: 'Tangkap peluang margin pada fast mover' },
-              { id: 'accelerate_turnover', label: '⚡ Percepat Perputaran Stok', desc: 'Diskon cairkan stok lambat & kas' },
-              { id: 'competitive_match', label: '🎯 Penyelarasan Pasar', desc: 'Samakan harga dengan minimarket sekitar' },
+              { id: 'balanced', label: 'Seimbang Otomatis (Rekomendasi AI)', desc: 'Optimalisasi laba dan perputaran' },
+              { id: 'maximize_profit', label: 'Maksimalkan Laba', desc: 'Tangkap peluang margin pada fast mover' },
+              { id: 'accelerate_turnover', label: 'Percepat Perputaran Stok', desc: 'Diskon cairkan stok lambat & kas' },
+              { id: 'competitive_match', label: 'Penyelarasan Pasar', desc: 'Samakan harga dengan minimarket sekitar' },
             ].map((strat) => (
               <button
                 key={strat.id}
@@ -581,9 +581,9 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
             {[
               { id: 'all', label: 'Semua' },
-              { id: 'increase', label: '🔥 Peluang Naik' },
-              { id: 'decrease', label: '📉 Perlu Turun' },
-              { id: 'clearance', label: '⚠️ Cuci Gudang' },
+              { id: 'increase', label: 'Peluang Naik' },
+              { id: 'decrease', label: 'Perlu Turun' },
+              { id: 'clearance', label: 'Cuci Gudang' },
               { id: 'maintain', label: 'Optimal' },
             ].map((f) => (
               <button
@@ -728,10 +728,10 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                               : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
                           }`}
                         >
-                          {item.turnoverSpeed === 'fast' && '🔥 Cepat'}
-                          {item.turnoverSpeed === 'moderate' && '⚡ Normal'}
-                          {item.turnoverSpeed === 'slow' && '🐢 Lambat'}
-                          {item.turnoverSpeed === 'dead_stock' && '⚠️ Macet'}
+                          {item.turnoverSpeed === 'fast' && 'Cepat'}
+                          {item.turnoverSpeed === 'moderate' && 'Normal'}
+                          {item.turnoverSpeed === 'slow' && 'Lambat'}
+                          {item.turnoverSpeed === 'dead_stock' && 'Macet'}
                         </span>
                         <div className="text-[11px] text-slate-500 mt-0.5">
                           DSI: {item.daysOfInventory > 100 ? '>90' : item.daysOfInventory} hari ({item.unitsSold30d} terjual)
@@ -904,10 +904,10 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
                                 : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
                             }`}
                           >
-                            {item.turnoverSpeed === 'fast' && '🔥 Fast Moving'}
-                            {item.turnoverSpeed === 'moderate' && '⚡ Steady / Normal'}
-                            {item.turnoverSpeed === 'slow' && '🐢 Slow Moving'}
-                            {item.turnoverSpeed === 'dead_stock' && '⚠️ Dead Stock'}
+                            {item.turnoverSpeed === 'fast' && 'Fast Moving'}
+                            {item.turnoverSpeed === 'moderate' && 'Steady / Normal'}
+                            {item.turnoverSpeed === 'slow' && 'Slow Moving'}
+                            {item.turnoverSpeed === 'dead_stock' && 'Dead Stock'}
                           </span>
 
                           <span className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -1167,7 +1167,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
 
       {/* MODAL 1: WHAT-IF PRICE ELASTICITY SIMULATOR */}
       {simulatorItem && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-xl relative">
             <button aria-label="Tutup"
               onClick={() => setSimulatorItem(null)}
@@ -1286,7 +1286,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
 
       {/* MODAL 2: EDIT COMPETITOR BENCHMARKS */}
       {competitorModalItem && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl relative">
             <button aria-label="Tutup"
               onClick={() => setCompetitorModalItem(null)}
@@ -1365,7 +1365,7 @@ export const DynamicPricingModule: React.FC<DynamicPricingModuleProps> = ({
 
       {/* MODAL 3: CUSTOM PRICE OVERRIDE */}
       {customEditItem && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-xl relative">
             <button aria-label="Tutup"
               onClick={() => setCustomEditItem(null)}

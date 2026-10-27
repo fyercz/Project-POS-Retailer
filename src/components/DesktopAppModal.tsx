@@ -590,7 +590,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                       type="button"
                       onClick={handleConfigureGitOrigin}
                       disabled={isConfiguringGit}
-                      className="px-3 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 cursor-pointer disabled:opacity-50"
+                      className="px-3 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-slate-950 font-bold text-xs shrink-0 cursor-pointer disabled:opacity-50"
                     >
                       {isConfiguringGit ? 'Menghubungkan...' : 'Hubungkan ke GitHub'}
                     </button>
@@ -1208,7 +1208,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                 {!isDesktop && canInstallPwa && (
                   <button
                     onClick={handleInstallClick}
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shrink-0 shadow-md shadow-blue-600/20 cursor-pointer flex items-center gap-1.5 transition-all active:scale-95"
+                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shrink-0 shadow-md shadow-blue-600/20 cursor-pointer flex items-center gap-1.5 transition-all active:scale-95"
                   >
                     <Download className="w-4 h-4" />
                     <span>Pasang Sekarang</span>
@@ -1275,7 +1275,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                   {canInstallPwa ? (
                     <button
                       onClick={handleInstallClick}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer inline-flex items-center gap-1.5"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>Instal Ulilmart POS ke Desktop</span>
@@ -1368,8 +1368,8 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                     onClick={handleToggleKiosk}
                     className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md transition-all active:scale-95 ${
                       isFullscreen
-                        ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/20'
-                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/20'
+                        ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
                     }`}
                   >
                     {isFullscreen ? (
@@ -1448,7 +1448,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
                 <div className="flex flex-wrap gap-2 pt-1">
                   <button
                     onClick={handleTestPrint}
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-sm"
+                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-sm"
                   >
                     <Printer className="w-4 h-4" />
                     <span>Uji Coba Cetak Struk Contoh</span>
@@ -1456,7 +1456,7 @@ export const DesktopAppModal: React.FC<DesktopAppModalProps> = ({
 
                   <button
                     onClick={handleTestDrawerKick}
-                    className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-sm"
+                    className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-sm"
                   >
                     <Coins className="w-4 h-4" />
                     <span>Tes Sinyal Buka Laci Uang (Drawer Kick)</span>

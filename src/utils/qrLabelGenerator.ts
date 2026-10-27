@@ -201,8 +201,8 @@ export function generateSingleQrShelfLabelHtml(
   let stockBadgeBg = '#ecfdf5';
   let stockText = `${product.stock} ${product.unit || 'pcs'}`;
   if (product.stock <= 0) {
-    stockBadgeColor = '#dc2626';
-    stockBadgeBg = '#fef2f2';
+    stockBadgeColor = '#e11d48';
+    stockBadgeBg = '#fff1f2';
     stockText = 'Habis';
   } else if (product.stock <= product.minStock) {
     stockBadgeColor = '#d97706';
@@ -226,7 +226,7 @@ export function generateSingleQrShelfLabelHtml(
           <div style="background: #0f172a; color: #ffffff; padding: 2px 4px; display: flex; justify-content: space-between; align-items: center; font-size: 7.5px; font-weight: 800; text-transform: uppercase; border-radius: 2px; line-height: 1;">
             <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">${options.storeName || 'ULILMART MAGETAN'}</span>
             <div style="display: flex; align-items: center; gap: 4px;">
-              ${options.showAisleLocation && product.aisle ? `<span style="background: #0284c7; color: #ffffff; padding: 0.5px 3px; border-radius: 2px; font-size: 6.5px;">${product.aisle}</span>` : ''}
+              ${options.showAisleLocation && product.aisle ? `<span style="background: #2563eb; color: #ffffff; padding: 0.5px 3px; border-radius: 2px; font-size: 6.5px;">${product.aisle}</span>` : ''}
               ${options.customPromoBadge ? `<span style="background: #e11d48; color: #ffffff; padding: 0.5px 3px; border-radius: 2px; font-size: 6.5px;">${options.customPromoBadge}</span>` : ''}
             </div>
           </div>`
@@ -253,7 +253,7 @@ export function generateSingleQrShelfLabelHtml(
               <div style="width: ${qrDimension}; height: ${qrDimension}; display: flex; align-items: center; justify-content: center; background: #ffffff; padding: 1px; border: 1px solid #cbd5e1; border-radius: 3px;">
                 ${qrSvg}
               </div>
-              <div style="font-size: 5.5px; font-weight: 800; color: #0284c7; text-align: center; line-height: 1; margin-top: 1.5px; letter-spacing: -0.2px;">
+              <div style="font-size: 5.5px; font-weight: 800; color: #2563eb; text-align: center; line-height: 1; margin-top: 1.5px; letter-spacing: -0.2px;">
                 SCAN CEK STOK
               </div>
             </div>`
@@ -265,7 +265,7 @@ export function generateSingleQrShelfLabelHtml(
             <!-- Price Display -->
             <div style="line-height: 1;">
               ${options.showUnit ? `<div style="font-size: 7px; color: #64748b; font-weight: 700; text-transform: uppercase;">HARGA / ${product.unit || 'PCS'}</div>` : ''}
-              <div style="font-size: 15px; font-weight: 900; color: #b91c1c; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -0.5px;">
+              <div style="font-size: 15px; font-weight: 900; color: #be123c; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -0.5px;">
                 ${formattedPrice}
               </div>
             </div>
@@ -312,7 +312,7 @@ export function generateSingleQrShelfLabelHtml(
       <div style="box-sizing: border-box; width: 100%; height: 100%; padding: 3px; border: ${borderStyle}; background: #ffffff; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 6.5px; font-weight: 800; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 1px;">
           <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">${product.brand || options.storeName || 'ULILMART'}</span>
-          ${options.showLastPriceUpdate ? `<span style="color: #0284c7;">Upd: ${priceUpdate.formattedDate}</span>` : ''}
+          ${options.showLastPriceUpdate ? `<span style="color: #2563eb;">Upd: ${priceUpdate.formattedDate}</span>` : ''}
         </div>
 
         <div style="font-size: 8.5px; font-weight: 800; color: #0f172a; line-height: 1.1; max-height: 19px; overflow: hidden;">
@@ -329,7 +329,7 @@ export function generateSingleQrShelfLabelHtml(
               : ''
           }
           <div style="flex: 1; text-align: right;">
-            <div style="font-size: 13px; font-weight: 900; color: #b91c1c; font-family: ui-monospace, monospace; line-height: 1;">
+            <div style="font-size: 13px; font-weight: 900; color: #be123c; font-family: ui-monospace, monospace; line-height: 1;">
               ${formattedPrice}
             </div>
             <div style="font-size: 6px; color: #64748b; margin-top: 1px;">

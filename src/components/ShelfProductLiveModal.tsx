@@ -95,7 +95,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
 
   if (!activeProduct) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in">
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full text-center shadow-xl border border-slate-200 dark:border-slate-800">
           <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4">
             <XCircle className="w-8 h-8" />
@@ -145,7 +145,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs overflow-y-auto animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xs overflow-y-auto animate-in fade-in">
       <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto flex flex-col max-h-[92vh]">
         {/* Top Header Bar */}
         <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white px-5 py-4 flex items-center justify-between border-b border-slate-800">
@@ -344,7 +344,7 @@ export const ShelfProductLiveModal: React.FC<ShelfProductLiveModalProps> = ({
                     Pembaruan Harga Terakhir
                   </h4>
                   <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">
-                    {priceUpdateInfo.isRecent ? '⚡ Baru saja diperbarui (Dalam 7 hari)' : 'Terverifikasi aktif'}
+                    {priceUpdateInfo.isRecent ? 'Baru saja diperbarui (Dalam 7 hari)' : 'Terverifikasi aktif'}
                   </span>
                 </div>
               </div>

@@ -444,29 +444,29 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
       ctx.fillText('INDOMIE', 205, 130);
 
       // Milk cartons
-      ctx.fillStyle = '#0284c7';
+      ctx.fillStyle = '#2563eb';
       ctx.fillRect(300, 70, 70, 110);
       ctx.fillStyle = '#ffffff';
       ctx.fillText('ULTRA 1L', 308, 125);
 
-      ctx.fillStyle = '#0284c7';
+      ctx.fillStyle = '#2563eb';
       ctx.fillRect(380, 70, 70, 110);
       ctx.fillStyle = '#ffffff';
       ctx.fillText('ULTRA 1L', 388, 125);
 
       // Bottom shelf items (Oils)
-      ctx.fillStyle = '#eab308';
+      ctx.fillStyle = '#f59e0b';
       ctx.fillRect(80, 240, 80, 120);
       ctx.fillStyle = '#0f172a';
       ctx.font = 'bold 11px sans-serif';
       ctx.fillText('BIMOLI 2L', 90, 300);
 
-      ctx.fillStyle = '#eab308';
+      ctx.fillStyle = '#f59e0b';
       ctx.fillRect(180, 240, 80, 120);
       ctx.fillStyle = '#0f172a';
       ctx.fillText('BIMOLI 2L', 190, 300);
 
-      ctx.fillStyle = '#eab308';
+      ctx.fillStyle = '#f59e0b';
       ctx.fillRect(280, 240, 80, 120);
       ctx.fillStyle = '#0f172a';
       ctx.fillText('BIMOLI 2L', 290, 300);
@@ -540,7 +540,7 @@ export const AIVisualStockOpnameModal: React.FC<AIVisualStockOpnameModalProps> =
   return (
     <div
       id="ai-visual-stock-opname-modal"
-      className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}

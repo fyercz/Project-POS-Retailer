@@ -394,7 +394,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
           >
             <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-rose-200/60 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold shadow-sm">
+                <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold shadow-sm">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
@@ -506,7 +506,7 @@ export const InventoryAlertBanner: React.FC<InventoryAlertBannerProps> = ({
                           <button
                             type="button"
                             onClick={() => onOpenReturn(p)}
-                            className="px-2 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition shadow-sm"
+                            className="px-2 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition shadow-sm"
                             title="Buat formulir retur supplier untuk barang kedaluwarsa ini"
                           >
                             <RotateCcw className="w-3 h-3" />

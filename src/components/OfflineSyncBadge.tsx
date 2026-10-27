@@ -64,7 +64,7 @@ export const OfflineSyncBadge: React.FC = () => {
           className={`w-4 h-4 rounded-full text-[11px] font-extrabold flex items-center justify-center font-mono ${
             !isOnline
               ? 'bg-amber-500 text-slate-950'
-              : 'bg-blue-500 text-white'
+              : 'bg-blue-600 text-white'
           }`}
         >
           {pendingSyncCount}

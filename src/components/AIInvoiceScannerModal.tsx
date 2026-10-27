@@ -316,7 +316,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
   return (
     <div
       id="ai-invoice-scanner-modal"
-      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -426,7 +426,7 @@ export const AIInvoiceScannerModal: React.FC<AIInvoiceScannerModalProps> = ({
                             setSelectedImage(null);
                             setCompressionInfo(null);
                           }}
-                          className="p-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-500 hover:text-white transition shrink-0 ml-2"
+                          className="p-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-700 hover:text-white transition shrink-0 ml-2"
                           title="Hapus berkas"
                         >
                           <X className="w-4 h-4" />

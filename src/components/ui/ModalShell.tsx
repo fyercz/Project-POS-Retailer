@@ -20,7 +20,7 @@ const WIDTH = { md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-3xl' };
 
 export function ModalShell({ title, description, icon, onClose, footer, size = 'lg', children }: ModalShellProps) {
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3">
       <div className={`w-full ${WIDTH[size]} max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl`}>
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3">
           <div className="min-w-0">

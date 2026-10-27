@@ -327,7 +327,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="w-full max-w-5xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
@@ -454,7 +454,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                   <button
                     type="button"
                     onClick={() => handleApplyUniformExpiry(uniformExpiryDate)}
-                    className="px-3 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] transition cursor-pointer"
+                    className="px-3 py-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[11px] transition cursor-pointer"
                   >
                     Terapkan Tanggal ke {selectedCount} Baris
                   </button>
@@ -501,7 +501,7 @@ export const BulkStockAdjustmentModal: React.FC<BulkStockAdjustmentModalProps> =
                     onClick={() => setUniformQtyMode('set')}
                     className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition cursor-pointer ${
                       uniformQtyMode === 'set'
-                        ? 'bg-blue-500 text-white shadow-sm'
+                        ? 'bg-blue-600 text-white shadow-sm'
                         : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >

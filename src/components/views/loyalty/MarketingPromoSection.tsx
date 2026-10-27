@@ -768,7 +768,7 @@ export const MarketingPromoSection: React.FC = () => {
               <div className="px-5">
                 <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-amber-50 dark:from-amber-950/30 dark:to-amber-950/20 border border-amber-300 dark:border-amber-800/60 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-white font-black flex items-center justify-center text-sm shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-sm shadow-sm">
                       %
                     </div>
                     <div>
@@ -1018,7 +1018,7 @@ export const MarketingPromoSection: React.FC = () => {
 
       {/* RECIPIENT BROADCAST MODAL */}
       {showRecipientModal && currentPromo && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div>

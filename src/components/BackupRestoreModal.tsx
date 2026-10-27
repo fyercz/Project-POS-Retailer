@@ -181,7 +181,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
     activeEmployee?.role === 'owner' || activeEmployee?.role === 'supervisor' || authorizedByPin;
   if (!canManageBackup) {
     return (
-      <div className="fixed inset-0 z-[120] bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4" onClick={onClose}>
         <div
           className="max-w-sm w-full rounded-2xl bg-white dark:bg-slate-900 p-5 text-center space-y-3 shadow-xl"
           onClick={(e) => e.stopPropagation()}
@@ -1365,12 +1365,12 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                               Database Aktif (Saat Ini)
                             </div>
                             <div className="font-bold text-slate-800 dark:text-slate-200 truncate">
-                              🏪 {settings.storeName || 'Toko Ritel'}
+                              {settings.storeName || 'Toko Ritel'}
                             </div>
                             <div className="text-slate-600 dark:text-slate-400 space-y-0.5">
-                              <div>📦 {products.length} Produk</div>
-                              <div>🧾 {transactions.length} Transaksi</div>
-                              <div>👥 {customers.length} Pelanggan</div>
+                              <div>{products.length} Produk</div>
+                              <div>{transactions.length} Transaksi</div>
+                              <div>{customers.length} Pelanggan</div>
                             </div>
                           </div>
 
@@ -1388,12 +1388,12 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                               )}
                             </div>
                             <div className="font-bold text-blue-900 dark:text-blue-200 truncate">
-                              🏪 {validationReport.fileInfo.storeName || 'Tidak Diketahui'}
+                              {validationReport.fileInfo.storeName || 'Tidak Diketahui'}
                             </div>
                             <div className="text-slate-600 dark:text-slate-400 space-y-0.5">
-                              <div>📦 {validationReport.metrics.validProductsCount} Produk Valid</div>
-                              <div>🧾 {validationReport.metrics.validTransactionsCount} Transaksi Valid</div>
-                              <div>👥 {validationReport.metrics.validCustomersCount} Pelanggan Valid</div>
+                              <div>{validationReport.metrics.validProductsCount} Produk Valid</div>
+                              <div>{validationReport.metrics.validTransactionsCount} Transaksi Valid</div>
+                              <div>{validationReport.metrics.validCustomersCount} Pelanggan Valid</div>
                             </div>
                           </div>
                         </div>
@@ -1524,7 +1524,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                           acknowledgedOverwrite: false,
                         });
                       }}
-                      className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95"
+                      className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 cursor-pointer transition-all active:scale-95"
                     >
                       <ShieldCheck className="w-4 h-4" />
                       <span>Lanjutkan Pemulihan Berkas Terverifikasi...</span>
@@ -2107,7 +2107,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
                   type="button"
                   disabled={!confirmRestoreModal.acknowledgedOverwrite}
                   onClick={handleExecuteRestore}
-                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer transition-all active:scale-95"
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 cursor-pointer transition-all active:scale-95"
                 >
                   <AlertTriangle className="w-4 h-4" />
                   <span>Ya, Saya Yakin — Timpa &amp; Pulihkan Data</span>
@@ -2146,7 +2146,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
               <button
                 type="button"
                 onClick={() => handleDeletePoint(confirmDeletePointId)}
-                className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer"
               >
                 Hapus Snapshot
               </button>

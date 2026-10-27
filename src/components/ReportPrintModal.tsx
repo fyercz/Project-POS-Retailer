@@ -345,7 +345,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
           <div style="display: flex; align-items: center; gap: 16px;">
             ${isUlilMartStore(settings.storeName) ? '<img src="/ulilmart-logo.svg" style="height: 48px; width: auto;" alt="' + escapeHtml(settings.storeName) + '" />' : '<div style="font-weight: 800; font-size: 20px;">' + escapeHtml(settings.storeName || 'Toko') + '</div>'}
             <div>
-              <div style="font-size: 13px; font-weight: 700; color: #0284c7; letter-spacing: 0.5px;">${escapeHtml(settings.storeTagline || 'Lengkap & Hemat')}</div>
+              <div style="font-size: 13px; font-weight: 700; color: #2563eb; letter-spacing: 0.5px;">${escapeHtml(settings.storeTagline || 'Lengkap & Hemat')}</div>
               <div style="font-size: 12px; color: #475569; margin-top: 2px;">
                 ${escapeHtml(settings.branchName)} • ${escapeHtml(settings.address)}
               </div>
@@ -403,8 +403,8 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
 
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
             <div style="font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase;">Laba Kotor</div>
-            <div style="font-size: 16px; font-weight: 800; color: #0d9488; margin-top: 2px;">${formatCurrency(grossProfit, settings.currency)}</div>
-            <div style="font-size: 10px; color: #0d9488; font-weight: 600; margin-top: 2px;">Margin: ${profitMargin}%</div>
+            <div style="font-size: 16px; font-weight: 800; color: #059669; margin-top: 2px;">${formatCurrency(grossProfit, settings.currency)}</div>
+            <div style="font-size: 10px; color: #059669; font-weight: 600; margin-top: 2px;">Margin: ${profitMargin}%</div>
           </div>
         </div>
 
@@ -508,7 +508,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                       <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold;">${p.quantity}</td>
                       <td style="padding: 6px 8px; text-align: right; font-family: monospace;">${formatCurrency(p.revenue, settings.currency)}</td>
                       <td style="padding: 6px 8px; text-align: right; font-family: monospace; color: #64748b;">${formatCurrency(p.cogs, settings.currency)}</td>
-                      <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold; color: #0d9488;">${formatCurrency(p.profit, settings.currency)}</td>
+                      <td style="padding: 6px 8px; text-align: right; font-family: monospace; font-weight: bold; color: #059669;">${formatCurrency(p.profit, settings.currency)}</td>
                     </tr>
                   `
                         )
@@ -643,7 +643,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                               ? (t.payment.bankName || 'KARTU EDC BRI')
                               : t.payment.method.toUpperCase();
                             return `
-                              <tr style="border-bottom: 1px solid #f1f5f9; ${isEdc ? 'background: #fafcff;' : ''}">
+                              <tr style="border-bottom: 1px solid #f1f5f9; ${isEdc ? 'background: #f8fafc;' : ''}">
                                 <td style="padding: 6px 8px; font-family: monospace; font-weight: bold; color: #0f172a;">${escapeHtml(t.invoiceNumber)}</td>
                                 <td style="padding: 6px 8px; color: #475569;">${new Date(t.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</td>
                                 <td style="padding: 6px 8px;">

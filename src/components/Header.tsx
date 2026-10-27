@@ -347,22 +347,22 @@ export const Header: React.FC = () => {
               className="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-500 dark:border-slate-700 cursor-pointer shadow-sm focus:ring-1 focus:ring-emerald-500 outline-none"
             >
               <option value="pos">
-                🛒 Kasir {!isViewAllowed(activeEmployee?.role, 'pos') ? '🔒 (Perlu SPV/Owner)' : ''}
+                Kasir {!isViewAllowed(activeEmployee?.role, 'pos') ? '(Perlu SPV/Owner)' : ''}
               </option>
               <option value="transactions">
-                🧾 Riwayat Nota {!isViewAllowed(activeEmployee?.role, 'transactions') ? '🔒 (Perlu SPV/Owner)' : ''}
+                Riwayat Nota {!isViewAllowed(activeEmployee?.role, 'transactions') ? '(Perlu SPV/Owner)' : ''}
               </option>
               <option value="inventory">
-                📦 Katalog & Stok {!isViewAllowed(activeEmployee?.role, 'inventory') ? '🔒 (Perlu Gudang/SPV)' : ''}
+                Katalog & Stok {!isViewAllowed(activeEmployee?.role, 'inventory') ? '(Perlu Gudang/SPV)' : ''}
               </option>
               <option value="customers">
-                ✨ Member & Poin {!isViewAllowed(activeEmployee?.role, 'customers') ? '🔒 (Perlu SPV/Owner)' : ''}
+                Member & Poin {!isViewAllowed(activeEmployee?.role, 'customers') ? '(Perlu SPV/Owner)' : ''}
               </option>
               <option value="marketing">
-                📢 Promo AI Marketing {!isViewAllowed(activeEmployee?.role, 'customers') ? '🔒 (Perlu SPV/Owner)' : ''}
+                Promo AI Marketing {!isViewAllowed(activeEmployee?.role, 'customers') ? '(Perlu SPV/Owner)' : ''}
               </option>
               <option value="reports">
-                📊 Laporan & Omzet {!isViewAllowed(activeEmployee?.role, 'reports') ? '🔒 (Perlu SPV/Owner)' : ''}
+                Laporan & Omzet {!isViewAllowed(activeEmployee?.role, 'reports') ? '(Perlu SPV/Owner)' : ''}
               </option>
             </select>
           </div>
