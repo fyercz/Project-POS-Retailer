@@ -35,6 +35,7 @@ import {
 } from '../utils/escposPrinter';
 import { errorMessage } from '../utils/errors';
 import { StoreLogo } from './StoreLogo';
+import { code128B } from '../utils/code128';
 
 interface ReceiptModalProps {
   transaction: Transaction | null;
@@ -42,6 +43,40 @@ interface ReceiptModalProps {
   onClose: () => void;
   isNewPayment?: boolean;
 }
+
+/** Code 128-B sebagai SVG bertepi tajam, selebar kertas, dengan zona kosong 10 modul di kiri-kanan. */
+const ReceiptBarcode: React.FC<{ value: string }> = ({ value }) => {
+  let pattern = '';
+  try {
+    pattern = code128B(value);
+  } catch {
+    return null;
+  }
+  const quiet = 10;
+  const bars: Array<[number, number]> = [];
+  for (let i = 0; i < pattern.length; ) {
+    if (pattern[i] === '1') {
+      let j = i;
+      while (pattern[j] === '1') j++;
+      bars.push([i + quiet, j - i]);
+      i = j;
+    } else i++;
+  }
+  return (
+    <svg
+      role="img"
+      aria-label={`Barcode nota ${value}`}
+      viewBox={`0 0 ${pattern.length + quiet * 2} 40`}
+      preserveAspectRatio="none"
+      shapeRendering="crispEdges"
+      className="w-full h-10"
+    >
+      {bars.map(([x, w]) => (
+        <rect key={x} x={x} y={0} width={w} height={40} fill="#000000" />
+      ))}
+    </svg>
+  );
+};
 
 export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   transaction,
@@ -392,8 +427,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             {/* Meta Info */}
             <div className="py-2 space-y-0.5 text-[11px] text-slate-700 border-b border-dashed border-slate-400">
               <div className="flex justify-between">
-                <span>No. Nota:</span>
-                <span className="font-bold">{transaction.invoiceNumber}</span>
+                <span className="shrink-0 whitespace-nowrap pr-2">No. Nota:</span>
+                <span className="font-bold text-right break-all">{transaction.invoiceNumber}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tanggal:</span>
@@ -418,8 +453,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               {transaction.items.map((item, idx) => (
                 <div key={idx} className="space-y-0.5">
                   <div className="flex justify-between font-bold">
-                    <span className="truncate pr-2">{item.product.name}</span>
-                    <span>{formatCurrency(item.totalPrice, settings.currency)}</span>
+                    {/* Nama barang tidak dipotong (dulu truncate: pembeli tidak bisa membaca nama barang) */}
+                    <span className="pr-2 min-w-0 break-words">{item.product.name}</span>
+                    <span className="shrink-0 whitespace-nowrap">{formatCurrency(item.totalPrice, settings.currency)}</span>
                   </div>
                   <div className="flex justify-between text-[11px] text-slate-600">
                     <span>
@@ -515,16 +551,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             {/* Footer Message */}
             <div className="pt-3 text-center space-y-2">
               <p className="text-[11px] text-slate-600">{settings.receiptFooterMessage}</p>
-              {/* Simulated Thermal Barcode */}
+              {/* Barcode Code 128 nomor nota yang benar-benar bisa dipindai (dulu garis hiasan) */}
               <div className="flex flex-col items-center">
-                <div className="h-6 w-3/4 flex items-center justify-between">
-                  {Array.from({ length: 30 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-full ${i % 3 === 0 ? 'w-1 bg-black' : i % 2 === 0 ? 'w-0.5 bg-black' : 'w-0.5 bg-transparent'}`}
-                    />
-                  ))}
-                </div>
+                <ReceiptBarcode value={transaction.invoiceNumber} />
                 <span className="text-[11px] tracking-widest text-slate-500 mt-0.5">
                   {transaction.invoiceNumber}
                 </span>
