@@ -110,8 +110,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
         method: 'qris',
         amountTendered: finalTotal,
         change: 0,
-        bankName: 'EDC BRI (QRIS)',
-        referenceCode: qrisRefCode.trim() || `BRI-Q-${Math.floor(100000 + Math.random() * 900000)}`,
+        bankName: 'EDC (QRIS)',
+        // Dulu nomor acak 'BRI-Q-xxxxxx' bila kosong: laporan rekonsiliasi memuat RRN yang tidak pernah ada
+        referenceCode: qrisRefCode.trim() || undefined,
         edcBatchNumber: qrisBatch.trim() || undefined,
       };
     } else if (paymentMethod === 'card') {
@@ -120,8 +121,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
         amountTendered: finalTotal,
         change: 0,
         cardLast4: cardLast4.slice(-4) || undefined,
-        bankName: cardBank ? `EDC BRI (${cardBank})` : 'EDC BRI (KARTU)',
-        referenceCode: cardRefCode.trim() || `BRI-C-${Math.floor(100000 + Math.random() * 900000)}`,
+        bankName: cardBank ? `EDC (${cardBank})` : 'EDC (KARTU)',
+        referenceCode: cardRefCode.trim() || undefined,
         edcBatchNumber: cardBatch.trim() || undefined,
       };
     } else {
@@ -163,12 +164,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
         <div className="p-5 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-5">
           {/* Left Column: Payment Method Selection & Method Details */}
           <div className="md:col-span-7 space-y-4">
-            {/* Method Tabs - 3 Main Methods: Tunai, QRIS EDC BRI, Kartu EDC BRI */}
+            {/* Method Tabs - 3 Main Methods: Tunai, QRIS EDC, Kartu EDC */}
             <div className="grid grid-cols-3 gap-2">
               {[
                 { method: 'cash' as PaymentMethod, label: 'Tunai (Cash)', icon: Banknote },
-                { method: 'qris' as PaymentMethod, label: 'QRIS EDC BRI', icon: QrCode },
-                { method: 'card' as PaymentMethod, label: 'Kartu EDC BRI', icon: CreditCard },
+                { method: 'qris' as PaymentMethod, label: 'QRIS EDC', icon: QrCode },
+                { method: 'card' as PaymentMethod, label: 'Kartu EDC', icon: CreditCard },
               ].map((item) => {
                 const Icon = item.icon;
                 const isSelected = paymentMethod === item.method;
@@ -274,18 +275,18 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
 
             {paymentMethod === 'qris' && (
               <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50/70 to-slate-50 dark:from-blue-950/30 dark:to-slate-950/60 border border-blue-200 dark:border-blue-900/60 space-y-3.5">
-                {/* EDC BRI Header Badge */}
+                {/* EDC Header Badge */}
                 <div className="flex items-center justify-between border-b border-blue-200/80 dark:border-blue-900/60 pb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-sm">
-                      BRI
+                      EDC
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-blue-950 dark:text-blue-100 leading-tight">
-                        QRIS Mesin EDC BRI
+                        QRIS Mesin EDC
                       </h4>
                       <p className="text-[11px] text-blue-700 dark:text-blue-300">
-                        Proses pada mesin EDC BRI & dicatat ke Laporan Pembayaran
+                        Proses pada mesin EDC & dicatat ke Laporan Pembayaran
                       </p>
                     </div>
                   </div>
@@ -301,7 +302,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                       1
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
-                      Pilih menu <strong>QRIS</strong> pada mesin EDC BRI.
+                      Pilih menu <strong>QRIS</strong> pada mesin EDC.
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
@@ -333,13 +334,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                   </div>
                 </div>
 
-                {/* Input No Referensi / RRN Struk EDC BRI */}
+                {/* Input No Referensi / RRN Struk EDC */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      No. Ref / RRN EDC BRI (Opsional)
+                      No. Ref / RRN EDC (Opsional)
                     </label>
-                    <input aria-label="No. Ref / RRN EDC BRI (Opsional)"
+                    <input aria-label="No. Ref / RRN EDC (Opsional)"
                       type="text"
                       value={qrisRefCode}
                       onChange={(e) => setQrisRefCode(e.target.value)}
@@ -363,25 +364,25 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
 
                 <div className="text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
-                  <span>Otomatis masuk Laporan Pembayaran & Rekonsiliasi Settlement EDC BRI.</span>
+                  <span>Otomatis masuk Laporan Pembayaran & Rekonsiliasi Settlement EDC.</span>
                 </div>
               </div>
             )}
 
             {paymentMethod === 'card' && (
               <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50/70 to-slate-50 dark:from-blue-950/30 dark:to-slate-950/60 border border-blue-200 dark:border-blue-900/60 space-y-3.5">
-                {/* EDC BRI Header Badge */}
+                {/* EDC Header Badge */}
                 <div className="flex items-center justify-between border-b border-blue-200/80 dark:border-blue-900/60 pb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shadow-sm">
-                      BRI
+                      EDC
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-blue-950 dark:text-blue-100 leading-tight">
-                        Kartu Debit / Kredit Mesin EDC BRI
+                        Kartu Debit / Kredit Mesin EDC
                       </h4>
                       <p className="text-[11px] text-blue-700 dark:text-blue-300">
-                        Proses pada mesin EDC BRI &amp; dicatat ke Laporan Pembayaran
+                        Proses pada mesin EDC &amp; dicatat ke Laporan Pembayaran
                       </p>
                     </div>
                   </div>
@@ -397,7 +398,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                       1
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
-                      Masukkan (Dip Chip), Gesek (Swipe), atau Tap Contactless kartu pada mesin EDC BRI.
+                      Masukkan (Dip Chip), Gesek (Swipe), atau Tap Contactless kartu pada mesin EDC.
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
@@ -416,7 +417,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                       3
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 text-[11px]">
-                      Minta nasabah memasukkan 6 digit PIN kartu pada tombol pinpad mesin EDC BRI.
+                      Minta nasabah memasukkan 6 digit PIN kartu pada tombol pinpad mesin EDC.
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
@@ -495,7 +496,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
 
                 <div className="text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
-                  <span>Otomatis masuk Laporan Pembayaran &amp; Rekonsiliasi Settlement EDC BRI.</span>
+                  <span>Otomatis masuk Laporan Pembayaran &amp; Rekonsiliasi Settlement EDC.</span>
                 </div>
               </div>
             )}

@@ -522,8 +522,8 @@ export const TransactionsView: React.FC = () => {
               >
                 <option value="all">Semua Cara Bayar</option>
                 <option value="cash">Tunai (Cash)</option>
-                <option value="qris">QRIS EDC BRI</option>
-                <option value="card">Kartu EDC BRI</option>
+                <option value="qris">QRIS EDC</option>
+                <option value="card">Kartu EDC</option>
               </select>
 
               {/* Cloud Sync Filter - Desktop only */}

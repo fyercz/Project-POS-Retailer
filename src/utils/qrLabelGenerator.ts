@@ -50,7 +50,42 @@ export async function generateQrSvgString(
 /**
  * Returns dynamic URL pointing to the real-time shelf inventory & price verification view
  */
+// Alamat dasar QR label rak yang dipakai saat ini (diatur jendela label QR; lihat resolveShelfBase)
+let shelfBaseOverride: string | null = null;
+export function setShelfQrBase(base: string | null): void {
+  shelfBaseOverride = base ? base.replace(/\/+$/, '') : null;
+}
+
+const LOCAL_HOSTS = /^(localhost|127(?:\.\d+){3}|\[?::1\]?|0\.0\.0\.0)$/i;
+
+/**
+ * Alamat dasar untuk QR label rak (murni, teruji). QR dipindai dari HP, jadi alamatnya harus bisa
+ * dijangkau dari jaringan toko. Dulu selalu alamat browser: di PC kasir yang dibuka lewat
+ * MULAI-KASIR.bat itu 'localhost' -> QR tidak bisa dibuka dari HP mana pun.
+ */
+export function resolveShelfBase(
+  origin: string,
+  hostname: string,
+  lanStatus?: { recommendedUrl?: string; localIps?: string[] } | null
+): { base: string; warning?: string } {
+  if (!LOCAL_HOSTS.test(hostname)) return { base: origin };
+  const rec = lanStatus?.recommendedUrl || '';
+  let recHost = '';
+  try {
+    recHost = rec ? new URL(rec).hostname : '';
+  } catch {
+    recHost = '';
+  }
+  if (rec && recHost && !LOCAL_HOSTS.test(recHost)) return { base: rec.replace(/\/+$/, '') };
+  return {
+    base: origin,
+    warning:
+      'PC ini belum terhubung ke jaringan (Wi-Fi/LAN): QR akan berisi alamat localhost dan TIDAK bisa dibuka dari HP. Sambungkan PC ke jaringan toko lalu buka ulang jendela ini.',
+  };
+}
+
 export function getDynamicShelfUrl(productId: string): string {
+  if (shelfBaseOverride) return `${shelfBaseOverride}/?shelf=${encodeURIComponent(productId)}`;
   if (typeof window !== 'undefined' && window.location) {
     const origin = window.location.origin;
     const pathname = window.location.pathname.replace(/\/$/, '');
@@ -63,7 +98,9 @@ export function getDynamicShelfUrl(productId: string): string {
  * Extracts and calculates the last price update date and contextual info
  */
 export function getLastPriceUpdateInfo(product: Product): LastPriceUpdateInfo {
-  let targetDate = '2026-10-01T08:00:00Z';
+  // Dulu tanggal tetap '2026-10-01' bila tidak ada riwayat: label mencetak tanggal yang tidak pernah
+  // terjadi. Kini: riwayat harga -> tanggal penerimaan -> tanggal impor -> tanpa tanggal.
+  let targetDate: string | null = null;
   let previousPrice: number | undefined = undefined;
   let changeType: string | undefined = undefined;
   let notes: string | undefined = undefined;
@@ -82,8 +119,14 @@ export function getLastPriceUpdateInfo(product: Product): LastPriceUpdateInfo {
     targetDate = product.lastOrderDate;
     changeType = 'purchase_receiving';
     notes = 'Penerimaan Stok Pertama';
+  } else if (product.importedAt) {
+    targetDate = product.importedAt;
+    notes = 'Data impor';
   }
 
+  if (!targetDate || Number.isNaN(new Date(targetDate).getTime())) {
+    return { formattedDate: '', formattedDateTime: '', isoString: '', daysAgo: undefined, isRecent: false } as unknown as LastPriceUpdateInfo;
+  }
   const d = new Date(targetDate);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
@@ -292,7 +335,7 @@ export function generateSingleQrShelfLabelHtml(
                   : ''
               }
               ${
-                options.showLastPriceUpdate
+                options.showLastPriceUpdate && priceUpdate.formattedDate
                   ? `
                 <span style="color: #475569; font-weight: 600;" title="Pembaruan harga terakhir">
                   Tgl Update: <strong>${priceUpdate.formattedDate}</strong>
@@ -312,7 +355,7 @@ export function generateSingleQrShelfLabelHtml(
       <div style="box-sizing: border-box; width: 100%; height: 100%; padding: 3px; border: ${borderStyle}; background: #ffffff; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 6.5px; font-weight: 800; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 1px;">
           <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">${product.brand || options.storeName || 'ULILMART'}</span>
-          ${options.showLastPriceUpdate ? `<span style="color: #2563eb;">Upd: ${priceUpdate.formattedDate}</span>` : ''}
+          ${options.showLastPriceUpdate && priceUpdate.formattedDate ? `<span style="color: #2563eb;">Upd: ${priceUpdate.formattedDate}</span>` : ''}
         </div>
 
         <div style="font-size: 8.5px; font-weight: 800; color: #0f172a; line-height: 1.1; max-height: 19px; overflow: hidden;">
@@ -397,8 +440,8 @@ export function buildFullQRShelfPrintDocument(
     const rollWidth = options.preset === 'thermal_roll_58mm' ? '58mm' : '80mm';
     const labelsHtml = flattened
       .map(
-        (f) => `
-        <div class="thermal-label-tag" style="page-break-after: always; width: ${rollWidth}; box-sizing: border-box; margin: 0 auto 4mm auto;">
+        (f, idx) => `
+        <div class="thermal-label-tag" style="page-break-after: ${idx < flattened.length - 1 ? 'always' : 'auto'}; width: ${rollWidth}; box-sizing: border-box; margin: 0 auto 4mm auto;">
           ${generateSingleQrShelfLabelHtml(f.product, f.qrSvg, options, currency)}
         </div>
       `
@@ -475,7 +518,7 @@ export function buildFullQRShelfPrintDocument(
         .join('');
 
       return `
-        <div class="sheet-page" style="page-break-after: ${pageIdx < pagesArray.length - 1 ? 'always' : 'auto'}; width: 210mm; min-height: 297mm; box-sizing: border-box; display: grid; grid-template-columns: repeat(${cols}, ${colWidth}); grid-template-rows: repeat(${rows}, ${rowHeight}); gap: 3mm; padding: 6mm 6mm; margin: 0 auto; justify-content: center; align-content: start;">
+        <div class="sheet-page" style="page-break-after: ${pageIdx < pagesArray.length - 1 ? 'always' : 'auto'}; width: 210mm; height: 296mm; overflow: hidden; box-sizing: border-box; display: grid; grid-template-columns: repeat(${cols}, ${colWidth}); grid-template-rows: repeat(${rows}, ${rowHeight}); gap: 2mm; padding: 4mm; margin: 0 auto; justify-content: center; align-content: start;">
           ${tags}
         </div>
       `;

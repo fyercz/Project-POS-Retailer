@@ -277,9 +277,9 @@ export const buildTransactionReceiptEscPos = (
 
   // Payment Breakdown
   const methodLabel = tx.payment.method === 'qris'
-    ? (tx.payment.bankName || 'QRIS EDC BRI')
+    ? (tx.payment.bankName || 'QRIS EDC')
     : tx.payment.method === 'card'
-    ? (tx.payment.bankName || 'KARTU EDC BRI')
+    ? (tx.payment.bankName || 'KARTU EDC')
     : tx.payment.method === 'cash'
     ? 'TUNAI (CASH)'
     : 'TRANSFER BANK';

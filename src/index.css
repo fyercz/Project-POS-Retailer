@@ -71,6 +71,18 @@
   body:has(#thermal-receipt-print-area) #thermal-receipt-print-area * {
     visibility: visible;
   }
+  /* Printer thermal hanya hitam/putih: abu-abu tercetak putus-putus/pudar */
+  #thermal-receipt-print-area * {
+    color: #000000 !important;
+  }
+  #thermal-receipt-print-area [class*='bg-slate-'] {
+    background: transparent !important;
+  }
+  /* Lencana inisial toko: bingkai garis (latar penuh tercetak hitam pekat, huruf tak terbaca) */
+  #thermal-receipt-print-area [data-store-initials] {
+    background: transparent !important;
+    border: 2px solid #000000 !important;
+  }
   #thermal-receipt-print-area {
     position: absolute;
     left: 0;

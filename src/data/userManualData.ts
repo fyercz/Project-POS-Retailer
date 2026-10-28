@@ -116,10 +116,10 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         summary: 'Menyelesaikan pembayaran pelanggan dengan berbagai metode bayar dan mencetak nota struk thermal kasir.',
         steps: [
           'Tekan tombol F9 atau klik tombol hijau "Bayar Sekarang" di bawah keranjang belanja.',
-          'Pilih metode pembayaran yang digunakan pembeli: Tunai (Cash), QRIS EDC BRI (diproses via mesin EDC BRI), atau Kartu EDC BRI (Debit/Kredit).',
+          'Pilih metode pembayaran yang digunakan pembeli: Tunai (Cash), QRIS EDC (diproses via mesin EDC), atau Kartu EDC (Debit/Kredit).',
           'Jika Tunai: Masukkan nominal uang yang diterima (atau pilih pecahan cepat Rp 50.000, Rp 100.000). Sistem otomatis menghitung jumlah kembalian secara presisi.',
-          'Jika QRIS / EDC: Input nominal pada mesin EDC BRI toko, setelah struk EDC approved, masukkan No. Ref / RRN EDC untuk mempermudah audit rekonsiliasi.',
-          'Klik "Selesaikan Pembayaran". Dialog struk kasir akan terbuka dan transaksi otomatis masuk ke Laporan Pembayaran & Settlement EDC BRI.',
+          'Jika QRIS / EDC: Input nominal pada mesin EDC toko, setelah struk EDC approved, masukkan No. Ref / RRN EDC untuk mempermudah audit rekonsiliasi.',
+          'Klik "Selesaikan Pembayaran". Dialog struk kasir akan terbuka dan transaksi otomatis masuk ke Laporan Pembayaran & Settlement EDC.',
           'Jika opsi Auto-Print aktif di Pengaturan Toko, jendela dialog cetak printer thermal (58mm/80mm) akan langsung terbuka secara otomatis tanpa perlu klik tombol cetak manual.',
           'Anda juga dapat mencetak ulang atau mengatur opsi Auto-Print langsung dari toolbar nota struk kasir.',
         ],

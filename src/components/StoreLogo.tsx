@@ -27,6 +27,7 @@ export const StoreLogo: React.FC<UlilMartLogoProps & { storeName?: string }> = (
   const mark = (
     <span
       aria-hidden="true"
+      data-store-initials
       className="inline-flex items-center justify-center rounded-xl bg-emerald-700 text-white font-black shrink-0"
       style={{ width: size, height: size, fontSize: Math.max(11, Math.round(size * 0.38)) }}
     >

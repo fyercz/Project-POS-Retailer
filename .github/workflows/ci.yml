@@ -41,6 +41,8 @@ jobs:
   e2e:
     name: E2E (Chromium)
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # unggah pratinjau cetak ke rilis "pratinjau-cetak"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -53,6 +55,14 @@ jobs:
         run: npm run build
       - name: Tes E2E
         run: npm run test:e2e
+      # Pratinjau hasil cetak (PDF/PNG dirender Chrome dalam mode cetak) untuk ditinjau
+      - name: Unggah pratinjau cetak
+        if: always() && hashFiles('pratinjau-cetak/*') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view pratinjau-cetak >/dev/null 2>&1 || gh release create pratinjau-cetak --prerelease --title "Pratinjau cetak (otomatis)" --notes "Dibuat otomatis oleh CI dari e2e/pratinjau-cetak.spec.ts. Bukan rilis aplikasi."
+          gh release upload pratinjau-cetak pratinjau-cetak/* --clobber
       - name: Simpan jejak tes yang gagal
         if: failure()
         uses: actions/upload-artifact@v4

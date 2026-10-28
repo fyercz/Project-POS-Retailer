@@ -35,6 +35,7 @@ import {
 } from '../utils/escposPrinter';
 import { errorMessage } from '../utils/errors';
 import { StoreLogo } from './StoreLogo';
+import { code128, receiptBarcodeValue } from '../utils/code128';
 
 interface ReceiptModalProps {
   transaction: Transaction | null;
@@ -42,6 +43,43 @@ interface ReceiptModalProps {
   onClose: () => void;
   isNewPayment?: boolean;
 }
+
+/**
+ * Barcode nota (Code 128 ringkas: nomor nota tanpa 'INV-' & tanda hubung, mode C untuk angka) sebagai
+ * SVG bertepi tajam selebar kertas, zona kosong 10 modul. Ringkas agar terbaca di 58 mm / 203 dpi.
+ */
+const ReceiptBarcode: React.FC<{ value: string }> = ({ value }) => {
+  let pattern = '';
+  try {
+    pattern = code128(receiptBarcodeValue(value));
+  } catch {
+    return null;
+  }
+  const quiet = 10;
+  const bars: Array<[number, number]> = [];
+  for (let i = 0; i < pattern.length; ) {
+    if (pattern[i] === '1') {
+      let j = i;
+      while (pattern[j] === '1') j++;
+      bars.push([i + quiet, j - i]);
+      i = j;
+    } else i++;
+  }
+  return (
+    <svg
+      role="img"
+      aria-label={`Barcode nota ${value}`}
+      viewBox={`0 0 ${pattern.length + quiet * 2} 40`}
+      preserveAspectRatio="none"
+      shapeRendering="crispEdges"
+      className="w-full h-10"
+    >
+      {bars.map(([x, w]) => (
+        <rect key={x} x={x} y={0} width={w} height={40} fill="#000000" />
+      ))}
+    </svg>
+  );
+};
 
 export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   transaction,
@@ -119,7 +157,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
     const el = document.getElementById('thermal-receipt-print-area');
     if (el) {
-      printViaIframe(el.outerHTML, `Struk_${transaction.invoiceNumber}`, paperSize);
+      printViaIframe(el.outerHTML, `Struk_${transaction.invoiceNumber}`, paperSize, { appStyles: true });
     } else {
       window.print();
     }
@@ -173,7 +211,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   const handleOpenReceiptTab = () => {
     const el = document.getElementById('thermal-receipt-print-area');
     if (el) {
-      openPrintWindow(el.outerHTML, `Struk POS - ${transaction?.invoiceNumber ?? ''}`, paperSize);
+      openPrintWindow(el.outerHTML, `Struk POS - ${transaction?.invoiceNumber ?? ''}`, paperSize, { appStyles: true });
     }
   };
 
@@ -373,8 +411,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   {settings.branchName && (
                     <p className="text-[11px] text-slate-700 font-semibold">{settings.branchName}</p>
                   )}
-                  <p className="text-[11px] text-slate-600 leading-tight">{settings.address}</p>
-                  <p className="text-[11px] text-slate-600 font-medium">Telp/WA: {settings.phone}</p>
+                  {settings.address && <p className="text-[11px] text-slate-600 leading-tight">{settings.address}</p>}
+                  {settings.phone && <p className="text-[11px] text-slate-600 font-medium">Telp/WA: {settings.phone}</p>}
                 </>
               ) : (
                 <>
@@ -383,8 +421,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   {settings.branchName && (
                     <p className="text-[11px] text-slate-600">{settings.branchName}</p>
                   )}
-                  <p className="text-[11px] text-slate-600 leading-tight">{settings.address}</p>
-                  <p className="text-[11px] text-slate-600">Telp/WA: {settings.phone}</p>
+                  {settings.address && <p className="text-[11px] text-slate-600 leading-tight">{settings.address}</p>}
+                  {settings.phone && <p className="text-[11px] text-slate-600">Telp/WA: {settings.phone}</p>}
                 </>
               )}
             </div>
@@ -392,8 +430,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             {/* Meta Info */}
             <div className="py-2 space-y-0.5 text-[11px] text-slate-700 border-b border-dashed border-slate-400">
               <div className="flex justify-between">
-                <span>No. Nota:</span>
-                <span className="font-bold">{transaction.invoiceNumber}</span>
+                <span className="shrink-0 whitespace-nowrap pr-2">No. Nota:</span>
+                <span className="font-bold text-right break-all">{transaction.invoiceNumber}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tanggal:</span>
@@ -418,8 +456,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               {transaction.items.map((item, idx) => (
                 <div key={idx} className="space-y-0.5">
                   <div className="flex justify-between font-bold">
-                    <span className="truncate pr-2">{item.product.name}</span>
-                    <span>{formatCurrency(item.totalPrice, settings.currency)}</span>
+                    {/* Nama barang tidak dipotong (dulu truncate: pembeli tidak bisa membaca nama barang) */}
+                    <span className="pr-2 min-w-0 break-words">{item.product.name}</span>
+                    <span className="shrink-0 whitespace-nowrap">{formatCurrency(item.totalPrice, settings.currency)}</span>
                   </div>
                   <div className="flex justify-between text-[11px] text-slate-600">
                     <span>
@@ -468,9 +507,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 <span>Metode Bayar:</span>
                 <span className="uppercase font-bold">
                   {transaction.payment.method === 'qris'
-                    ? (transaction.payment.bankName || 'QRIS EDC BRI')
+                    ? (transaction.payment.bankName || 'QRIS EDC')
                     : transaction.payment.method === 'card'
-                    ? (transaction.payment.bankName || 'KARTU EDC BRI')
+                    ? (transaction.payment.bankName || 'KARTU EDC')
                     : transaction.payment.method === 'cash'
                     ? 'TUNAI (CASH)'
                     : 'TRANSFER BANK'}
@@ -515,16 +554,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             {/* Footer Message */}
             <div className="pt-3 text-center space-y-2">
               <p className="text-[11px] text-slate-600">{settings.receiptFooterMessage}</p>
-              {/* Simulated Thermal Barcode */}
+              {/* Barcode Code 128 nomor nota yang benar-benar bisa dipindai (dulu garis hiasan) */}
               <div className="flex flex-col items-center">
-                <div className="h-6 w-3/4 flex items-center justify-between">
-                  {Array.from({ length: 30 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-full ${i % 3 === 0 ? 'w-1 bg-black' : i % 2 === 0 ? 'w-0.5 bg-black' : 'w-0.5 bg-transparent'}`}
-                    />
-                  ))}
-                </div>
+                <ReceiptBarcode value={transaction.invoiceNumber} />
                 <span className="text-[11px] tracking-widest text-slate-500 mt-0.5">
                   {transaction.invoiceNumber}
                 </span>

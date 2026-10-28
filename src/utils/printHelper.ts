@@ -17,7 +17,25 @@ export interface PrintDocumentOptions {
  * Robust printing using a hidden iframe to ensure compatibility with
  * embedded iframes, modals, and physical thermal or desktop printers.
  */
-export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS', paperType: 'a4' | 'f4' | '80mm' | '58mm' = 'a4') => {
+/**
+ * Salin semua aturan CSS aplikasi (Tailwind, dsb.) sebagai teks. Dipakai untuk dokumen cetak yang
+ * isinya disalin dari tampilan layar (struk). Disalin, bukan ditautkan, agar pasti sudah termuat
+ * sebelum dialog cetak muncul. Dulu struk dicetak TANPA CSS aplikasi: label & angka menempel,
+ * bingkai putus-putus tebal, lencana inisial menempel di nama toko.
+ */
+export const collectAppStyles = (): string => {
+  const parts: string[] = [];
+  for (const sheet of Array.from(document.styleSheets)) {
+    try {
+      parts.push(Array.from(sheet.cssRules).map((r) => r.cssText).join('\n'));
+    } catch {
+      // stylesheet lintas-origin (mis. font): lewati
+    }
+  }
+  return parts.join('\n');
+};
+
+export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS', paperType: 'a4' | 'f4' | '80mm' | '58mm' = 'a4', options: { appStyles?: boolean; pageMargin?: string } = {}) => {
   // Remove existing print iframe if any
   const existingFrame = document.getElementById('pos-print-hidden-frame');
   if (existingFrame) {
@@ -60,7 +78,7 @@ export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS
         <style>
           @page {
             size: ${pageSizeRule};
-            margin: ${isThermal ? '2mm' : '8mm 10mm'};
+            margin: ${options.pageMargin ?? (isThermal ? '2mm' : '8mm 10mm')};
           }
           * {
             box-sizing: border-box;
@@ -147,6 +165,7 @@ export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS
             .no-print { display: none !important; }
           }
         </style>
+        ${options.appStyles ? `<style>${collectAppStyles()}</style>` : ''}
       </head>
       <body>
         ${contentHtml}
@@ -163,6 +182,10 @@ export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS
     try {
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();
+      // Kembalikan fokus ke aplikasi: dulu fokus tertinggal di iframe cetak tersembunyi sehingga
+      // Escape (tutup jendela) & pintasan keyboard tidak berfungsi setelah mencetak
+      window.focus();
+      (document.activeElement as HTMLElement | null)?.blur?.();
     } catch (err) {
       console.warn('Iframe print failed, falling back to window.print', err);
       window.print();
@@ -173,7 +196,7 @@ export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS
 /**
  * Opens report in a dedicated printable popup window
  */
-export const openPrintWindow = (contentHtml: string, title: string = 'Laporan POS', paperType: 'a4' | 'f4' | '80mm' | '58mm' = 'a4') => {
+export const openPrintWindow = (contentHtml: string, title: string = 'Laporan POS', paperType: 'a4' | 'f4' | '80mm' | '58mm' = 'a4', options: { appStyles?: boolean; pageMargin?: string } = {}) => {
   const isThermal = paperType === '58mm' || paperType === '80mm';
   const width = isThermal ? 420 : 850;
   const height = 750;
@@ -209,7 +232,7 @@ export const openPrintWindow = (contentHtml: string, title: string = 'Laporan PO
         <style>
           @page {
             size: ${pageSizeRule};
-            margin: ${isThermal ? '3mm' : '8mm 10mm'};
+            margin: ${options.pageMargin ?? (isThermal ? '3mm' : '8mm 10mm')};
           }
           * {
             box-sizing: border-box;
@@ -283,6 +306,7 @@ export const openPrintWindow = (contentHtml: string, title: string = 'Laporan PO
             body { padding: 0 !important; }
           }
         </style>
+        ${options.appStyles ? `<style>${collectAppStyles()}</style>` : ''}
       </head>
       <body>
         <div class="toolbar">

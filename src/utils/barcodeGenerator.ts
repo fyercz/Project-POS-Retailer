@@ -1,3 +1,4 @@
+import { code128 } from './code128';
 /**
  * High Precision SVG Barcode Generator (Code 128 Subset B/C & Code 39)
  * Pure TypeScript, lightweight, pixel-crisp for A4/F4 price tags & thermal printers.
@@ -65,25 +66,26 @@ export function generateBarcodeSvgString(
   const barWidth = options.barWidth || 1.4;
   const showText = options.showText ?? true;
   const fontSize = options.fontSize || 10;
-  const quietZone = options.quietZone ?? 10;
+  // Zona kosong minimal 10 MODUL di kiri-kanan (spesifikasi Code 128); nilai px lebih kecil dinaikkan
+  const quietZone = Math.max(options.quietZone ?? 0, 10 * barWidth);
 
-  const patternIndices = encodeCode128(rawText);
-
-  // Convert pattern strings to binary widths (bar, space, bar, space...)
+  // Code 128 dengan mode C otomatis untuk deret angka (src/utils/code128.ts, terverifikasi terhadap
+  // python-barcode & pemindai ZXing). Dulu selalu mode B: EAN 13 digit = 178 modul -> kini ~123.
+  let modules: string;
+  try {
+    modules = code128(rawText);
+  } catch {
+    modules = code128(rawText.replace(/[^\x20-\x7e]/g, ''));
+  }
   const barElements: { x: number; width: number }[] = [];
   let currentX = quietZone;
-
-  patternIndices.forEach((idx) => {
-    const pattern = CODE128_PATTERNS[idx] || CODE128_PATTERNS[0];
-    for (let p = 0; p < pattern.length; p++) {
-      const width = parseInt(pattern[p], 10) * barWidth;
-      const isBar = p % 2 === 0;
-      if (isBar) {
-        barElements.push({ x: currentX, width });
-      }
-      currentX += width;
-    }
-  });
+  for (let i = 0; i < modules.length; ) {
+    let j = i;
+    while (j < modules.length && modules[j] === modules[i]) j++;
+    if (modules[i] === '1') barElements.push({ x: currentX, width: (j - i) * barWidth });
+    currentX += (j - i) * barWidth;
+    i = j;
+  }
 
   const totalWidth = currentX + quietZone;
   const totalHeight = showText ? height + fontSize + 4 : height;
