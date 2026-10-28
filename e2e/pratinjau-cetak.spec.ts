@@ -113,3 +113,57 @@ test('pratinjau cetak label harga, label rak QR, dan laporan', async ({ page }) 
   expect(report).not.toContain('Lengkap &amp; Hemat');
   expect(report).not.toMatch(/\bBRI\b/);
 });
+
+test('pratinjau cetak faktur pembelian (A4 & 80 mm) dan rekap shift', async ({ page }) => {
+  test.setTimeout(240_000);
+  page.on('dialog', (d) => d.accept().catch(() => {}));
+  await page.addInitScript(() => {
+    window.print = () => {};
+  });
+  await registerOwner(page, { store: 'Toko Uji Cetak' });
+  await addProduct(page, { name: 'Minyak Goreng Sania Pouch 2L', sku: 'MNY-2', barcode: '2000000009021', cost: 34000, price: 38000, stock: 0 });
+  await addProduct(page, { name: 'Beras Pandan Wangi 5kg', sku: 'BRS-5', barcode: '2000000009022', cost: 68000, price: 76000, stock: 0 });
+  await addProduct(page, { name: 'Kopi Kapal Api Special Mix 10x25g', sku: 'KOP-10', barcode: '2000000009023', cost: 13500, price: 15500, stock: 0 });
+
+  // Terima barang (3 baris) dari supplier tempo
+  await page.locator('#nav-btn-inventory').click();
+  await page.getByRole('button', { name: /Faktur Masuk/ }).first().click();
+  await page.locator('#btn-open-receiving-tab').click();
+  await page.getByLabel('Nama Supplier / Distributor').selectOption('Supplier Lainnya / Grosir Lokal');
+  await page.getByLabel('No. Faktur / Surat Jalan Supplier').fill('SJ-2026-1028');
+  const rows: Array<[string, string, string]> = [['Minyak Goreng', '12', '34000'], ['Beras Pandan', '5', '68000'], ['Kopi Kapal', '20', '13500']];
+  for (let i = 0; i < rows.length; i++) {
+    if (i > 0) await page.getByRole('button', { name: /Tambah Manual/ }).first().click();
+    const picker = page.getByRole('combobox', { name: 'Produk diterima' }).nth(i);
+    await picker.click();
+    await picker.fill(rows[i]![0]);
+    await page.getByRole('option', { name: new RegExp(rows[i]![0]) }).first().click();
+    await page.getByLabel('Jumlah diterima').nth(i).fill(rows[i]![1]);
+    await page.getByLabel('Harga modal per unit').nth(i).fill(rows[i]![2]);
+  }
+  await page.getByRole('button', { name: /Proses & Tambah ke Stok Toko/ }).click();
+  const marginDlg = page.getByRole('dialog', { name: /Periksa Harga Jual/ });
+  if (await marginDlg.isVisible().catch(() => false)) await marginDlg.getByRole('button', { name: 'Nanti Saja' }).click();
+
+  await page.getByRole('button', { name: 'Lihat Faktur' }).first().click();
+  const fakturA4 = await capturePrint(page, 'faktur-a4', null, () => page.getByTitle('Cetak dokumen faktur lembar A4 resmi').click());
+  expect(fakturA4).toContain('Beras Pandan Wangi 5kg');
+  expect(fakturA4).toContain('SJ-2026-1028');
+  await capturePrint(page, 'faktur-80mm', 80, () => page.getByTitle('Cetak struk penerimaan versi kasir (printer thermal)').click());
+  await page.keyboard.press('Escape');
+
+  // Penjualan lalu tutup shift dengan selisih Rp 500
+  await page.locator('#nav-btn-pos').click();
+  await page.locator('[id^="product-card-"]', { hasText: 'Beras Pandan' }).first().click();
+  await page.locator('[id^="product-card-"]', { hasText: 'Kopi Kapal' }).first().click();
+  await page.locator('#btn-checkout-pay').click();
+  await page.getByTestId('payment-cash-input').fill('100000');
+  await page.locator('#btn-confirm-complete-payment').click();
+  await page.getByTestId('receipt-close').click();
+  await page.locator('#btn-employee-menu').click();
+  await page.locator('#menu-item-shift-report').click();
+  await page.getByTestId('shift-actual-cash').fill('91000'); // seharusnya 91.500 -> kurang 500
+  await page.locator('#btn-confirm-close-shift').click();
+  const rekap = await capturePrint(page, 'rekap-shift-80mm', 80, () => page.getByRole('button', { name: /Cetak Rekap Shift/ }).click());
+  expect(rekap).toContain('Toko Uji Cetak');
+});
