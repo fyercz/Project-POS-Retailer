@@ -90,7 +90,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
           <div style="font-size: 13px; font-weight: bold; text-transform: uppercase;">${escapeHtml(settings.storeName)}</div>
           <div>${escapeHtml(settings.branchName)}</div>
           <div style="font-size: 9px;">${escapeHtml(settings.address)}</div>
-          <div style="font-size: 9px;">Telp: ${escapeHtml(settings.phone)}</div>
+          ${settings.phone ? `<div style="font-size: 9px;">Telp: ${escapeHtml(settings.phone)}</div>` : ''}
         </div>
 
         <div style="text-align: center; font-weight: bold; margin: 6px 0; font-size: 12px;">
@@ -139,7 +139,11 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
           </div>
           <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 2px;">
             <span>Selisih Rekonsiliasi:</span>
-            <span>${(shiftClosedResult.difference || 0) === 0 ? 'Rp 0 (PAS/SESUAI)' : formatRupiah(shiftClosedResult.difference || 0)}</span>
+            <span>${(() => {
+              // 'Kurang Rp 500' / 'Lebih Rp 500' lebih jelas daripada 'Rp -500'
+              const d = Number(shiftClosedResult.difference) || 0;
+              return d === 0 ? 'Rp 0 (PAS/SESUAI)' : `${d < 0 ? 'Kurang' : 'Lebih'} ${formatRupiah(Math.abs(d))}`;
+            })()}</span>
           </div>
         </div>
 
@@ -152,7 +156,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({ isOpen, onClose }) => {
           <div style="width: 45%;">
             <div>Supervisor / Manager</div>
             <div style="margin-top: 35px; border-bottom: 1px solid #000;"></div>
-            <div style="margin-top: 2px;">(........................)</div>
+            <div style="margin-top: 2px;">(.................)</div>
           </div>
         </div>
       </div>

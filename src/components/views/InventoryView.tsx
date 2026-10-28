@@ -1049,6 +1049,8 @@ export const InventoryView: React.FC = () => {
       supplierName,
       invoiceNumber: invoiceNumber.trim() || `INV-SUP-${Date.now().toString().slice(-6)}`,
       paymentTerms,
+      // Siapa yang benar-benar menerima barang (dulu kosong -> faktur selalu 'Staff Gudang')
+      receivedBy: activeEmployee?.name,
       notes: purchaseNotes.trim() || undefined,
       subtotal: receivingSubtotal,
       discountTiming,
