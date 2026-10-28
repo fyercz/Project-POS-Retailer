@@ -87,6 +87,7 @@ test('pratinjau cetak label harga, label rak QR, dan laporan', async ({ page }) 
   const tagOpener = page.getByText('Cetak Pricetag (A4 / F4)').first();
   if (!(await tagOpener.isVisible().catch(() => false))) await page.locator('#btn-dropdown-audit').click();
   await tagOpener.click();
+  await page.getByRole('button', { name: /^Pilih Item \(/ }).first().click(); // tab pemilihan barang
   await page.getByRole('button', { name: /^Pilih Semua \(/ }).first().click();
   await capturePrint(page, 'label-harga-a4', null, () => page.getByRole('button', { name: /^Cetak Pricetag \(/ }).click());
   await page.keyboard.press('Escape');
@@ -96,6 +97,7 @@ test('pratinjau cetak label harga, label rak QR, dan laporan', async ({ page }) 
   const qr = page.locator('#btn-open-qr-shelf-labels').first();
   if (!(await qr.isVisible().catch(() => false))) await page.locator('#btn-dropdown-audit').click();
   await qr.click();
+  await page.getByRole('button', { name: /^Pilih Produk \(/ }).first().click(); // tab pemilihan produk
   await page.getByRole('button', { name: /^Pilih Semua \(/ }).first().click();
   await capturePrint(page, 'label-rak-qr', null, () => page.getByRole('button', { name: /^Cetak Sekarang \(/ }).click());
   await page.keyboard.press('Escape');
