@@ -235,7 +235,7 @@ export const ReportsView: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Payment Breakdown & EDC BRI Reconciliation Metrics
+  // Payment Breakdown & EDC Reconciliation Metrics
   const paymentMetrics = useMemo(() => {
     let totalCash = 0;
     let totalQris = 0;
@@ -398,7 +398,7 @@ export const ReportsView: React.FC = () => {
       'Waktu',
       'Metode Bayar',
       'Kanal / Bank',
-      'No Ref / RRN EDC BRI',
+      'No Ref / RRN EDC',
       'Kasir',
       'Pelanggan',
       'Nominal Tagihan (Rp)',
@@ -408,13 +408,13 @@ export const ReportsView: React.FC = () => {
       tx.invoiceNumber,
       formatDate(tx.createdAt),
       tx.payment?.method === 'qris'
-        ? 'QRIS EDC BRI'
+        ? 'QRIS EDC'
         : tx.payment?.method === 'card'
-        ? (tx.payment?.bankName || 'KARTU EDC BRI')
+        ? (tx.payment?.bankName || 'KARTU EDC')
         : tx.payment?.method === 'cash'
         ? 'TUNAI'
         : 'TRANSFER',
-      tx.payment?.bankName || (tx.payment?.method === 'cash' ? 'Laci Fisik Kasir' : 'Mesin EDC BRI'),
+      tx.payment?.bankName || (tx.payment?.method === 'cash' ? 'Laci Fisik Kasir' : 'Mesin EDC'),
       tx.payment?.referenceCode || '-',
       tx.cashierName,
       tx.customer?.name || 'Umum',
@@ -431,7 +431,7 @@ export const ReportsView: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-              EDC BRI Settlement &amp; Kasir
+              EDC Settlement &amp; Kasir
             </span>
             <span className="text-xs text-slate-500">•</span>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
@@ -440,7 +440,7 @@ export const ReportsView: React.FC = () => {
           </div>
           <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mt-0.5">
             <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <span>Laporan Pembayaran &amp; Rekonsiliasi EDC BRI</span>
+            <span>Laporan Pembayaran &amp; Rekonsiliasi EDC</span>
           </h2>
         </div>
 
@@ -637,7 +637,7 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* ============================================================== */}
-      {/* TAB 1: LAPORAN PEMBAYARAN & REKONSILIASI EDC BRI               */}
+      {/* TAB 1: LAPORAN PEMBAYARAN & REKONSILIASI EDC               */}
       {/* ============================================================== */}
       {activeTab === 'payments' && (
         <div className="space-y-4">
@@ -702,7 +702,7 @@ export const ReportsView: React.FC = () => {
             </button>
           </div>
 
-          {/* 4 Summary Cards: Cash, QRIS EDC BRI, Card EDC, and GRAND TOTAL EDC SETTLEMENT */}
+          {/* 4 Summary Cards: Cash, QRIS EDC, Card EDC, and GRAND TOTAL EDC SETTLEMENT */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* 1. Uang Tunai (Cash) */}
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -723,13 +723,13 @@ export const ReportsView: React.FC = () => {
               </div>
             </div>
 
-            {/* 2. QRIS Mesin EDC BRI */}
+            {/* 2. QRIS Mesin EDC */}
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
-                  <span>QRIS EDC BRI</span>
+                  <span>QRIS EDC</span>
                   <span className="px-1.5 py-0.2 rounded-md text-[11px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300">
-                    EDC BRI
+                    EDC
                   </span>
                 </span>
                 <span className="p-1 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
@@ -764,12 +764,12 @@ export const ReportsView: React.FC = () => {
               </div>
             </div>
 
-            {/* 4. TOTAL SETTLEMENT EDC BRI (HIGHLIGHT) */}
+            {/* 4. TOTAL SETTLEMENT EDC (HIGHLIGHT) */}
             <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-md border border-blue-500">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-blue-100 flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-blue-200" />
-                  <span>TOTAL SETTLEMENT EDC BRI</span>
+                  <span>TOTAL SETTLEMENT EDC</span>
                 </span>
                 <span className="px-1.5 py-0.5 rounded-md text-[11px] font-black bg-white/20 text-white uppercase">
                   Closing Kasir
@@ -792,11 +792,11 @@ export const ReportsView: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Calculator className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <h3 className="font-bold text-xs text-blue-950 dark:text-blue-100 uppercase tracking-wider">
-                    Alat Rekonsiliasi Struk Settlement EDC BRI
+                    Alat Rekonsiliasi Struk Settlement EDC
                   </h3>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
-                  Ketikkan total nominal dari struk settlement fisik mesin EDC BRI untuk mencocokkan dengan rekaman sistem POS.
+                  Ketikkan total nominal dari struk settlement fisik mesin EDC untuk mencocokkan dengan rekaman sistem POS.
                 </p>
               </div>
 
@@ -847,8 +847,8 @@ export const ReportsView: React.FC = () => {
               <div className="flex flex-wrap gap-1.5">
                 {[
                   { id: 'all' as const, label: 'Semua Metode', count: dateFilteredCompleted.length },
-                  { id: 'qris' as const, label: 'QRIS EDC BRI', count: paymentMetrics.qrisCount },
-                  { id: 'card' as const, label: 'Kartu EDC BRI', count: paymentMetrics.cardCount },
+                  { id: 'qris' as const, label: 'QRIS EDC', count: paymentMetrics.qrisCount },
+                  { id: 'card' as const, label: 'Kartu EDC', count: paymentMetrics.cardCount },
                   { id: 'cash' as const, label: 'Uang Tunai', count: paymentMetrics.cashCount },
                 ].map((item) => (
                   <button
@@ -895,7 +895,7 @@ export const ReportsView: React.FC = () => {
                   <tr>
                     <th className="py-2.5 px-3">No. Faktur / Waktu</th>
                     <th className="py-2.5 px-3">Kanal Pembayaran</th>
-                    <th className="py-2.5 px-3">No. Ref / RRN EDC BRI</th>
+                    <th className="py-2.5 px-3">No. Ref / RRN EDC</th>
                     <th className="py-2.5 px-3">Kasir &amp; Pelanggan</th>
                     <th className="py-2.5 px-3 text-right">Nominal Tagihan</th>
                     <th className="py-2.5 px-3 text-center">Status</th>
@@ -928,13 +928,13 @@ export const ReportsView: React.FC = () => {
                             {tx.payment?.method === 'qris' && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
                                 <QrCode className="w-3 h-3" />
-                                <span>QRIS EDC BRI</span>
+                                <span>QRIS EDC</span>
                               </span>
                             )}
                             {tx.payment?.method === 'card' && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800">
                                 <CreditCard className="w-3 h-3" />
-                                <span>{tx.payment?.bankName || 'Kartu EDC BRI'}</span>
+                                <span>{tx.payment?.bankName || 'Kartu EDC'}</span>
                               </span>
                             )}
                             {tx.payment?.method === 'cash' && (
@@ -1161,7 +1161,7 @@ export const ReportsView: React.FC = () => {
             {/* Quick Actions & Settlement Guide */}
             <div className="lg:col-span-5 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
               <h3 className="font-bold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-wider">
-                SOP Rekonsiliasi EDC BRI Toko
+                SOP Rekonsiliasi EDC Toko
               </h3>
 
               <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-2 text-xs text-slate-700 dark:text-slate-300">
@@ -1170,7 +1170,7 @@ export const ReportsView: React.FC = () => {
                     1
                   </span>
                   <span>
-                    Di akhir shift / hari, cetak <strong>Struk Settlement</strong> pada mesin EDC BRI toko.
+                    Di akhir shift / hari, cetak <strong>Struk Settlement</strong> pada mesin EDC toko.
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
@@ -1178,7 +1178,7 @@ export const ReportsView: React.FC = () => {
                     2
                   </span>
                   <span>
-                    Buka tab <strong>Laporan Pembayaran &amp; Settlement EDC BRI</strong> pada sistem POS.
+                    Buka tab <strong>Laporan Pembayaran &amp; Settlement EDC</strong> pada sistem POS.
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
@@ -1186,7 +1186,7 @@ export const ReportsView: React.FC = () => {
                     3
                   </span>
                   <span>
-                    Cocokkan total <strong>QRIS EDC BRI</strong> dan <strong>Kartu EDC</strong> antara struk mesin EDC dengan POS.
+                    Cocokkan total <strong>QRIS EDC</strong> dan <strong>Kartu EDC</strong> antara struk mesin EDC dengan POS.
                   </span>
                 </div>
               </div>
@@ -1196,7 +1196,7 @@ export const ReportsView: React.FC = () => {
                 onClick={() => setActiveTab('payments')}
                 className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
-                <span>Buka Laporan Pembayaran &amp; Settlement EDC BRI</span>
+                <span>Buka Laporan Pembayaran &amp; Settlement EDC</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>

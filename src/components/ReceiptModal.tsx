@@ -507,9 +507,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 <span>Metode Bayar:</span>
                 <span className="uppercase font-bold">
                   {transaction.payment.method === 'qris'
-                    ? (transaction.payment.bankName || 'QRIS EDC BRI')
+                    ? (transaction.payment.bankName || 'QRIS EDC')
                     : transaction.payment.method === 'card'
-                    ? (transaction.payment.bankName || 'KARTU EDC BRI')
+                    ? (transaction.payment.bankName || 'KARTU EDC')
                     : transaction.payment.method === 'cash'
                     ? 'TUNAI (CASH)'
                     : 'TRANSFER BANK'}

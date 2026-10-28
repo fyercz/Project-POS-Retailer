@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   X,
   Printer,
@@ -70,6 +70,11 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
   } = usePOS();
 
   const [reportType, setReportType] = useState<ReportType>(defaultType);
+  // Komponen selalu terpasang: ikuti jenis dari tombol setiap kali dibuka. Dulu jenis terkunci pada
+  // nilai pertama ('payments'): 'Cetak Ikhtisar Omzet' mencetak Laporan Rekonsiliasi Pembayaran.
+  useEffect(() => {
+    if (isOpen) setReportType(defaultType);
+  }, [isOpen, defaultType]);
   const [period, setPeriod] = useState<PeriodFilter>('today');
   const [paperFormat, setPaperFormat] = useState<PaperFormat>('a4');
   const [copied, setCopied] = useState(false);
@@ -201,7 +206,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
       summary: 'LAPORAN IKHTISAR PENJUALAN & LABA KOTOR',
       transactions: 'LAPORAN RINCIAN TRANSAKSI PENJUALAN KASIR',
       products: 'LAPORAN PENJUALAN & KINERJA PRODUK',
-      payments: 'LAPORAN REKONSILIASI PEMBAYARAN & SETTLEMENT EDC BRI',
+      payments: 'LAPORAN REKONSILIASI PEMBAYARAN & SETTLEMENT EDC',
       returns: 'LAPORAN RETUR PENJUALAN & DISKON',
       purchases: 'LAPORAN PEMBELIAN & PENERIMAAN SUPPLIER',
       shifts: 'LAPORAN REKAPITULASI SHIFT KASIR',
@@ -222,10 +227,10 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               ${isUlilMartStore(settings.storeName) ? '<img src="/ulilmart-logo.svg" style="height: 28px; max-width: 160px; filter: grayscale(100%) contrast(200%);" alt="' + escapeHtml(settings.storeName) + '" />' : '<div style="font-weight: 800; font-size: 14px;">' + escapeHtml(settings.storeName || 'Toko') + '</div>'}
             </div>
             <div style="font-size: 13px; font-weight: bold; text-transform: uppercase;">${escapeHtml(settings.storeName)}</div>
-            <div style="font-size: 10px; font-weight: 600;">${escapeHtml(settings.storeTagline || 'Lengkap & Hemat')}</div>
+            ${settings.storeTagline ? `<div style="font-size: 10px; font-weight: 600;">${escapeHtml(settings.storeTagline)}</div>` : ''}
             <div>${escapeHtml(settings.branchName)}</div>
-            <div style="font-size: 9px;">${escapeHtml(settings.address)}</div>
-            <div style="font-size: 9px;">Telp: ${escapeHtml(settings.phone)}</div>
+            ${settings.address ? `<div style="font-size: 9px;">${escapeHtml(settings.address)}</div>` : ''}
+            ${settings.phone ? `<div style="font-size: 9px;">Telp: ${escapeHtml(settings.phone)}</div>` : ''}
           </div>
 
           <div style="text-align: center; font-weight: bold; margin: 6px 0; font-size: 11px;">
@@ -282,11 +287,11 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               <span>${formatCurrency(paymentBreakdown.cash, settings.currency)}</span>
             </div>
             <div style="display: flex; justify-content: space-between;">
-              <span>QRIS EDC BRI:</span>
+              <span>QRIS EDC:</span>
               <span>${formatCurrency(paymentBreakdown.qris, settings.currency)}</span>
             </div>
             <div style="display: flex; justify-content: space-between;">
-              <span>Kartu EDC BRI:</span>
+              <span>Kartu EDC:</span>
               <span>${formatCurrency(paymentBreakdown.card, settings.currency)}</span>
             </div>
             ${
@@ -299,7 +304,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                 : ''
             }
             <div style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px dotted #000; margin-top: 4px; padding-top: 2px;">
-              <span>SETTLEMENT EDC BRI:</span>
+              <span>SETTLEMENT EDC:</span>
               <span>${formatCurrency(totalEdcSettlement, settings.currency)}</span>
             </div>
             <div style="font-size: 9px; color: #555; text-align: right;">(${totalEdcTxCount} Struk: QRIS ${qrisTxCount} | Kartu ${cardTxCount})</div>
@@ -345,13 +350,9 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
           <div style="display: flex; align-items: center; gap: 16px;">
             ${isUlilMartStore(settings.storeName) ? '<img src="/ulilmart-logo.svg" style="height: 48px; width: auto;" alt="' + escapeHtml(settings.storeName) + '" />' : '<div style="font-weight: 800; font-size: 20px;">' + escapeHtml(settings.storeName || 'Toko') + '</div>'}
             <div>
-              <div style="font-size: 13px; font-weight: 700; color: #2563eb; letter-spacing: 0.5px;">${escapeHtml(settings.storeTagline || 'Lengkap & Hemat')}</div>
-              <div style="font-size: 12px; color: #475569; margin-top: 2px;">
-                ${escapeHtml(settings.branchName)} • ${escapeHtml(settings.address)}
-              </div>
-              <div style="font-size: 11px; color: #64748b;">
-                Telp: ${escapeHtml(settings.phone)} | Email: info@${escapeHtml(settings.storeName.toLowerCase().replace(/\s+/g, ''))}.com
-              </div>
+              ${settings.storeTagline ? `<div style="font-size: 13px; font-weight: 700; color: #2563eb; letter-spacing: 0.5px;">${escapeHtml(settings.storeTagline)}</div>` : ''}
+              ${[settings.branchName, settings.address].filter(Boolean).length ? `<div style="font-size: 12px; color: #475569; margin-top: 2px;">${[settings.branchName, settings.address].filter(Boolean).map((x) => escapeHtml(String(x))).join(' • ')}</div>` : ''}
+              ${settings.phone ? `<div style="font-size: 11px; color: #64748b;">Telp: ${escapeHtml(settings.phone)}</div>` : ''}
             </div>
           </div>
 
@@ -529,19 +530,19 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
             ${
               reportType === 'payments'
                 ? `
-            <!-- Box Rekonsiliasi Settlement Mesin EDC BRI -->
+            <!-- Box Rekonsiliasi Settlement Mesin EDC -->
             <div style="background: #eff6ff; border: 1.5px solid #2563eb; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #bfdbfe; padding-bottom: 6px;">
                 <div style="font-size: 13px; font-weight: 800; color: #1e3a8a;">
-                  REKONSILIASI SETTLEMENT MESIN EDC BRI
+                  REKONSILIASI SETTLEMENT MESIN EDC
                 </div>
                 <span style="font-size: 10px; font-weight: bold; background: #2563eb; color: #ffffff; padding: 2px 8px; border-radius: 4px;">
-                  TERMINAL EDC BRI
+                  TERMINAL EDC
                 </span>
               </div>
               <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 11px;">
                 <div style="background: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px;">
-                  <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">QRIS Mesin EDC BRI</div>
+                  <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">QRIS Mesin EDC</div>
                   <div style="font-size: 15px; font-weight: 800; color: #1d4ed8; font-family: monospace; margin-top: 2px;">
                     ${formatCurrency(paymentBreakdown.qris, settings.currency)}
                   </div>
@@ -549,7 +550,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                 </div>
 
                 <div style="background: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px;">
-                  <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">Kartu EDC BRI (Debit/Kredit)</div>
+                  <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">Kartu EDC (Debit/Kredit)</div>
                   <div style="font-size: 15px; font-weight: 800; color: #1d4ed8; font-family: monospace; margin-top: 2px;">
                     ${formatCurrency(paymentBreakdown.card, settings.currency)}
                   </div>
@@ -557,7 +558,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                 </div>
 
                 <div style="background: #1e3a8a; border-radius: 6px; padding: 8px; color: #ffffff;">
-                  <div style="color: #bfdbfe; font-size: 10px; font-weight: bold; text-transform: uppercase;">TOTAL SETTLEMENT EDC BRI</div>
+                  <div style="color: #bfdbfe; font-size: 10px; font-weight: bold; text-transform: uppercase;">TOTAL SETTLEMENT EDC</div>
                   <div style="font-size: 16px; font-weight: 900; color: #93c5fd; font-family: monospace; margin-top: 2px;">
                     ${formatCurrency(totalEdcSettlement, settings.currency)}
                   </div>
@@ -585,8 +586,8 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               <tbody>
                 ${[
                   { name: 'Uang Tunai (Cash)', type: 'Laci Kasir Fisik', amount: paymentBreakdown.cash, count: filteredTransactions.filter(t => t.payment.method === 'cash').length },
-                  { name: 'QRIS EDC BRI', type: 'Settlement Mesin EDC BRI', amount: paymentBreakdown.qris, count: qrisTxCount },
-                  { name: 'Kartu EDC BRI (Debit & Kredit)', type: 'Settlement Mesin EDC BRI', amount: paymentBreakdown.card, count: cardTxCount },
+                  { name: 'QRIS EDC', type: 'Settlement Mesin EDC', amount: paymentBreakdown.qris, count: qrisTxCount },
+                  { name: 'Kartu EDC (Debit & Kredit)', type: 'Settlement Mesin EDC', amount: paymentBreakdown.card, count: cardTxCount },
                   ...(paymentBreakdown.transfer > 0 ? [{ name: 'Transfer Bank (Lama)', type: 'Bank Direct Transfer', amount: paymentBreakdown.transfer, count: filteredTransactions.filter(t => t.payment.method === 'transfer').length }] : []),
                 ].map((m) => {
                   const share = grossSales > 0 ? ((m.amount / grossSales) * 100).toFixed(1) : '0';
@@ -638,9 +639,9 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
                           .map((t) => {
                             const isEdc = t.payment.method === 'qris' || t.payment.method === 'card';
                             const methodBadge = t.payment.method === 'qris'
-                              ? 'QRIS EDC BRI'
+                              ? 'QRIS EDC'
                               : t.payment.method === 'card'
-                              ? (t.payment.bankName || 'KARTU EDC BRI')
+                              ? (t.payment.bankName || 'KARTU EDC')
                               : t.payment.method.toUpperCase();
                             return `
                               <tr style="border-bottom: 1px solid #f1f5f9; ${isEdc ? 'background: #f8fafc;' : ''}">
@@ -734,18 +735,18 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
       ]);
       exportToCSV(filename, headers, rows);
     } else if (reportType === 'payments') {
-      const headers = ['No Faktur', 'Waktu', 'Metode Bayar', 'Kanal / Bank', 'No Ref / RRN EDC BRI', 'Kasir', 'Pelanggan', 'Nominal (Rp)', 'Status'];
+      const headers = ['No Faktur', 'Waktu', 'Metode Bayar', 'Kanal / Bank', 'No Ref / RRN EDC', 'Kasir', 'Pelanggan', 'Nominal (Rp)', 'Status'];
       const rows = filteredTransactions.map((t) => [
         t.invoiceNumber,
         new Date(t.createdAt).toLocaleString('id-ID'),
         t.payment.method === 'qris'
-          ? 'QRIS EDC BRI'
+          ? 'QRIS EDC'
           : t.payment.method === 'card'
-          ? (t.payment.bankName || 'KARTU EDC BRI')
+          ? (t.payment.bankName || 'KARTU EDC')
           : t.payment.method === 'cash'
           ? 'TUNAI'
           : 'TRANSFER',
-        t.payment.bankName || (t.payment.method === 'cash' ? 'Laci Fisik Kasir' : 'Mesin EDC BRI'),
+        t.payment.bankName || (t.payment.method === 'cash' ? 'Laci Fisik Kasir' : 'Mesin EDC'),
         t.payment.referenceCode || '-',
         t.cashierName,
         t.customer?.name || 'Umum',
@@ -841,7 +842,7 @@ export const ReportPrintModal: React.FC<ReportPrintModalProps> = ({
               <option value="summary">Ringkasan Penjualan & Laba Kotor</option>
               <option value="transactions">Rincian Transaksi Selesai</option>
               <option value="products">Produk Terlaris & Margin</option>
-              <option value="payments">Laporan Pembayaran &amp; Settlement EDC BRI</option>
+              <option value="payments">Laporan Pembayaran &amp; Settlement EDC</option>
             </select>
           </div>
 

@@ -105,5 +105,11 @@ test('pratinjau cetak label harga, label rak QR, dan laporan', async ({ page }) 
   // Laporan ikhtisar omzet
   await page.locator('#nav-btn-reports').click();
   await page.getByRole('button', { name: /Cetak Ikhtisar Omzet/ }).first().click();
-  await capturePrint(page, 'laporan-ikhtisar', null, () => page.getByRole('button', { name: /Cetak Dokumen Sekarang/ }).click());
+  const report = await capturePrint(page, 'laporan-ikhtisar', null, () => page.getByRole('button', { name: /Cetak Dokumen Sekarang/ }).click());
+  // Tombol ikhtisar mencetak ikhtisar (dulu terkunci pada laporan pembayaran)
+  expect(report).toContain('LAPORAN IKHTISAR PENJUALAN & LABA KOTOR');
+  // Tanpa data karangan: email dari nama toko, slogan bawaan, nama bank tetap
+  expect(report).not.toContain('info@');
+  expect(report).not.toContain('Lengkap &amp; Hemat');
+  expect(report).not.toMatch(/\bBRI\b/);
 });
