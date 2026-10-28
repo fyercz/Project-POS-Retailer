@@ -336,10 +336,10 @@ export const PriceTagModal: React.FC<PriceTagModalProps> = ({
     const barcodeCode = product.barcode || product.sku;
     const barcodeSvg = showBarcode
       ? generateBarcodeSvgString(barcodeCode, {
-          height: template === 'barcode_sticker' ? 22 : template === 'promo_pop' ? 32 : 24,
+          // Lebih tinggi & zona kosong sesuai spesifikasi agar terbaca pemindai (dulu 22-24 px, zona ~3 modul)
+          height: template === 'barcode_sticker' ? 34 : template === 'promo_pop' ? 40 : 36,
           fontSize: 8,
           showText: false,
-          quietZone: 4,
         })
       : '';
 

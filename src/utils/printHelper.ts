@@ -182,6 +182,10 @@ export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS
     try {
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();
+      // Kembalikan fokus ke aplikasi: dulu fokus tertinggal di iframe cetak tersembunyi sehingga
+      // Escape (tutup jendela) & pintasan keyboard tidak berfungsi setelah mencetak
+      window.focus();
+      (document.activeElement as HTMLElement | null)?.blur?.();
     } catch (err) {
       console.warn('Iframe print failed, falling back to window.print', err);
       window.print();
