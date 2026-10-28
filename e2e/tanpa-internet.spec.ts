@@ -44,8 +44,14 @@ test('satu kasir tanpa internet: alur utama, QR pairing, font logo, tanpa akses 
   expect(fontsOk).toEqual({ dancing: true, montserrat: true });
 
   // QR pairing HP di jendela LAN: dibuat di dalam aplikasi & terlihat
-  await page.locator('#btn-employee-menu').click();
-  await page.locator('#menu-item-lan-server').click();
+  // Item 'Server LAN' bisa berada di menu akun atau menu alat
+  const lanItem = page.locator('#menu-item-lan-server:visible').first();
+  for (const menu of ['#btn-employee-menu', '#btn-tools-menu']) {
+    if (await lanItem.isVisible().catch(() => false)) break;
+    await page.keyboard.press('Escape');
+    if (await page.locator(menu).isVisible().catch(() => false)) await page.locator(menu).click();
+  }
+  await lanItem.click();
   const pairingQr = page.getByAltText('QR Code Sambungan Kasir').first();
   await expect(pairingQr).toBeVisible({ timeout: 10_000 });
   expect(await pairingQr.getAttribute('src')).toMatch(/^data:image\/png/);
