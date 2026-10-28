@@ -5,7 +5,7 @@
  */
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { registerOwner, addProduct } from './helpers';
+import { registerOwner, addProduct, hoverContrastFailures } from './helpers';
 
 async function checkHoverContrast(page: Page, scope: string) {
   const count = await page.evaluate((sel) => {
@@ -57,4 +57,23 @@ test('tombol berwarna tetap terbaca saat disorot (kasir, pengaturan, formulir pr
   const all = [...pos.failures, ...pay.failures, ...settings.failures, ...form.failures];
   expect(pos.count + pay.count + settings.count + form.count, 'ada tombol berwarna yang diperiksa').toBeGreaterThan(3);
   expect(all, all.join('\n')).toEqual([]);
+});
+
+test('pemeriksa kontras ringan (dipakai penjelajah) benar-benar menangkap tombol bermasalah', async ({ page }) => {
+  test.setTimeout(120_000);
+  await registerOwner(page, { store: 'Toko Kontrol' });
+  // Kontrol negatif: tombol bertulisan putih di atas hijau terang (emerald-400, ~2:1)
+  await page.evaluate(() => {
+    const box = document.createElement('div');
+    box.id = 'kontrol-kontras';
+    box.innerHTML =
+      '<button class="bg-emerald-700 text-white px-3 py-2" style="background-color:#34d399">Tombol Buruk</button>' +
+      '<button class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-2">Tombol Baik</button>';
+    document.body.appendChild(box);
+  });
+  const found = await hoverContrastFailures(page, '#kontrol-kontras', 'kontrol');
+  expect(found.some((f) => f.includes('Tombol Buruk')), found.join('\n')).toBe(true);
+  expect(found.some((f) => f.includes('Tombol Baik')), found.join('\n')).toBe(false);
+  // Dan pada layar kasir sungguhan: tidak ada temuan
+  expect(await hoverContrastFailures(page, 'body', 'kasir')).toEqual([]);
 });

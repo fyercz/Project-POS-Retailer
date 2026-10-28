@@ -147,3 +147,64 @@ export async function readStoredValue<T = any>(page: Page, key: string): Promise
     key
   );
 }
+
+/**
+ * Kontras SAAT DISOROT untuk semua tombol berlatar warna & bertulisan putih di dalam `scope`.
+ * Cepat (tanpa axe): sorot tombol, baca warna yang benar-benar dirender (via kanvas 1x1, karena
+ * Tailwind v4 memakai oklch), hitung rasio kontras WCAG. Kombinasi kelas yang sama diperiksa sekali.
+ */
+export async function hoverContrastFailures(page: Page, scope: string, label: string, max = 12): Promise<string[]> {
+  const ids = await page.evaluate(
+    ({ sel, max }) => {
+      const root = document.querySelector(sel);
+      if (!root) return [] as string[];
+      const seen = new Set<string>();
+      const out: string[] = [];
+      for (const b of Array.from(root.querySelectorAll<HTMLButtonElement>('button'))) {
+        if (out.length >= max) break;
+        if (b.disabled || b.getClientRects().length === 0 || !(b.textContent || '').trim()) continue;
+        if (!/(?:^|\s)bg-(?:emerald|blue|rose|indigo|amber|slate)-\d{3}\b/.test(b.className) || !/(?:^|\s)text-white\b/.test(b.className)) continue;
+        if (seen.has(b.className)) continue;
+        seen.add(b.className);
+        const id = `hc-${Math.random().toString(36).slice(2, 8)}`;
+        b.setAttribute('data-hc', id);
+        out.push(id);
+      }
+      return out;
+    },
+    { sel: scope, max }
+  );
+  const failures: string[] = [];
+  for (const id of ids) {
+    const btn = page.locator(`[data-hc="${id}"]`);
+    if (!(await btn.isVisible().catch(() => false))) continue;
+    await btn.hover({ timeout: 2000 }).catch(() => {});
+    await page.waitForTimeout(200);
+    const r = await btn
+      .evaluate((el) => {
+        const cv = document.createElement('canvas');
+        cv.width = cv.height = 1;
+        const ctx = cv.getContext('2d')!;
+        const rgb = (c: string) => {
+          ctx.clearRect(0, 0, 1, 1);
+          ctx.fillStyle = '#000';
+          ctx.fillStyle = c;
+          ctx.fillRect(0, 0, 1, 1);
+          const d = ctx.getImageData(0, 0, 1, 1).data;
+          return [d[0]!, d[1]!, d[2]!, d[3]!];
+        };
+        const lum = ([r, g, b]: number[]) =>
+          [r!, g!, b!].map((v) => ((v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)).reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i]!, 0);
+        const cs = getComputedStyle(el);
+        const bg = rgb(cs.backgroundColor);
+        if (bg[3]! < 200) return null; // latar transparan: tidak dinilai di sini
+        const fg = rgb(cs.color);
+        const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+        return { ratio: (a! + 0.05) / (b! + 0.05), text: (el.textContent || '').trim().slice(0, 40) };
+      })
+      .catch(() => null);
+    if (r && r.ratio < 4.5) failures.push(`Kontras saat disorot ${r.ratio.toFixed(2)}:1 < 4,5 — "${r.text}" (${label})`);
+  }
+  await page.mouse.move(0, 0);
+  return failures;
+}

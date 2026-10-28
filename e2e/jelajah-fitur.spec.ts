@@ -5,7 +5,7 @@
  * error konsol) dicatat sebagai anotasi.
  */
 import { test, expect, type Page } from '@playwright/test';
-import { registerOwner, addProduct, sellProductByName } from './helpers';
+import { hoverContrastFailures, registerOwner, addProduct, sellProductByName } from './helpers';
 
 const VIEWS = ['pos', 'transactions', 'inventory', 'customers', 'reports'];
 const OPENERS = [
@@ -103,6 +103,7 @@ test('jelajah semua halaman, tab, dan jendela tanpa error', async ({ page }) => 
   for (const v of VIEWS) {
     await page.locator(`#nav-btn-${v}`).click();
     await checkErrors(`Halaman ${v}`);
+    notes.push(...(await hoverContrastFailures(page, 'main', `Halaman ${v}`)));
     await clickTabsIn(page.locator('main'), `Halaman ${v}`);
     await closeAll(`Halaman ${v}`);
   }
@@ -153,7 +154,13 @@ test('jelajah semua halaman, tab, dan jendela tanpa error', async ({ page }) => 
     await dialogs().first().waitFor({ state: 'visible', timeout: 4000 }).catch(() => {});
     await checkErrors(`Jendela #${id}`);
     const dlg = dialogs().last();
-    if ((await dlg.count()) > 0) await clickTabsIn(dlg, `Jendela #${id}`, 15);
+    if ((await dlg.count()) > 0) {
+      // Kontras tombol saat disorot di jendela ini (audit desain 2026-10-26)
+      await dlg.evaluate((el) => el.setAttribute('data-hoverscope', '1')).catch(() => {});
+      notes.push(...(await hoverContrastFailures(page, '[data-hoverscope="1"]', `Jendela #${id}`)));
+      await dlg.evaluate((el) => el.removeAttribute('data-hoverscope')).catch(() => {});
+      await clickTabsIn(dlg, `Jendela #${id}`, 15);
+    }
     await closeAll(`#${id}`);
   }
 
