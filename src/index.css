@@ -168,3 +168,20 @@
   outline: 2px solid #059669;
   outline-offset: 2px;
 }
+
+/* Cetak di kertas sempit (thermal 58/80 mm): printer hanya hitam/putih & ruang terbatas */
+@media print and (max-width: 100mm) {
+  .print-hide-narrow {
+    display: none !important;
+  }
+  body * {
+    color: #000000 !important;
+  }
+  [class*='bg-slate-'] {
+    background: transparent !important;
+  }
+  [data-store-initials] {
+    background: transparent !important;
+    border: 2px solid #000000 !important;
+  }
+}

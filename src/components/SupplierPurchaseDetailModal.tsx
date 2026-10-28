@@ -253,7 +253,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                       <th className="py-2.5 px-3">Nama Produk & Barcode</th>
                       <th className="py-2.5 px-3 text-center">Qty Masuk</th>
                       <th className="py-2.5 px-3 text-right">Harga Beli (HPP)</th>
-                      <th className="py-2.5 px-3 text-center">Tgl Expired</th>
+                      <th className="py-2.5 px-3 text-center print-hide-narrow">Tgl Expired</th>
                       <th className="py-2.5 px-3 text-right">Subtotal</th>
                     </tr>
                   </thead>
@@ -274,13 +274,13 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                         <td className="py-2 px-3 text-center font-bold font-mono text-emerald-700 dark:text-emerald-400">
                           {item.quantity}
                         </td>
-                        <td className="py-2 px-3 text-right font-mono">
+                        <td className="py-2 px-3 text-right font-mono whitespace-nowrap">
                           {formatCurrency(item.costPrice, settings.currency)}
                         </td>
-                        <td className="py-2 px-3 text-center font-mono text-[11px] text-slate-500">
+                        <td className="py-2 px-3 text-center font-mono text-[11px] text-slate-500 print-hide-narrow">
                           {item.expiryDate ? formatDate(item.expiryDate) : '-'}
                         </td>
-                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                           {formatCurrency(item.subtotal || item.quantity * item.costPrice, settings.currency)}
                         </td>
                       </tr>
