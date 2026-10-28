@@ -5,7 +5,7 @@
  * putus dikirim ulang otomatis tanpa dobel setelah jaringan kembali.
  */
 import { test, expect, type APIRequestContext } from '@playwright/test';
-import { registerOwner, addProduct, sellProductByName } from './helpers';
+import { blockInternet, registerOwner, addProduct, sellProductByName } from './helpers';
 
 
 async function serverStock(request: APIRequestContext, BARCODE: string): Promise<number | null> {
@@ -25,6 +25,9 @@ test('dua kasir: stok server benar, katalog tersinkron, penjualan offline dikiri
   const stockNow = () => serverStock(request, BARCODE);
   const ctxA = await browser.newContext();
   const ctxB = await browser.newContext();
+  // Toko TANPA INTERNET, hanya LAN: semua akses ke luar alamat lokal diblokir & dicatat
+  const internetA = await blockInternet(ctxA);
+  const internetB = await blockInternet(ctxB);
   for (const ctx of [ctxA, ctxB]) {
     await ctx.addInitScript(() => {
       window.print = () => {};
@@ -78,4 +81,6 @@ test('dua kasir: stok server benar, katalog tersinkron, penjualan offline dikiri
 
   await ctxA.close();
   await ctxB.close();
+  // LAN berjalan tanpa internet: tidak ada percobaan akses internet dari kedua kasir
+  expect([...new Set([...internetA, ...internetB])]).toEqual([]);
 });

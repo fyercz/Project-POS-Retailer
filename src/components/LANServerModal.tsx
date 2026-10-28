@@ -46,6 +46,7 @@ import {
   deleteLANSharedHeldOrder,
 } from '../utils/lanSyncManager';
 import { LANTroubleshootPanel } from './LANTroubleshootPanel';
+import QRCode from 'qrcode';
 
 interface LANServerModalProps {
   isOpen: boolean;
@@ -276,7 +277,18 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
     ? publicCloudUrl
     : (effectiveHostIp ? `http://${effectiveHostIp}:${port}` : currentOrigin);
 
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(activeDisplayUrl)}`;
+  // QR sambungan dibuat DI DALAM aplikasi (pustaka qrcode). Dulu api.qrserver.com: tanpa internet
+  // QR tidak muncul (dan disembunyikan diam-diam), padahal HP & PC terhubung di LAN yang sama.
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  useEffect(() => {
+    let alive = true;
+    QRCode.toDataURL(activeDisplayUrl, { width: 240, margin: 1, errorCorrectionLevel: 'M' })
+      .then((url) => alive && setQrCodeUrl(url))
+      .catch(() => alive && setQrCodeUrl(''));
+    return () => {
+      alive = false;
+    };
+  }, [activeDisplayUrl]);
 
   const handleSaveCustomIp = (ipToSave: string) => {
     const cleaned = ipToSave.trim().replace(/^https?:\/\//, '').replace(/:.*$/, '');
@@ -758,7 +770,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                     <div className="flex flex-col items-center bg-white dark:bg-slate-950 p-4 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 shadow-sm shrink-0 text-center w-full sm:w-48">
                       <div className="p-1 rounded-xl bg-white border border-slate-200 dark:border-slate-800 shadow-sm">
                         <img
-                          src={qrCodeUrl}
+                          src={qrCodeUrl || undefined}
                           alt="QR Code Sambungan Kasir"
                           className="w-36 h-36 rounded-xl bg-white"
                           onError={(e) => {

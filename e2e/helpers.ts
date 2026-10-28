@@ -208,3 +208,25 @@ export async function hoverContrastFailures(page: Page, scope: string, label: st
   await page.mouse.move(0, 0);
   return failures;
 }
+
+/**
+ * Simulasi toko tanpa internet tetapi LAN tetap jalan: setiap permintaan ke luar alamat lokal
+ * diblokir & dicatat. Kembalikan daftar alamat internet yang dicoba aplikasi.
+ */
+export async function blockInternet(context: import('@playwright/test').BrowserContext): Promise<string[]> {
+  const attempted: string[] = [];
+  await context.route('**/*', (route) => {
+    const url = route.request().url();
+    let local = false;
+    try {
+      const u = new URL(url);
+      local = ['data:', 'blob:'].includes(u.protocol) || /^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/.test(u.hostname);
+    } catch {
+      local = true;
+    }
+    if (local) return route.continue();
+    attempted.push(url.slice(0, 120));
+    return route.abort('internetdisconnected');
+  });
+  return attempted;
+}
