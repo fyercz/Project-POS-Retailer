@@ -89,7 +89,7 @@ test('pratinjau cetak label harga, label rak QR, dan laporan', async ({ page }) 
   await tagOpener.click();
   await page.getByRole('button', { name: /^Pilih Item \(/ }).first().click(); // tab pemilihan barang
   await page.getByRole('button', { name: /^Pilih Semua \(/ }).first().click();
-  await capturePrint(page, 'label-harga-a4', null, () => page.getByRole('button', { name: /^Cetak Pricetag \(/ }).click());
+  await capturePrint(page, 'label-harga-a4', null, () => page.getByRole('button', { name: /^Cetak Pricetag \((?:A4|F4)\)$/ }).click());
   await page.keyboard.press('Escape');
 
   // Label rak QR
