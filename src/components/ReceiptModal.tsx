@@ -119,7 +119,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
     const el = document.getElementById('thermal-receipt-print-area');
     if (el) {
-      printViaIframe(el.outerHTML, `Struk_${transaction.invoiceNumber}`, paperSize);
+      printViaIframe(el.outerHTML, `Struk_${transaction.invoiceNumber}`, paperSize, { appStyles: true });
     } else {
       window.print();
     }
@@ -173,7 +173,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   const handleOpenReceiptTab = () => {
     const el = document.getElementById('thermal-receipt-print-area');
     if (el) {
-      openPrintWindow(el.outerHTML, `Struk POS - ${transaction?.invoiceNumber ?? ''}`, paperSize);
+      openPrintWindow(el.outerHTML, `Struk POS - ${transaction?.invoiceNumber ?? ''}`, paperSize, { appStyles: true });
     }
   };
 
@@ -373,8 +373,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   {settings.branchName && (
                     <p className="text-[11px] text-slate-700 font-semibold">{settings.branchName}</p>
                   )}
-                  <p className="text-[11px] text-slate-600 leading-tight">{settings.address}</p>
-                  <p className="text-[11px] text-slate-600 font-medium">Telp/WA: {settings.phone}</p>
+                  {settings.address && <p className="text-[11px] text-slate-600 leading-tight">{settings.address}</p>}
+                  {settings.phone && <p className="text-[11px] text-slate-600 font-medium">Telp/WA: {settings.phone}</p>}
                 </>
               ) : (
                 <>
@@ -383,8 +383,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   {settings.branchName && (
                     <p className="text-[11px] text-slate-600">{settings.branchName}</p>
                   )}
-                  <p className="text-[11px] text-slate-600 leading-tight">{settings.address}</p>
-                  <p className="text-[11px] text-slate-600">Telp/WA: {settings.phone}</p>
+                  {settings.address && <p className="text-[11px] text-slate-600 leading-tight">{settings.address}</p>}
+                  {settings.phone && <p className="text-[11px] text-slate-600">Telp/WA: {settings.phone}</p>}
                 </>
               )}
             </div>
