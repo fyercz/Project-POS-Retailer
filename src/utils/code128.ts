@@ -19,3 +19,68 @@ export function code128B(text: string): string {
   const check = sum % 103;
   return PATTERNS[START_B] + values.map((v) => PATTERNS[v]).join('') + PATTERNS[check] + STOP;
 }
+
+const START_C = 105;
+const CODE_B = 100; // pindah ke mode B (dari mode C)
+const CODE_C = 99; // pindah ke mode C (dari mode B)
+
+/**
+ * Code 128 dengan mode C otomatis untuk deret angka (2 angka per simbol): lebih ringkas sehingga
+ * garis lebih lebar & tetap terbaca di kertas 58 mm (printer 203 dpi). Deret angka >= 4 di awal/akhir
+ * atau >= 6 di tengah dikodekan dalam mode C.
+ */
+export function code128(text: string): string {
+  for (const ch of text) {
+    const c = ch.charCodeAt(0);
+    if (c < 32 || c > 126) throw new Error(`Karakter tidak didukung Code 128: ${JSON.stringify(ch)}`);
+  }
+  const digitRun = (i: number) => {
+    let j = i;
+    while (j < text.length && text[j]! >= '0' && text[j]! <= '9') j++;
+    return j - i;
+  };
+  const values: number[] = [];
+  let i = 0;
+  let mode: 'B' | 'C';
+  const firstRun = digitRun(0);
+  if (firstRun >= 4) {
+    mode = 'C';
+    values.push(START_C);
+  } else {
+    mode = 'B';
+    values.push(START_B);
+  }
+  while (i < text.length) {
+    const run = digitRun(i);
+    if (mode === 'C') {
+      if (run >= 2) {
+        values.push(Number(text.slice(i, i + 2)));
+        i += 2;
+        continue;
+      }
+      values.push(CODE_B);
+      mode = 'B';
+      continue;
+    }
+    const atEnd = i + run === text.length;
+    if (run >= 6 || (atEnd && run >= 4)) {
+      if (run % 2 === 1) {
+        values.push(text.charCodeAt(i) - 32); // angka ganjil pertama tetap di mode B
+        i++;
+      }
+      values.push(CODE_C);
+      mode = 'C';
+      continue;
+    }
+    values.push(text.charCodeAt(i) - 32);
+    i++;
+  }
+  let sum = values[0]!;
+  for (let k = 1; k < values.length; k++) sum += values[k]! * k;
+  return values.map((v) => PATTERNS[v]).join('') + PATTERNS[sum % 103] + STOP;
+}
+
+/** Isi barcode struk: nomor nota tanpa awalan "INV-" & tanda hubung (lebih ringkas). */
+export function receiptBarcodeValue(invoiceNumber: string): string {
+  return invoiceNumber.replace(/^INV-/i, '').replace(/-/g, '');
+}

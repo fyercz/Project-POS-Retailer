@@ -35,7 +35,7 @@ import {
 } from '../utils/escposPrinter';
 import { errorMessage } from '../utils/errors';
 import { StoreLogo } from './StoreLogo';
-import { code128B } from '../utils/code128';
+import { code128, receiptBarcodeValue } from '../utils/code128';
 
 interface ReceiptModalProps {
   transaction: Transaction | null;
@@ -44,11 +44,14 @@ interface ReceiptModalProps {
   isNewPayment?: boolean;
 }
 
-/** Code 128-B sebagai SVG bertepi tajam, selebar kertas, dengan zona kosong 10 modul di kiri-kanan. */
+/**
+ * Barcode nota (Code 128 ringkas: nomor nota tanpa 'INV-' & tanda hubung, mode C untuk angka) sebagai
+ * SVG bertepi tajam selebar kertas, zona kosong 10 modul. Ringkas agar terbaca di 58 mm / 203 dpi.
+ */
 const ReceiptBarcode: React.FC<{ value: string }> = ({ value }) => {
   let pattern = '';
   try {
-    pattern = code128B(value);
+    pattern = code128(receiptBarcodeValue(value));
   } catch {
     return null;
   }

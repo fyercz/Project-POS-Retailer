@@ -62,3 +62,46 @@ test('pratinjau cetak struk 58 mm & 80 mm', async ({ page }) => {
     expect(html).toContain('Gula Pasir 1kg');
   }
 });
+
+test('pratinjau cetak label harga, label rak QR, dan laporan', async ({ page }) => {
+  test.setTimeout(240_000);
+  page.on('dialog', (d) => d.accept().catch(() => {}));
+  await page.addInitScript(() => {
+    window.print = () => {};
+  });
+  await registerOwner(page, { store: 'Toko Uji Cetak' });
+  await addProduct(page, { name: 'Indomie Goreng Spesial Jumbo Rasa Ayam Panggang 129g', sku: 'IDM-J', barcode: '2000000009011', cost: 3200, price: 4000, stock: 50 });
+  await addProduct(page, { name: 'Teh Botol 350ml', sku: 'TEH-C', barcode: '2000000009012', cost: 3000, price: 3500, stock: 50 });
+  await addProduct(page, { name: 'Gula Pasir 1kg', sku: 'GLA-C', barcode: '2000000009013', cost: 16500, price: 18500, stock: 50 });
+
+  // Satu penjualan agar laporan berisi
+  await page.locator('#nav-btn-pos').click();
+  await page.locator('[id^="product-card-"]', { hasText: 'Gula Pasir' }).first().click();
+  await page.locator('#btn-checkout-pay').click();
+  await page.getByTestId('payment-cash-input').fill('20000');
+  await page.locator('#btn-confirm-complete-payment').click();
+  await page.getByTestId('receipt-close').click();
+
+  // Label harga (A4)
+  await page.locator('#nav-btn-inventory').click();
+  const tagOpener = page.getByText('Cetak Pricetag (A4 / F4)').first();
+  if (!(await tagOpener.isVisible().catch(() => false))) await page.locator('#btn-dropdown-audit').click();
+  await tagOpener.click();
+  await page.getByRole('button', { name: /^Pilih Semua \(/ }).first().click();
+  await capturePrint(page, 'label-harga-a4', null, () => page.getByRole('button', { name: /^Cetak Pricetag \(/ }).click());
+  await page.keyboard.press('Escape');
+
+  // Label rak QR
+  await page.locator('#nav-btn-inventory').click();
+  const qr = page.locator('#btn-open-qr-shelf-labels').first();
+  if (!(await qr.isVisible().catch(() => false))) await page.locator('#btn-dropdown-audit').click();
+  await qr.click();
+  await page.getByRole('button', { name: /^Pilih Semua \(/ }).first().click();
+  await capturePrint(page, 'label-rak-qr', null, () => page.getByRole('button', { name: /^Cetak Sekarang \(/ }).click());
+  await page.keyboard.press('Escape');
+
+  // Laporan ikhtisar omzet
+  await page.locator('#nav-btn-reports').click();
+  await page.getByRole('button', { name: /Cetak Ikhtisar Omzet/ }).first().click();
+  await capturePrint(page, 'laporan-ikhtisar', null, () => page.getByRole('button', { name: /Cetak Dokumen Sekarang/ }).click());
+});
