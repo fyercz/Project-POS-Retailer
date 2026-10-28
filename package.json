@@ -1,7 +1,7 @@
 {
   "name": "react-example",
   "private": true,
-  "version": "1.8.7",
+  "version": "1.8.8",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
@@ -17,6 +17,8 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@fontsource/dancing-script": "^5.3.0",
+    "@fontsource/montserrat": "^5.3.0",
     "@google/genai": "^2.4.0",
     "@libsql/client": "^0.18.0",
     "@tailwindcss/vite": "^4.1.14",

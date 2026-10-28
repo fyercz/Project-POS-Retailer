@@ -46,6 +46,7 @@ import {
   deleteLANSharedHeldOrder,
 } from '../utils/lanSyncManager';
 import { LANTroubleshootPanel } from './LANTroubleshootPanel';
+import QRCode from 'qrcode';
 
 interface LANServerModalProps {
   isOpen: boolean;
@@ -57,6 +58,26 @@ interface LANServerModalProps {
   onApplyMasterData?: (data: { products: Product[]; transactions?: Transaction[]; customers?: Customer[]; suppliers?: Supplier[] }) => void;
   onRecallSharedHeldOrder?: (heldOrder: any) => void;
 }
+
+/**
+ * QR sambungan HP, dibuat DI DALAM aplikasi (pustaka qrcode). Dulu api.qrserver.com: tanpa internet
+ * QR tidak muncul (dan disembunyikan diam-diam), padahal HP & PC terhubung di LAN yang sama.
+ * Komponen terpisah agar hook tidak bergantung pada return dini jendela LAN.
+ */
+const PairingQr: React.FC<{ url: string }> = ({ url }) => {
+  const [dataUrl, setDataUrl] = useState('');
+  useEffect(() => {
+    let alive = true;
+    QRCode.toDataURL(url, { width: 240, margin: 1, errorCorrectionLevel: 'M' })
+      .then((u) => alive && setDataUrl(u))
+      .catch(() => alive && setDataUrl(''));
+    return () => {
+      alive = false;
+    };
+  }, [url]);
+  if (!dataUrl) return <div className="w-36 h-36 rounded-xl bg-white" aria-hidden="true" />;
+  return <img src={dataUrl} alt="QR Code Sambungan Kasir" className="w-36 h-36 rounded-xl bg-white" />;
+};
 
 export const LANServerModal: React.FC<LANServerModalProps> = ({
   isOpen,
@@ -276,7 +297,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
     ? publicCloudUrl
     : (effectiveHostIp ? `http://${effectiveHostIp}:${port}` : currentOrigin);
 
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(activeDisplayUrl)}`;
+
 
   const handleSaveCustomIp = (ipToSave: string) => {
     const cleaned = ipToSave.trim().replace(/^https?:\/\//, '').replace(/:.*$/, '');
@@ -757,14 +778,7 @@ export const LANServerModal: React.FC<LANServerModalProps> = ({
                     {/* QR Code Quick Scan for Mobile/Tablet */}
                     <div className="flex flex-col items-center bg-white dark:bg-slate-950 p-4 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 shadow-sm shrink-0 text-center w-full sm:w-48">
                       <div className="p-1 rounded-xl bg-white border border-slate-200 dark:border-slate-800 shadow-sm">
-                        <img
-                          src={qrCodeUrl}
-                          alt="QR Code Sambungan Kasir"
-                          className="w-36 h-36 rounded-xl bg-white"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
+                        <PairingQr url={activeDisplayUrl} />
                       </div>
                       <div className="flex items-center gap-1 text-[11px] font-bold text-slate-800 dark:text-slate-200 mt-2.5">
                         <QrCode className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
