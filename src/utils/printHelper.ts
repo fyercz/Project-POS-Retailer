@@ -35,7 +35,7 @@ export const collectAppStyles = (): string => {
   return parts.join('\n');
 };
 
-export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS', paperType: 'a4' | 'f4' | '80mm' | '58mm' = 'a4', options: { appStyles?: boolean } = {}) => {
+export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS', paperType: 'a4' | 'f4' | '80mm' | '58mm' = 'a4', options: { appStyles?: boolean; pageMargin?: string } = {}) => {
   // Remove existing print iframe if any
   const existingFrame = document.getElementById('pos-print-hidden-frame');
   if (existingFrame) {
@@ -78,7 +78,7 @@ export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS
         <style>
           @page {
             size: ${pageSizeRule};
-            margin: ${isThermal ? '2mm' : '8mm 10mm'};
+            margin: ${options.pageMargin ?? (isThermal ? '2mm' : '8mm 10mm')};
           }
           * {
             box-sizing: border-box;
@@ -196,7 +196,7 @@ export const printViaIframe = (contentHtml: string, title: string = 'Laporan POS
 /**
  * Opens report in a dedicated printable popup window
  */
-export const openPrintWindow = (contentHtml: string, title: string = 'Laporan POS', paperType: 'a4' | 'f4' | '80mm' | '58mm' = 'a4', options: { appStyles?: boolean } = {}) => {
+export const openPrintWindow = (contentHtml: string, title: string = 'Laporan POS', paperType: 'a4' | 'f4' | '80mm' | '58mm' = 'a4', options: { appStyles?: boolean; pageMargin?: string } = {}) => {
   const isThermal = paperType === '58mm' || paperType === '80mm';
   const width = isThermal ? 420 : 850;
   const height = 750;
@@ -232,7 +232,7 @@ export const openPrintWindow = (contentHtml: string, title: string = 'Laporan PO
         <style>
           @page {
             size: ${pageSizeRule};
-            margin: ${isThermal ? '3mm' : '8mm 10mm'};
+            margin: ${options.pageMargin ?? (isThermal ? '3mm' : '8mm 10mm')};
           }
           * {
             box-sizing: border-box;

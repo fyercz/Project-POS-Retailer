@@ -46,6 +46,7 @@ import {
   buildFullQRShelfPrintDocument,
 } from '../utils/qrLabelGenerator';
 import { printViaIframe, openPrintWindow } from '../utils/printHelper';
+import { resolveShelfBase, setShelfQrBase } from '../utils/qrLabelGenerator';
 import { ShelfProductLiveModal } from './ShelfProductLiveModal';
 
 export interface QRShelfLabelModalProps {
@@ -127,9 +128,34 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
     }
   }, [initialSelectedProduct, initialSelectedProductIds]);
 
-  // Pre-generate QR SVGs for selected products
+  // Alamat dasar QR: harus bisa dibuka dari HP. Dibuka lewat localhost -> pakai alamat jaringan
+  // server (/api/lan/status). QR dibuat SETELAH alamat ditentukan (QR disimpan di qrSvgMap).
+  const [shelfBase, setShelfBase] = useState<{ base: string; warning?: string } | null>(null);
   useEffect(() => {
     if (!isOpen) return;
+    let alive = true;
+    const { origin, hostname } = window.location;
+    const apply = (status: { recommendedUrl?: string } | null) => {
+      if (!alive) return;
+      const r = resolveShelfBase(origin, hostname, status);
+      setShelfQrBase(r.base);
+      setShelfBase(r);
+      setQrSvgMap({});
+    };
+    if (resolveShelfBase(origin, hostname).warning === undefined) apply(null);
+    else
+      fetch('/api/lan/status')
+        .then((res) => (res.ok ? res.json() : null))
+        .then(apply)
+        .catch(() => apply(null));
+    return () => {
+      alive = false;
+    };
+  }, [isOpen]);
+
+  // Pre-generate QR SVGs for selected products
+  useEffect(() => {
+    if (!isOpen || !shelfBase) return;
     const selectedIds = Object.keys(selectedCopies).filter((id) => selectedCopies[id] > 0);
     const missingIds = selectedIds.filter((id) => !qrSvgMap[id]);
 
@@ -159,7 +185,7 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [selectedCopies, products, isOpen, qrSvgMap]);
+  }, [selectedCopies, products, isOpen, qrSvgMap, shelfBase]);
 
   // Filtered products list for product selector
   const filteredProducts = useMemo(() => {
@@ -299,6 +325,10 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
 
   // Execute Print
   const handlePrint = async () => {
+    // Gulungan thermal: kertas 58/80 mm (dulu selalu A4). Lembar A4 dirancang penuh sekertas:
+    // tanpa margin halaman (dulu meluber -> baris terakhir terpotong & halaman kosong).
+    const printPaper: [ 'a4' | '58mm' | '80mm', { pageMargin?: string } ] =
+      preset === 'thermal_roll_58mm' ? ['58mm', {}] : preset === 'thermal_roll_80mm' ? ['80mm', {}] : ['a4', { pageMargin: '0' }];
     if (selectedProductList.length === 0) return;
 
     // Ensure all SVGs are loaded
@@ -326,9 +356,9 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
     );
 
     try {
-      printViaIframe(printHtml, 'Cetak Label Rak QR');
+      printViaIframe(printHtml, 'Cetak Label Rak QR', ...printPaper);
     } catch {
-      openPrintWindow(printHtml, 'Cetak Label Rak QR');
+      openPrintWindow(printHtml, 'Cetak Label Rak QR', ...printPaper);
     }
   };
 
@@ -358,6 +388,14 @@ export const QRShelfLabelModal: React.FC<QRShelfLabelModalProps> = ({
             </div>
           </div>
 
+          {shelfBase && (
+            <p
+              role={shelfBase.warning ? 'alert' : 'status'}
+              className={`text-[11px] font-semibold max-w-md ${shelfBase.warning ? 'text-rose-700 dark:text-rose-400' : 'text-slate-600 dark:text-slate-400'}`}
+            >
+              {shelfBase.warning || `QR berisi alamat: ${shelfBase.base} (pastikan HP terhubung ke Wi-Fi toko)`}
+            </p>
+          )}
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
