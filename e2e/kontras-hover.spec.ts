@@ -74,6 +74,7 @@ test('pemeriksa kontras ringan (dipakai penjelajah) benar-benar menangkap tombol
   const found = await hoverContrastFailures(page, '#kontrol-kontras', 'kontrol');
   expect(found.some((f) => f.includes('Tombol Buruk')), found.join('\n')).toBe(true);
   expect(found.some((f) => f.includes('Tombol Baik')), found.join('\n')).toBe(false);
-  // Dan pada layar kasir sungguhan: tidak ada temuan
+  // Dan pada layar kasir sungguhan (tanpa tombol uji): tidak ada temuan
+  await page.evaluate(() => document.getElementById('kontrol-kontras')?.remove());
   expect(await hoverContrastFailures(page, 'body', 'kasir')).toEqual([]);
 });
