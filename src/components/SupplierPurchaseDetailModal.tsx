@@ -40,7 +40,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
   onPrintPriceTags,
 }) => {
   const printAreaRef = useRef<HTMLDivElement>(null);
-  const { supplierPurchases, recordSupplierPayment, activeEmployee } = usePOS();
+  const { supplierPurchases, recordSupplierPayment, activeEmployee, products } = usePOS();
   const [payAmount, setPayAmount] = useState('');
   const [paySource, setPaySource] = useState<'cash_drawer' | 'bank_transfer' | ''>('');
   const [payNote, setPayNote] = useState('');
@@ -75,7 +75,8 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
   const handlePrintDocument = (paper: 'a4' | '80mm') => {
     if (!printAreaRef.current) return;
     const content = printAreaRef.current.innerHTML;
-    printViaIframe(content, `Faktur_${purchase.invoiceNumber}`, paper);
+    // Isi diambil dari tampilan layar (Tailwind): sertakan CSS aplikasi (dulu tercetak berantakan)
+    printViaIframe(content, `Faktur_${purchase.invoiceNumber}`, paper, { appStyles: true });
   };
 
   return (
@@ -185,12 +186,8 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                     </p>
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-500 max-w-sm">
-                  {settings.address}
-                </p>
-                <p className="text-[11px] text-slate-500 font-mono">
-                  Telp: {settings.phone}
-                </p>
+                {settings.address && <p className="text-[11px] text-slate-500 max-w-sm">{settings.address}</p>}
+                {settings.phone && <p className="text-[11px] text-slate-500 font-mono">Telp: {settings.phone}</p>}
               </div>
 
               <div className="text-left sm:text-right space-y-1">
@@ -266,7 +263,13 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                         <td className="py-2 px-3 text-center text-slate-500 font-mono">{idx + 1}</td>
                         <td className="py-2 px-3">
                           <div className="font-semibold text-slate-900 dark:text-white">{item.productName}</div>
-                          <div className="text-[11px] text-slate-500 font-mono">ID: {item.productId}</div>
+                          {/* Barcode/SKU produk (dulu ID internal 'prod-…' yang tidak berarti bagi supplier) */}
+                          <div className="text-[11px] text-slate-500 font-mono">
+                            {(() => {
+                              const prod = products.find((p) => p.id === item.productId);
+                              return prod?.barcode || prod?.sku || '-';
+                            })()}
+                          </div>
                         </td>
                         <td className="py-2 px-3 text-center font-bold font-mono text-emerald-700 dark:text-emerald-400">
                           {item.quantity}

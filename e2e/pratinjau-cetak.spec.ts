@@ -149,6 +149,9 @@ test('pratinjau cetak faktur pembelian (A4 & 80 mm) dan rekap shift', async ({ p
   const fakturA4 = await capturePrint(page, 'faktur-a4', null, () => page.getByTitle('Cetak dokumen faktur lembar A4 resmi').click());
   expect(fakturA4).toContain('Beras Pandan Wangi 5kg');
   expect(fakturA4).toContain('SJ-2026-1028');
+  expect(fakturA4).toContain('2000000009022'); // barcode produk, bukan ID internal
+  expect(fakturA4).not.toMatch(/ID: prod-/);
+  expect(fakturA4).toContain('Pak Uji'); // penerima sebenarnya (dulu selalu 'Staff Gudang')
   await capturePrint(page, 'faktur-80mm', 80, () => page.getByTitle('Cetak struk penerimaan versi kasir (printer thermal)').click());
   await page.keyboard.press('Escape');
 
@@ -165,5 +168,6 @@ test('pratinjau cetak faktur pembelian (A4 & 80 mm) dan rekap shift', async ({ p
   await page.getByTestId('shift-actual-cash').fill('91000'); // seharusnya 91.500 -> kurang 500
   await page.locator('#btn-confirm-close-shift').click();
   const rekap = await capturePrint(page, 'rekap-shift-80mm', 80, () => page.getByRole('button', { name: /Cetak Rekap Shift/ }).click());
-  expect(rekap).toContain('Toko Uji Cetak');
+  expect(rekap).toMatch(/TOKO UJI CETAK|Toko Uji Cetak/);
+  expect(rekap).toMatch(/Kurang Rp\s*500/);
 });
