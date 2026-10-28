@@ -45,8 +45,8 @@ test('satu kasir tanpa internet: alur utama, QR pairing, font logo, tanpa akses 
 
   // QR pairing HP di jendela LAN: dibuat di dalam aplikasi & terlihat
   // Item 'Server LAN' bisa berada di menu akun atau menu alat
-  const lanItem = page.locator('#menu-item-lan-server:visible').first();
-  for (const menu of ['#btn-employee-menu', '#btn-tools-menu']) {
+  const lanItem = page.locator('#menu-item-lan-server:visible, #tools-item-lan-server:visible').first();
+  for (const menu of ['#btn-tools-menu', '#btn-employee-menu']) {
     if (await lanItem.isVisible().catch(() => false)) break;
     await page.keyboard.press('Escape');
     if (await page.locator(menu).isVisible().catch(() => false)) await page.locator(menu).click();

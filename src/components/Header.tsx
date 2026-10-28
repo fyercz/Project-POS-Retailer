@@ -465,6 +465,7 @@ export const Header: React.FC = () => {
                   <>
                   {/* LAN Multi-Client Server */}
                   <button
+                    id="tools-item-lan-server"
                     onClick={() => {
                       setIsToolsMenuOpen(false);
                       setIsLANModalOpen(true);
