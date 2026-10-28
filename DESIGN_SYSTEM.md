@@ -152,4 +152,7 @@ label/notifikasi), atau **lapisan jendela yang tidak standar**.
 
 `e2e/kontras-hover.spec.ts` menyorot setiap tombol berwarna di layar kasir, jendela pembayaran,
 Pengaturan, dan formulir produk, lalu memeriksa kontrasnya dengan axe **dalam keadaan tersorot**
-(pemeriksaan axe biasa hanya melihat keadaan diam).
+(pemeriksaan axe biasa hanya melihat keadaan diam). Penjelajah semua fitur
+(`e2e/jelajah-fitur.spec.ts`) menjalankan pemeriksaan yang sama — versi ringan
+`hoverContrastFailures` (rumus WCAG dari warna yang dirender) — di **setiap halaman dan jendela**;
+kontrol negatif memastikan pemeriksa itu benar-benar menangkap tombol yang buruk.
