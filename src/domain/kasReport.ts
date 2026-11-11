@@ -99,7 +99,21 @@ export function buildKasBulanan(input: KasInput) {
       const n = i + 1;
       const start = Number(s.startingCash) || 0;
       const ending = s.actualCashEnding !== undefined ? Number(s.actualCashEnding) : start + (Number(s.cashSales) || 0) - (Number(s.cashOut) || 0);
-      const setoran = Math.round(ending - start);
+      // Beban & bayar tagihan dari LACI selama shift sudah mengurangi uang laci, padahal keduanya
+      // dicatat lagi sebagai baris keluar di buku kas -> tambahkan kembali agar tidak terpotong dua kali.
+      const t0 = new Date(s.startTime).getTime();
+      const t1 = s.endTime ? new Date(s.endTime).getTime() : Number.MAX_SAFE_INTEGER;
+      const within = (iso: string) => {
+        const t = new Date(iso).getTime();
+        return t >= t0 && t <= t1;
+      };
+      const drawerOut =
+        input.expenses.filter((e) => e.paymentSource === 'cash_drawer' && within(e.date)).reduce((a, e) => a + (Number(e.amount) || 0), 0) +
+        input.supplierPurchases
+          .flatMap((po) => po.payments || [])
+          .filter((p) => p.source === 'cash_drawer' && within(p.date))
+          .reduce((a, p) => a + (Number(p.amount) || 0), 0);
+      const setoran = Math.round(ending - start + drawerOut);
       if (setoran === 0) return;
       if (n === 1) push(d, { uraian: `Penjualan Kasir Sift 1`, debet: setoran, kredit: 0, jenis: 'penjualan' });
       else push(addDays(d, 1), { uraian: `Penjualan Kasir Sift ${n} Tgl ${shortDate(d)}`, debet: setoran, kredit: 0, jenis: 'penjualan' });

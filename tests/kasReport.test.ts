@@ -9,7 +9,8 @@ const suppliers = [
 ].map(([name, code]) => ({ name: name!, code }));
 const at = (d: string, h: number) => new Date(`2026-${d}T${String(h).padStart(2, '0')}:00:00`).toISOString();
 const cashPO = (name: string, amount: number) => ({ supplierName: name, createdAt: at('10-01', 9), finalTotal: amount, paymentTerms: 'Tunai / Cash' });
-const pay = (name: string, amount: number) => ({ supplierName: name, createdAt: at('09-20', 9), finalTotal: amount, paymentTerms: 'Tempo 14 Hari', payments: [{ amount, date: at('10-01', 10), source: 'cash_drawer' }] });
+// Tagihan dibayar dari kas toko sebelum shift dibuka (seperti praktik toko), bukan dari laci shift berjalan
+const pay = (name: string, amount: number) => ({ supplierName: name, createdAt: at('09-20', 9), finalTotal: amount, paymentTerms: 'Tempo 14 Hari', payments: [{ amount, date: at('10-01', 6), source: 'cash_drawer' }] });
 
 test('laporan kas: 1 Oktober 2026 sama persis dengan LAP.HARI toko (saldo akhir Rp 11.425.500)', () => {
   const r = buildKasBulanan({
@@ -24,7 +25,7 @@ test('laporan kas: 1 Oktober 2026 sama persis dengan LAP.HARI toko (saldo akhir 
     transactions: [],
     supplierPurchases: [cashPO('CHAMPION', 560_000), cashPO('YAKULT', 89_500), cashPO('PELITA N R', 198_000), cashPO('TELUR', 220_000), cashPO('AICE', 567_000), pay('T ALAN', 203_000), pay('ENSEVAL', 389_500), pay('PUTRA N', 1_129_500), pay('WINGS', 838_000)],
     suppliers,
-    expenses: [{ date: at('10-01', 11), amount: 254_000, description: 'PERALATAN TOKO', category: 'peralatan_toko', paymentSource: 'cash_drawer' }],
+    expenses: [{ date: at('10-01', 6), amount: 254_000, description: 'PERALATAN TOKO', category: 'peralatan_toko', paymentSource: 'cash_drawer' }],
     cashEntries: [{ id: 'c1', date: at('10-01', 12), kind: 'income', category: 'sewa_rak', counterparty: 'T ALAN', amount: 10_000, description: 'Sewa Rak dari T ALAN' }],
   });
   const d1 = r.days[0]!;
@@ -61,4 +62,19 @@ test('laporan kas: debit sebulan satu baris, PPOB terpisah dengan saldo berjalan
   assert.equal(debitRows[0]!.debet, 50_000, 'void tidak dihitung, tunai bukan debit');
   assert.deepEqual(r.ppobRows.map((p) => p.saldo), [3_691_500, -808_500]);
   assert.equal(r.closingBalance, 50_000 - 11_000_000);
+});
+
+test('laporan kas: beban & tagihan dari laci selama shift tidak terpotong dua kali', () => {
+  // Shift: jual tunai 1.000.000; selama shift bayar beban 50.000 & tagihan 200.000 dari laci
+  // -> uang di laci saat tutup = 750.000. Saldo kas harus = awal + 1.000.000 - 50.000 - 200.000.
+  const r = buildKasBulanan({
+    year: 2026, month: 10, openingBalance: 500_000,
+    shifts: [{ id: 's', startTime: at('10-05', 7), endTime: at('10-05', 14), status: 'closed', startingCash: 0, actualCashEnding: 750_000 }],
+    transactions: [], suppliers: [{ name: 'WINGS', code: '064' }], cashEntries: [],
+    supplierPurchases: [{ supplierName: 'WINGS', createdAt: at('09-20', 9), finalTotal: 200_000, paymentTerms: 'Tempo 14 Hari', payments: [{ amount: 200_000, date: at('10-05', 10), source: 'cash_drawer' }] }],
+    expenses: [{ date: at('10-05', 11), amount: 50_000, description: 'KRESEK', category: 'perlengkapan_toko', paymentSource: 'cash_drawer' }],
+  });
+  const d = r.days[0]!;
+  assert.equal(d.rows.find((x) => x.jenis === 'penjualan')!.debet, 1_000_000, 'penjualan = setoran + yang dibayar dari laci');
+  assert.equal(d.closing, 500_000 + 1_000_000 - 50_000 - 200_000);
 });
