@@ -68,6 +68,7 @@ import { lineCogs, baseUnitsOf, unitMultiplierOf, returnedCogs } from '../../uti
 import { BalanceSheetPanel } from './reports/BalanceSheetPanel';
 import { IncomeStatementPanel } from './reports/IncomeStatementPanel';
 import { CashBookModal } from '../CashBookModal';
+import { KasExportModal } from '../KasExportModal';
 
 export const ReportsView: React.FC = () => {
   const { products, categories, recordProductPriceChange, updateProduct } = usePOSCatalog();
@@ -94,6 +95,7 @@ export const ReportsView: React.FC = () => {
   // Expense Modal State
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isCashBookOpen, setIsCashBookOpen] = useState(false);
+  const [isKasExportOpen, setIsKasExportOpen] = useState(false);
   const [newExpenseCategory, setNewExpenseCategory] = useState<ExpenseCategory>('listrik_air_internet');
   const [newExpenseDesc, setNewExpenseDesc] = useState('');
   const [newExpenseAmount, setNewExpenseAmount] = useState('');
@@ -517,6 +519,16 @@ export const ReportsView: React.FC = () => {
             <Sparkles className="w-4 h-4 fill-current" />
             <span className="hidden sm:inline">Analisis AI</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Ekspor laporan kas bulanan format toko (LAP.HARI / LAP.BLN / PPOB / LABA) */}
+          <button
+            id="btn-open-kas-export"
+            type="button"
+            onClick={() => setIsKasExportOpen(true)}
+            className="px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+          >
+            <span>Ekspor Laporan Kas (Excel)</span>
           </button>
 
           {/* Buku kas harian (sewa rak, penarikan kas, PPOB): terlihat di semua tab */}
@@ -1697,6 +1709,7 @@ export const ReportsView: React.FC = () => {
 
       {/* Printable Report Modal */}
       <CashBookModal isOpen={isCashBookOpen} onClose={() => setIsCashBookOpen(false)} />
+      <KasExportModal isOpen={isKasExportOpen} onClose={() => setIsKasExportOpen(false)} />
       <ReportPrintModal
         isOpen={isPrintModalOpen}
         onClose={() => setIsPrintModalOpen(false)}
