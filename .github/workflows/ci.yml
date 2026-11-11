@@ -50,8 +50,26 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --no-audit --no-fund
-      - name: Pasang browser Chromium
-        run: npx playwright install --with-deps chromium
+      # Browser disimpan di cache (tidak diunduh ulang selama versi Playwright sama). Unduhan &
+      # paket sistem diberi batas waktu & dicoba ulang: dulu satu koneksi macet menghabiskan
+      # 10 menit lalu job gagal sebelum satu tes pun berjalan.
+      - name: Cache browser Playwright
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Pasang browser Chromium (cache + coba ulang)
+        timeout-minutes: 20
+        run: |
+          for i in 1 2 3; do
+            if [ "${{ steps.pw-cache.outputs.cache-hit }}" != "true" ]; then
+              timeout 300 npx playwright install chromium || { echo "Unduh browser gagal (percobaan $i)"; sleep 20; continue; }
+            fi
+            timeout 300 npx playwright install-deps chromium && exit 0
+            echo "Pasang paket sistem gagal (percobaan $i)"; sleep 20
+          done
+          exit 1
       - name: Build
         run: npm run build
       - name: Tes E2E
