@@ -99,7 +99,7 @@ export const ReportsView: React.FC = () => {
   const [newExpenseCategory, setNewExpenseCategory] = useState<ExpenseCategory>('listrik_air_internet');
   const [newExpenseDesc, setNewExpenseDesc] = useState('');
   const [newExpenseAmount, setNewExpenseAmount] = useState('');
-  const [newExpenseSource, setNewExpenseSource] = useState<'cash_drawer' | 'bank_transfer'>('cash_drawer');
+  const [newExpenseSource, setNewExpenseSource] = useState<'cash_drawer' | 'kas_toko' | 'bank_transfer'>('cash_drawer');
   const [newExpenseNotes, setNewExpenseNotes] = useState('');
   const [expenseFormError, setExpenseFormError] = useState('');
 
@@ -1645,7 +1645,7 @@ export const ReportsView: React.FC = () => {
                 <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
                   Sumber Dana Pembayaran:
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <label className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
                     <input
                       type="radio"
@@ -1655,6 +1655,17 @@ export const ReportsView: React.FC = () => {
                       className="text-indigo-600"
                     />
                     <span className="font-semibold text-slate-800 dark:text-slate-200">Kas di Laci Kasir</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <input
+                      type="radio"
+                      name="source"
+                      checked={newExpenseSource === 'kas_toko'}
+                      onChange={() => setNewExpenseSource('kas_toko')}
+                      className="text-indigo-600"
+                    />
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">Kas Toko (bukan laci)</span>
                   </label>
 
                   <label className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">

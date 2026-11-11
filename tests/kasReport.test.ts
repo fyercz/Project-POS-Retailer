@@ -78,3 +78,17 @@ test('laporan kas: beban & tagihan dari laci selama shift tidak terpotong dua ka
   assert.equal(d.rows.find((x) => x.jenis === 'penjualan')!.debet, 1_000_000, 'penjualan = setoran + yang dibayar dari laci');
   assert.equal(d.closing, 500_000 + 1_000_000 - 50_000 - 200_000);
 });
+
+test('laporan kas: bayar dari KAS TOKO selama shift tidak menambah setoran, tetap tercatat keluar', () => {
+  // Shift jual tunai 1.000.000 (laci 1.000.000 utuh); pemilik bayar beban 50.000 dari kas toko
+  const r = buildKasBulanan({
+    year: 2026, month: 10, openingBalance: 500_000,
+    shifts: [{ id: 's', startTime: at('10-05', 7), endTime: at('10-05', 14), status: 'closed', startingCash: 0, actualCashEnding: 1_000_000 }],
+    transactions: [], suppliers: [], cashEntries: [], supplierPurchases: [],
+    expenses: [{ date: at('10-05', 11), amount: 50_000, description: 'GALON', category: 'lainnya', paymentSource: 'kas_toko' }],
+  });
+  const d = r.days[0]!;
+  assert.equal(d.rows.find((x) => x.jenis === 'penjualan')!.debet, 1_000_000);
+  assert.ok(d.rows.some((x) => x.uraian === 'GALON' && x.kredit === 50_000));
+  assert.equal(d.closing, 1_450_000);
+});

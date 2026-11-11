@@ -125,13 +125,13 @@ export function buildKasBulanan(input: KasInput) {
     if (/tunai|cash/i.test(po.paymentTerms || 'tunai') && total > 0)
       push(ymdLocal(po.createdAt), { uraian: `Pembelian Barang dari ${po.supplierName}${codeOf(po.supplierName)}`, debet: 0, kredit: total, jenis: 'pembelian' });
     for (const p of po.payments || []) {
-      if (p.source && p.source !== 'cash_drawer') continue; // transfer bank tidak keluar dari kas toko
+      if (p.source === 'bank_transfer') continue; // transfer bank tidak keluar dari kas (laci / kas toko)
       push(ymdLocal(p.date), { uraian: `Bayar tagihan kpd ${po.supplierName}${codeOf(po.supplierName)}`, debet: 0, kredit: Math.round(Number(p.amount) || 0), jenis: 'tagihan' });
     }
   }
 
   for (const e of input.expenses) {
-    if (e.paymentSource && e.paymentSource !== 'cash_drawer') continue;
+    if (e.paymentSource === 'bank_transfer') continue; // laci & kas toko tercatat; transfer bank tidak
     const label = input.expenseLabel ? input.expenseLabel(e.category) : e.category;
     push(ymdLocal(e.date), { uraian: e.description || label, debet: 0, kredit: Math.round(Number(e.amount) || 0), jenis: 'beban', sub: label });
   }

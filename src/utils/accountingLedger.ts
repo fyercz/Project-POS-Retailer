@@ -508,7 +508,7 @@ export function generateJournalEntries(options: {
       const liabilityCode = kind === 'consignment' ? '2030' : '2010';
       const liabilityName = kind === 'consignment' ? 'Utang Titipan / Konsinyasi Supplier' : 'Utang Dagang Supplier';
       const sourceCode = pay.source === 'bank_transfer' ? '1020' : '1010';
-      const sourceName = pay.source === 'bank_transfer' ? 'Bank & Saldo QRIS' : 'Kas di Laci Kasir';
+      const sourceName = pay.source === 'bank_transfer' ? 'Bank & Saldo QRIS' : pay.source === 'kas_toko' ? 'Kas Toko' : 'Kas di Laci Kasir';
       entries.push({
         id: `jrnl-pay-${pay.id}`,
         date: pay.date,
@@ -532,7 +532,7 @@ export function generateJournalEntries(options: {
     if (amount <= 0) continue;
 
     const sourceCode = exp.paymentSource === 'bank_transfer' ? '1020' : '1010';
-    const sourceName = exp.paymentSource === 'bank_transfer' ? 'Bank & Saldo QRIS' : 'Kas di Laci Kasir';
+    const sourceName = exp.paymentSource === 'bank_transfer' ? 'Bank & Saldo QRIS' : exp.paymentSource === 'kas_toko' ? 'Kas Toko' : 'Kas di Laci Kasir';
 
     const lines = [
       {

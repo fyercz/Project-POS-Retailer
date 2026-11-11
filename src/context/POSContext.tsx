@@ -235,7 +235,7 @@ export interface POSTransactionsContextType {
   recordSupplierPayment: (
     purchaseId: string,
     amount: number,
-    source: 'cash_drawer' | 'bank_transfer',
+    source: 'cash_drawer' | 'kas_toko' | 'bank_transfer',
     note?: string
   ) => { success: boolean; message: string };
   suppliers: Supplier[];
@@ -2565,7 +2565,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const recordSupplierPayment = (
     purchaseId: string,
     amount: number,
-    source: 'cash_drawer' | 'bank_transfer',
+    source: 'cash_drawer' | 'kas_toko' | 'bank_transfer',
     note?: string
   ): { success: boolean; message: string } => {
     if (activeEmployee?.role !== 'owner' && activeEmployee?.role !== 'supervisor') {
