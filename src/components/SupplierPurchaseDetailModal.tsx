@@ -42,7 +42,7 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
   const printAreaRef = useRef<HTMLDivElement>(null);
   const { supplierPurchases, recordSupplierPayment, activeEmployee, products } = usePOS();
   const [payAmount, setPayAmount] = useState('');
-  const [paySource, setPaySource] = useState<'cash_drawer' | 'bank_transfer' | ''>('');
+  const [paySource, setPaySource] = useState<'cash_drawer' | 'kas_toko' | 'bank_transfer' | ''>('');
   const [payNote, setPayNote] = useState('');
   const [payMessage, setPayMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -423,7 +423,8 @@ export const SupplierPurchaseDetailModal: React.FC<SupplierPurchaseDetailModalPr
                   className="px-2 py-1.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-white dark:bg-slate-900"
                 >
                   <option value="" disabled>-- Sumber dana --</option>
-                  <option value="cash_drawer">Kas laci kasir</option>
+                  <option value="cash_drawer">Kas laci kasir (shift berjalan)</option>
+                  <option value="kas_toko">Kas toko (bukan laci kasir)</option>
                   <option value="bank_transfer">Transfer bank</option>
                 </select>
                 <input aria-label="Catatan (opsional)"

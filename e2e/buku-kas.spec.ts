@@ -3,7 +3,7 @@
  * penarikan kas (prive), PPOB per shift. Diperiksa dua tahap: tertulis, lalu bertahan setelah reload.
  */
 import { test, expect, type Page } from '@playwright/test';
-import { registerOwner, addEmployee, lockAndLogin, readStored } from './helpers';
+import { registerOwner, addEmployee, lockAndLogin, readStored, readStoredValue, addProduct, sellProductByName } from './helpers';
 
 const entries = async (page: Page) =>
   (await readStored(page, 'pos_cash_entries')).map((c: any) => `${c.kind}|${c.category || c.shiftLabel || '-'}|${c.amount}|${c.description}`).sort();
@@ -105,4 +105,26 @@ test('kode supplier otomatis, kas masuk lain, penarikan kas, PPOB per shift; kas
     }
   }
   expect((await readStored(page, 'pos_cash_entries')).filter((c: any) => c.kind === 'withdrawal').length).toBe(1);
+});
+
+test('beban dari Kas Toko tidak mengurangi uang laci shift; dari laci tetap mengurangi', async ({ page }) => {
+  test.setTimeout(180_000);
+  await registerOwner(page, { store: 'Toko Kas' });
+  await addProduct(page, { name: 'Kopi Sachet', sku: 'KOP-KT', barcode: '2000000011001', cost: 1100, price: 1500, stock: 50 });
+  await sellProductByName(page, 'Kopi Sachet', 2000); // shift berjalan
+
+  for (const [nominal, ket, sumber] of [['25000', 'Galon (kas toko)', 'Kas Toko (bukan laci)'], ['10000', 'Kresek (laci)', 'Kas di Laci Kasir']] as const) {
+    await page.locator('#nav-btn-reports').click();
+    await page.getByRole('button', { name: /Buku Jurnal Umum/ }).first().click();
+    await page.getByRole('button', { name: /Catat Beban Kas Keluar/ }).click();
+    await page.getByLabel('Nominal Pengeluaran (Rp)').fill(nominal);
+    await page.getByLabel('Keterangan Pengeluaran').fill(ket);
+    await page.getByLabel('Kategori Beban Operasional').selectOption({ index: 1 });
+    await page.getByLabel(sumber).check();
+    await page.getByRole('button', { name: /Simpan Beban & Jurnal/ }).click();
+  }
+  await expect
+    .poll(async () => (await readStored(page, 'pos_operational_expenses')).map((e: any) => `${e.description}:${e.paymentSource}`).sort())
+    .toEqual(['Galon (kas toko):kas_toko', 'Kresek (laci):cash_drawer']);
+  await expect.poll(async () => (await readStoredValue(page, 'pos_current_shift_v1'))?.cashOut, { message: 'hanya beban dari laci' }).toBe(10000);
 });

@@ -391,7 +391,8 @@ export interface SupplierPayment {
   id: string;
   amount: number;
   date: string;
-  source: 'cash_drawer' | 'bank_transfer';
+  /** kas_toko = kas utama toko (bukan laci kasir; tidak mengubah uang laci shift) */
+  source: 'cash_drawer' | 'kas_toko' | 'bank_transfer';
   note?: string;
   recordedBy: string;
 }
@@ -858,7 +859,8 @@ export interface OperationalExpense {
   category: ExpenseCategory;
   description: string;
   amount: number;
-  paymentSource: 'cash_drawer' | 'bank_transfer';
+  /** kas_toko = kas utama toko (bukan laci kasir; tidak mengubah uang laci shift) */
+  paymentSource: 'cash_drawer' | 'kas_toko' | 'bank_transfer';
   recordedBy: string;
   notes?: string;
   receiptNumber?: string;
