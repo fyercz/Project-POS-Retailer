@@ -461,14 +461,6 @@ export const ReportsView: React.FC = () => {
               </button>
               <button
                 type="button"
-                id="btn-open-cash-book"
-                onClick={() => setIsCashBookOpen(true)}
-                className="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all active:scale-95"
-              >
-                <span>Buku Kas Toko (Sewa Rak, Penarikan, PPOB)</span>
-              </button>
-              <button
-                type="button"
                 onClick={handleExportJournalCSV}
                 className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
               >
@@ -525,6 +517,18 @@ export const ReportsView: React.FC = () => {
             <Sparkles className="w-4 h-4 fill-current" />
             <span className="hidden sm:inline">Analisis AI</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Buku kas harian (sewa rak, penarikan kas, PPOB): terlihat di semua tab */}
+          <button
+            id="btn-open-cash-book"
+            type="button"
+            onClick={() => setIsCashBookOpen(true)}
+            className="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors active:scale-95"
+            title="Kas masuk lain-lain (sewa rak, sewa tempat, kardus, laba PPOB), penarikan kas, PPOB per shift"
+          >
+            <Wallet className="w-4 h-4" />
+            <span>Buku Kas Toko</span>
           </button>
 
           <button
