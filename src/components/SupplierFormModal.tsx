@@ -49,10 +49,12 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
   supplierToEdit,
   onSuccess,
 }) => {
-  const { addSupplier, updateSupplier } = usePOS();
+  const { addSupplier, updateSupplier, suppliers } = usePOS();
   const isEditMode = Boolean(supplierToEdit);
 
   const [name, setName] = useState('');
+  // Kode supplier toko (mis. '043'), seperti di laporan kas: 'Pembelian Barang dari CHAMPION (043)'
+  const [code, setCode] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -67,6 +69,7 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
   useEffect(() => {
     if (supplierToEdit) {
       setName(supplierToEdit.name || '');
+      setCode(supplierToEdit.code || '');
       setContactPerson(supplierToEdit.contactPerson || '');
       setPhone(supplierToEdit.phone || '');
       setEmail(supplierToEdit.email || '');
@@ -82,6 +85,7 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
       setPhone('');
       setEmail('');
       setAddress('');
+      setCode('');
       // Mitra baru: kategori & lama pengiriman dikosongkan (dulu otomatis 'Sembako' dan 2 hari)
       setCategory('');
       setPaymentTerms(PAYMENT_TERMS_OPTIONS[0]);
@@ -97,6 +101,10 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
   const validate = () => {
     const errs: { [key: string]: string } = {};
     if (!name.trim()) errs.name = 'Nama supplier / perusahaan distributor wajib diisi';
+    const c = code.trim().toUpperCase();
+    if (c && !/^[A-Z0-9-]{1,10}$/.test(c)) errs.code = 'Kode 1-10 karakter: huruf, angka, atau tanda hubung (mis. 043)';
+    else if (c && (suppliers || []).some((x) => x.id !== supplierToEdit?.id && (x.code || '').toUpperCase() === c))
+      errs.code = `Kode ${c} sudah dipakai supplier lain`;
     // Nomor telepon dan WhatsApp sekarang opsional
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -108,6 +116,7 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
 
     const supplierPayload: Omit<Supplier, 'id' | 'createdAt'> = {
       name: name.trim(),
+      code: code.trim().toUpperCase() || undefined,
       contactPerson: contactPerson.trim() || undefined,
       phone: phone.trim() || undefined,
       email: email.trim() || undefined,
@@ -192,6 +201,29 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
               />
             </div>
             {errors.name && <p id="err-supplierformmodal-name" role="alert" className="text-[11px] text-rose-600 mt-1">{errors.name}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="supplier-code" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Kode Supplier (opsional)
+            </label>
+            <input
+              id="supplier-code"
+              aria-invalid={Boolean(errors.code)}
+              aria-describedby={errors.code ? 'err-supplierformmodal-code' : 'hint-supplierformmodal-code'}
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              placeholder="Contoh: 043"
+              className={`w-32 px-3 py-2 text-sm font-mono rounded-xl border ${
+                errors.code ? 'border-rose-500 bg-rose-50/20' : 'border-slate-500 dark:border-slate-700'
+              } bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none`}
+            />
+            {errors.code ? (
+              <p id="err-supplierformmodal-code" role="alert" className="text-[11px] text-rose-600 mt-1">{errors.code}</p>
+            ) : (
+              <p id="hint-supplierformmodal-code" className="text-[11px] text-slate-500 mt-1">Kode yang dipakai di buku kas toko, mis. CHAMPION = 043</p>
+            )}
           </div>
 
           {/* Contact Person & Phone */}
