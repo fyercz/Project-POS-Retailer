@@ -110,6 +110,7 @@ import { mergeCategories, validateNewCategory } from '../domain/categories';
 import { hasActionPermission } from '../utils/permissions';
 import { makeStockAdjustments, type StockAdjustment } from '../domain/stockAdjustments';
 import { validateCashEntry, type CashEntry } from '../domain/cashBook';
+import { nextSupplierCode, assignMissingSupplierCodes } from '../domain/supplierCode';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -1211,7 +1212,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await load<any[]>('pos_stock_adjustments', isArr, setStockAdjustments as any);
         await load<any[]>('pos_cash_entries', isArr, setCashEntries as any);
         await load<any[]>('pos_supplier_purchases_v2', isArr, setSupplierPurchases as any);
-        await load<any[]>('pos_retail_suppliers_v2', isArr, setSuppliers as any);
+        // Supplier lama tanpa kode diberi kode otomatis (urut waktu dibuat)
+        await load<any[]>('pos_retail_suppliers_v2', isArr, (v: any[]) => setSuppliers(assignMissingSupplierCodes(v)));
         await load<any[]>('pos_employees_v2', (v) => isArr(v) && v.length > 0, setEmployees as any);
         await load<any[]>('pos_restore_points_v1', isArr, setRestorePoints as any);
         await load<any>('pos_current_shift_v1', (v) => typeof v === 'object' && !isArr(v), setCurrentShift as any);
@@ -2891,6 +2893,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addSupplier = (supplierData: Omit<Supplier, 'id' | 'createdAt'>): Supplier => {
     const newSupplier: Supplier = {
       ...supplierData,
+      // Kode dibuat aplikasi (nomor urut 3 digit), tidak dari isian pengguna
+      code: nextSupplierCode(suppliers),
       id: `sup-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       createdAt: toLocalDateString(),
     };
@@ -2899,8 +2903,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSupplier = (id: string, updated: Partial<Supplier>) => {
+    // Kode supplier dikelola aplikasi: tidak bisa diubah lewat edit
+    const { code: _ignoredCode, ...rest } = updated;
+    void _ignoredCode;
     setSuppliers((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
+      prev.map((s) => (s.id === id ? { ...s, ...rest } : s))
     );
   };
 

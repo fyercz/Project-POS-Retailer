@@ -13,26 +13,24 @@ async function openCashBook(page: Page) {
   await page.locator('#btn-open-cash-book').click();
 }
 
-test('kode supplier unik, kas masuk lain, penarikan kas, PPOB per shift; kasir tidak bisa menarik kas', async ({ page }) => {
+test('kode supplier otomatis, kas masuk lain, penarikan kas, PPOB per shift; kasir tidak bisa menarik kas', async ({ page }) => {
   test.setTimeout(180_000);
   page.on('dialog', (d) => d.accept().catch(() => {}));
   await registerOwner(page, { store: 'ULIL Mart' });
 
-  // Supplier berkode 043; kode ganda ditolak
+  // Kode supplier dibuat aplikasi: nomor urut 001, 002 (tidak diketik pengguna)
   await page.locator('#nav-btn-inventory').click();
   await page.getByRole('button', { name: /Supplier Mitra/ }).first().click();
-  for (const [name, expectOk] of [['CHAMPION', true], ['KAO', false]] as const) {
+  for (const [name, code] of [['CHAMPION', '001'], ['KAO', '002']] as const) {
     await page.locator('#btn-add-supplier').click();
+    await expect(page.getByTestId('supplier-code')).toContainText(`${code} (otomatis)`);
     await page.getByLabel('Nama Perusahaan / Supplier / Distributor').fill(name);
-    await page.getByLabel('Kode Supplier (opsional)').fill('043');
     await page.getByRole('dialog').locator('button[type="submit"]').click();
-    if (expectOk) await expect(page.getByRole('dialog')).toHaveCount(0);
-    else {
-      await expect(page.getByText('Kode 043 sudah dipakai supplier lain')).toBeVisible();
-      await page.keyboard.press('Escape');
-    }
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   }
-  expect((await readStored(page, 'pos_retail_suppliers_v2')).map((s: any) => `${s.name}:${s.code}`)).toEqual(['CHAMPION:043']);
+  await expect
+    .poll(async () => (await readStored(page, 'pos_retail_suppliers_v2')).map((s: any) => `${s.name}:${s.code}`).sort())
+    .toEqual(['CHAMPION:001', 'KAO:002']);
 
   // Kas masuk: sewa rak dari CHAMPION
   await openCashBook(page);
