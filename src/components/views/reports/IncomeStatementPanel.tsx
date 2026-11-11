@@ -192,7 +192,7 @@ export const IncomeStatementPanel: React.FC<IncomeStatementPanelProps> = ({ date
 
                   {(dateFilteredIncome.otherIncome ?? 0) > 0 && (
                     <div className="flex justify-between py-1.5 px-2 text-xs">
-                      <span className="font-sans text-slate-700 dark:text-slate-300">4030/4040 • Pendapatan lain-lain (kelebihan kas shift, selisih stok lebih)</span>
+                      <span className="font-sans text-slate-700 dark:text-slate-300">4030/4040/4050 • Pendapatan lain-lain (sewa rak, sewa tempat, kardus, laba PPOB, kelebihan kas, selisih stok)</span>
                       <span className="font-mono text-emerald-700 dark:text-emerald-400">+{formatCurrency(dateFilteredIncome.otherIncome ?? 0, settings.currency)}</span>
                     </div>
                   )}

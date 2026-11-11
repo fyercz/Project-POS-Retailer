@@ -349,6 +349,8 @@ export interface SupplierPurchaseItem {
 export interface Supplier {
   id: string;
   name: string;
+  /** Kode supplier toko (mis. '043'), dipakai di laporan kas: 'Pembelian Barang dari CHAMPION (043)' */
+  code?: string;
   contactPerson?: string;
   phone?: string; // Opsional: nomor telepon / WhatsApp kontak distributor
   email?: string;
@@ -703,6 +705,8 @@ export interface BackupPayload {
     transactions?: Transaction[];
     salesReturns?: SalesReturn[];
     purchaseReturns?: PurchaseReturn[];
+    /** Buku kas di luar penjualan: kas masuk lain-lain, penarikan kas, PPOB */
+    cashEntries?: Array<{ id: string; date: string; kind: string; category?: string; description: string; amount: number; counterparty?: string; shiftLabel?: string; recordedBy?: string }>;
     /** Riwayat penyesuaian persediaan (opname/koreksi) untuk pembukuan */
     stockAdjustments?: Array<{ id: string; date: string; productId: string; productName: string; delta: number; unitCost: number; value: number; reason: string; recordedBy?: string }>;
     supplierPurchases?: SupplierPurchase[];
@@ -824,7 +828,7 @@ export interface JournalEntry {
   id: string;
   date: string;
   referenceNumber: string; // e.g. INV-..., RET-..., PO-..., EXP-...
-  sourceType: 'sale' | 'sales_return' | 'purchase_order' | 'supplier_payment' | 'shift_adjustment' | 'expense' | 'initial_balance' | 'purchase_return' | 'stock_adjustment';
+  sourceType: 'sale' | 'sales_return' | 'purchase_order' | 'supplier_payment' | 'shift_adjustment' | 'expense' | 'initial_balance' | 'purchase_return' | 'stock_adjustment' | 'other_income' | 'owner_withdrawal';
   description: string;
   lines: JournalLineItem[];
   totalDebit: number;
@@ -839,6 +843,13 @@ export type ExpenseCategory =
   | 'perlengkapan_kantor'
   | 'pemeliharaan_toko'
   | 'konsumsi_operasional'
+  // Kategori mengikuti laporan kas manual toko (LAP.HARI / LABA)
+  | 'token_listrik'
+  | 'telepon_pdam'
+  | 'perlengkapan_toko'
+  | 'peralatan_toko'
+  | 'infaq_sosial'
+  | 'servis_perbaikan'
   | 'lainnya';
 
 export interface OperationalExpense {
@@ -879,6 +890,8 @@ export interface BalanceSheet {
     retainedEarnings: number; // Akumulasi laba ditahan
     /** Selisih yang tidak dijelaskan pencatatan (stok awal tanpa faktur, opname, kas awal, ...) */
     unrecordedCapital?: number;
+    /** Prive: kas yang diambil pemilik (mengurangi ekuitas) */
+    ownerWithdrawals?: number;
     totalEquity: number;
   };
   totalLiabilitiesAndEquity: number;
@@ -905,6 +918,8 @@ export interface IncomeStatement {
     inventoryLoss?: number; // Beban selisih persediaan (akun 6050)
     totalOperatingExpenses: number;
   };
+  /** Kas masuk lain-lain (sewa rak, sewa tempat, kardus, laba PPOB; akun 4050), sudah termasuk di otherIncome */
+  cashBookIncome?: number;
   /** Pendapatan selisih persediaan (akun 4040), sudah termasuk di otherIncome */
   inventoryGain?: number;
   /** Pendapatan lain-lain: kelebihan kas saat tutup shift (akun 4030) */

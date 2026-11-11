@@ -109,6 +109,8 @@ import { weightedAverageCost, invoiceCostFactor, landedUnitCost } from '../domai
 import { mergeCategories, validateNewCategory } from '../domain/categories';
 import { hasActionPermission } from '../utils/permissions';
 import { makeStockAdjustments, type StockAdjustment } from '../domain/stockAdjustments';
+import { validateCashEntry, type CashEntry } from '../domain/cashBook';
+import { nextSupplierCode, assignMissingSupplierCodes } from '../domain/supplierCode';
 
 // --- Domain-Specific Context Types (Rank 2 Optimization) ---
 
@@ -205,6 +207,10 @@ export interface POSCartContextType extends POSCartActionsContextType {
 }
 
 export interface POSTransactionsContextType {
+  /** Buku kas: kas masuk lain-lain, penarikan kas, PPOB */
+  cashEntries: CashEntry[];
+  addCashEntry: (input: Partial<CashEntry>) => { success: boolean; message: string };
+  deleteCashEntry: (id: string) => boolean;
   /** Riwayat penyesuaian persediaan (opname/koreksi) */
   stockAdjustments: StockAdjustment[];
   /** Shift aktif + riwayat (untuk selisih kas di laporan laba rugi) */
@@ -608,6 +614,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Riwayat penyesuaian persediaan (opname/koreksi) untuk pembukuan
   const [stockAdjustments, setStockAdjustments] = useState<StockAdjustment[]>([]);
+  // Buku kas di luar penjualan: kas masuk lain-lain, penarikan kas, PPOB (laporan kas manual toko)
+  const [cashEntries, setCashEntries] = useState<CashEntry[]>([]);
   const [purchaseReturns, setPurchaseReturns] = useState<PurchaseReturn[]>(() => {
     const saved = localStorage.getItem('pos_purchase_returns');
     if (!saved) return [];
@@ -1202,8 +1210,10 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await load<any[]>('pos_sales_returns', isArr, setSalesReturns as any);
         await load<any[]>('pos_purchase_returns', isArr, setPurchaseReturns as any);
         await load<any[]>('pos_stock_adjustments', isArr, setStockAdjustments as any);
+        await load<any[]>('pos_cash_entries', isArr, setCashEntries as any);
         await load<any[]>('pos_supplier_purchases_v2', isArr, setSupplierPurchases as any);
-        await load<any[]>('pos_retail_suppliers_v2', isArr, setSuppliers as any);
+        // Supplier lama tanpa kode diberi kode otomatis (urut waktu dibuat)
+        await load<any[]>('pos_retail_suppliers_v2', isArr, (v: any[]) => setSuppliers(assignMissingSupplierCodes(v)));
         await load<any[]>('pos_employees_v2', (v) => isArr(v) && v.length > 0, setEmployees as any);
         await load<any[]>('pos_restore_points_v1', isArr, setRestorePoints as any);
         await load<any>('pos_current_shift_v1', (v) => typeof v === 'object' && !isArr(v), setCurrentShift as any);
@@ -1283,6 +1293,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!isStorageHydrated) return;
     scheduleSave('pos_stock_adjustments', stockAdjustments);
   }, [stockAdjustments, scheduleSave, isStorageHydrated]);
+
+  useEffect(() => {
+    if (!isStorageHydrated) return;
+    scheduleSave('pos_cash_entries', cashEntries);
+  }, [cashEntries, scheduleSave, isStorageHydrated]);
 
   useEffect(() => {
     if (!isStorageHydrated) return;
@@ -2686,6 +2701,24 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return count;
   };
 
+  // Buku kas: semua pengguna boleh mencatat kas masuk & penjualan PPOB; uang keluar (penarikan kas,
+  // isi saldo PPOB) & penghapusan hanya Owner/Supervisor.
+  const isManagerRole = () => !!activeEmployee && ['owner', 'supervisor'].includes(activeEmployee.role);
+  const addCashEntry = (input: Partial<CashEntry>): { success: boolean; message: string } => {
+    if ((input.kind === 'withdrawal' || input.kind === 'ppob_topup') && !isManagerRole())
+      return { success: false, message: 'Hanya Owner/Supervisor yang boleh mencatat uang keluar.' };
+    const r = validateCashEntry({ ...input, recordedBy: activeEmployee?.name });
+    if (!r.ok) return { success: false, message: r.message };
+    const entry: CashEntry = { ...r.entry, id: `kas-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` };
+    setCashEntries((prev) => [entry, ...prev]);
+    return { success: true, message: `${entry.description} dicatat.` };
+  };
+  const deleteCashEntry = (id: string): boolean => {
+    if (!isManagerRole()) return false;
+    setCashEntries((prev) => prev.filter((c) => c.id !== id));
+    return true;
+  };
+
   // Catat penyesuaian persediaan (nilai = selisih x harga modal saat ini) untuk pembukuan
   const recordStockAdjustments = (after: Array<{ id: string; stock: number }>, reason: string) => {
     const adj = makeStockAdjustments(products, after, reason, activeEmployee?.name);
@@ -2860,6 +2893,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addSupplier = (supplierData: Omit<Supplier, 'id' | 'createdAt'>): Supplier => {
     const newSupplier: Supplier = {
       ...supplierData,
+      // Kode dibuat aplikasi (nomor urut 3 digit), tidak dari isian pengguna
+      code: nextSupplierCode(suppliers),
       id: `sup-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       createdAt: toLocalDateString(),
     };
@@ -2868,8 +2903,11 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSupplier = (id: string, updated: Partial<Supplier>) => {
+    // Kode supplier dikelola aplikasi: tidak bisa diubah lewat edit
+    const { code: _ignoredCode, ...rest } = updated;
+    void _ignoredCode;
     setSuppliers((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
+      prev.map((s) => (s.id === id ? { ...s, ...rest } : s))
     );
   };
 
@@ -3045,6 +3083,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         salesReturns,
         purchaseReturns,
         stockAdjustments,
+        cashEntries,
         supplierPurchases,
         settings,
         vouchers,
@@ -3074,6 +3113,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     salesReturns,
     purchaseReturns,
     stockAdjustments,
+    cashEntries,
     supplierPurchases,
     vouchers,
     employees,
@@ -3237,6 +3277,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (Array.isArray(d.purchaseReturns)) setPurchaseReturns(d.purchaseReturns);
           // Riwayat penyesuaian persediaan (sejak v1.8.0; backup lama tidak memilikinya)
           if (Array.isArray((d as any).stockAdjustments)) setStockAdjustments((d as any).stockAdjustments);
+          if (Array.isArray((d as any).cashEntries)) setCashEntries((d as any).cashEntries);
           if (Array.isArray(d.supplierPurchases)) setSupplierPurchases(d.supplierPurchases);
           // Pengaturan digabung: backup versi lama tidak punya pengaturan baru (jangan sampai kosong)
           if (d.settings && typeof d.settings === 'object') setSettings((prev) => mergeRestoredSettings(prev, d.settings));
@@ -3409,6 +3450,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   latestFns.current = {
+    addCashEntry,
+    deleteCashEntry,
     applyPriceUpdates,
     addCategory,
     handleSetPointsToRedeem,
@@ -3473,7 +3516,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const stableFns = useMemo(() => {
     const wrapped: Record<string, any> = {};
-    for (const key of ['applyPriceUpdates', 'addCategory', 'handleSetPointsToRedeem', 'addCustomer', 'addEmployee', 'addExpense', 'addProduct', 'addProductsBatch', 'addSupplier', 'addToCart', 'addVoucher', 'adjustCustomerPoints', 'applyCustomerDiscount', 'applyMinStockRuleToAllProducts', 'applyVoucher', 'bulkAdjustProducts', 'clearAllProducts', 'clearAllTransactions', 'clearCart', 'clearImportedProducts', 'closeCurrentShift', 'completeFirstRunSetup', 'deleteEmployee', 'deleteExpense', 'deleteHeldOrder', 'deleteProduct', 'deleteProductsBatch', 'deleteSupplier', 'deleteVoucher', 'holdCurrentOrder', 'lockScreen', 'loginWithPin', 'logoutEmployee', 'openGeminiCopilot', 'processPayment', 'processPurchaseReturn', 'processSalesReturn', 'processSupplierPurchase', 'quickSwitchEmployee', 'recallHeldOrder', 'recordProductPriceChange', 'recordSupplierPayment', 'removeCustomerDiscount', 'removeFromCart', 'removeVoucher', 'setCartItemQuantity', 'setUsePoints', 'startNewShift', 'unlockScreen', 'updateCartItemDiscount', 'updateCartItemNote', 'updateCartItemQuantity', 'updateCartItemUnit', 'updateCustomer', 'updateEmployee', 'updateProduct', 'updateProductStock', 'updateSettings', 'updateShiftStartingCash', 'updateSupplier', 'voidTransaction']) wrapped[key] = (...args: any[]) => latestFns.current[key](...args);
+    for (const key of ['addCashEntry', 'deleteCashEntry', 'applyPriceUpdates', 'addCategory', 'handleSetPointsToRedeem', 'addCustomer', 'addEmployee', 'addExpense', 'addProduct', 'addProductsBatch', 'addSupplier', 'addToCart', 'addVoucher', 'adjustCustomerPoints', 'applyCustomerDiscount', 'applyMinStockRuleToAllProducts', 'applyVoucher', 'bulkAdjustProducts', 'clearAllProducts', 'clearAllTransactions', 'clearCart', 'clearImportedProducts', 'closeCurrentShift', 'completeFirstRunSetup', 'deleteEmployee', 'deleteExpense', 'deleteHeldOrder', 'deleteProduct', 'deleteProductsBatch', 'deleteSupplier', 'deleteVoucher', 'holdCurrentOrder', 'lockScreen', 'loginWithPin', 'logoutEmployee', 'openGeminiCopilot', 'processPayment', 'processPurchaseReturn', 'processSalesReturn', 'processSupplierPurchase', 'quickSwitchEmployee', 'recallHeldOrder', 'recordProductPriceChange', 'recordSupplierPayment', 'removeCustomerDiscount', 'removeFromCart', 'removeVoucher', 'setCartItemQuantity', 'setUsePoints', 'startNewShift', 'unlockScreen', 'updateCartItemDiscount', 'updateCartItemNote', 'updateCartItemQuantity', 'updateCartItemUnit', 'updateCustomer', 'updateEmployee', 'updateProduct', 'updateProductStock', 'updateSettings', 'updateShiftStartingCash', 'updateSupplier', 'voidTransaction']) wrapped[key] = (...args: any[]) => latestFns.current[key](...args);
     return wrapped;
   }, []);
 
@@ -3605,6 +3648,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const transactionsValue = useMemo<POSTransactionsContextType>(
     () => ({
+      cashEntries,
+      addCashEntry: stableFns.addCashEntry,
+      deleteCashEntry: stableFns.deleteCashEntry,
       stockAdjustments,
       allShifts,
       isPaymentModalOpen,
@@ -3636,6 +3682,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       clearAllTransactions: stableFns.clearAllTransactions,
     }),
     [
+      cashEntries,
       stockAdjustments,
       allShifts,
       isPaymentModalOpen,
@@ -3702,12 +3749,13 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       expenses,
       purchaseReturns,
       stockAdjustments,
+      cashEntries,
       initialCapital: settings.initialCapital ?? 0, // ?? (bukan ||): modal 0 tetap 0
       initialCashInDrawer: settings.initialCashInDrawer ?? 0,
       initialBankBalance: settings.initialBankBalance ?? 0,
       pointRedemptionRate: settings.pointRedemptionRate || 100,
     });
-  }, [transactions, salesReturns, supplierPurchases, allShifts, expenses, purchaseReturns, stockAdjustments, settings.initialCapital, settings.initialCashInDrawer, settings.initialBankBalance, settings.pointRedemptionRate]);
+  }, [transactions, salesReturns, supplierPurchases, allShifts, expenses, purchaseReturns, stockAdjustments, cashEntries, settings.initialCapital, settings.initialCashInDrawer, settings.initialBankBalance, settings.pointRedemptionRate]);
 
   const balanceSheet = useMemo(() => {
     return computeBalanceSheet({
@@ -3720,13 +3768,14 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       salesReturns,
       purchaseReturns,
       stockAdjustments,
+      cashEntries,
       // ?? (bukan ||): modal 0 tetap 0. Dulu 0 berubah menjadi Rp 50 juta karangan
       initialCapital: settings.initialCapital ?? 0,
       initialCashInDrawer: settings.initialCashInDrawer ?? 0,
       initialBankBalance: settings.initialBankBalance ?? 0,
       pointRedemptionRate: settings.pointRedemptionRate || 100,
     });
-  }, [products, transactions, customers, supplierPurchases, allShifts, expenses, salesReturns, purchaseReturns, stockAdjustments, settings.initialCapital, settings.initialCashInDrawer, settings.initialBankBalance, settings.pointRedemptionRate]);
+  }, [products, transactions, customers, supplierPurchases, allShifts, expenses, salesReturns, purchaseReturns, stockAdjustments, cashEntries, settings.initialCapital, settings.initialCashInDrawer, settings.initialBankBalance, settings.pointRedemptionRate]);
 
   const incomeStatement = useMemo(() => {
     return computeIncomeStatement({
@@ -3736,8 +3785,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       expenses,
       pointRedemptionRate: settings.pointRedemptionRate || 100,
       stockAdjustments,
+      cashEntries,
     });
-  }, [transactions, salesReturns, allShifts, expenses, stockAdjustments, settings.pointRedemptionRate]);
+  }, [transactions, salesReturns, allShifts, expenses, stockAdjustments, cashEntries, settings.pointRedemptionRate]);
 
   const uiValue = useMemo<POSUIContextType>(
     () => ({

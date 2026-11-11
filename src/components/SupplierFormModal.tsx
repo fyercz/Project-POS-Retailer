@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Supplier } from '../types';
 import { usePOS } from '../context/POSContext';
+import { nextSupplierCode } from '../domain/supplierCode';
 
 interface SupplierFormModalProps {
   isOpen: boolean;
@@ -49,7 +50,7 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
   supplierToEdit,
   onSuccess,
 }) => {
-  const { addSupplier, updateSupplier } = usePOS();
+  const { addSupplier, updateSupplier, suppliers } = usePOS();
   const isEditMode = Boolean(supplierToEdit);
 
   const [name, setName] = useState('');
@@ -193,6 +194,14 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
             </div>
             {errors.name && <p id="err-supplierformmodal-name" role="alert" className="text-[11px] text-rose-600 mt-1">{errors.name}</p>}
           </div>
+
+          {/* Kode supplier dibuat & dikelola aplikasi (nomor urut), dipakai di laporan kas */}
+          <p data-testid="supplier-code" className="text-xs text-slate-600 dark:text-slate-400">
+            Kode supplier:{' '}
+            <strong className="font-mono text-slate-800 dark:text-slate-100">
+              {supplierToEdit?.code || `${nextSupplierCode(suppliers || [])} (otomatis)`}
+            </strong>
+          </p>
 
           {/* Contact Person & Phone */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

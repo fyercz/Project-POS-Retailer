@@ -67,10 +67,12 @@ import { usePOSCatalog } from '../../context/POSContext';
 import { lineCogs, baseUnitsOf, unitMultiplierOf, returnedCogs } from '../../utils/cogs';
 import { BalanceSheetPanel } from './reports/BalanceSheetPanel';
 import { IncomeStatementPanel } from './reports/IncomeStatementPanel';
+import { CashBookModal } from '../CashBookModal';
+import { KasExportModal } from '../KasExportModal';
 
 export const ReportsView: React.FC = () => {
   const { products, categories, recordProductPriceChange, updateProduct } = usePOSCatalog();
-  const { transactions, salesReturns, setActiveReceipt, allShifts, stockAdjustments } = usePOSTransactions();
+  const { transactions, salesReturns, setActiveReceipt, allShifts, stockAdjustments, cashEntries } = usePOSTransactions();
   const {
     settings,
     openGeminiCopilot,
@@ -92,6 +94,8 @@ export const ReportsView: React.FC = () => {
 
   // Expense Modal State
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isCashBookOpen, setIsCashBookOpen] = useState(false);
+  const [isKasExportOpen, setIsKasExportOpen] = useState(false);
   const [newExpenseCategory, setNewExpenseCategory] = useState<ExpenseCategory>('listrik_air_internet');
   const [newExpenseDesc, setNewExpenseDesc] = useState('');
   const [newExpenseAmount, setNewExpenseAmount] = useState('');
@@ -174,10 +178,11 @@ export const ReportsView: React.FC = () => {
       shifts: allShifts, // dulu tanpa shift: selisih kas tutup shift tidak muncul di laporan ini
       pointRedemptionRate: settings.pointRedemptionRate || 100,
       stockAdjustments,
+      cashEntries,
       startDate: startIso,
       endDate: endIso,
     });
-  }, [transactions, salesReturns, expenses, allShifts, stockAdjustments, settings.pointRedemptionRate, startDate, endDate]);
+  }, [transactions, salesReturns, expenses, allShifts, stockAdjustments, cashEntries, settings.pointRedemptionRate, startDate, endDate]);
 
   // Dynamic Date-filtered & Search-filtered General Journal
   const dateFilteredJournal = useMemo(() => {
@@ -514,6 +519,28 @@ export const ReportsView: React.FC = () => {
             <Sparkles className="w-4 h-4 fill-current" />
             <span className="hidden sm:inline">Analisis AI</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Ekspor laporan kas bulanan format toko (LAP.HARI / LAP.BLN / PPOB / LABA) */}
+          <button
+            id="btn-open-kas-export"
+            type="button"
+            onClick={() => setIsKasExportOpen(true)}
+            className="px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+          >
+            <span>Ekspor Laporan Kas (Excel)</span>
+          </button>
+
+          {/* Buku kas harian (sewa rak, penarikan kas, PPOB): terlihat di semua tab */}
+          <button
+            id="btn-open-cash-book"
+            type="button"
+            onClick={() => setIsCashBookOpen(true)}
+            className="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors active:scale-95"
+            title="Kas masuk lain-lain (sewa rak, sewa tempat, kardus, laba PPOB), penarikan kas, PPOB per shift"
+          >
+            <Wallet className="w-4 h-4" />
+            <span>Buku Kas Toko</span>
           </button>
 
           <button
@@ -1569,12 +1596,18 @@ export const ReportsView: React.FC = () => {
                   onChange={(e) => setNewExpenseCategory(e.target.value as ExpenseCategory)}
                   className="w-full p-2.5 rounded-xl border border-slate-500 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
                 >
-                  <option value="listrik_air_internet">Listrik, Air &amp; Internet</option>
-                  <option value="gaji_karyawan">Gaji &amp; Bonus Karyawan</option>
+                  <option value="gaji_karyawan">Gaji Karyawan</option>
+                  <option value="token_listrik">Token / Beban Listrik</option>
+                  <option value="telepon_pdam">Telepon &amp; PDAM</option>
+                  <option value="perlengkapan_toko">Perlengkapan Toko (Kresek, Kertas Thermal)</option>
+                  <option value="peralatan_toko">Peralatan Toko</option>
+                  <option value="servis_perbaikan">Servis &amp; Perbaikan (AC, Freezer)</option>
+                  <option value="infaq_sosial">Infaq, Iuran &amp; Sosial</option>
                   <option value="sewa_ruko">Sewa Tempat / Ruko</option>
-                  <option value="perlengkapan_kantor">Perlengkapan &amp; Kantong Plastik</option>
-                  <option value="pemeliharaan_toko">Pemeliharaan &amp; Kebersihan</option>
                   <option value="konsumsi_operasional">Konsumsi &amp; Logistik Staf</option>
+                  <option value="listrik_air_internet">Listrik, Air &amp; Internet (lama)</option>
+                  <option value="perlengkapan_kantor">Perlengkapan &amp; Kantong Plastik (lama)</option>
+                  <option value="pemeliharaan_toko">Pemeliharaan &amp; Kebersihan (lama)</option>
                   <option value="lainnya">Beban Operasional Lainnya</option>
                 </select>
               </div>
@@ -1675,6 +1708,8 @@ export const ReportsView: React.FC = () => {
       )}
 
       {/* Printable Report Modal */}
+      <CashBookModal isOpen={isCashBookOpen} onClose={() => setIsCashBookOpen(false)} />
+      <KasExportModal isOpen={isKasExportOpen} onClose={() => setIsKasExportOpen(false)} />
       <ReportPrintModal
         isOpen={isPrintModalOpen}
         onClose={() => setIsPrintModalOpen(false)}

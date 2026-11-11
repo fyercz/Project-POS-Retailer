@@ -278,6 +278,18 @@ export const BalanceSheetPanel: React.FC<BalanceSheetPanelProps> = ({ balanceShe
                           </span>
                         </div>
 
+                        {(balanceSheet.equity.ownerWithdrawals ?? 0) > 0 && (
+                          <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/60">
+                            <div>
+                              <span className="font-medium text-slate-800 dark:text-slate-200">3020 • Prive / Penarikan Kas Pemilik</span>
+                              <p className="text-[11px] text-slate-500">Kas yang diambil pemilik (mengurangi modal, bukan beban)</p>
+                            </div>
+                            <span className="font-mono font-bold text-rose-700 dark:text-rose-400">
+                              -{formatCurrency(balanceSheet.equity.ownerWithdrawals ?? 0, settings.currency)}
+                            </span>
+                          </div>
+                        )}
+
                         {/* Dulu: "Laba ditahan" = SISA agar neraca selalu seimbang. Kini sisa ditampilkan terang-terangan. */}
                         <div className={`py-1.5 px-2 rounded-xl border ${balanceSheet.isReconciled ? 'border-slate-100 dark:border-slate-800/60' : 'border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30'}`}>
                           <div className="flex justify-between items-center gap-2">
