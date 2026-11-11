@@ -126,3 +126,24 @@ test('saldo toko dipakai belanja: kas hanya bagian tunai, kewajiban berkurang, j
 function ret0(id: string, txId: string, method: string): any {
   return { id, returnNumber: id, transactionId: txId, invoiceNumber: txId, cashierName: 'Uji', createdAt: D, refundMethod: method, totalRefundAmount: 12000, items: [{ productId: 'A', productName: 'A', quantity: 1, unitPrice: 12000, totalRefund: 12000, reason: 'uji', restockToInventory: false }] };
 }
+
+test('buku kas: pendapatan lain masuk laba, penarikan kas = prive (bukan beban), neraca seimbang', () => {
+  const sale: any = tx('K1', [line(A, 1, 20000)], 0, 'cash');
+  const cashEntries: any[] = [
+    { id: 'c1', date: D, kind: 'income', category: 'sewa_rak', description: 'Sewa Rak dari T ALAN', amount: 10000 },
+    { id: 'c2', date: D, kind: 'withdrawal', description: 'Penarikan Kas', amount: 5000 },
+    { id: 'c3', date: D, kind: 'ppob_sale', description: 'Penjualan PPOB', amount: 640000 }, // buku terpisah
+  ];
+  const pl = computeIncomeStatement({ transactions: [sale], cashEntries } as any);
+  const plTanpa = computeIncomeStatement({ transactions: [sale] } as any);
+  assert.equal(pl.netOperatingProfit - plTanpa.netOperatingProfit, 10000, 'hanya sewa rak menambah laba; penarikan & PPOB tidak');
+  const bs = computeBalanceSheet({ products: [], transactions: [sale], cashEntries } as any);
+  const bsTanpa = computeBalanceSheet({ products: [], transactions: [sale] } as any);
+  assert.equal(bs.assets.cashOnHand - bsTanpa.assets.cashOnHand, 5000, 'kas +10.000 sewa -5.000 penarikan');
+  assert.equal(bs.equity.ownerWithdrawals, 5000);
+  assert.equal(bs.equity.unrecordedCapital, bsTanpa.equity.unrecordedCapital, 'tidak menambah selisih belum tercatat');
+  const je = generateJournalEntries({ transactions: [sale], cashEntries, supplierPurchases: [] } as any);
+  const kas = je.filter((e: any) => e.id.startsWith('jrnl-kas-'));
+  assert.equal(kas.length, 2);
+  assert.ok(kas.every((e: any) => e.isBalanced));
+});

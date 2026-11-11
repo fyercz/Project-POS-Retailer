@@ -14,6 +14,7 @@ import {
 } from '../types';
 import { lineCogs, returnedCogs } from './cogs';
 import { summarizeAdjustments, type StockAdjustment } from '../domain/stockAdjustments';
+import { summarizeCashBook, type CashEntry } from '../domain/cashBook';
 
 export type { ExpenseCategory };
 
@@ -109,6 +110,8 @@ export const STANDARD_CHART_OF_ACCOUNTS: ChartOfAccount[] = [
   // 6000 - BEBAN OPERASIONAL
   { code: '6010', name: 'Beban Operasional Toko', category: 'expense', normalBalance: 'debit', description: 'Biaya utilitas, token listrik, internet, air, operasional' },
   { code: '6020', name: 'Beban Selisih Kas Shift', category: 'expense', normalBalance: 'debit', description: 'Kerugian selisih minus fisik uang saat tutup shift kasir' },
+  { code: '4050', name: 'Pendapatan Lain-lain (Sewa Rak, Sewa Tempat, Kardus, Laba PPOB)', category: 'revenue', normalBalance: 'credit', description: 'Kas masuk di luar penjualan barang.' },
+  { code: '3020', name: 'Prive / Penarikan Kas Pemilik', category: 'equity', normalBalance: 'debit', description: 'Uang toko yang diambil pemilik; mengurangi modal, bukan beban.' },
   { code: '6050', name: 'Beban Selisih Persediaan', category: 'expense', normalBalance: 'debit', description: 'Barang hilang/rusak hasil stock opname atau koreksi stok (dinilai harga modal).' },
   { code: '4040', name: 'Pendapatan Selisih Persediaan', category: 'revenue', normalBalance: 'credit', description: 'Barang lebih dari catatan hasil stock opname atau koreksi stok.' },
   { code: '6040', name: 'Beban Program Poin Member', category: 'expense', normalBalance: 'debit', description: 'Nilai poin loyalitas yang diberikan kepada member (dicatat saat poin diperoleh).' },
@@ -122,6 +125,12 @@ export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   perlengkapan_kantor: 'Perlengkapan & Kantong Plastik',
   pemeliharaan_toko: 'Pemeliharaan & Kebersihan',
   konsumsi_operasional: 'Konsumsi & Logistik Staf',
+  token_listrik: 'Token / Beban Listrik',
+  telepon_pdam: 'Telepon & PDAM',
+  perlengkapan_toko: 'Perlengkapan Toko (Kresek, Kertas Thermal)',
+  peralatan_toko: 'Peralatan Toko',
+  infaq_sosial: 'Infaq, Iuran & Sosial',
+  servis_perbaikan: 'Servis & Perbaikan (AC, Freezer)',
   lainnya: 'Beban Operasional Lainnya',
 };
 
@@ -151,6 +160,7 @@ export function generateJournalEntries(options: {
   purchaseReturns?: Array<{ id: string; returnNumber?: string; supplierName: string; totalAmount: number; createdAt: string; status?: string }>;
   pointRedemptionRate?: number;
   stockAdjustments?: StockAdjustment[];
+  cashEntries?: CashEntry[];
 }): JournalEntry[] {
   const {
     transactions = [],
@@ -164,6 +174,7 @@ export function generateJournalEntries(options: {
     purchaseReturns = [],
     pointRedemptionRate = 100,
     stockAdjustments = [],
+    cashEntries = [],
   } = options;
 
   const entries: JournalEntry[] = [];
@@ -554,6 +565,32 @@ export function generateJournalEntries(options: {
   }
 
   // Sort chronologically descending
+  // Buku kas: kas masuk lain-lain (4050) & penarikan kas pemilik (prive 3020). PPOB = buku terpisah.
+  for (const c of cashEntries) {
+    const v = Math.round(Math.max(0, Number(c.amount) || 0));
+    if (v <= 0 || (c.kind !== 'income' && c.kind !== 'withdrawal')) continue;
+    const income = c.kind === 'income';
+    entries.push({
+      id: `jrnl-kas-${c.id}`,
+      date: c.date,
+      referenceNumber: `KAS-${c.id.slice(-5).toUpperCase()}`,
+      sourceType: income ? 'other_income' : 'owner_withdrawal',
+      description: income ? `Kas masuk: ${c.description}` : `Penarikan kas pemilik: ${c.description}`,
+      lines: income
+        ? [
+            { accountCode: '1010', accountName: 'Kas di Laci Kasir', debit: v, credit: 0, memo: c.description },
+            { accountCode: '4050', accountName: 'Pendapatan Lain-lain', debit: 0, credit: v, memo: c.description },
+          ]
+        : [
+            { accountCode: '3020', accountName: 'Prive / Penarikan Kas Pemilik', debit: v, credit: 0, memo: c.description },
+            { accountCode: '1010', accountName: 'Kas di Laci Kasir', debit: 0, credit: v, memo: 'Kas diambil pemilik' },
+          ],
+      totalDebit: v,
+      totalCredit: v,
+      isBalanced: true,
+    });
+  }
+
   // Penyesuaian persediaan (opname/koreksi): dulu tidak dijurnal sama sekali
   for (const a of stockAdjustments) {
     const v = Math.round(Math.abs(Number(a.value) || 0));
@@ -621,6 +658,7 @@ export function computeIncomeStatement(options: {
   endDate?: string;
   pointRedemptionRate?: number;
   stockAdjustments?: StockAdjustment[];
+  cashEntries?: CashEntry[];
 }): IncomeStatement {
   const {
     transactions = [],
@@ -631,6 +669,7 @@ export function computeIncomeStatement(options: {
     endDate,
     pointRedemptionRate = 100,
     stockAdjustments = [],
+    cashEntries = [],
   } = options;
 
   let startMs = 0;
@@ -718,6 +757,12 @@ export function computeIncomeStatement(options: {
     perlengkapan_kantor: 0,
     pemeliharaan_toko: 0,
     konsumsi_operasional: 0,
+    token_listrik: 0,
+    telepon_pdam: 0,
+    perlengkapan_toko: 0,
+    peralatan_toko: 0,
+    infaq_sosial: 0,
+    servis_perbaikan: 0,
     lainnya: 0,
   };
 
@@ -746,7 +791,9 @@ export function computeIncomeStatement(options: {
   const totalOperatingExpenses = expenseItemsSum + cashShortExpense + pointsExpense + inventoryLoss;
 
   // 6. Net Operating Profit
-  const netOperatingProfit = grossProfit - totalOperatingExpenses + cashOverIncome + inventoryGain;
+  // Kas masuk lain-lain (sewa rak, sewa tempat, kardus, laba PPOB). PPOB & penarikan kas tidak masuk laba.
+  const cashBookIncome = summarizeCashBook(cashEntries, startMs, endMs).otherIncome;
+  const netOperatingProfit = grossProfit - totalOperatingExpenses + cashOverIncome + inventoryGain + cashBookIncome;
   const netProfitMarginPercent = netSales > 0 ? (netOperatingProfit / netSales) * 100 : 0;
 
   return {
@@ -766,8 +813,9 @@ export function computeIncomeStatement(options: {
       inventoryLoss,
       totalOperatingExpenses,
     },
-    otherIncome: cashOverIncome + inventoryGain,
+    otherIncome: cashOverIncome + inventoryGain + cashBookIncome,
     inventoryGain,
+    cashBookIncome,
     netOperatingProfit,
     netProfitMarginPercent,
   };
@@ -791,6 +839,7 @@ export function computeBalanceSheet(options: {
   initialBankBalance?: number;
   pointRedemptionRate?: number;
   stockAdjustments?: StockAdjustment[];
+  cashEntries?: CashEntry[];
 }): BalanceSheet {
   const {
     products = [],
@@ -806,6 +855,7 @@ export function computeBalanceSheet(options: {
     initialBankBalance = 0,
     pointRedemptionRate = 100,
     stockAdjustments = [],
+    cashEntries = [],
   } = options;
 
   // 1. Merchandise Inventory Valuation (Nilai Total Fisik Stok Toko)
@@ -847,6 +897,11 @@ export function computeBalanceSheet(options: {
       edcCardReceivables += finalTotal;
     }
   }
+
+  // Buku kas: kas masuk lain-lain menambah kas, penarikan kas (prive) mengurangi kas. PPOB terpisah.
+  const cashBook = summarizeCashBook(cashEntries);
+  cashOnHand += cashBook.otherIncome - cashBook.withdrawals;
+  const ownerWithdrawals = cashBook.withdrawals;
 
   // Deduct operational expenses
   for (const exp of expenses) {
@@ -941,6 +996,7 @@ export function computeBalanceSheet(options: {
     expenses,
     pointRedemptionRate,
     stockAdjustments,
+    cashEntries,
   });
   const currentPeriodNetIncome = incomeStmt.netOperatingProfit;
 
@@ -951,8 +1007,8 @@ export function computeBalanceSheet(options: {
   // Ekuitas = TOTAL modal awal (bagian laci/bank sudah masuk ke kas/bank, sisanya dana awal lainnya)
   const ownerInitialCapital = split.reduce((a, [, , v]) => a + v, 0);
   const retainedEarnings = 0;
-  const unrecordedCapital = Math.round(totalAssets - totalLiabilities - ownerInitialCapital - currentPeriodNetIncome);
-  const totalEquity = ownerInitialCapital + currentPeriodNetIncome + retainedEarnings + unrecordedCapital;
+  const unrecordedCapital = Math.round(totalAssets - totalLiabilities - ownerInitialCapital - currentPeriodNetIncome + ownerWithdrawals);
+  const totalEquity = ownerInitialCapital + currentPeriodNetIncome + retainedEarnings - ownerWithdrawals + unrecordedCapital;
 
   const totalLiabilitiesAndEquity = totalLiabilities + totalEquity;
   const difference = totalAssets - totalLiabilitiesAndEquity;
@@ -982,6 +1038,7 @@ export function computeBalanceSheet(options: {
       currentPeriodNetIncome,
       retainedEarnings,
       unrecordedCapital,
+      ownerWithdrawals,
       totalEquity,
     },
     totalLiabilitiesAndEquity,
