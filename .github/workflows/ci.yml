@@ -40,7 +40,8 @@ jobs:
 
   e2e:
     name: E2E (Chromium)
-    runs-on: ubuntu-latest
+    # Dikunci: 'ubuntu-latest' pindah ke Ubuntu 26 (Okt 2026) dan pemasangan browser Playwright gagal di sana
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # unggah pratinjau cetak ke rilis "pratinjau-cetak"
     steps:
